@@ -4,6 +4,7 @@ import { supabase } from './services/supabaseClient';
 import { Mail, Sparkles, ChevronRight, ShieldCheck } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
+import PayInterface from './PayInterface';
 
 // ==========================================
 // MAIN DEUS APP & LOGIN UI (MAGIC LINK ONLY)
@@ -206,6 +207,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/pay" element={<PayInterface />} />
       </Routes>
     </Router>
   );

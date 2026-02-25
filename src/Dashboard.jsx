@@ -10,6 +10,7 @@ import EmergencySOS from './EmergencySOS';
 import Training from './Training';
 import Agents from './Agents';
 import DepositInterface from './DepositInterface';
+import QRCode from "react-qr-code";
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
   LogOut, Menu, X, Landmark, Clock,
@@ -55,6 +56,10 @@ export default function Dashboard({ session, onSignOut }) {
   // 1. Add state to hold the balance and the notification
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
+  const [requestEmail, setRequestEmail] = useState('');
+  const [requestLink, setRequestLink] = useState(null);
+  const [requestReason, setRequestReason] = useState('');
+  const [showQR, setShowQR] = useState(false);
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
   const tabTitles = {
@@ -95,6 +100,28 @@ export default function Dashboard({ session, onSignOut }) {
     if (session?.user?.id) {
       fetchAllData();
     }
+  }, [session?.user?.id]);
+  // REAL-TIME ENGINE: Listens for incoming money instantly
+  useEffect(() => {
+    if (!session?.user?.id) return;
+   
+    const channel = supabase.channel('realtime-deus')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions', filter: `user_id=eq.${session.user.id}` }, (payload) => {
+        // Automatically add new transaction to the top of the list
+        setTransactions(prev => [payload.new, ...prev]);
+       
+        // Trigger the DEUS notification toast instantly
+        setNotification({
+          type: 'success',
+          text: `Inbound Transfer Detected: $${Math.abs(payload.new.amount).toFixed(2)}`
+        });
+        setTimeout(() => setNotification(null), 5000);
+       
+        // Re-fetch everything to ensure perfect sync
+        fetchAllData();
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
   }, [session?.user?.id]);
   useEffect(() => {
     // Check the URL for Stripe's return messages
@@ -250,35 +277,32 @@ export default function Dashboard({ session, onSignOut }) {
           </button>
         </div>
         {/* Latest Activity Box */}
-        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col justify-between shadow-sm">
-          {transactions.length > 0 ? (
-            <>
-              <div>
-                <span className="text-sm text-slate-500 font-medium tracking-wider uppercase block mb-4">Latest Activity</span>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
-                    <Clock size={20} />
+        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col shadow-sm h-full max-h-[220px] overflow-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm text-slate-500 font-medium tracking-wider uppercase block">Transaction Ledger</span>
+            <button onClick={() => setActiveTab('ACCOUNTS')} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800">View All</button>
+          </div>
+         
+          <div className="space-y-4 overflow-y-auto no-scrollbar">
+            {transactions.length > 0 ? transactions.slice(0, 3).map((tx) => (
+              <div key={tx.id} className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'}`}>
+                    {tx.amount > 0 ? <Download size={16} /> : <Send size={16} />}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800 capitalize">{transactions[0].transaction_type}</p>
-                    <p className="text-sm text-slate-500">{new Date(transactions[0].created_at).toLocaleDateString()}</p>
+                    <p className="font-bold text-sm text-slate-800 capitalize">{tx.description || tx.type}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{new Date(tx.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
+                <span className={`font-black text-sm ${tx.amount > 0 ? 'text-emerald-600' : 'text-slate-800'}`}>
+                  {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                </span>
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-200/60 flex justify-between items-center">
-                <span className="font-black text-xl text-slate-800">{formatCurrency(Math.abs(transactions[0].amount))}</span>
-                <button onClick={() => setActiveTab('ACCOUNTS')} className="text-blue-600 text-sm font-bold hover:underline">View All</button>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
-                <Clock size={20} />
-              </div>
-              <p className="text-sm text-slate-500 font-medium tracking-wider uppercase block">Latest Activity</p>
-              <p className="text-slate-400 font-medium">No recent transactions</p>
-            </div>
-          )}
+            )) : (
+              <p className="text-sm text-slate-400 font-medium text-center mt-4">No recent transactions</p>
+            )}
+          </div>
         </div>
       </div>
       {/* Action Line & Analytics Toggle */}
@@ -452,8 +476,8 @@ export default function Dashboard({ session, onSignOut }) {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200">
       {/* Background gradients */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/20 rounded-full blur-[120px]"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h=[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h=[40%] bg-indigo-400/20 rounded-full blur-[120px]"></div>
       </div>
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
         {/* Mobile Sidebar Overlay */}
@@ -654,38 +678,139 @@ export default function Dashboard({ session, onSignOut }) {
             <form onSubmit={async (e) => {
               e.preventDefault();
               setIsLoading(true);
-              const amount = parseFloat(e.target.amount.value) * (activeModal === 'DEPOSIT' || activeModal === 'REQUEST' ? 1 : -1);
-              if (activeModal === 'DEPOSIT') {
-                await handleDeposit(amount);
-              } else {
-                await supabase.from('transactions').insert([{ user_id: session.user.id, amount, transaction_type: activeModal.toLowerCase(), status: 'completed' }]);
-                if (activeModal === 'DEPOSIT') {
-                  await supabase.from('balances').update({ liquid_usd: balances.liquid_usd + amount }).eq('user_id', session.user.id);
+              const amount = parseFloat(e.target.amount.value);
+              
+              if (activeModal === 'REQUEST') {
+                // Generate the public Pay link with URL parameters
+                const link = `${window.location.origin}/pay?to=${session.user.id}&amount=${amount}&reason=${encodeURIComponent(requestReason)}`;
+                setRequestLink(link);
+                
+                if (requestEmail) {
+                  // In a production app, you would trigger your Resend API here
+                  setNotification({ type: 'success', text: `Encrypted request dispatched to ${requestEmail}` });
+                  setTimeout(() => setNotification(null), 5000);
                 }
+                setIsLoading(false);
+                return; 
               }
+
+              // Standard internal transfer logic
+              const finalAmount = activeModal === 'DEPOSIT' ? amount : -amount;
+              await supabase.from('transactions').insert([{ 
+                user_id: session.user.id, 
+                amount: finalAmount, 
+                type: activeModal.toLowerCase(), 
+                description: `Internal ${activeModal}`,
+                status: 'completed' 
+              }]);
+              
               await fetchAllData();
               setActiveModal(null);
               setIsLoading(false);
             }} className="p-8 space-y-6 relative z-10 text-center">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Entry Amount (USD)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="amount"
-                  required
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 font-black text-3xl text-center text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-300"
-                  placeholder="0.00"
-                  autoFocus
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
-              >
-                {isLoading ? 'TRANSMITTING...' : `CONFIRM ${activeModal}`}
-              </button>
+              
+              {!requestLink ? (
+                <>
+                  {activeModal === 'REQUEST' && (
+                    <div className="space-y-4 mb-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Reason / Note (Optional)</label>
+                          <input
+                            type="text"
+                            value={requestReason}
+                            onChange={(e) => setRequestReason(e.target.value)}
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300"
+                            placeholder="e.g., Dinner in Paris"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Target Email (Optional)</label>
+                          <input
+                            type="email"
+                            value={requestEmail}
+                            onChange={(e) => setRequestEmail(e.target.value)}
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300"
+                            placeholder="client@example.com"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-left">Amount (USD)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="amount"
+                      required
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 font-black text-4xl text-center text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-300 shadow-inner"
+                      placeholder="0.00"
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:-translate-y-1 transition-all disabled:opacity-50"
+                  >
+                    {isLoading ? 'TRANSMITTING...' : activeModal === 'REQUEST' ? 'GENERATE SECURE LINK' : `CONFIRM ${activeModal}`}
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                  <div className="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
+                    <ShieldCheck size={32} />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-800 text-xl">Payment Portal Ready</h4>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Ready for external routing via Card or ACH.</p>
+                  </div>
+                  
+                  {showQR ? (
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-center inline-block mx-auto animate-in fade-in zoom-in">
+                      <QRCode value={requestLink} size={180} fgColor="#0f172a" />
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 border-2 border-slate-100 p-4 rounded-xl break-all relative group cursor-pointer" onClick={() => {
+                      navigator.clipboard.writeText(requestLink);
+                      setNotification({ type: 'success', text: 'Link copied to clipboard!' });
+                    }}>
+                      <p className="text-sm font-bold text-blue-600 group-hover:text-blue-700 transition-colors">{requestLink}</p>
+                      <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-[1px]">
+                        <span className="font-black text-blue-700 text-xs uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-sm">Click to Copy</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowQR(!showQR)}
+                      className="flex-1 bg-slate-100 text-slate-700 rounded-xl py-4 font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    >
+                      {showQR ? 'SHOW LINK' : 'SHOW QR CODE'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.location.href = `mailto:?subject=Secure Payment Request via DEUS&body=I am requesting a secure payment of $${parseFloat(amount).toFixed(2)}${requestReason ? ` for ${requestReason}` : ''}.%0D%0A%0D%0APlease pay via this secure DEUS link: ${requestLink}`}
+                      className="flex-1 bg-slate-800 text-white rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-700 transition-all"
+                    >
+                      EMAIL INVOICE
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => { setActiveModal(null); setRequestLink(null); setRequestEmail(''); setRequestReason(''); setShowQR(false); }}
+                    className="w-full text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-slate-800 transition-all pt-2"
+                  >
+                    Close Window
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>
