@@ -18,9 +18,8 @@ import {
   Sparkles, Settings, Eye, EyeOff, Target, TrendingUp,
   Folder, Compass, User, BookOpen, ArrowRight, Coffee,
   Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search,
-  Sun, Moon, Sunrise
+  Sun, Moon, Sunrise, Loader2
 } from 'lucide-react';
-
 export default function Dashboard({ session, onSignOut }) {
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('NET_POSITION');
@@ -31,7 +30,6 @@ export default function Dashboard({ session, onSignOut }) {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
- 
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -62,6 +60,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [requestReason, setRequestReason] = useState('');
   const [requestAmount, setRequestAmount] = useState(0);
   const [showQR, setShowQR] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
   const tabTitles = {
@@ -106,19 +105,16 @@ export default function Dashboard({ session, onSignOut }) {
   // REAL-TIME ENGINE: Listens for incoming money instantly
   useEffect(() => {
     if (!session?.user?.id) return;
-
     const channel = supabase.channel('realtime-deus')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions', filter: `user_id=eq.${session.user.id}` }, (payload) => {
         // Automatically add new transaction to the top of the list
         setTransactions(prev => [payload.new, ...prev]);
-
         // Trigger the DEUS notification toast instantly
         setNotification({
           type: 'success',
           text: `Inbound Transfer Detected: $${Math.abs(payload.new.amount).toFixed(2)}`
         });
         setTimeout(() => setNotification(null), 5000);
-
         // Re-fetch everything to ensure perfect sync
         fetchAllData();
       })
@@ -221,11 +217,39 @@ export default function Dashboard({ session, onSignOut }) {
         amount: amount
       }
     });
-
     if (data?.url) {
       window.location.href = data.url; // Redirects user to the secure Stripe page
     } else {
       console.error("Stripe routing failed", error);
+    }
+  };
+  const handleSendEmailInvoice = async () => {
+    if (!requestEmail) {
+      setNotification({ type: 'error', text: 'Please enter a target email first.' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    setIsSendingEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-request-email', {
+        body: {
+          requesterName: userName,
+          targetEmail: requestEmail,
+          amount: requestAmount,
+          reason: requestReason,
+          payLink: requestLink
+        }
+      });
+      if (error) throw error;
+     
+      setNotification({ type: 'success', text: `Official invoice dispatched to ${requestEmail}` });
+      setTimeout(() => setNotification(null), 5000);
+    } catch (err) {
+      console.error(err);
+      setNotification({ type: 'error', text: 'Failed to dispatch invoice. Please try again.' });
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setIsSendingEmail(false);
     }
   };
   // ==========================================
@@ -284,7 +308,6 @@ export default function Dashboard({ session, onSignOut }) {
             <span className="text-sm text-slate-500 font-medium tracking-wider uppercase block">Transaction Ledger</span>
             <button onClick={() => setActiveTab('ACCOUNTS')} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800">View All</button>
           </div>
-
           <div className="space-y-4 overflow-y-auto no-scrollbar">
             {transactions.length > 0 ? transactions.slice(0, 3).map((tx) => (
               <div key={tx.id} className="flex justify-between items-center">
@@ -682,12 +705,10 @@ export default function Dashboard({ session, onSignOut }) {
               setIsLoading(true);
               const amount = parseFloat(e.target.amount.value);
               setRequestAmount(amount);
-
               if (activeModal === 'REQUEST') {
                 // Generate the public Pay link with URL parameters
                 const link = `${window.location.origin}/pay?to=${session.user.id}&amount=${amount}&reason=${encodeURIComponent(requestReason)}`;
                 setRequestLink(link);
-
                 if (requestEmail) {
                   // In a production app, you would trigger your Resend API here
                   setNotification({ type: 'success', text: `Encrypted request dispatched to ${requestEmail}` });
@@ -696,7 +717,6 @@ export default function Dashboard({ session, onSignOut }) {
                 setIsLoading(false);
                 return;
               }
-
               // Standard internal transfer logic
               const finalAmount = activeModal === 'DEPOSIT' ? amount : -amount;
               await supabase.from('transactions').insert([{
@@ -706,12 +726,10 @@ export default function Dashboard({ session, onSignOut }) {
                 description: `Internal ${activeModal}`,
                 status: 'completed'
               }]);
-
               await fetchAllData();
               setActiveModal(null);
               setIsLoading(false);
             }} className="p-8 space-y-6 relative z-10 text-center">
-
               {!requestLink ? (
                 <>
                   {activeModal === 'REQUEST' && (
@@ -740,7 +758,6 @@ export default function Dashboard({ session, onSignOut }) {
                       </div>
                     </div>
                   )}
-
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-left">Amount (USD)</label>
                     <input
@@ -753,7 +770,6 @@ export default function Dashboard({ session, onSignOut }) {
                       autoFocus
                     />
                   </div>
-
                   <button
                     type="submit"
                     disabled={isLoading}
@@ -771,7 +787,6 @@ export default function Dashboard({ session, onSignOut }) {
                     <h4 className="font-black text-slate-800 text-xl">Payment Portal Ready</h4>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Ready for external routing via Card or ACH.</p>
                   </div>
-
                   {showQR ? (
                     <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-center inline-block mx-auto animate-in fade-in zoom-in">
                       <QRCode value={requestLink} size={180} fgColor="#0f172a" />
@@ -787,7 +802,6 @@ export default function Dashboard({ session, onSignOut }) {
                       </div>
                     </div>
                   )}
-
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -798,13 +812,13 @@ export default function Dashboard({ session, onSignOut }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => window.location.href = `mailto:?subject=Secure Payment Request via DEUS&body=I am requesting a secure payment of $${parseFloat(requestAmount).toFixed(2)}${requestReason ? ` for ${requestReason}` : ''}.%0D%0A%0D%0APlease pay via this secure DEUS link: ${requestLink}`}
-                      className="flex-1 bg-slate-800 text-white rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-700 transition-all"
+                      onClick={handleSendEmailInvoice}
+                      disabled={isSendingEmail}
+                      className="flex-1 bg-slate-800 text-white rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-700 transition-all disabled:opacity-50 flex items-center justify-center"
                     >
-                      EMAIL INVOICE
+                      {isSendingEmail ? <Loader2 className="animate-spin" size={14} /> : 'EMAIL INVOICE'}
                     </button>
                   </div>
-
                   <button
                     type="button"
                     onClick={() => { setActiveModal(null); setRequestLink(null); setRequestEmail(''); setRequestReason(''); setShowQR(false); }}
