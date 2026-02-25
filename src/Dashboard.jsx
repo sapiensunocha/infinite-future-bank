@@ -11,6 +11,7 @@ import Training from './Training';
 import Agents from './Agents';
 import DepositInterface from './DepositInterface';
 import QRCode from "react-qr-code";
+import CardLinker from './CardLinker';
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
   LogOut, Menu, X, Landmark, Clock,
@@ -61,6 +62,8 @@ export default function Dashboard({ session, onSignOut }) {
   const [requestAmount, setRequestAmount] = useState(0);
   const [showQR, setShowQR] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [showCardLinker, setShowCardLinker] = useState(false);
+  const [linkedCards, setLinkedCards] = useState([]);
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
   const tabTitles = {
@@ -96,6 +99,12 @@ export default function Dashboard({ session, onSignOut }) {
     if (invData) setInvestments(invData);
     const { data: notifData } = await supabase.from('notifications').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
     if (notifData) setNotifications(notifData);
+    const { data: cardsData } = await supabase
+      .from('linked_cards')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false });
+    if (cardsData) setLinkedCards(cardsData);
   };
   useEffect(() => {
     if (session?.user?.id) {
@@ -470,6 +479,11 @@ export default function Dashboard({ session, onSignOut }) {
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
+            <div>
+              <button onClick={() => setShowCardLinker(true)} className="px-6 py-3 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 transition-all">
+                Link New Card
+              </button>
+            </div>
           </div>
         )}
         {subTab === 'DOCUMENTS' && (
@@ -807,34 +821,65 @@ export default function Dashboard({ session, onSignOut }) {
                   )}
                   {activeModal === 'WITHDRAW' && (
                     <div className="space-y-4 mb-6">
-                      <div className="bg-slate-800 p-4 rounded-2xl text-left">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1 flex items-center gap-1"><ShieldCheck size={12}/> 256-Bit Encrypted</p>
-                        <p className="text-xs font-bold text-slate-300">Enter your external routing details. Funds will settle in 1-2 business days.</p>
-                      </div>
-                     
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2">
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Routing Number (9 Digits)</label>
-                          <input
-                            type="text"
-                            name="routingNumber"
-                            maxLength="9"
-                            required
-                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-slate-800 transition-all placeholder:text-slate-300 tracking-widest"
-                            placeholder="000000000"
-                          />
+                      <div className="bg-slate-800 p-4 rounded-2xl text-left flex justify-between items-start">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1 flex items-center gap-1"><ShieldCheck size={12}/> Instant Payouts</p>
+                          <p className="text-xs font-bold text-slate-300">Route capital directly to your linked accounts or cards.</p>
                         </div>
-                        <div className="col-span-2">
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Account Number</label>
-                          <input
-                            type="password"
-                            name="accountNumber"
-                            required
-                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-slate-800 transition-all placeholder:text-slate-300 tracking-widest"
-                            placeholder="••••••••••••"
-                          />
-                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => { setActiveModal(null); setShowCardLinker(true); }}
+                          className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all"
+                        >
+                          + Link Card
+                        </button>
                       </div>
+                      
+                      {linkedCards.length > 0 ? (
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Select Destination</label>
+                          <div className="grid gap-2">
+                            {linkedCards.map(card => (
+                              <label key={card.id} className="flex items-center gap-3 p-4 border-2 border-slate-100 rounded-2xl cursor-pointer hover:border-blue-500 transition-all bg-slate-50 relative group">
+                                <input type="radio" name="selectedCard" value={card.stripe_external_account_id} defaultChecked={card.is_default} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                                <div className="flex-1 text-left flex items-center gap-3">
+                                  <div className="w-10 h-7 bg-slate-200 rounded flex items-center justify-center text-[10px] font-black uppercase text-slate-600 tracking-widest">
+                                    {card.brand === 'visa' ? 'VISA' : card.brand === 'mastercard' ? 'MC' : card.brand}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-sm text-slate-800">•••• {card.last4}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Debit Card</p>
+                                  </div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="col-span-2">
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Routing Number (9 Digits)</label>
+                            <input
+                              type="text"
+                              name="routingNumber"
+                              maxLength="9"
+                              required={linkedCards.length === 0}
+                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300 tracking-widest"
+                              placeholder="000000000"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Account Number</label>
+                            <input
+                              type="password"
+                              name="accountNumber"
+                              required={linkedCards.length === 0}
+                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300 tracking-widest"
+                              placeholder="••••••••••••"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                   <div>
@@ -928,6 +973,18 @@ export default function Dashboard({ session, onSignOut }) {
         <DepositInterface
           session={session}
           onClose={() => setShowDepositUI(false)}
+        />
+      )}
+      {showCardLinker && (
+        <CardLinker 
+          session={session} 
+          onClose={() => setShowCardLinker(false)} 
+          onSuccess={(card) => {
+            setShowCardLinker(false);
+            setNotification({ type: 'success', text: `${card.brand.toUpperCase()} ending in ${card.last4} successfully vaulted.` });
+            setTimeout(() => setNotification(null), 5000);
+            // Optionally fetch all data again if you are saving cards to the DEUS DB
+          }}
         />
       )}
     </div>
