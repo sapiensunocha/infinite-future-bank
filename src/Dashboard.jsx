@@ -51,6 +51,8 @@ export default function Dashboard({ session, onSignOut }) {
   const [isLoading, setIsLoading] = useState(false);
   // Profile Editing States
   const [editedName, setEditedName] = useState('');
+  // 1. Add state to hold the balance and the notification
+  const [notification, setNotification] = useState(null);
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
   const tabTitles = {
@@ -92,6 +94,31 @@ export default function Dashboard({ session, onSignOut }) {
       fetchAllData();
     }
   }, [session?.user?.id]);
+  useEffect(() => {
+    // Check the URL for Stripe's return messages
+    const query = new URLSearchParams(window.location.search);
+    
+    if (query.get('status') === 'success') {
+      setNotification({ type: 'success', text: 'Capital Successfully Secured.' });
+      
+      // Instantly clean the URL so the user doesn't see "?status=success"
+      window.history.replaceState(null, '', window.location.pathname);
+      
+      // The Supabase Webhook takes about 1 second to update the database. 
+      // We wait 2 seconds, then automatically pull the fresh balance so the screen ticks up!
+      setTimeout(fetchAllData, 2000); 
+    }
+
+    if (query.get('status') === 'cancelled') {
+      setNotification({ type: 'error', text: 'Deposit routing aborted.' });
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+    
+    // Auto-hide the notification after 5 seconds
+    if (query.has('status')) {
+      setTimeout(() => setNotification(null), 5000);
+    }
+  }, [session.user.id]);
   useEffect(() => {
     if (searchQuery) {
       if (searchDebounce.current) clearTimeout(searchDebounce.current);
@@ -672,6 +699,19 @@ export default function Dashboard({ session, onSignOut }) {
                 {isLoading ? 'TRANSMITTING...' : `CONFIRM ${activeModal}`}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* DEUS SYSTEM NOTIFICATION */}
+      {notification && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
+          <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
+            notification.type === 'success' 
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+              : 'bg-red-500/10 border-red-500/20 text-red-400'
+          }`}>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+            <p className="font-black text-sm uppercase tracking-widest">{notification.text}</p>
           </div>
         </div>
       )}
