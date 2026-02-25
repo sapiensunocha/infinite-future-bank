@@ -1,29 +1,34 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const [status, setStatus] = useState('DECRYPTING CLEARANCE...');
 
   useEffect(() => {
-    // 1. Instantly check if Supabase already processed the URL and created a session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 1. Immediately check if Supabase parsed the valid token
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
       if (session) {
-        navigate('/'); // Handoff to main App/Dashboard
+        setStatus('VERIFIED. ROUTING...');
+        setTimeout(() => navigate('/'), 500); // Exactly half a second delay
+      } else if (error || !window.location.hash) {
+        setStatus('LINK EXPIRED OR INVALID.');
+        setTimeout(() => navigate('/'), 2000);
       }
-    });
+    };
 
-    // 2. Listen for the exact moment the URL is parsed and the user is logged in
+    checkSession();
+
+    // 2. Failsafe listener for the moment the token is accepted
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || session) {
-        navigate('/');
+        setStatus('VERIFIED. ROUTING...');
+        setTimeout(() => navigate('/'), 500);
       }
     });
-
-    // 3. Failsafe: If the link is expired or broken, send them back to login
-    if (window.location.hash.includes('error_description')) {
-      navigate('/');
-    }
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -31,8 +36,12 @@ const AuthCallback = () => {
   return (
     <div className="flex h-screen w-full items-center justify-center bg-slate-50 text-emerald-500 font-sans">
       <div className="flex flex-col items-center space-y-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-500"></div>
-        <p className="tracking-widest text-xs font-black uppercase">Decrypting Clearance...</p>
+        {status === 'DECRYPTING CLEARANCE...' ? (
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-500"></div>
+        ) : (
+          <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black text-lg">✓</div>
+        )}
+        <p className="tracking-widest text-xs font-black uppercase">{status}</p>
       </div>
     </div>
   );
