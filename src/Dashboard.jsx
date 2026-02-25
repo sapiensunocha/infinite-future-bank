@@ -160,6 +160,21 @@ export default function Dashboard({ session, onSignOut }) {
     await supabase.from('notifications').update({ read: true }).eq('id', id);
     await fetchAllData();
   };
+  const handleDeposit = async (amount) => {
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: { 
+        userId: session.user.id, 
+        email: session.user.email,
+        amount: amount 
+      }
+    });
+
+    if (data?.url) {
+      window.location.href = data.url; // Redirects user to the secure Stripe page
+    } else {
+      console.error("Stripe routing failed", error);
+    }
+  };
   // ==========================================
   // VIEW 1: NET POSITION (Core Hub)
   // ==========================================
@@ -625,9 +640,13 @@ export default function Dashboard({ session, onSignOut }) {
               e.preventDefault();
               setIsLoading(true);
               const amount = parseFloat(e.target.amount.value) * (activeModal === 'DEPOSIT' || activeModal === 'REQUEST' ? 1 : -1);
-              await supabase.from('transactions').insert([{ user_id: session.user.id, amount, transaction_type: activeModal.toLowerCase(), status: 'completed' }]);
               if (activeModal === 'DEPOSIT') {
-                await supabase.from('balances').update({ liquid_usd: balances.liquid_usd + amount }).eq('user_id', session.user.id);
+                await handleDeposit(amount);
+              } else {
+                await supabase.from('transactions').insert([{ user_id: session.user.id, amount, transaction_type: activeModal.toLowerCase(), status: 'completed' }]);
+                if (activeModal === 'DEPOSIT') {
+                  await supabase.from('balances').update({ liquid_usd: balances.liquid_usd + amount }).eq('user_id', session.user.id);
+                }
               }
               await fetchAllData();
               setActiveModal(null);
