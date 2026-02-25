@@ -1,37 +1,37 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 import { Mail, Smartphone, Sparkles, ChevronRight, KeyRound, ShieldCheck } from 'lucide-react';
 import Dashboard from './Dashboard';
+import AuthCallback from './features/onboarding/AuthCallback';
 
-export default function App() {
+// ==========================================
+// MAIN DEUS APP & LOGIN UI
+// ==========================================
+function MainApp() {
   const [session, setSession] = useState(null);
   const [currentView, setCurrentView] = useState('choose_auth');
   const [authType, setAuthType] = useState('');
-  // States
   const [contactValue, setContactValue] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check for active session and Auto-Provision Profile & Balances
   useEffect(() => {
     const initializeUser = async (currentSession) => {
       setSession(currentSession);
       if (currentSession) {
-        // DEUS Auto-Provisioning: Check if profile exists
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', currentSession.user.id)
-          .maybeSingle(); // <--- FIXED: Prevents 406 crash for new users
+          .maybeSingle(); 
           
         if (!profile) {
-          // 1. Create Profile for New User
           await supabase.from('profiles').insert([{
             id: currentSession.user.id,
             full_name: currentSession.user.email || currentSession.user.phone || 'DEUS User'
           }]);
-          // 2. Initialize Empty Balances for New User
           await supabase.from('balances').insert([{
             user_id: currentSession.user.id,
             liquid_usd: 0,
@@ -61,23 +61,32 @@ export default function App() {
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
   };
 
-  // STEP 1: Send OTP (creates user if not exists)
   const handleSendCode = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage({ text: '', type: '' });
-    // Clean the input of invisible spaces and force lowercase
     const cleanContact = contactValue.trim().toLowerCase();
+    
     try {
-      const otpParams = currentView === 'enter_email'
-        ? { email: cleanContact }
-        : { phone: cleanContact };
-      const { error } = await supabase.auth.signInWithOtp(otpParams);
+      const { error } = await supabase.auth.signInWithOtp({
+        [currentView === 'enter_email' ? 'email' : 'phone']: cleanContact,
+        options: {
+          // This is critical: it tells Supabase where to send the user after they click the email!
+          emailRedirectTo: 'https://deux.infinitefuturebank.org/auth/callback'
+        }
+      });
+
       if (error) throw error;
-      // Move to Verification Screen
+
       setAuthType(currentView);
-      setCurrentView('verify_code');
-      showMessage('Clearance code sent.', 'success');
+      // If it's email, show the check email screen. If phone, show the code input screen.
+      if (currentView === 'enter_email') {
+        setCurrentView('check_email');
+      } else {
+        setCurrentView('verify_code');
+      }
+      
+      showMessage('Clearance initiated.', 'success');
     } catch (error) {
       console.error(error);
       showMessage(`Routing failed: ${error.message}`, 'error');
@@ -86,20 +95,17 @@ export default function App() {
     }
   };
 
-  // STEP 2: Verify the 6-Digit Code
   const handleVerifyCode = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage({ text: '', type: '' });
     try {
       const { error } = await supabase.auth.verifyOtp({
-        email: authType === 'enter_email' ? contactValue.trim().toLowerCase() : undefined,
-        phone: authType === 'enter_phone' ? contactValue.trim() : undefined,
+        phone: contactValue.trim(),
         token: otpCode.trim(),
-        type: authType === 'enter_email' ? 'email' : 'sms'
+        type: 'sms'
       });
       if (error) throw error;
-      // Success! The useEffect will catch the session change and show the dashboard.
     } catch (error) {
       showMessage(`Invalid clearance code: ${error.message}`, 'error');
     } finally {
@@ -107,11 +113,7 @@ export default function App() {
     }
   };
 
-  // ==========================================
-  // VIEW 1: LOGGED IN (DEUS Dashboard Shell)
-  // ==========================================
   if (session) {
-    // This now renders the stunning new Dashboard file
     return (
       <Dashboard
         session={session}
@@ -125,17 +127,14 @@ export default function App() {
     );
   }
 
-  // ==========================================
-  // VIEW 2: PASSWORDLESS AUTH (Unified)
-  // ==========================================
   return (
     <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden font-sans selection:bg-blue-500/30 flex flex-col items-center justify-center p-6">
-      {/* Ambient Gradient Orbs */}
       <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-blue-300/20 blur-[120px] pointer-events-none z-0"></div>
       <div className="fixed bottom-[-10%] right-[-5%] w-[50vw] h-[50vw] rounded-full bg-indigo-300/20 blur-[120px] pointer-events-none z-0"></div>
       <div className="fixed top-[30%] right-[10%] w-[30vw] h-[30vw] rounded-full bg-emerald-300/10 blur-[120px] pointer-events-none z-0"></div>
+      
       <div className="relative z-10 w-full max-w-[480px]">
-        {/* DEUS Logo Header */}
+        {/* Logo */}
         <div className="flex flex-col items-center justify-center mb-10 drop-shadow-sm cursor-pointer" onClick={() => setCurrentView('choose_auth')}>
           <div className="flex items-center gap-1">
             <span className="text-6xl font-black text-[#4285F4]">D</span>
@@ -145,9 +144,10 @@ export default function App() {
             <Sparkles className="text-blue-500 ml-3" size={32} />
           </div>
         </div>
-        {/* Glass Card */}
+
         <div className="bg-white/60 backdrop-blur-2xl rounded-[3rem] border border-white/60 shadow-2xl shadow-slate-200/40 p-10 relative overflow-hidden">
-          {/* STATE 1: CHOOSE ONBOARDING PATH */}
+          
+          {/* VIEW 1: CHOOSE AUTH */}
           {currentView === 'choose_auth' && (
             <div className="animate-in fade-in zoom-in-95 duration-300 text-center">
               <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Access Portal</h2>
@@ -164,7 +164,8 @@ export default function App() {
               </div>
             </div>
           )}
-          {/* STATE 2: ENTER INFO & "SWIPE TO DEPLOY" */}
+
+          {/* VIEW 2: ENTER EMAIL OR PHONE */}
           {(currentView === 'enter_email' || currentView === 'enter_phone') && (
             <div className="animate-in slide-in-from-right-8 duration-300 text-center">
               <div className="flex justify-center mb-6">
@@ -195,7 +196,28 @@ export default function App() {
               <button onClick={() => setCurrentView('choose_auth')} className="mt-8 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Change Routing Method</button>
             </div>
           )}
-          {/* STATE 3: ENTER 6-DIGIT CODE */}
+
+          {/* VIEW 3A: CHECK EMAIL (For Magic Links) */}
+          {currentView === 'check_email' && (
+            <div className="animate-in zoom-in duration-300 text-center">
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 animate-bounce">
+                  <Mail size={40}/>
+                </div>
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Check Your Email</h2>
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-8 leading-relaxed">
+                Clearance link dispatched to:<br/>
+                <span className="text-emerald-600 font-bold">{contactValue}</span>
+              </p>
+              <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-200 text-[11px] text-slate-500 font-medium leading-relaxed italic">
+                Click the "Initialize Connection" button in your inbox to unlock your DEUS terminal automatically.
+              </div>
+              <button onClick={() => setCurrentView('choose_auth')} className="mt-10 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">Abort & Return</button>
+            </div>
+          )}
+
+          {/* VIEW 3B: VERIFY SMS CODE (For Phone) */}
           {currentView === 'verify_code' && (
             <div className="animate-in slide-in-from-right-8 duration-300 text-center">
               <div className="flex justify-center mb-6">
@@ -233,7 +255,6 @@ export default function App() {
             </div>
           )}
         </div>
-        {/* Powered By Footer */}
         <div className="mt-8 text-center">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
             <ShieldCheck size={14} className="text-blue-400" />
@@ -242,5 +263,19 @@ export default function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ==========================================
+// ROOT ROUTER PROVIDER
+// ==========================================
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+      </Routes>
+    </Router>
   );
 }
