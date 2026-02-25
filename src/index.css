@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ifb-bg text-ifb-slate antialiased selection:bg-ifb-blue/30 selection:text-ifb-slate font-sans relative;
+  }
+
+  /* Your MI Dashboard Ambient Gradient Orbs */
+  body::before {
+    content: '';
+    @apply fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-blue-300/20 blur-[120px] pointer-events-none -z-10;
+  }
+  body::after {
+    content: '';
+    @apply fixed bottom-[-10%] right-[-5%] w-[50vw] h-[50vw] rounded-full bg-indigo-300/20 blur-[120px] pointer-events-none -z-10;
+  }
+}
+
+@layer utilities {
+  .ambient-orb-3 {
+    @apply fixed top-[30%] right-[10%] w-[30vw] h-[30vw] rounded-full bg-emerald-300/10 blur-[120px] pointer-events-none -z-10;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300/50 rounded-full transition-colors;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400/80;
+  }
+}
