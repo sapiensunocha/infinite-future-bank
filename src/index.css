@@ -4,25 +4,30 @@
 
 @layer base {
   body {
-    @apply bg-ifb-bg text-ifb-slate antialiased selection:bg-ifb-blue/30 selection:text-ifb-slate font-sans relative;
+    /* 1. The Deep Space Void & Crisp Text */
+    @apply bg-ifb-background text-ifb-text antialiased selection:bg-ifb-primary/40 selection:text-white font-sans relative overflow-x-hidden min-h-screen;
   }
 
-  /* Your MI Dashboard Ambient Gradient Orbs */
+  /* 2. Alpha Glass Ambient Glowing Orbs (Trust Blue) */
   body::before {
     content: '';
-    @apply fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-blue-300/20 blur-[120px] pointer-events-none -z-10;
+    @apply fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-ifb-primary/15 blur-[120px] pointer-events-none -z-10;
   }
+  
+  /* 3. Alpha Glass Ambient Glowing Orbs (Electric Cyan) */
   body::after {
     content: '';
-    @apply fixed bottom-[-10%] right-[-5%] w-[50vw] h-[50vw] rounded-full bg-indigo-300/20 blur-[120px] pointer-events-none -z-10;
+    @apply fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-ifb-accent/10 blur-[120px] pointer-events-none -z-10;
   }
 }
 
 @layer utilities {
+  /* 4. The Wealth Emerald Third Orb */
   .ambient-orb-3 {
-    @apply fixed top-[30%] right-[10%] w-[30vw] h-[30vw] rounded-full bg-emerald-300/10 blur-[120px] pointer-events-none -z-10;
+    @apply fixed top-[30%] left-[40%] w-[30vw] h-[30vw] rounded-full bg-ifb-success/10 blur-[120px] pointer-events-none -z-10;
   }
   
+  /* 5. Dark Mode Glass Scrollbars */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -31,9 +36,18 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-300/50 rounded-full transition-colors;
+    @apply bg-white/10 rounded-full transition-colors;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400/80;
+    @apply bg-white/20;
+  }
+  
+  /* Hide scrollbar completely but allow scrolling (for clean sidebars) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 }
