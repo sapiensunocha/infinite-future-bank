@@ -60,6 +60,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [requestEmail, setRequestEmail] = useState('');
   const [requestLink, setRequestLink] = useState(null);
   const [requestReason, setRequestReason] = useState('');
+  const [requestAmount, setRequestAmount] = useState(0);
   const [showQR, setShowQR] = useState(false);
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
@@ -680,6 +681,7 @@ export default function Dashboard({ session, onSignOut }) {
               e.preventDefault();
               setIsLoading(true);
               const amount = parseFloat(e.target.amount.value);
+              setRequestAmount(amount);
 
               if (activeModal === 'REQUEST') {
                 // Generate the public Pay link with URL parameters
@@ -796,7 +798,7 @@ export default function Dashboard({ session, onSignOut }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => window.location.href = `mailto:?subject=Secure Payment Request via DEUS&body=I am requesting a secure payment of $${parseFloat(amount).toFixed(2)}${requestReason ? ` for ${requestReason}` : ''}.%0D%0A%0D%0APlease pay via this secure DEUS link: ${requestLink}`}
+                      onClick={() => window.location.href = `mailto:?subject=Secure Payment Request via DEUS&body=I am requesting a secure payment of $${parseFloat(requestAmount).toFixed(2)}${requestReason ? ` for ${requestReason}` : ''}.%0D%0A%0D%0APlease pay via this secure DEUS link: ${requestLink}`}
                       className="flex-1 bg-slate-800 text-white rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-700 transition-all"
                     >
                       EMAIL INVOICE
