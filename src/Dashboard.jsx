@@ -9,6 +9,7 @@ import FinancialPlanner from './FinancialPlanner';
 import EmergencySOS from './EmergencySOS';
 import Training from './Training';
 import Agents from './Agents';
+import DepositInterface from './DepositInterface';
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
   LogOut, Menu, X, Landmark, Clock,
@@ -18,6 +19,7 @@ import {
   Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search,
   Sun, Moon, Sunrise
 } from 'lucide-react';
+
 export default function Dashboard({ session, onSignOut }) {
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('NET_POSITION');
@@ -28,7 +30,6 @@ export default function Dashboard({ session, onSignOut }) {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
- 
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -53,6 +54,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [editedName, setEditedName] = useState('');
   // 1. Add state to hold the balance and the notification
   const [notification, setNotification] = useState(null);
+  const [showDepositUI, setShowDepositUI] = useState(false);
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
   const tabTitles = {
@@ -97,23 +99,18 @@ export default function Dashboard({ session, onSignOut }) {
   useEffect(() => {
     // Check the URL for Stripe's return messages
     const query = new URLSearchParams(window.location.search);
-    
     if (query.get('status') === 'success') {
       setNotification({ type: 'success', text: 'Capital Successfully Secured.' });
-      
       // Instantly clean the URL so the user doesn't see "?status=success"
       window.history.replaceState(null, '', window.location.pathname);
-      
-      // The Supabase Webhook takes about 1 second to update the database. 
+      // The Supabase Webhook takes about 1 second to update the database.
       // We wait 2 seconds, then automatically pull the fresh balance so the screen ticks up!
-      setTimeout(fetchAllData, 2000); 
+      setTimeout(fetchAllData, 2000);
     }
-
     if (query.get('status') === 'cancelled') {
       setNotification({ type: 'error', text: 'Deposit routing aborted.' });
       window.history.replaceState(null, '', window.location.pathname);
     }
-    
     // Auto-hide the notification after 5 seconds
     if (query.has('status')) {
       setTimeout(() => setNotification(null), 5000);
@@ -207,7 +204,6 @@ export default function Dashboard({ session, onSignOut }) {
   // ==========================================
   const NetPositionView = () => (
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-     
       {/* Greeting Card */}
       <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
         <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -296,7 +292,7 @@ export default function Dashboard({ session, onSignOut }) {
         <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
           <ArrowRightLeft size={16} /> Transfer
         </button>
-        <button onClick={() => setActiveModal('DEPOSIT')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
+        <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
           <Plus size={16} /> Deposit
         </button>
         <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
@@ -460,7 +456,6 @@ export default function Dashboard({ session, onSignOut }) {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/20 rounded-full blur-[120px]"></div>
       </div>
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
-       
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
           <div
@@ -510,7 +505,6 @@ export default function Dashboard({ session, onSignOut }) {
         </aside>
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative overflow-hidden">
-         
           {/* Top Header */}
           <header className="h-20 border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-30 sticky top-0">
             <div className="flex items-center gap-4">
@@ -522,7 +516,6 @@ export default function Dashboard({ session, onSignOut }) {
               </h2>
             </div>
             <div className="flex items-center gap-4 md:gap-6 relative">
-             
               {/* Dynamic Animated Search Bar */}
               <div className={`relative transition-all duration-300 ease-in-out hidden sm:block ${isSearchExpanded ? 'w-80' : 'w-40'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -535,12 +528,10 @@ export default function Dashboard({ session, onSignOut }) {
                   onBlur={() => { setTimeout(() => setIsSearchExpanded(false), 200); }}
                   className="w-full pl-10 pr-4 py-2 bg-white/50 border border-white/60 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/50 transition-all text-sm font-medium text-slate-700 shadow-sm"
                 />
-               
                 {/* Search Dropdown */}
                 {isSearchExpanded && searchQuery.length > 0 && (
                   <div className="absolute top-full mt-2 left-0 w-80 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Search Results</p>
-                   
                     {searchResults.transactions.length > 0 && (
                       <div className="mb-3">
                         <span className="text-xs font-bold text-slate-600">Transactions</span>
@@ -549,7 +540,6 @@ export default function Dashboard({ session, onSignOut }) {
                         ))}
                       </div>
                     )}
-                   
                     {searchResults.pockets.length > 0 && (
                       <div className="mb-3">
                         <span className="text-xs font-bold text-slate-600">Pockets</span>
@@ -642,7 +632,6 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'SETTINGS' && <SettingsView />}
           </div>
-         
           {/* Floating AI Advisor Button */}
           <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20">
             <MessageSquare size={24} className="group-hover:animate-pulse" />
@@ -662,7 +651,6 @@ export default function Dashboard({ session, onSignOut }) {
                 <X size={20} />
               </button>
             </div>
-           
             <form onSubmit={async (e) => {
               e.preventDefault();
               setIsLoading(true);
@@ -714,6 +702,12 @@ export default function Dashboard({ session, onSignOut }) {
             <p className="font-black text-sm uppercase tracking-widest">{notification.text}</p>
           </div>
         </div>
+      )}
+      {showDepositUI && (
+        <DepositInterface 
+          session={session} 
+          onClose={() => setShowDepositUI(false)} 
+        />
       )}
     </div>
   );
