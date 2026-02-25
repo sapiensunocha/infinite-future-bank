@@ -31,6 +31,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+ 
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -104,19 +105,19 @@ export default function Dashboard({ session, onSignOut }) {
   // REAL-TIME ENGINE: Listens for incoming money instantly
   useEffect(() => {
     if (!session?.user?.id) return;
-   
+
     const channel = supabase.channel('realtime-deus')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions', filter: `user_id=eq.${session.user.id}` }, (payload) => {
         // Automatically add new transaction to the top of the list
         setTransactions(prev => [payload.new, ...prev]);
-       
+
         // Trigger the DEUS notification toast instantly
         setNotification({
           type: 'success',
           text: `Inbound Transfer Detected: $${Math.abs(payload.new.amount).toFixed(2)}`
         });
         setTimeout(() => setNotification(null), 5000);
-       
+
         // Re-fetch everything to ensure perfect sync
         fetchAllData();
       })
@@ -213,10 +214,10 @@ export default function Dashboard({ session, onSignOut }) {
   };
   const handleDeposit = async (amount) => {
     const { data, error } = await supabase.functions.invoke('create-checkout', {
-      body: { 
-        userId: session.user.id, 
+      body: {
+        userId: session.user.id,
         email: session.user.email,
-        amount: amount 
+        amount: amount
       }
     });
 
@@ -282,7 +283,7 @@ export default function Dashboard({ session, onSignOut }) {
             <span className="text-sm text-slate-500 font-medium tracking-wider uppercase block">Transaction Ledger</span>
             <button onClick={() => setActiveTab('ACCOUNTS')} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800">View All</button>
           </div>
-         
+
           <div className="space-y-4 overflow-y-auto no-scrollbar">
             {transactions.length > 0 ? transactions.slice(0, 3).map((tx) => (
               <div key={tx.id} className="flex justify-between items-center">
@@ -476,8 +477,8 @@ export default function Dashboard({ session, onSignOut }) {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200">
       {/* Background gradients */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h=[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h=[40%] bg-indigo-400/20 rounded-full blur-[120px]"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/20 rounded-full blur-[120px]"></div>
       </div>
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
         {/* Mobile Sidebar Overlay */}
@@ -679,36 +680,36 @@ export default function Dashboard({ session, onSignOut }) {
               e.preventDefault();
               setIsLoading(true);
               const amount = parseFloat(e.target.amount.value);
-              
+
               if (activeModal === 'REQUEST') {
                 // Generate the public Pay link with URL parameters
                 const link = `${window.location.origin}/pay?to=${session.user.id}&amount=${amount}&reason=${encodeURIComponent(requestReason)}`;
                 setRequestLink(link);
-                
+
                 if (requestEmail) {
                   // In a production app, you would trigger your Resend API here
                   setNotification({ type: 'success', text: `Encrypted request dispatched to ${requestEmail}` });
                   setTimeout(() => setNotification(null), 5000);
                 }
                 setIsLoading(false);
-                return; 
+                return;
               }
 
               // Standard internal transfer logic
               const finalAmount = activeModal === 'DEPOSIT' ? amount : -amount;
-              await supabase.from('transactions').insert([{ 
-                user_id: session.user.id, 
-                amount: finalAmount, 
-                type: activeModal.toLowerCase(), 
+              await supabase.from('transactions').insert([{
+                user_id: session.user.id,
+                amount: finalAmount,
+                type: activeModal.toLowerCase(),
                 description: `Internal ${activeModal}`,
-                status: 'completed' 
+                status: 'completed'
               }]);
-              
+
               await fetchAllData();
               setActiveModal(null);
               setIsLoading(false);
             }} className="p-8 space-y-6 relative z-10 text-center">
-              
+
               {!requestLink ? (
                 <>
                   {activeModal === 'REQUEST' && (
@@ -750,7 +751,7 @@ export default function Dashboard({ session, onSignOut }) {
                       autoFocus
                     />
                   </div>
-                  
+
                   <button
                     type="submit"
                     disabled={isLoading}
@@ -768,7 +769,7 @@ export default function Dashboard({ session, onSignOut }) {
                     <h4 className="font-black text-slate-800 text-xl">Payment Portal Ready</h4>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Ready for external routing via Card or ACH.</p>
                   </div>
-                  
+
                   {showQR ? (
                     <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-center inline-block mx-auto animate-in fade-in zoom-in">
                       <QRCode value={requestLink} size={180} fgColor="#0f172a" />
@@ -784,7 +785,7 @@ export default function Dashboard({ session, onSignOut }) {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex gap-3">
                     <button
                       type="button"
@@ -819,8 +820,8 @@ export default function Dashboard({ session, onSignOut }) {
       {notification && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
-            notification.type === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+            notification.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
               : 'bg-red-500/10 border-red-500/20 text-red-400'
           }`}>
             <div className={`w-2 h-2 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
@@ -829,9 +830,9 @@ export default function Dashboard({ session, onSignOut }) {
         </div>
       )}
       {showDepositUI && (
-        <DepositInterface 
-          session={session} 
-          onClose={() => setShowDepositUI(false)} 
+        <DepositInterface
+          session={session}
+          onClose={() => setShowDepositUI(false)}
         />
       )}
     </div>
