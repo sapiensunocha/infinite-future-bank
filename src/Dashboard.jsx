@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from './services/supabaseClient';
-import Chat from './chat';
+import Chat from './Chat';
 import AccountHub from './AccountHub';
 import OrganizationSuite from './OrganizationSuite';
 import WealthInvest from './WealthInvest';
