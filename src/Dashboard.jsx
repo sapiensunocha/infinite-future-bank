@@ -181,7 +181,7 @@ export default function Dashboard({ session, onSignOut }) {
         </div>
         <button
           onClick={() => insight.target === 'ADVISOR' ? setActiveModal('ADVISOR') : setActiveTab(insight.target)}
-          className="mx-auto md:mx-0 px-6 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:-translate-y-1 transition-all flex items-center gap-2"
+          className="mx-auto md:mx-0 px-6 py-4 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 hover:-translate-y-1 transition-all flex items-center gap-2"
         >
           {insight.action} <ArrowRight size={14} />
         </button>
@@ -189,13 +189,13 @@ export default function Dashboard({ session, onSignOut }) {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Balance Box with relocated Toggle Eye */}
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-300 font-medium tracking-wider uppercase">Total Safety Net</span>
+            <span className="text-sm text-blue-100 font-medium tracking-wider uppercase">Total Safety Net</span>
             <button
               onClick={() => setShowBalances(!showBalances)}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-blue-200 hover:text-white transition-colors"
               title="Toggle Balance Privacy"
             >
               {showBalances ? <Eye size={18} /> : <EyeOff size={18} />}
@@ -206,7 +206,7 @@ export default function Dashboard({ session, onSignOut }) {
           </h2>
           <button
             onClick={() => setActiveTab('ACCOUNTS')}
-            className="w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-slate-900 hover:-translate-y-1 transition-all"
+            className="w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-blue-900 hover:-translate-y-1 transition-all"
           >
             <ArrowRight size={20} />
           </button>
@@ -254,7 +254,7 @@ export default function Dashboard({ session, onSignOut }) {
         <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
           <ArrowRightLeft size={16} /> Transfer
         </button>
-        <button onClick={() => setActiveModal('DEPOSIT')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-900 text-white shadow-lg transition-all hover:bg-slate-800">
+        <button onClick={() => setActiveModal('DEPOSIT')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
           <Plus size={16} /> Deposit
         </button>
         <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
@@ -375,7 +375,7 @@ export default function Dashboard({ session, onSignOut }) {
               <button
                 onClick={handleNameUpdate}
                 disabled={isLoading}
-                className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-800 transition-all disabled:opacity-50"
+                className="px-6 py-3 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 transition-all disabled:opacity-50"
               >
                 {isLoading ? 'Saving...' : 'Save Changes'}
               </button>
@@ -602,7 +602,7 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
          
           {/* Floating AI Advisor Button */}
-          <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-slate-900 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20">
+          <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20">
             <MessageSquare size={24} className="group-hover:animate-pulse" />
             <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
           </button>
@@ -648,7 +648,7 @@ export default function Dashboard({ session, onSignOut }) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-slate-900 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-slate-800 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
               >
                 {isLoading ? 'TRANSMITTING...' : `CONFIRM ${activeModal}`}
               </button>
