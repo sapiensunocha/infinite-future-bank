@@ -720,7 +720,6 @@ export default function Dashboard({ session, onSignOut }) {
                 setIsLoading(false);
                 return;
               }
-
               // OVERDRAFT PROTECTION: Prevent withdrawing more than they have
               if (activeModal === 'WITHDRAW' && amount > balances.liquid_usd) {
                 setNotification({ type: 'error', text: 'INSUFFICIENT LIQUIDITY: Transaction Declined' });
@@ -728,34 +727,55 @@ export default function Dashboard({ session, onSignOut }) {
                 setIsLoading(false);
                 return;
               }
+              // ------------------------------------------------------------
+              // EXTERNAL ROUTING (WITHDRAWALS TO BANK)
+              // ------------------------------------------------------------
+              if (activeModal === 'WITHDRAW') {
+                const routingNum = e.target.routingNumber.value;
+                const accountNum = e.target.accountNumber.value;
 
-              // STANDARD ROUTING (Deposit, Send, Transfer, Withdraw)
-              const finalAmount = activeModal === 'DEPOSIT' ? amount : -amount;
+                try {
+                  const { data, error } = await supabase.functions.invoke('process-withdrawal', {
+                    body: { 
+                      userId: session.user.id, 
+                      amount: amount,
+                      routingNumber: routingNum,
+                      accountNumber: accountNum
+                    }
+                  });
+
+                  if (error || data?.error) {
+                    throw new Error(data?.error || "Routing failed.");
+                  }
+
+                  setNotification({ type: 'success', text: `Capital Extraction Initiated: $${amount.toFixed(2)}` });
+                  setTimeout(() => setNotification(null), 5000);
+                  
+                  await fetchAllData();
+                  setActiveModal(null);
+                } catch (err) {
+                  setNotification({ type: 'error', text: err.message });
+                  setTimeout(() => setNotification(null), 5000);
+                } finally {
+                  setIsLoading(false);
+                }
+                return;
+              }
+              // STANDARD ROUTING (Send, Transfer)
+              const finalAmount = -amount;
               
               // 1. Log to Master Ledger
               await supabase.from('transactions').insert([{ 
                 user_id: session.user.id, 
                 amount: finalAmount, 
                 type: activeModal.toLowerCase(), 
-                description: activeModal === 'WITHDRAW' ? 'External Bank Withdrawal' : `Internal ${activeModal}`,
+                description: `Internal ${activeModal}`,
                 status: 'completed' 
               }]);
 
-              // 2. Instantly update their liquid balance
-              if (activeModal === 'WITHDRAW') {
-                await supabase.from('balances')
-                  .update({ liquid_usd: balances.liquid_usd - amount })
-                  .eq('user_id', session.user.id);
-              }
-              
               await fetchAllData();
               setActiveModal(null);
               setIsLoading(false);
-              
-              if (activeModal === 'WITHDRAW') {
-                 setNotification({ type: 'success', text: `Capital Extraction Initiated: $${amount.toFixed(2)}` });
-                 setTimeout(() => setNotification(null), 5000);
-              }
             }} className="p-8 space-y-6 relative z-10 text-center">
               {!requestLink ? (
                 <>
@@ -791,12 +811,13 @@ export default function Dashboard({ session, onSignOut }) {
                         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1 flex items-center gap-1"><ShieldCheck size={12}/> 256-Bit Encrypted</p>
                         <p className="text-xs font-bold text-slate-300">Enter your external routing details. Funds will settle in 1-2 business days.</p>
                       </div>
-                      
+                     
                       <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
                           <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Routing Number (9 Digits)</label>
                           <input
                             type="text"
+                            name="routingNumber"
                             maxLength="9"
                             required
                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-slate-800 transition-all placeholder:text-slate-300 tracking-widest"
@@ -807,6 +828,7 @@ export default function Dashboard({ session, onSignOut }) {
                           <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Account Number</label>
                           <input
                             type="password"
+                            name="accountNumber"
                             required
                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-slate-800 transition-all placeholder:text-slate-300 tracking-widest"
                             placeholder="••••••••••••"
