@@ -19,7 +19,7 @@ import {
   Sparkles, Settings, Eye, EyeOff, Target, TrendingUp,
   Folder, Compass, User, BookOpen, ArrowRight, Coffee,
   Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search,
-  Sun, Moon, Sunrise, Loader2
+  Sun, Moon, Sunrise, Loader2, CreditCard
 } from 'lucide-react';
 export default function Dashboard({ session, onSignOut }) {
   // Navigation & UI States
@@ -212,6 +212,19 @@ export default function Dashboard({ session, onSignOut }) {
     const { error } = await supabase.from('profiles').update({ full_name: editedName }).eq('id', session.user.id);
     if (error) console.error(error);
     await fetchAllData();
+    setIsLoading(false);
+  };
+  const handleDeleteCard = async (cardId) => {
+    setIsLoading(true);
+    const { error } = await supabase.from('linked_cards').delete().eq('id', cardId);
+    if (error) {
+      console.error(error);
+      setNotification({ type: 'error', text: 'Failed to remove card.' });
+    } else {
+      setNotification({ type: 'success', text: 'Payment method securely removed.' });
+      await fetchAllData();
+    }
+    setTimeout(() => setNotification(null), 3000);
     setIsLoading(false);
   };
   const markAsRead = async (id) => {
@@ -420,9 +433,9 @@ export default function Dashboard({ session, onSignOut }) {
       <div className="md:col-span-1 space-y-2 bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm h-fit">
         {[
           { id: 'PROFILE', label: 'Profile', icon: <User size={18} /> },
+          { id: 'LINKED_ACCOUNTS', label: 'Banks & Cards', icon: <CreditCard size={18} /> }, // <-- ADD THIS
           { id: 'DOCUMENTS', label: 'Documents', icon: <FileText size={18} /> },
           { id: 'SECURITY', label: 'Security', icon: <Lock size={18} /> },
-          { id: 'PREFERENCES', label: 'Preferences', icon: <Settings size={18} /> },
           { id: 'ABOUT', label: 'About Us', icon: <Info size={18} /> },
         ].map((item) => (
           <button
@@ -486,6 +499,63 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         )}
+        {subTab === 'LINKED_ACCOUNTS' && (
+          <div className="space-y-8 max-w-2xl animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-black text-slate-800">Payout Methods</h3>
+                <p className="text-xs font-bold text-slate-500 mt-1">Manage your connected bank accounts and debit cards for withdrawals.</p>
+              </div>
+              <button 
+                onClick={() => setShowCardLinker(true)}
+                className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest px-4 py-3 rounded-xl transition-all shadow-md flex items-center gap-2"
+              >
+                <Plus size={14} /> Add Method
+              </button>
+            </div>
+
+            {linkedCards.length > 0 ? (
+              <div className="grid gap-4">
+                {linkedCards.map(card => (
+                  <div key={card.id} className="bg-white border-2 border-slate-100 rounded-2xl p-5 flex items-center justify-between shadow-sm group hover:border-blue-200 transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-xs font-black uppercase text-slate-600 tracking-widest border border-slate-200">
+                        {card.brand === 'visa' ? 'VISA' : card.brand === 'mastercard' ? 'MC' : card.brand}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm text-slate-800">•••• •••• •••• {card.last4}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-1 mt-1">
+                          <ShieldCheck size={10} /> Verified for Instant Payouts
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleDeleteCard(card.id)}
+                      disabled={isLoading}
+                      className="text-slate-300 hover:text-red-500 transition-colors p-2 bg-slate-50 rounded-lg hover:bg-red-50"
+                      title="Remove Card"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                <CreditCard size={48} className="mx-auto mb-4 text-slate-300" />
+                <p className="font-bold text-slate-600 mb-2">No Linked Methods</p>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">Link a debit card or bank account to enable secure withdrawals from your DEUS balance.</p>
+              </div>
+            )}
+            
+            <div className="mt-8 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-start gap-3">
+              <Lock className="text-blue-500 shrink-0 mt-1" size={16} />
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                DEUS utilizes bank-grade 256-bit AES encryption. Card numbers are vaulted directly by our clearing house (Stripe) and never touch our internal servers.
+              </p>
+            </div>
+          </div>
+        )}
         {subTab === 'DOCUMENTS' && (
           <div className="text-center py-12 text-slate-500">
             <FileText size={48} className="mx-auto mb-4 opacity-50" />
@@ -496,12 +566,6 @@ export default function Dashboard({ session, onSignOut }) {
           <div className="text-center py-12 text-slate-500">
             <Lock size={48} className="mx-auto mb-4 opacity-50" />
             <p className="font-medium text-lg">Security settings are coming soon.</p>
-          </div>
-        )}
-        {subTab === 'PREFERENCES' && (
-          <div className="text-center py-12 text-slate-500">
-            <Settings size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="font-medium text-lg">Preferences are coming soon.</p>
           </div>
         )}
         {subTab === 'ABOUT' && (

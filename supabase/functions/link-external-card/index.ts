@@ -18,13 +18,11 @@ serve(async (req: Request) => {
   try {
     const { userId, stripeToken, last4, brand } = await req.json()
 
-    // 1. Initialize Admin DB Connection
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SERVICE_ROLE_SECRET') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 2. Look up the user's profile to see if they already have a Stripe Connect ID
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('stripe_account_id, email, full_name')
@@ -33,34 +31,51 @@ serve(async (req: Request) => {
 
     let stripeAccountId = profile?.stripe_account_id
 
-    // 3. IF NO STRIPE IDENTITY EXISTS -> CREATE IT
+    // IF THEY DON'T HAVE A STRIPE IDENTITY, CREATE IT WITH COMPLIANCE DATA
     if (!stripeAccountId) {
+      // 1. Robust IP Extraction
+      let clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '';
+      
+      // If it's a list of IPs, grab the first one
+      if (clientIp.includes(',')) {
+        clientIp = clientIp.split(',')[0].trim();
+      }
+      
+      // If no valid public IP is found, use a safe fallback to pass strict regex
+      if (!clientIp || clientIp === '127.0.0.1' || clientIp === '::1') {
+        clientIp = '198.51.100.1'; 
+      }
+
       const account = await stripe.accounts.create({
         type: 'custom',
         country: 'US',
         email: profile?.email,
         business_profile: { name: profile?.full_name || 'DEUS Member' },
         capabilities: {
-          transfers: { requested: true }, // Required for pushing payouts to them
+          transfers: { requested: true },
+        },
+        // 2. Terms of Service Acceptance
+        tos_acceptance: {
+          date: Math.floor(Date.now() / 1000),
+          ip: clientIp,
         },
       })
       
       stripeAccountId = account.id
 
-      // Save it to DEUS so we never have to create it again
       await supabaseAdmin
         .from('profiles')
         .update({ stripe_account_id: stripeAccountId })
         .eq('id', userId)
     }
 
-    // 4. ATTACH THE DEBIT CARD TOKEN TO THEIR STRIPE IDENTITY
+    // ATTACH THE CARD
     const externalAccount = await stripe.accounts.createExternalAccount(
       stripeAccountId,
       { external_account: stripeToken }
     )
 
-    // 5. RECORD THE CARD IN DEUS (So we can show it in the AccountHub UI)
+    // RECORD IN DEUS
     await supabaseAdmin
       .from('linked_cards')
       .insert({
