@@ -344,6 +344,9 @@ export default function Dashboard({ session, onSignOut }) {
         <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
           <Plus size={16} /> Deposit
         </button>
+        <button onClick={() => setActiveModal('WITHDRAW')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
+          <Landmark size={16} /> Withdraw
+        </button>
         <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
         <button
           onClick={() => setShowAnalytics(!showAnalytics)}
@@ -717,18 +720,42 @@ export default function Dashboard({ session, onSignOut }) {
                 setIsLoading(false);
                 return;
               }
-              // Standard internal transfer logic
+
+              // OVERDRAFT PROTECTION: Prevent withdrawing more than they have
+              if (activeModal === 'WITHDRAW' && amount > balances.liquid_usd) {
+                setNotification({ type: 'error', text: 'INSUFFICIENT LIQUIDITY: Transaction Declined' });
+                setTimeout(() => setNotification(null), 5000);
+                setIsLoading(false);
+                return;
+              }
+
+              // STANDARD ROUTING (Deposit, Send, Transfer, Withdraw)
               const finalAmount = activeModal === 'DEPOSIT' ? amount : -amount;
-              await supabase.from('transactions').insert([{
-                user_id: session.user.id,
-                amount: finalAmount,
-                type: activeModal.toLowerCase(),
-                description: `Internal ${activeModal}`,
-                status: 'completed'
+              
+              // 1. Log to Master Ledger
+              await supabase.from('transactions').insert([{ 
+                user_id: session.user.id, 
+                amount: finalAmount, 
+                type: activeModal.toLowerCase(), 
+                description: activeModal === 'WITHDRAW' ? 'External Bank Withdrawal' : `Internal ${activeModal}`,
+                status: 'completed' 
               }]);
+
+              // 2. Instantly update their liquid balance
+              if (activeModal === 'WITHDRAW') {
+                await supabase.from('balances')
+                  .update({ liquid_usd: balances.liquid_usd - amount })
+                  .eq('user_id', session.user.id);
+              }
+              
               await fetchAllData();
               setActiveModal(null);
               setIsLoading(false);
+              
+              if (activeModal === 'WITHDRAW') {
+                 setNotification({ type: 'success', text: `Capital Extraction Initiated: $${amount.toFixed(2)}` });
+                 setTimeout(() => setNotification(null), 5000);
+              }
             }} className="p-8 space-y-6 relative z-10 text-center">
               {!requestLink ? (
                 <>
@@ -753,6 +780,36 @@ export default function Dashboard({ session, onSignOut }) {
                             onChange={(e) => setRequestEmail(e.target.value)}
                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300"
                             placeholder="client@example.com"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {activeModal === 'WITHDRAW' && (
+                    <div className="space-y-4 mb-6">
+                      <div className="bg-slate-800 p-4 rounded-2xl text-left">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1 flex items-center gap-1"><ShieldCheck size={12}/> 256-Bit Encrypted</p>
+                        <p className="text-xs font-bold text-slate-300">Enter your external routing details. Funds will settle in 1-2 business days.</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Routing Number (9 Digits)</label>
+                          <input
+                            type="text"
+                            maxLength="9"
+                            required
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-slate-800 transition-all placeholder:text-slate-300 tracking-widest"
+                            placeholder="000000000"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Account Number</label>
+                          <input
+                            type="password"
+                            required
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-slate-800 transition-all placeholder:text-slate-300 tracking-widest"
+                            placeholder="••••••••••••"
                           />
                         </div>
                       </div>
