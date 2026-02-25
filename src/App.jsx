@@ -10,7 +10,7 @@ import AuthCallback from './features/onboarding/AuthCallback';
 // ==========================================
 function MainApp() {
   const [session, setSession] = useState(null);
-  const [currentView, setCurrentView] = useState('enter_email'); // Only 2 views now: 'enter_email' or 'check_email'
+  const [currentView, setCurrentView] = useState('enter_email');
   const [contactValue, setContactValue] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
@@ -18,18 +18,23 @@ function MainApp() {
   useEffect(() => {
     const initializeUser = async (currentSession) => {
       setSession(currentSession);
-      if (currentSession) {
+      if (currentSession?.user) {
+        // FIXED: Now we select the full_name so the dashboard can actually use it
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, full_name')
           .eq('id', currentSession.user.id)
           .maybeSingle(); 
           
         if (!profile) {
+          // FIXED: We grab the text before the '@' in the email to use as their name
+          const generatedName = currentSession.user.email?.split('@')[0] || 'Client';
+
           await supabase.from('profiles').insert([{
             id: currentSession.user.id,
-            full_name: currentSession.user.email || 'DEUS User'
+            full_name: generatedName
           }]);
+
           await supabase.from('balances').insert([{
             user_id: currentSession.user.id,
             liquid_usd: 0,
@@ -75,7 +80,6 @@ function MainApp() {
 
       if (error) throw error;
 
-      // Instantly switch to the Check Email screen
       setCurrentView('check_email');
       showMessage('Clearance link dispatched.', 'success');
     } catch (error) {
