@@ -15,7 +15,8 @@ import {
   Send, Download, Plus, MessageSquare,
   Sparkles, Settings, Eye, EyeOff, Target, TrendingUp,
   Folder, Compass, User, BookOpen, ArrowRight, Coffee,
-  Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search
+  Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search,
+  Sun, Moon, Sunrise
 } from 'lucide-react';
 export default function Dashboard({ session, onSignOut }) {
   // Navigation & UI States
@@ -168,7 +169,7 @@ export default function Dashboard({ session, onSignOut }) {
       {/* Greeting Card */}
       <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
         <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-          {hour < 12 ? <Coffee size={32} /> : <Sparkles size={32} />}
+          {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
         </div>
         <div className="flex-1 text-center md:text-left space-y-2">
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">
