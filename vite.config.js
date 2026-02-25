@@ -24,7 +24,8 @@ export default defineConfig({
 
   // 4. Build optimization for when you deploy IFB to production
   build: {
-    target: 'esnext', // Compiles to the fastest modern JavaScript
+    // FIXED: Compiles to a universally supported version so Safari doesn't choke
+    target: ['es2020', 'safari13', 'edge88', 'firefox78', 'chrome87'], 
     outDir: 'dist',
     sourcemap: false, // Hides your source code from the public build
   }
