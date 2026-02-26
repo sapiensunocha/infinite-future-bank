@@ -19,7 +19,7 @@ import {
   Sparkles, Settings, Eye, EyeOff, Target, TrendingUp,
   Folder, Compass, User, BookOpen, ArrowRight, Coffee,
   Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search,
-  Sun, Moon, Sunrise, Loader2, CreditCard
+  Sun, Moon, Sunrise, Loader2, CreditCard, Scale
 } from 'lucide-react';
 
 export default function Dashboard({ session, onSignOut }) {
@@ -52,6 +52,10 @@ export default function Dashboard({ session, onSignOut }) {
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState('');
   
+  // KYC States
+  const [kycForm, setKycForm] = useState({ legalName: '', dob: '', phone: '', address: '' });
+  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
+
   // Transaction & Payment States
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
@@ -77,7 +81,17 @@ export default function Dashboard({ session, onSignOut }) {
     if (!session?.user?.id) return;
     const { data: pData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
     const { data: bData } = await supabase.from('balances').select('*').eq('user_id', session.user.id).maybeSingle();
-    if (pData) { setProfile(pData); setEditedName(pData.full_name || ''); }
+    
+    if (pData) { 
+      setProfile(pData); 
+      setEditedName(pData.full_name || ''); 
+      setKycForm({
+        legalName: pData.full_legal_name || '',
+        dob: pData.dob || '',
+        phone: pData.phone || '',
+        address: pData.residential_address || ''
+      });
+    }
     if (bData) setBalances(bData);
     
     const { data: tData } = await supabase.from('transactions').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
@@ -112,7 +126,11 @@ export default function Dashboard({ session, onSignOut }) {
         setNotification({ type: 'success', text: `Inbound Transfer Detected: $${Math.abs(payload.new.amount).toFixed(2)}` });
         setTimeout(() => setNotification(null), 5000);
         fetchAllData();
-      }).subscribe();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${session.user.id}` }, () => {
+        fetchAllData();
+      })
+      .subscribe();
     return () => supabase.removeChannel(channel);
   }, [session?.user?.id]);
 
@@ -166,7 +184,9 @@ export default function Dashboard({ session, onSignOut }) {
   };
   const insight = getHomeInsight();
 
+  // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
+  
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -179,29 +199,70 @@ export default function Dashboard({ session, onSignOut }) {
     await fetchAllData();
     setIsLoading(false);
   };
+  
   const handleNameUpdate = async () => {
     setIsLoading(true);
     await supabase.from('profiles').update({ full_name: editedName }).eq('id', session.user.id);
     await fetchAllData();
     setIsLoading(false);
   };
+
+  const handleSubmitKYC = async (e) => {
+    e.preventDefault();
+    setIsSubmittingKyc(true);
+    try {
+      const { error } = await supabase.from('profiles').update({
+        full_legal_name: kycForm.legalName,
+        dob: kycForm.dob,
+        phone: kycForm.phone,
+        residential_address: kycForm.address,
+        kyc_status: 'verified' // Marks them as verified internally
+      }).eq('id', session.user.id);
+      
+      if (error) throw error;
+      setNotification({ type: 'success', text: 'Identity verified to Tier-1 Standards.' });
+      await fetchAllData();
+    } catch (err) {
+      setNotification({ type: 'error', text: 'KYC Submission Failed.' });
+    } finally {
+      setIsSubmittingKyc(false);
+    }
+  };
+
+  const handleSignAgreements = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.from('profiles').update({ docs_signed: true }).eq('id', session.user.id);
+      if (error) throw error;
+      setNotification({ type: 'success', text: 'Master Agreement Cryptographically Signed.' });
+      await fetchAllData();
+    } catch (err) {
+      setNotification({ type: 'error', text: 'Failed to sign agreements.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDeleteCard = async (cardId) => {
     setIsLoading(true);
     const { error } = await supabase.from('linked_cards').delete().eq('id', cardId);
-    if (error) { setNotification({ type: 'error', text: 'Failed to remove card.' }); } 
+    if (error) { setNotification({ type: 'error', text: 'Failed to remove card.' }); }
     else { setNotification({ type: 'success', text: 'Payment method securely removed.' }); await fetchAllData(); }
     setTimeout(() => setNotification(null), 3000);
     setIsLoading(false);
   };
+  
   const markAsRead = async (id) => {
     await supabase.from('notifications').update({ read: true }).eq('id', id);
     await fetchAllData();
   };
+  
   const handleDeposit = async (amount) => {
     const { data, error } = await supabase.functions.invoke('create-checkout', { body: { userId: session.user.id, email: session.user.email, amount: amount } });
-    if (data?.url) window.location.href = data.url; 
+    if (data?.url) window.location.href = data.url;
     else console.error("Stripe routing failed", error);
   };
+  
   const handleSendEmailInvoice = async () => {
     if (!requestEmail) { setNotification({ type: 'error', text: 'Please enter a target email first.' }); setTimeout(() => setNotification(null), 3000); return; }
     setIsSendingEmail(true);
@@ -350,11 +411,12 @@ export default function Dashboard({ session, onSignOut }) {
 
   const SettingsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
+      
+      {/* Settings Navigation */}
       <div className="md:col-span-1 space-y-2 bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-3xl shadow-glass h-fit">
         {[
-          { id: 'PROFILE', label: 'Profile', icon: <User size={18} /> },
+          { id: 'PROFILE', label: 'Identity & Legal', icon: <User size={18} /> },
           { id: 'LINKED_ACCOUNTS', label: 'Banks & Cards', icon: <CreditCard size={18} /> },
-          { id: 'DOCUMENTS', label: 'Documents', icon: <FileText size={18} /> },
           { id: 'SECURITY', label: 'Security', icon: <Lock size={18} /> },
           { id: 'ABOUT', label: 'About Us', icon: <Info size={18} /> },
         ].map((item) => (
@@ -368,44 +430,119 @@ export default function Dashboard({ session, onSignOut }) {
         </button>
       </div>
 
+      {/* Settings Content Area */}
       <div className="md:col-span-3 bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-glass">
-        <h2 className="text-2xl font-black text-white mb-8">{subTab}</h2>
+        
+        {/* --- IDENTITY & COMPLIANCE --- */}
         {subTab === 'PROFILE' && (
-          <div className="space-y-8 max-w-xl">
-            <div className="flex items-center gap-6">
+          <div className="space-y-8 max-w-2xl">
+            <h2 className="text-2xl font-black text-white mb-2">Institutional Identity</h2>
+            <p className="text-xs text-slate-400 mb-8">Manage your DEUS profile, KYC compliance, and legal agreements.</p>
+            
+            {/* 1. Basic Profile Info */}
+            <div className="flex items-center gap-6 bg-black/30 p-6 rounded-3xl border border-white/5">
               <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-                <div className="w-24 h-24 rounded-3xl bg-black/40 border-4 border-white/10 shadow-glass flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-20 rounded-2xl bg-black/40 border border-white/10 shadow-glass flex items-center justify-center overflow-hidden">
                   {profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <span className="text-3xl font-black text-slate-500">{profile?.full_name?.charAt(0).toUpperCase() || <User size={40} />}</span>}
                 </div>
-                <div className="absolute inset-0 bg-black/60 rounded-3xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera className="text-white" size={24} />
                 </div>
                 <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
               </div>
-              <div>
-                <p className="text-sm font-black uppercase tracking-widest text-slate-400 mb-1">Profile Photo</p>
-                <p className="text-xs text-slate-500">Click to upload a new avatar. JPG or PNG.</p>
+              <div className="flex-1 space-y-3">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400">Display Name</label>
+                <div className="flex gap-3">
+                  <input type="text" value={editedName} onChange={(e) => setEditedName(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-xl p-3 font-bold text-sm text-white outline-none focus:border-ifb-primary transition-all" />
+                  <button onClick={handleNameUpdate} disabled={isLoading} className="px-6 bg-ifb-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-glow-blue hover:bg-blue-600 transition-all disabled:opacity-50">
+                    Save
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Display Name</label>
-                <input type="text" value={editedName} onChange={(e) => setEditedName(e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-2xl p-4 font-black text-sm text-white outline-none focus:border-ifb-primary transition-all" />
+
+            {/* 2. KYC Form */}
+            <div className="bg-black/30 border border-white/5 p-8 rounded-3xl mt-8 shadow-inner">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black text-white flex items-center gap-2"><ShieldCheck className="text-ifb-success" size={20}/> Identity Verification (KYC)</h3>
+                {profile?.kyc_status === 'verified' && <span className="text-[10px] font-black uppercase tracking-widest text-ifb-success bg-ifb-success/10 px-3 py-1.5 rounded-lg border border-ifb-success/20">Verified</span>}
               </div>
-              <button onClick={handleNameUpdate} disabled={isLoading} className="px-6 py-3 bg-ifb-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-glow-blue hover:bg-blue-600 transition-all disabled:opacity-50">
-                {isLoading ? 'Saving...' : 'Save Changes'}
-              </button>
+              <p className="text-xs text-slate-400 mb-8 leading-relaxed">Federal regulations require identity verification for Tier-1 liquidity access, Alpha Marketplace investments, and external Stripe payouts.</p>
+              
+              <form onSubmit={handleSubmitKYC} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Full Legal Name</label>
+                    <input type="text" value={kycForm.legalName} onChange={(e) => setKycForm({...kycForm, legalName: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-black/50 border border-white/10 rounded-xl p-4 font-bold text-sm text-white outline-none focus:border-ifb-primary disabled:opacity-50" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Date of Birth</label>
+                    <input type="date" value={kycForm.dob} onChange={(e) => setKycForm({...kycForm, dob: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-black/50 border border-white/10 rounded-xl p-4 font-bold text-sm text-white outline-none focus:border-ifb-primary disabled:opacity-50" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Phone Number</label>
+                    <input type="tel" value={kycForm.phone} onChange={(e) => setKycForm({...kycForm, phone: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-black/50 border border-white/10 rounded-xl p-4 font-bold text-sm text-white outline-none focus:border-ifb-primary disabled:opacity-50" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Residential Address</label>
+                    <input type="text" value={kycForm.address} onChange={(e) => setKycForm({...kycForm, address: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-black/50 border border-white/10 rounded-xl p-4 font-bold text-sm text-white outline-none focus:border-ifb-primary disabled:opacity-50" />
+                  </div>
+                </div>
+                
+                {profile?.kyc_status !== 'verified' && (
+                  <button type="submit" disabled={isSubmittingKyc} className="w-full mt-4 bg-white/10 hover:bg-white/20 text-white font-black text-[10px] uppercase tracking-widest py-4 rounded-xl transition-all flex items-center justify-center gap-2 border border-white/10 shadow-glass">
+                    {isSubmittingKyc ? <Loader2 className="animate-spin" size={16}/> : 'Transmit Identity for Verification'}
+                  </button>
+                )}
+              </form>
             </div>
+
+            {/* 3. IFB Regulatory Agreements */}
+            <div className="bg-black/30 border border-white/5 p-8 rounded-3xl mt-8 shadow-inner">
+              <div className="flex items-center gap-3 mb-4">
+                <Scale className="text-slate-400" size={24} />
+                <h3 className="text-lg font-black text-white">Master Service Agreement & Licensing</h3>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed mb-8">
+                Infinite Future Bank (DEUS) operates under stringent global financial regulations. To utilize our liquidity engines and Stripe clearing houses, you must agree to our regulatory oversight.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-white/5 border border-white/10 p-5 rounded-2xl text-center">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">United States</p>
+                  <p className="text-xs font-black text-white">EIN: 33-1869013</p>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-5 rounded-2xl text-center">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Austria</p>
+                  <p className="text-xs font-black text-white">Steuernummer: 91 323/2005</p>
+                </div>
+                <div className="bg-white/5 border border-white/10 p-5 rounded-2xl text-center">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Canada</p>
+                  <p className="text-xs font-black text-white">CRA: 721487825 RC 0001</p>
+                </div>
+              </div>
+
+              {!profile?.docs_signed ? (
+                <button onClick={handleSignAgreements} disabled={isLoading} className="w-full py-4 bg-ifb-primary text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-glow-blue hover:bg-blue-600 transition-all flex items-center justify-center gap-2 border border-blue-400/30">
+                  {isLoading ? <Loader2 className="animate-spin" size={16}/> : 'Cryptographically Sign & Accept Terms'}
+                </button>
+              ) : (
+                <div className="w-full py-4 bg-ifb-success/10 border border-ifb-success/30 text-ifb-success font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 shadow-glow">
+                  <ShieldCheck size={16} /> Agreement Cryptographically Verified
+                </div>
+              )}
+            </div>
+            
           </div>
         )}
 
+        {/* --- LINKED ACCOUNTS --- */}
         {subTab === 'LINKED_ACCOUNTS' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-lg font-black text-white">Payout Methods</h3>
-                <p className="text-xs font-bold text-slate-400 mt-1">Manage your connected bank accounts and debit cards for withdrawals.</p>
-              </div>
+            <h2 className="text-2xl font-black text-white mb-2">Payout Methods</h2>
+            <p className="text-xs text-slate-400 mb-8">Manage your connected bank accounts and debit cards for withdrawals.</p>
+            
+            <div className="flex justify-end mb-6">
               <button onClick={() => setShowCardLinker(true)} className="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-3 rounded-xl transition-all shadow-glass flex items-center gap-2">
                 <Plus size={14} /> Add Method
               </button>
@@ -447,18 +584,15 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         )}
 
-        {subTab === 'DOCUMENTS' && (
-          <div className="text-center py-12 text-slate-500">
-            <FileText size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="font-medium text-lg text-slate-400">Your documents section is coming soon.</p>
-          </div>
-        )}
+        {/* --- SECURITY --- */}
         {subTab === 'SECURITY' && (
           <div className="text-center py-12 text-slate-500">
             <Lock size={48} className="mx-auto mb-4 opacity-30" />
-            <p className="font-medium text-lg text-slate-400">Security settings are coming soon.</p>
+            <p className="font-medium text-lg text-slate-400">Advanced Security configuration coming soon.</p>
           </div>
         )}
+        
+        {/* --- ABOUT --- */}
         {subTab === 'ABOUT' && (
           <div className="text-center py-12 text-slate-400 space-y-4">
             <Info size={48} className="mx-auto mb-4 opacity-50 text-ifb-primary" />
@@ -474,7 +608,7 @@ export default function Dashboard({ session, onSignOut }) {
     <div className="min-h-screen bg-transparent font-sans text-white">
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
         {isSidebarOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
-        
+       
         <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#0B0F19]/80 backdrop-blur-2xl border-r border-white/10 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col`}>
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -514,7 +648,7 @@ export default function Dashboard({ session, onSignOut }) {
             </button>
           </div>
         </aside>
-
+        
         <main className="flex-1 flex flex-col relative overflow-hidden">
           <header className="h-20 border-b border-white/10 bg-[#0B0F19]/40 backdrop-blur-2xl flex items-center justify-between px-6 z-30 sticky top-0">
             <div className="flex items-center gap-4">
@@ -523,6 +657,7 @@ export default function Dashboard({ session, onSignOut }) {
               </button>
               <h2 className="hidden md:block font-black text-lg text-white tracking-tight">{tabTitles[activeTab]}</h2>
             </div>
+            
             <div className="flex items-center gap-4 md:gap-6 relative">
               <div className={`relative transition-all duration-300 ease-in-out hidden sm:block ${isSearchExpanded ? 'w-80' : 'w-40'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -539,10 +674,12 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 )}
               </div>
+              
               <button onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)} className="text-slate-400 hover:text-white transition-colors relative" title="Notifications">
                 <Bell size={22} />
                 {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#0B0F19]"></span>}
               </button>
+              
               {isNotificationMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsNotificationMenuOpen(false)}></div>
@@ -562,6 +699,7 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </>
               )}
+              
               <div className="relative group">
                 <div onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex items-center gap-3 cursor-pointer group px-3 py-2 rounded-2xl hover:bg-white/10 transition-colors border border-transparent hover:border-white/10 relative z-50">
                   <div className="text-right hidden sm:block">
@@ -572,6 +710,7 @@ export default function Dashboard({ session, onSignOut }) {
                     {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : <span className="font-black text-slate-400 text-lg">{profile?.full_name?.charAt(0).toUpperCase() || <User size={20} />}</span>}
                   </div>
                 </div>
+                
                 {isProfileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)}></div>
@@ -587,7 +726,7 @@ export default function Dashboard({ session, onSignOut }) {
                       </div>
                       <div className="space-y-1">
                         <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-300 hover:bg-white/10 hover:text-white transition-all">
-                          <Settings size={16} /> Full Settings
+                          <Settings size={16} /> Identity & Legal
                         </button>
                         <button onClick={() => { setActiveTab('SOS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all">
                           <ShieldCheck size={16} /> Emergency SOS
@@ -602,20 +741,20 @@ export default function Dashboard({ session, onSignOut }) {
               </div>
             </div>
           </header>
-
+          
           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 custom-scrollbar pr-2">
             {activeTab === 'NET_POSITION' && <NetPositionView />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
-            {activeTab === 'PLANNER' && <FinancialPlanner session={session} balances={balances} showBalances={showBalances} />}
-            {activeTab === 'LIFESTYLE' && <GlobalLifestyle session={session} profile={profile} />}
-            {activeTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} sosData={sosData} showBalances={showBalances} />}
+            {activeTab === 'PLANNER' && <FinancialPlanner balances={balances} />}
+            {activeTab === 'LIFESTYLE' && <GlobalLifestyle />}
+            {activeTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} />}
             {activeTab === 'TRAINING' && <Training session={session} />}
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'SETTINGS' && <SettingsView />}
           </div>
-
+          
           <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-ifb-primary text-white shadow-glow-blue rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border border-blue-400/30">
             <MessageSquare size={24} className="group-hover:animate-pulse" />
             <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
@@ -635,6 +774,7 @@ export default function Dashboard({ session, onSignOut }) {
                 <X size={20} />
               </button>
             </div>
+            
             <form onSubmit={async (e) => {
               e.preventDefault();
               setIsLoading(true);
@@ -663,7 +803,6 @@ export default function Dashboard({ session, onSignOut }) {
                 const routingNum = e.target.routingNumber?.value;
                 const accountNum = e.target.accountNumber?.value;
                 const selectedCard = e.target.selectedCard?.value;
-
                 try {
                   const { data, error } = await supabase.functions.invoke('process-withdrawal', {
                     body: { userId: session.user.id, amount: amount, routingNumber: routingNum, accountNumber: accountNum, cardId: selectedCard }
@@ -682,11 +821,12 @@ export default function Dashboard({ session, onSignOut }) {
               }
               
               const finalAmount = -amount;
-              await supabase.from('transactions').insert([{ user_id: session.user.id, amount: finalAmount, type: activeModal.toLowerCase(), description: `Internal ${activeModal}`, status: 'completed' }]);
+              await supabase.from('transactions').insert([{ user_id: session.user.id, amount: finalAmount, transaction_type: activeModal.toLowerCase(), description: `Internal ${activeModal}`, status: 'completed' }]);
               await fetchAllData();
               setActiveModal(null);
               setIsLoading(false);
             }} className="p-8 space-y-6 relative z-10 text-center">
+              
               {!requestLink ? (
                 <>
                   {activeModal === 'REQUEST' && (
@@ -809,9 +949,9 @@ export default function Dashboard({ session, onSignOut }) {
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
       
       {showCardLinker && (
-        <CardLinker 
-          session={session} 
-          onClose={() => setShowCardLinker(false)} 
+        <CardLinker
+          session={session}
+          onClose={() => setShowCardLinker(false)}
           onSuccess={(card) => {
             setShowCardLinker(false);
             setNotification({ type: 'success', text: `${card.brand.toUpperCase()} ending in ${card.last4} successfully vaulted.` });

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from './services/supabaseClient';
-import { ShieldCheck, Loader2 } from 'lucide-react';
+import { ShieldCheck, Loader2, X } from 'lucide-react';
 
 // Initialize Stripe outside of component renders to avoid recreating the object
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -38,20 +38,20 @@ const CheckoutForm = ({ amount }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="p-4 bg-white/50 border border-slate-200 rounded-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in duration-300">
+      <div className="p-5 bg-black/40 border border-white/10 rounded-2xl shadow-inner">
         <PaymentElement />
       </div>
       
       {errorMessage && (
-        <div className="p-3 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl text-center">
+        <div className="p-4 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl text-center shadow-inner">
           {errorMessage}
         </div>
       )}
 
       <button 
         disabled={isProcessing || !stripe || !elements}
-        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm uppercase tracking-widest p-4 rounded-2xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full bg-ifb-primary hover:bg-blue-600 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-glow-blue transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-blue-400/30"
       >
         {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `AUTHORIZE $${amount} DEPOSIT`}
       </button>
@@ -87,44 +87,67 @@ export default function DepositInterface({ session, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white rounded-[2rem] shadow-2xl overflow-hidden relative border border-slate-100 p-8">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="w-full max-w-md bg-[#0B0F19] rounded-[2.5rem] shadow-glass overflow-hidden relative border border-white/10 p-8">
         
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-800 font-bold text-xs uppercase tracking-widest">
-          Close
+        {/* Subtle Ambient Glow */}
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-ifb-primary/10 blur-[60px] pointer-events-none"></div>
+
+        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors bg-white/5 p-2 rounded-xl border border-white/10 z-10">
+          <X size={20} />
         </button>
 
-        <h2 className="text-2xl font-black text-slate-800 mb-1">Inject Capital</h2>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-1">
-          <ShieldCheck size={14} className="text-emerald-500" />
-          256-bit AES Encrypted
-        </p>
+        <div className="relative z-10">
+          <h2 className="text-2xl font-black text-white mb-1">Inject Capital</h2>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
+            <ShieldCheck size={14} className="text-ifb-success" />
+            256-bit AES Encrypted
+          </p>
 
-        {!clientSecret ? (
-          <div className="space-y-4">
-            <div className="relative">
-              <span className="absolute left-6 top-5 text-slate-400 font-black text-xl">$</span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-6 py-5 text-xl font-black outline-none focus:border-emerald-400 focus:bg-white transition-all text-slate-800"
-              />
+          {!clientSecret ? (
+            <div className="space-y-6">
+              <div className="relative">
+                <span className="absolute left-6 top-6 text-slate-500 font-black text-xl">$</span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full bg-black/30 border border-white/10 rounded-2xl pl-12 pr-6 py-6 text-2xl font-black outline-none focus:border-ifb-primary focus:bg-black/50 transition-all text-white placeholder:text-slate-600 shadow-inner"
+                  autoFocus
+                />
+              </div>
+              <button 
+                onClick={handleInitialize}
+                disabled={!amount || isInitializing}
+                className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center shadow-glass"
+              >
+                {isInitializing ? <Loader2 className="animate-spin" size={18} /> : 'ESTABLISH SECURE CONNECTION'}
+              </button>
             </div>
-            <button 
-              onClick={handleInitialize}
-              disabled={!amount || isInitializing}
-              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-black text-sm uppercase tracking-widest p-4 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center"
+          ) : (
+            <Elements 
+              stripe={stripePromise} 
+              options={{ 
+                clientSecret, 
+                appearance: { 
+                  theme: 'night', 
+                  variables: { 
+                    colorPrimary: '#2563EB', 
+                    colorBackground: '#0B0F19',
+                    colorText: '#F8FAFC',
+                    colorDanger: '#ef4444',
+                    fontFamily: 'system-ui, sans-serif',
+                    borderRadius: '16px',
+                    spacingUnit: '4px'
+                  } 
+                } 
+              }}
             >
-              {isInitializing ? <Loader2 className="animate-spin" size={18} /> : 'SECURE CONNECTION'}
-            </button>
-          </div>
-        ) : (
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
-            <CheckoutForm amount={amount} />
-          </Elements>
-        )}
+              <CheckoutForm amount={amount} />
+            </Elements>
+          )}
+        </div>
       </div>
     </div>
   );
