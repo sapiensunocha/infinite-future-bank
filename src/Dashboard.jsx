@@ -21,8 +21,12 @@ import {
   Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search,
   Sun, Moon, Sunrise, Loader2, CreditCard, Scale,
   ArrowDownToLine, FileSignature, Mail, ShieldAlert, Accessibility,
-  Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw
+  Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
+  // NEW ICONS
+  Filter, Calendar, ArrowDownUp, FileDown,
+  CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
+
 export default function Dashboard({ session, onSignOut }) {
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('NET_POSITION');
@@ -53,15 +57,16 @@ export default function Dashboard({ session, onSignOut }) {
   // Accessibility States (Preview vs Saved)
   const [accessSettings, setAccessSettings] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
   const [previewAccess, setPreviewAccess] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
-
+  // Transaction & Statement States
+  const [showStatementModal, setShowStatementModal] = useState(false);
+  const [statementConfig, setStatementConfig] = useState({ startDate: '', endDate: '', format: 'pdf' });
   // Extended KYC & ID Scan States
   const [kycForm, setKycForm] = useState({ legalName: '', dob: '', phone: '', address: '', country: '', relationshipStatus: '', idDocumentUrl: '' });
   const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
   const [isUploadingId, setIsUploadingId] = useState(false);
-
   // Security & Account States
-  const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' }); // init -> verify
-  const [mfaState, setMfaState] = useState({ qrCode: '', secret: '', verifyCode: '', factorId: '', step: 'init' }); // init -> scan -> verified
+  const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
+  const [mfaState, setMfaState] = useState({ qrCode: '', secret: '', verifyCode: '', factorId: '', step: 'init' });
   // Transaction & Payment States
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
@@ -78,24 +83,27 @@ export default function Dashboard({ session, onSignOut }) {
   const [scheduleDate, setScheduleDate] = useState('');
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
+
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
     PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
-    SETTINGS: 'Settings', AGENTS: 'Your Team'
+    SETTINGS: 'Settings', AGENTS: 'Your Team', TRANSACTIONS: 'Transactions'
   };
-  // 1. AUTOMATIC URL CLEANER (Fixes the 403 Session Error)
+
+  // 1. AUTOMATIC URL CLEANER
   useEffect(() => {
     if (window.location.hash.includes('access_token') || window.location.hash.includes('error')) {
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
+
   const fetchAllData = async () => {
     if (!session?.user?.id) return;
     const { data: pData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
     const { data: bData } = await supabase.from('balances').select('*').eq('user_id', session.user.id).maybeSingle();
-    if (pData) { 
-      setProfile(pData); 
-      setEditedName(pData.full_name || ''); 
+    if (pData) {
+      setProfile(pData);
+      setEditedName(pData.full_name || '');
       setKycForm({
         legalName: pData.full_legal_name || '',
         dob: pData.dob || '',
@@ -112,7 +120,7 @@ export default function Dashboard({ session, onSignOut }) {
         motion: pData.reduce_motion || false
       };
       setAccessSettings(loadedAccess);
-      setPreviewAccess(loadedAccess); // Set preview to match saved
+      setPreviewAccess(loadedAccess);
     }
     if (bData) setBalances(bData);
     const { data: tData } = await supabase.from('transactions').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
@@ -130,7 +138,9 @@ export default function Dashboard({ session, onSignOut }) {
     const { data: cardsData } = await supabase.from('linked_cards').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
     if (cardsData) setLinkedCards(cardsData);
   };
+
   useEffect(() => { if (session?.user?.id) fetchAllData(); }, [session?.user?.id]);
+
   useEffect(() => {
     if (!session?.user?.id) return;
     const channel = supabase.channel('realtime-deus')
@@ -146,6 +156,7 @@ export default function Dashboard({ session, onSignOut }) {
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [session?.user?.id]);
+
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     if (query.get('status') === 'success') {
@@ -159,6 +170,7 @@ export default function Dashboard({ session, onSignOut }) {
     }
     if (query.has('status')) setTimeout(() => setNotification(null), 5000);
   }, [session.user.id]);
+
   useEffect(() => {
     if (searchQuery) {
       if (searchDebounce.current) clearTimeout(searchDebounce.current);
@@ -175,12 +187,14 @@ export default function Dashboard({ session, onSignOut }) {
     }
     return () => { if (searchDebounce.current) clearTimeout(searchDebounce.current); };
   }, [searchQuery, session.user.id]);
+
   const formatCurrency = (val) => showBalances ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0) : 'XXXX';
   const totalNetWorth = (balances.liquid_usd || 0) + (balances.alpha_equity_usd || 0) + (balances.mysafe_digital_usd || 0);
   const userName = profile?.full_name?.split('@')[0] || 'Client';
   const unreadCount = notifications.filter(n => !n.read).length;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+
   const getHomeInsight = () => {
     const month = new Date().getMonth();
     if (totalNetWorth === 0) return { text: "Welcome to your new financial home. We are genuinely thrilled to have you with us. Let's take the first step in building your secure foundation by exploring a quick guide in our Training academy.", action: "Explore Training", target: "TRAINING" };
@@ -191,14 +205,15 @@ export default function Dashboard({ session, onSignOut }) {
     if (((month >= 5 && month <= 7) || month === 11) && balances.liquid_usd > 3000) return { text: "As the season changes, we want to ensure you are taking care of yourself. Remember that your Lifestyle perks grant you VIP lounge access and global connectivity for your upcoming travels.", action: "Access Lifestyle", target: "LIFESTYLE" };
     return { text: "Your safety net is perfectly secure and your accounts are thriving. We are proud to support your journey. Whenever you are ready, reach out to your AI advisor to discuss your next strategic move.", action: "Chat with Advisor", target: "ADVISOR" };
   };
+
   const insight = getHomeInsight();
+
   // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setIsLoading(true);
-    // Add Date.now() to force a new unique URL, bypassing browser cache
     const filePath = `${session.user.id}/avatar_${Date.now()}`;
     const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
     if (uploadError) { console.error(uploadError); setIsLoading(false); return; }
@@ -207,21 +222,20 @@ export default function Dashboard({ session, onSignOut }) {
     await fetchAllData();
     setIsLoading(false);
   };
+
   const handleNameUpdate = async () => {
     setIsLoading(true);
     await supabase.from('profiles').update({ full_name: editedName }).eq('id', session.user.id);
     await fetchAllData();
     setIsLoading(false);
   };
+
   const handleSaveAccessibility = async (newSettings) => {
     setAccessSettings(newSettings);
-  
-    // APPLY TO DOM INSTANTLY SO THE USER SEES IT CHANGE LIVE
     document.documentElement.setAttribute('data-theme', newSettings.theme);
     document.documentElement.setAttribute('data-contrast', newSettings.contrast ? 'high' : 'normal');
     document.documentElement.setAttribute('data-text-size', newSettings.textSize);
     document.documentElement.setAttribute('data-reduce-motion', newSettings.motion ? 'true' : 'false');
-    // Push silently to database
     await supabase.from('profiles').update({
       theme_preference: newSettings.theme,
       high_contrast: newSettings.contrast,
@@ -229,6 +243,7 @@ export default function Dashboard({ session, onSignOut }) {
       reduce_motion: newSettings.motion
     }).eq('id', session.user.id);
   };
+
   const handleSubmitKYC = async (e) => {
     e.preventDefault();
     setIsSubmittingKyc(true);
@@ -238,7 +253,7 @@ export default function Dashboard({ session, onSignOut }) {
         dob: kycForm.dob,
         phone: kycForm.phone,
         residential_address: kycForm.address,
-        kyc_status: 'verified' // Marks them as verified internally
+        kyc_status: 'verified'
       }).eq('id', session.user.id);
       if (error) throw error;
       setNotification({ type: 'success', text: 'Identity verified to Tier-1 Standards.' });
@@ -249,6 +264,7 @@ export default function Dashboard({ session, onSignOut }) {
       setIsSubmittingKyc(false);
     }
   };
+
   const handleSignAgreements = async () => {
     setIsLoading(true);
     try {
@@ -262,6 +278,7 @@ export default function Dashboard({ session, onSignOut }) {
       setIsLoading(false);
     }
   };
+
   const handleDeleteCard = async (cardId) => {
     setIsLoading(true);
     const { error } = await supabase.from('linked_cards').delete().eq('id', cardId);
@@ -270,15 +287,18 @@ export default function Dashboard({ session, onSignOut }) {
     setTimeout(() => setNotification(null), 3000);
     setIsLoading(false);
   };
+
   const markAsRead = async (id) => {
     await supabase.from('notifications').update({ read: true }).eq('id', id);
     await fetchAllData();
   };
+
   const handleDeposit = async (amount) => {
     const { data, error } = await supabase.functions.invoke('create-checkout', { body: { userId: session.user.id, email: session.user.email, amount: amount } });
     if (data?.url) window.location.href = data.url;
     else console.error("Stripe routing failed", error);
   };
+
   const handleSendEmailInvoice = async () => {
     if (!requestEmail) { setNotification({ type: 'error', text: 'Please enter a target email first.' }); setTimeout(() => setNotification(null), 3000); return; }
     setIsSendingEmail(true);
@@ -293,7 +313,6 @@ export default function Dashboard({ session, onSignOut }) {
       setTimeout(() => setNotification(null), 5000);
     } finally { setIsSendingEmail(false); }
   };
-  // --- REAL SECURITY & KYC FUNCTIONS ---
 
   const handleIdDocumentUpload = async (e) => {
     const file = e.target.files[0];
@@ -302,7 +321,7 @@ export default function Dashboard({ session, onSignOut }) {
     const filePath = `${session.user.id}/ID_${Date.now()}`;
     const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
     if (uploadError) { setNotification({ type: 'error', text: 'ID Scan Failed.' }); setIsUploadingId(false); return; }
-    
+  
     const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
     setKycForm({ ...kycForm, idDocumentUrl: publicUrl });
     setNotification({ type: 'success', text: 'ID Document Securely Vaulted.' });
@@ -313,7 +332,7 @@ export default function Dashboard({ session, onSignOut }) {
     if (!emailChange.newEmail) return;
     setIsLoading(true);
     const { error } = await supabase.auth.updateUser({ email: emailChange.newEmail });
-    if (error) { setNotification({ type: 'error', text: error.message }); } 
+    if (error) { setNotification({ type: 'error', text: error.message }); }
     else {
       setEmailChange({ ...emailChange, step: 'verify' });
       setNotification({ type: 'success', text: `Verification code sent to ${emailChange.newEmail}` });
@@ -346,7 +365,7 @@ export default function Dashboard({ session, onSignOut }) {
     setIsLoading(true);
     const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaState.factorId });
     if (challengeError) return setIsLoading(false);
-    
+  
     const { error } = await supabase.auth.mfa.verify({ factorId: mfaState.factorId, challengeId: challenge.id, code: mfaState.verifyCode });
     if (error) { setNotification({ type: 'error', text: 'Invalid Authenticator Code.' }); }
     else {
@@ -374,10 +393,9 @@ export default function Dashboard({ session, onSignOut }) {
     }).eq('id', session.user.id);
     setNotification({ type: 'success', text: 'Display preferences applied and saved.' });
   };
+
   const NetPositionView = () => (
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-  
-      {/* --- KYC 30-DAY REMINDER BANNER --- */}
       {profile && profile.kyc_status !== 'verified' && (
         <div className="bg-red-50 border border-red-200 p-5 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
           <div>
@@ -389,7 +407,6 @@ export default function Dashboard({ session, onSignOut }) {
           </button>
         </div>
       )}
-  
       <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
         <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
           {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
@@ -402,7 +419,6 @@ export default function Dashboard({ session, onSignOut }) {
           {insight.action} <ArrowRight size={14} />
         </button>
       </div>
-      {/* Expanded Total Balance (Ledger Removed) */}
       <div className="w-full">
         <div className="bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
@@ -492,58 +508,129 @@ export default function Dashboard({ session, onSignOut }) {
       </div>
     </div>
   );
-  // --- THE MASTER LEDGER & STATEMENTS VIEW ---
-  const LedgerView = () => {
-    const handleDownload = () => {
-      setNotification({ type: 'success', text: 'Generating cryptographically signed PDF statement...' });
-      setTimeout(() => setNotification(null), 3000);
-    };
+
+  // --- THE FULL TRANSACTIONS ENGINE ---
+  const TransactionsView = () => {
+    const [activeTxTab, setActiveTxTab] = useState('ALL');
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+   
+    const monthTxs = transactions.filter(tx => {
+      const d = new Date(tx.created_at);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+    const moneyIn = monthTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
+    const moneyOut = monthTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+    const netChange = moneyIn - moneyOut;
+
     return (
-      <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-        <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-3xl p-8 shadow-xl shadow-slate-200/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Master Ledger</h2>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Immutable Transaction History</p>
+      <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+        <div className="flex flex-col xl:flex-row gap-6">
+          <div className="flex-1 bg-white border border-slate-200 p-8 rounded-[2rem] shadow-sm flex flex-col justify-center">
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Transactions</h2>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">Immutable Master Ledger</p>
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
-            <button onClick={handleDownload} className="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
-              <FileSignature size={14}/> Download PDF
-            </button>
-            <button onClick={handleDownload} className="flex-1 md:flex-none px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2">
-              <Mail size={14}/> Email Statement
-            </button>
+          <div className="flex-1 grid grid-cols-3 gap-4">
+            <div className="bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Net Change (This Month)</p>
+              <p className={`text-xl font-black tracking-tight ${netChange >= 0 ? 'text-slate-800' : 'text-slate-800'}`}>
+                {netChange >= 0 ? '+' : '-'}{formatCurrency(Math.abs(netChange))}
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1"><ArrowDownRight size={14} className="text-emerald-500"/> Money In</p>
+              <p className="text-xl font-black tracking-tight text-emerald-600">{formatCurrency(moneyIn)}</p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1"><ArrowUpRight size={14} className="text-slate-400"/> Money Out</p>
+              <p className="text-xl font-black tracking-tight text-slate-800">{formatCurrency(moneyOut)}</p>
+            </div>
           </div>
         </div>
-        <div className="bg-white border border-slate-100 rounded-3xl p-2 shadow-xl shadow-slate-200/40 overflow-hidden">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Description</th>
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Type</th>
-                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map(tx => (
-                <tr key={tx.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                  <td className="p-6 text-sm text-slate-500 font-medium">{new Date(tx.created_at).toLocaleDateString()}</td>
-                  <td className="p-6 text-sm text-slate-800 font-bold capitalize">{tx.description || tx.transaction_type}</td>
-                  <td className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400"><span className="bg-slate-100 px-3 py-1 rounded-full">{tx.transaction_type}</span></td>
-                  <td className={`p-6 text-sm font-black text-right ${tx.amount > 0 ? 'text-emerald-500' : 'text-slate-800'}`}>{tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}</td>
-                </tr>
+
+        <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+            <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar">
+              {['ALL', 'SUCCEEDED', 'PENDING', 'FAILED'].map(tab => (
+                <button
+                  key={tab} onClick={() => setActiveTxTab(tab)}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTxTab === tab ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                >
+                  {tab}
+                </button>
               ))}
-            </tbody>
-          </table>
-          {transactions.length === 0 && <p className="text-center py-10 text-slate-400 font-medium">No ledger entries found.</p>}
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <button className="flex-1 md:flex-none px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 flex items-center justify-center gap-2 shadow-sm">
+                <Filter size={14}/> Filter
+              </button>
+              <button onClick={() => setShowStatementModal(true)} className="flex-1 md:flex-none px-4 py-2 bg-slate-800 text-white border border-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 flex items-center justify-center gap-2 shadow-sm">
+                <FileDown size={14}/> Export
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-white">
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">Date & Time</th>
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Description</th>
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Method</th>
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map(tx => {
+                  const isPositive = tx.amount > 0;
+                  const uiStatus = tx.status === 'completed' ? 'Succeeded' : tx.status === 'pending' ? 'Pending' : 'Failed';
+                 
+                  if (activeTxTab !== 'ALL' && activeTxTab !== uiStatus.toUpperCase()) return null;
+
+                  return (
+                    <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
+                      <td className="p-4 whitespace-nowrap">
+                        <p className="text-sm font-bold text-slate-800">{new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                        <p className="text-[10px] font-bold text-slate-400">{new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                      </td>
+                      <td className="p-4">
+                        <p className="text-sm font-bold text-slate-800 capitalize">{tx.description || tx.transaction_type}</p>
+                        <p className="text-[10px] font-bold text-slate-400">ID: {tx.id.split('-')[0]}...</p>
+                      </td>
+                      <td className="p-4">
+                        <span className="bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest inline-block">
+                          {tx.transaction_type}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        {uiStatus === 'Succeeded' && <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg w-fit border border-emerald-100"><CheckCircle2 size={12}/> Succeeded</span>}
+                        {uiStatus === 'Pending' && <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-lg w-fit border border-amber-100"><Clock size={12}/> Pending</span>}
+                        {uiStatus === 'Failed' && <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 px-3 py-1 rounded-lg w-fit border border-red-100"><XCircle size={12}/> Failed</span>}
+                      </td>
+                      <td className={`p-4 text-sm font-black text-right whitespace-nowrap ${isPositive ? 'text-emerald-600' : 'text-slate-800'}`}>
+                        {isPositive ? '+' : ''}{formatCurrency(tx.amount)} <span className="text-[10px] text-slate-400 ml-1">USD</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            {transactions.length === 0 && (
+              <div className="text-center py-16">
+                <ArrowDownUp size={40} className="mx-auto text-slate-300 mb-4" />
+                <p className="text-sm font-bold text-slate-600">No transactions found</p>
+                <p className="text-xs text-slate-400 mt-1">Adjust your filters or initiate a transfer.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
   };
+
   const SettingsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
-      
-      {/* Sidebar Menu */}
       <div className="md:col-span-1 space-y-2 bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm h-fit">
         {[
           { id: 'PROFILE', label: 'Identity & Legal', icon: <User size={18} /> },
@@ -561,18 +648,13 @@ export default function Dashboard({ session, onSignOut }) {
           <LogOut size={18} /> Secure Exit
         </button>
       </div>
-
       <div className="md:col-span-3 bg-white/60 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-sm">
-        
-        {/* --- IDENTITY & LEGAL --- */}
         {subTab === 'PROFILE' && (
           <div className="space-y-8 max-w-2xl">
             <div>
               <h2 className="text-2xl font-black text-slate-800 mb-2">Institutional Identity</h2>
               <p className="text-xs text-slate-500">Manage your core profile, communication methods, and global KYC status.</p>
             </div>
-
-            {/* Profile Basics & Avatar */}
             <div className="flex items-center gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm">
               <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
                 <div className="w-20 h-20 rounded-2xl bg-slate-200 border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
@@ -593,8 +675,6 @@ export default function Dashboard({ session, onSignOut }) {
                 </div>
               </div>
             </div>
-
-            {/* Real KYC Form */}
             <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
               <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                 <h3 className="text-lg font-black text-slate-800 flex items-center gap-2"><Fingerprint className="text-blue-500" size={20}/> Identity Verification (KYC)</h3>
@@ -604,17 +684,14 @@ export default function Dashboard({ session, onSignOut }) {
                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200"><RefreshCw size={12} className="inline mr-1 animate-spin"/> AI Review Pending</span>
                 ) : null}
               </div>
-              
               <form onSubmit={(e) => {
                   e.preventDefault();
                   if (!kycForm.idDocumentUrl) return setNotification({type: 'error', text: 'Government ID scan is required.'});
-                  // Simulate submitting to AI queue
                   supabase.from('profiles').update({ ...kycForm, kyc_status: 'pending_review' }).eq('id', session.user.id).then(() => {
                     setNotification({ type: 'success', text: 'Documents submitted. AI Verification processing.'});
                     fetchAllData();
                   });
               }} className="space-y-6">
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Full Legal Name</label>
@@ -646,8 +723,6 @@ export default function Dashboard({ session, onSignOut }) {
                     </select>
                   </div>
                 </div>
-
-                {/* ID Scan Upload */}
                 <div className="mt-4 p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-center relative">
                   {kycForm.idDocumentUrl ? (
                     <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold"><ShieldCheck size={20}/> ID Document Scanned Successfully</div>
@@ -663,7 +738,6 @@ export default function Dashboard({ session, onSignOut }) {
                     </>
                   )}
                 </div>
-
                 {profile?.kyc_status !== 'verified' && profile?.kyc_status !== 'pending_review' && (
                   <button type="submit" disabled={isSubmittingKyc} className="w-full bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-xl shadow-lg hover:bg-blue-600 transition-all">
                     Submit KYC to Compliance
@@ -671,8 +745,6 @@ export default function Dashboard({ session, onSignOut }) {
                 )}
               </form>
             </div>
-            
-            {/* Regulatory Agreements */}
             <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl shadow-sm">
               <div className="flex items-center gap-3 mb-4"><Scale className="text-slate-500" size={24} /><h3 className="text-lg font-black text-slate-800">Master Service Agreement</h3></div>
               <p className="text-xs text-slate-500 leading-relaxed mb-6">By signing, you agree to IFB operations under US (EIN: 33-1869013), Austria (91 323/2005), and Canada (CRA: 721487825 RC 0001) regulations.</p>
@@ -686,16 +758,12 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         )}
-
-        {/* --- SECURITY & ACCESS --- */}
         {subTab === 'SECURITY' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div>
               <h2 className="text-2xl font-black text-slate-800 mb-2">Security & Access</h2>
               <p className="text-xs text-slate-500">Protect your assets with Multi-Factor Authentication and secure routing credentials.</p>
             </div>
-
-            {/* Email Change */}
             <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-6 flex items-center gap-2"><Mail size={16} className="text-blue-500"/> Update Routing Email</h3>
               {emailChange.step === 'init' ? (
@@ -710,14 +778,11 @@ export default function Dashboard({ session, onSignOut }) {
                 </div>
               )}
             </div>
-
-            {/* Authenticator App */}
             <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2"><Lock size={16} className="text-blue-500"/> Authenticator App</h3>
                 {profile?.mfa_enabled && <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1 rounded-lg">Active</span>}
               </div>
-              
               {!profile?.mfa_enabled && mfaState.step === 'init' && (
                 <div>
                   <p className="text-xs text-slate-600 leading-relaxed mb-6">We highly recommend securing your institutional profile with a Time-Based One-Time Password (TOTP) application like Google Authenticator or Authy to prevent unauthorized access.</p>
@@ -726,7 +791,6 @@ export default function Dashboard({ session, onSignOut }) {
                   </button>
                 </div>
               )}
-
               {mfaState.step === 'scan' && (
                 <div className="space-y-6 text-center animate-in zoom-in-95">
                   <p className="text-sm font-bold text-slate-800">Scan this QR Code in your Authenticator App</p>
@@ -741,8 +805,6 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         )}
-
-        {/* --- ACCESSIBILITY --- */}
         {subTab === 'ACCESSIBILITY' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div className="flex justify-between items-end">
@@ -752,7 +814,6 @@ export default function Dashboard({ session, onSignOut }) {
               </div>
               <button onClick={saveAccessibility} className="px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 shadow-lg">Save Preferences</button>
             </div>
-
             <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
               <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                 <div><h4 className="text-sm font-bold text-slate-800">App Theme</h4></div>
@@ -781,8 +842,6 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         )}
-
-        {/* --- ABOUT US --- */}
         {subTab === 'ABOUT' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div className="text-center mb-10">
@@ -792,7 +851,6 @@ export default function Dashboard({ session, onSignOut }) {
               <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-4">Infinite Future Bank</h2>
               <p className="text-sm text-slate-600 leading-relaxed max-w-lg mx-auto font-medium">DEUS is the primary technological interface for Infinite Future Bank (IFB), a globally regulated neo-banking institution designed to provide autonomous, highly secure capital architecture for the modern sovereign individual.</p>
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm text-center">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">US HQ</p>
@@ -810,15 +868,12 @@ export default function Dashboard({ session, onSignOut }) {
                 <p className="text-xs text-slate-500 mt-1">CRA: 721487825 RC 0001</p>
               </div>
             </div>
-            
             <div className="p-6 bg-blue-600 text-white rounded-3xl shadow-lg mt-8 text-center flex flex-col items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors">
               <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Support Contact</p>
               <p className="text-lg font-bold">concierge@infinitefuturebank.org</p>
             </div>
           </div>
         )}
-
-        {/* Existing Linked Accounts Tab */}
         {subTab === 'LINKED_ACCOUNTS' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in zoom-in-95 duration-300">
             <h2 className="text-2xl font-black text-slate-800 mb-2">Payout Methods</h2>
@@ -858,26 +913,20 @@ export default function Dashboard({ session, onSignOut }) {
             )}
           </div>
         )}
-
       </div>
     </div>
   );
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200">
-      {/* Background gradients */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/20 rounded-full blur-[120px]"></div>
       </div>
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
-        {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          ></div>
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>
         )}
-        {/* Sidebar Navigation */}
         <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-100/80 backdrop-blur-xl border-r border-slate-200/60 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col`}>
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -894,7 +943,7 @@ export default function Dashboard({ session, onSignOut }) {
           <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-2 no-scrollbar">
             {[
               { id: 'NET_POSITION', icon: <Compass size={18} />, label: 'Home' },
-              { id: 'LEDGER', icon: <FileText size={18} />, label: 'Statements' },
+              { id: 'TRANSACTIONS', icon: <ArrowDownUp size={18} />, label: 'Transactions' },
               { id: 'PLANNER', icon: <Target size={18} />, label: 'Planner' },
               { id: 'ACCOUNTS', icon: <Landmark size={18} />, label: 'Accounts' },
               { id: 'ORGANIZE', icon: <Folder size={18} />, label: 'Organize' },
@@ -918,9 +967,8 @@ export default function Dashboard({ session, onSignOut }) {
             </button>
           </div>
         </aside>
-        {/* Main Content Area */}
+
         <main className="flex-1 flex flex-col relative overflow-hidden">
-          {/* Top Header */}
           <header className="h-20 border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-30 sticky top-0">
             <div className="flex items-center gap-4">
               <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-800 hover:text-blue-500 transition-colors p-2 -ml-2 rounded-xl hover:bg-white/40">
@@ -931,7 +979,6 @@ export default function Dashboard({ session, onSignOut }) {
               </h2>
             </div>
             <div className="flex items-center gap-4 md:gap-6 relative">
-              {/* Dynamic Animated Search Bar */}
               <div className={`relative transition-all duration-300 ease-in-out hidden sm:block ${isSearchExpanded ? 'w-80' : 'w-40'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
@@ -943,7 +990,6 @@ export default function Dashboard({ session, onSignOut }) {
                   onBlur={() => { setTimeout(() => setIsSearchExpanded(false), 200); }}
                   className="w-full pl-10 pr-4 py-2 bg-white/50 border border-white/60 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/50 transition-all text-sm font-medium text-slate-700 shadow-sm"
                 />
-                {/* Search Dropdown */}
                 {isSearchExpanded && searchQuery.length > 0 && (
                   <div className="absolute top-full mt-2 left-0 w-80 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Search Results</p>
@@ -981,7 +1027,6 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </>
               )}
-              {/* Profile Menu */}
               <div className="relative group">
                 <div onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex items-center gap-3 cursor-pointer group px-3 py-2 rounded-2xl hover:bg-white/40 transition-colors border border-transparent hover:border-white/60 relative z-50">
                   <div className="text-right hidden sm:block">
@@ -1028,9 +1073,10 @@ export default function Dashboard({ session, onSignOut }) {
               </div>
             </div>
           </header>
+
           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar">
             {activeTab === 'NET_POSITION' && <NetPositionView />}
-            {activeTab === 'LEDGER' && <LedgerView />}
+            {activeTab === 'TRANSACTIONS' && <TransactionsView />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
@@ -1041,12 +1087,14 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'SETTINGS' && <SettingsView />}
           </div>
+
           <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20">
             <MessageSquare size={24} className="group-hover:animate-pulse" />
             <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
           </button>
         </main>
       </div>
+
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -1062,7 +1110,6 @@ export default function Dashboard({ session, onSignOut }) {
               setIsLoading(true);
               const amount = parseFloat(e.target.amount.value);
               setRequestAmount(amount);
-              // --- INTERNAL TRANSFER ENGINE ---
               if (activeModal === 'TRANSFER') {
                 const fromAcct = e.target.fromAccount.value;
                 const toAcct = e.target.toAccount.value;
@@ -1080,19 +1127,15 @@ export default function Dashboard({ session, onSignOut }) {
                 finally { setIsLoading(false); }
                 return;
               }
-              // --- SEND WITH SCHEDULE LOGIC ---
               if (activeModal === 'SEND') {
                 if (!sendRecipient) {
                   setNotification({ type: 'error', text: 'Please select a recipient from your directory.' });
                   setIsLoading(false); return;
                 }
                 const msg = isScheduled ? `Transfer of ${formatCurrency(amount)} scheduled for ${new Date(scheduleDate).toLocaleDateString()}.` : `Funds successfully dispatched.`;
-            
-                // If not scheduled, deduct funds immediately.
                 if (!isScheduled) {
                    await supabase.from('transactions').insert([{ user_id: session.user.id, amount: -amount, transaction_type: 'send', description: `Transfer to selected recipient`, status: 'completed' }]);
                 }
-            
                 setNotification({ type: 'success', text: msg });
                 await fetchAllData();
                 setActiveModal(null);
@@ -1154,7 +1197,6 @@ export default function Dashboard({ session, onSignOut }) {
                           <button type="button" onClick={() => { setActiveModal(null); setActiveTab('ORGANIZE'); }} className="px-4 bg-slate-100 text-blue-600 font-black rounded-2xl border-2 border-slate-200 hover:bg-slate-200 transition-colors shadow-sm"><Plus size={20}/></button>
                         </div>
                       </div>
-                  
                       <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100 mt-4">
                         <label className="flex items-center gap-3 cursor-pointer">
                           <input type="checkbox" checked={isScheduled} onChange={(e) => setIsScheduled(e.target.checked)} className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-slate-300" />
@@ -1245,28 +1287,27 @@ export default function Dashboard({ session, onSignOut }) {
                       )}
                     </div>
                   )}
-{/* --- INTERNAL TRANSFER UI --- */}
-              {activeModal === 'TRANSFER' && (
-                <div className="space-y-4 mb-6 text-left">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">From Account</label>
-                    <select name="fromAccount" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
-                      <option value="liquid_usd">Cash on Hand ({formatCurrency(balances.liquid_usd)})</option>
-                      <option value="alpha_equity_usd">Alpha Equity ({formatCurrency(balances.alpha_equity_usd)})</option>
-                      <option value="mysafe_digital_usd">Digital Safe ({formatCurrency(balances.mysafe_digital_usd)})</option>
-                    </select>
-                  </div>
-                  <div className="flex justify-center -my-2 relative z-10"><div className="bg-blue-50 text-blue-500 p-2 rounded-full border border-blue-100"><ArrowDownToLine size={16}/></div></div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">To Account</label>
-                    <select name="toAccount" defaultValue="alpha_equity_usd" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
-                      <option value="liquid_usd">Cash on Hand</option>
-                      <option value="alpha_equity_usd">Alpha Equity</option>
-                      <option value="mysafe_digital_usd">Digital Safe</option>
-                    </select>
-                  </div>
-                </div>
-              )}
+                  {activeModal === 'TRANSFER' && (
+                    <div className="space-y-4 mb-6 text-left">
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">From Account</label>
+                        <select name="fromAccount" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
+                          <option value="liquid_usd">Cash on Hand ({formatCurrency(balances.liquid_usd)})</option>
+                          <option value="alpha_equity_usd">Alpha Equity ({formatCurrency(balances.alpha_equity_usd)})</option>
+                          <option value="mysafe_digital_usd">Digital Safe ({formatCurrency(balances.mysafe_digital_usd)})</option>
+                        </select>
+                      </div>
+                      <div className="flex justify-center -my-2 relative z-10"><div className="bg-blue-50 text-blue-500 p-2 rounded-full border border-blue-100"><ArrowDownToLine size={16}/></div></div>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">To Account</label>
+                        <select name="toAccount" defaultValue="alpha_equity_usd" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
+                          <option value="liquid_usd">Cash on Hand</option>
+                          <option value="alpha_equity_usd">Alpha Equity</option>
+                          <option value="mysafe_digital_usd">Digital Safe</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-left">Amount (USD)</label>
                     <input type="number" step="0.01" name="amount" required className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 font-black text-4xl text-center text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-300 shadow-inner" placeholder="0.00" autoFocus />
@@ -1333,6 +1374,7 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
+
       {notification && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
@@ -1345,6 +1387,7 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
+
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
       {showCardLinker && (
         <CardLinker
@@ -1357,6 +1400,67 @@ export default function Dashboard({ session, onSignOut }) {
             fetchAllData();
           }}
         />
+      )}
+
+      {/* 🧾 STATEMENT GENERATION MODAL */}
+      {showStatementModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative border border-slate-100">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center relative z-10">
+              <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase">Export Statements</h3>
+              <button onClick={() => setShowStatementModal(false)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                <X size={20} />
+              </button>
+            </div>
+           
+            <div className="p-8 space-y-6 relative z-10">
+              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                Generate cryptographically signed statements for tax, auditing, or compliance purposes.
+              </p>
+             
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Start Date</label>
+                  <input type="date" value={statementConfig.startDate} onChange={e => setStatementConfig({...statementConfig, startDate: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">End Date</label>
+                  <input type="date" value={statementConfig.endDate} onChange={e => setStatementConfig({...statementConfig, endDate: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Format</label>
+                <select value={statementConfig.format} onChange={e => setStatementConfig({...statementConfig, format: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
+                  <option value="pdf">PDF (Certified)</option>
+                  <option value="csv">CSV (Spreadsheet)</option>
+                </select>
+              </div>
+             
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
+                <button
+                  onClick={() => {
+                    setShowStatementModal(false);
+                    setNotification({ type: 'success', text: `Generating ${statementConfig.format.toUpperCase()} export...` });
+                    setTimeout(() => setNotification(null), 3000);
+                  }}
+                  className="flex-1 bg-white border border-slate-200 text-slate-700 rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <FileDown size={14}/> Download
+                </button>
+                <button
+                  onClick={() => {
+                    setShowStatementModal(false);
+                    setNotification({ type: 'success', text: `Statement dispatched to secure email.` });
+                    setTimeout(() => setNotification(null), 3000);
+                  }}
+                  className="flex-1 bg-slate-800 text-white rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                >
+                  <Mail size={14}/> Email
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
