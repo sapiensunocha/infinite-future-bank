@@ -4,7 +4,7 @@ import {
   ShieldCheck, Zap, Crosshair, TrendingUp, ShieldAlert, 
   Globe, Landmark, Scale, Heart, Coins, Send, X, Bot, 
   Sparkles, User, Loader2, ChevronRight, Settings2, 
-  CheckCircle2, Mail, Bell, Play, Pause, Activity
+  CheckCircle2, Mail, Bell, Play, Pause, Activity, Plus, Target
 } from 'lucide-react';
 
 const CABINET = [
@@ -73,13 +73,11 @@ export default function Agents({ session, profile, balances }) {
   const triggerNotification = async (type, msg) => {
     setNotification({ type, text: msg });
     setTimeout(() => setNotification(null), 5000);
-    // Push to DEUS global notifications table so it shows on dashboard bell
     if (profile?.id) {
       await supabase.from('notifications').insert([{ user_id: profile.id, message: msg }]);
     }
   };
 
-  // The Master Brain Connection
   const callAgentAPI = async (agent, messages, taskStr = null) => {
     try {
       const { data, error } = await supabase.functions.invoke('agent-chat', {
@@ -114,7 +112,6 @@ export default function Agents({ session, profile, balances }) {
     setIsAiTyping(true);
     triggerNotification('success', `Directive dispatched to ${taskModalAgent.name}. Analyzing global data...`);
     
-    // Switch to chat view to see the agent's response to the task
     setSelectedAgent(taskModalAgent);
     const initialChat = [{ role: 'user', text: `DIRECTIVE ASSIGNED: ${taskInput}` }];
     setChatHistory(initialChat);
@@ -132,7 +129,6 @@ export default function Agents({ session, profile, balances }) {
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-white relative">
       
-      {/* 🏛️ Header & Task Center */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/5 backdrop-blur-2xl border border-white/10 p-6 rounded-[2.5rem] shadow-glass">
         <div>
           <h2 className="text-2xl font-black text-white tracking-tight">Agent Cabinet</h2>
@@ -195,7 +191,6 @@ export default function Agents({ session, profile, balances }) {
         })}
       </div>
 
-      {/* CONFIGURATION (ENROLL) MODAL */}
       {isConfiguring && selectedAgent && (
         <div className="fixed inset-0 z-[210] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/80 animate-in fade-in duration-300">
           <div className="bg-[#0B0F19] border border-white/10 shadow-glass rounded-[3.5rem] max-w-lg w-full p-10 relative overflow-hidden">
@@ -224,7 +219,6 @@ export default function Agents({ session, profile, balances }) {
         </div>
       )}
 
-      {/* ASSIGN TASK MODAL */}
       {taskModalAgent && (
         <div className="fixed inset-0 z-[210] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/80 animate-in fade-in duration-300">
           <div className="bg-[#0B0F19] border border-white/10 shadow-glass rounded-[3.5rem] max-w-lg w-full p-10 relative">
@@ -246,7 +240,6 @@ export default function Agents({ session, profile, balances }) {
         </div>
       )}
 
-      {/* CONSULTATION CHAT TERMINAL */}
       {!isConfiguring && !taskModalAgent && selectedAgent && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6 backdrop-blur-3xl bg-black/80 animate-in fade-in duration-300">
           <div className="bg-[#0B0F19] border border-white/10 shadow-glass rounded-[3rem] max-w-2xl w-full h-[80vh] flex flex-col overflow-hidden relative">
@@ -297,7 +290,6 @@ export default function Agents({ session, profile, balances }) {
         </div>
       )}
 
-      {/* 🟢 IN-APP NOTIFICATION */}
       {notification && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[300] animate-in slide-in-from-top-4 fade-in duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-glass border backdrop-blur-2xl flex items-center gap-3 ${
