@@ -20,15 +20,21 @@ function MainApp() {
     const initializeUser = async (currentSession) => {
       setSession(currentSession);
       if (currentSession?.user) {
-        // FIXED: Now we select the full_name so the dashboard can actually use it
+        
+        // FETCH PROFILE WITH ACCESSIBILITY SETTINGS
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id, full_name')
+          .select('id, full_name, theme_preference, high_contrast, text_size, reduce_motion')
           .eq('id', currentSession.user.id)
           .maybeSingle(); 
           
-        if (!profile) {
-          // FIXED: We grab the text before the '@' in the email to use as their name
+        if (profile) {
+          // APPLY SETTINGS TO HTML DOCUMENT GLOBALLY
+          document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
+          document.documentElement.setAttribute('data-contrast', profile.high_contrast ? 'high' : 'normal');
+          document.documentElement.setAttribute('data-text-size', profile.text_size || 'default');
+          document.documentElement.setAttribute('data-reduce-motion', profile.reduce_motion ? 'true' : 'false');
+        } else {
           const generatedName = currentSession.user.email?.split('@')[0] || 'Client';
 
           await supabase.from('profiles').insert([{
@@ -99,6 +105,11 @@ function MainApp() {
           supabase.auth.signOut();
           setCurrentView('enter_email');
           setContactValue('');
+          // Reset accessibility on logout
+          document.documentElement.removeAttribute('data-theme');
+          document.documentElement.removeAttribute('data-contrast');
+          document.documentElement.removeAttribute('data-text-size');
+          document.documentElement.removeAttribute('data-reduce-motion');
         }}
       />
     );
