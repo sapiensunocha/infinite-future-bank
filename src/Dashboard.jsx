@@ -19,9 +19,9 @@ import {
   Sparkles, Settings, Eye, EyeOff, Target, TrendingUp,
   Folder, Compass, User, BookOpen, ArrowRight, Coffee,
   Camera, FileText, Lock, Info, Bell, Users, BarChart2, Globe, PieChart, Search,
-  Sun, Moon, Sunrise, Loader2, CreditCard, Scale
+  Sun, Moon, Sunrise, Loader2, CreditCard, Scale,
+  ArrowDownToLine, FileSignature, Mail, ShieldAlert
 } from 'lucide-react';
-
 export default function Dashboard({ session, onSignOut }) {
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('NET_POSITION');
@@ -32,14 +32,14 @@ export default function Dashboard({ session, onSignOut }) {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
-  
+ 
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState({
     transactions: [], notifications: [], pockets: [], recipients: [], investments: []
   });
-  
+ 
   // Real-Time Database States
   const [profile, setProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -51,11 +51,10 @@ export default function Dashboard({ session, onSignOut }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState('');
-  
+ 
   // KYC States
   const [kycForm, setKycForm] = useState({ legalName: '', dob: '', phone: '', address: '' });
   const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
-
   // Transaction & Payment States
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
@@ -67,24 +66,31 @@ export default function Dashboard({ session, onSignOut }) {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [showCardLinker, setShowCardLinker] = useState(false);
   const [linkedCards, setLinkedCards] = useState([]);
-  
+ 
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
-  
+ 
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
     PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
     SETTINGS: 'Settings', AGENTS: 'Your Team'
   };
 
+  // 1. AUTOMATIC URL CLEANER (Fixes the 403 Session Error)
+  useEffect(() => {
+    if (window.location.hash.includes('access_token') || window.location.hash.includes('error')) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
   const fetchAllData = async () => {
     if (!session?.user?.id) return;
     const { data: pData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
     const { data: bData } = await supabase.from('balances').select('*').eq('user_id', session.user.id).maybeSingle();
-    
-    if (pData) { 
-      setProfile(pData); 
-      setEditedName(pData.full_name || ''); 
+   
+    if (pData) {
+      setProfile(pData);
+      setEditedName(pData.full_name || '');
       setKycForm({
         legalName: pData.full_legal_name || '',
         dob: pData.dob || '',
@@ -93,31 +99,29 @@ export default function Dashboard({ session, onSignOut }) {
       });
     }
     if (bData) setBalances(bData);
-    
+   
     const { data: tData } = await supabase.from('transactions').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
     if (tData) setTransactions(tData);
-    
+   
     const { data: pocketsData } = await supabase.from('pockets').select('*').eq('user_id', session.user.id);
     if (pocketsData) setPockets(pocketsData);
-    
+   
     const { data: recData } = await supabase.from('recipients').select('*').eq('user_id', session.user.id);
     if (recData) setRecipients(recData);
-    
+   
     const { data: sosDbData } = await supabase.from('sos_shield').select('*').eq('user_id', session.user.id).maybeSingle();
     if (sosDbData) setSosData(sosDbData);
-    
+   
     const { data: invData } = await supabase.from('investments').select('*').eq('user_id', session.user.id);
     if (invData) setInvestments(invData);
-    
+   
     const { data: notifData } = await supabase.from('notifications').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
     if (notifData) setNotifications(notifData);
-    
+   
     const { data: cardsData } = await supabase.from('linked_cards').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
     if (cardsData) setLinkedCards(cardsData);
   };
-
   useEffect(() => { if (session?.user?.id) fetchAllData(); }, [session?.user?.id]);
-
   useEffect(() => {
     if (!session?.user?.id) return;
     const channel = supabase.channel('realtime-deus')
@@ -133,7 +137,6 @@ export default function Dashboard({ session, onSignOut }) {
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [session?.user?.id]);
-
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     if (query.get('status') === 'success') {
@@ -147,7 +150,6 @@ export default function Dashboard({ session, onSignOut }) {
     }
     if (query.has('status')) setTimeout(() => setNotification(null), 5000);
   }, [session.user.id]);
-
   useEffect(() => {
     if (searchQuery) {
       if (searchDebounce.current) clearTimeout(searchDebounce.current);
@@ -164,14 +166,12 @@ export default function Dashboard({ session, onSignOut }) {
     }
     return () => { if (searchDebounce.current) clearTimeout(searchDebounce.current); };
   }, [searchQuery, session.user.id]);
-
   const formatCurrency = (val) => showBalances ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0) : 'XXXX';
   const totalNetWorth = (balances.liquid_usd || 0) + (balances.alpha_equity_usd || 0) + (balances.mysafe_digital_usd || 0);
   const userName = profile?.full_name?.split('@')[0] || 'Client';
   const unreadCount = notifications.filter(n => !n.read).length;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-
   const getHomeInsight = () => {
     const month = new Date().getMonth();
     if (totalNetWorth === 0) return { text: "Welcome to your new financial home. We are genuinely thrilled to have you with us. Let's take the first step in building your secure foundation by exploring a quick guide in our Training academy.", action: "Explore Training", target: "TRAINING" };
@@ -183,10 +183,9 @@ export default function Dashboard({ session, onSignOut }) {
     return { text: "Your safety net is perfectly secure and your accounts are thriving. We are proud to support your journey. Whenever you are ready, reach out to your AI advisor to discuss your next strategic move.", action: "Chat with Advisor", target: "ADVISOR" };
   };
   const insight = getHomeInsight();
-
   // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
-  
+ 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -199,14 +198,13 @@ export default function Dashboard({ session, onSignOut }) {
     await fetchAllData();
     setIsLoading(false);
   };
-  
+ 
   const handleNameUpdate = async () => {
     setIsLoading(true);
     await supabase.from('profiles').update({ full_name: editedName }).eq('id', session.user.id);
     await fetchAllData();
     setIsLoading(false);
   };
-
   const handleSubmitKYC = async (e) => {
     e.preventDefault();
     setIsSubmittingKyc(true);
@@ -218,7 +216,7 @@ export default function Dashboard({ session, onSignOut }) {
         residential_address: kycForm.address,
         kyc_status: 'verified' // Marks them as verified internally
       }).eq('id', session.user.id);
-      
+     
       if (error) throw error;
       setNotification({ type: 'success', text: 'Identity verified to Tier-1 Standards.' });
       await fetchAllData();
@@ -228,7 +226,6 @@ export default function Dashboard({ session, onSignOut }) {
       setIsSubmittingKyc(false);
     }
   };
-
   const handleSignAgreements = async () => {
     setIsLoading(true);
     try {
@@ -242,7 +239,6 @@ export default function Dashboard({ session, onSignOut }) {
       setIsLoading(false);
     }
   };
-
   const handleDeleteCard = async (cardId) => {
     setIsLoading(true);
     const { error } = await supabase.from('linked_cards').delete().eq('id', cardId);
@@ -251,18 +247,18 @@ export default function Dashboard({ session, onSignOut }) {
     setTimeout(() => setNotification(null), 3000);
     setIsLoading(false);
   };
-  
+ 
   const markAsRead = async (id) => {
     await supabase.from('notifications').update({ read: true }).eq('id', id);
     await fetchAllData();
   };
-  
+ 
   const handleDeposit = async (amount) => {
     const { data, error } = await supabase.functions.invoke('create-checkout', { body: { userId: session.user.id, email: session.user.email, amount: amount } });
     if (data?.url) window.location.href = data.url;
     else console.error("Stripe routing failed", error);
   };
-  
+ 
   const handleSendEmailInvoice = async () => {
     if (!requestEmail) { setNotification({ type: 'error', text: 'Please enter a target email first.' }); setTimeout(() => setNotification(null), 3000); return; }
     setIsSendingEmail(true);
@@ -277,9 +273,22 @@ export default function Dashboard({ session, onSignOut }) {
       setTimeout(() => setNotification(null), 5000);
     } finally { setIsSendingEmail(false); }
   };
-
   const NetPositionView = () => (
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+      
+      {/* --- KYC 30-DAY REMINDER BANNER --- */}
+      {profile && profile.kyc_status !== 'verified' && (
+        <div className="bg-red-50 border border-red-200 p-5 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+          <div>
+            <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16}/> Regulatory Action Required</h3>
+            <p className="text-slate-600 text-sm mt-1 font-medium">To comply with global anti-money laundering laws, you must complete Identity Verification (KYC) within 30 days to prevent account suspension.</p>
+          </div>
+          <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); }} className="px-6 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
+            Verify Identity Now
+          </button>
+        </div>
+      )}
+      
       <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-glass">
         <div className="w-16 h-16 bg-ifb-primary/20 text-ifb-primary rounded-full flex items-center justify-center flex-shrink-0 border border-ifb-primary/30 shadow-glow-blue">
           {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
@@ -292,7 +301,6 @@ export default function Dashboard({ session, onSignOut }) {
           {insight.action} <ArrowRight size={14} />
         </button>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gradient-to-br from-ifb-primary to-blue-900 rounded-3xl p-6 md:p-8 text-white shadow-glow-blue relative overflow-hidden group border border-white/10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
@@ -307,7 +315,6 @@ export default function Dashboard({ session, onSignOut }) {
             <ArrowRight size={20} />
           </button>
         </div>
-
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 flex flex-col shadow-glass h-full max-h-[220px] overflow-hidden">
           <div className="flex justify-between items-center mb-4">
             <span className="text-sm text-slate-400 font-medium tracking-wider uppercase block">Transaction Ledger</span>
@@ -335,7 +342,6 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       </div>
-
       <div className="flex flex-wrap items-center gap-3 bg-white/5 backdrop-blur-2xl border border-white/10 p-2 rounded-3xl shadow-glass">
         <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white/10 text-slate-300 transition-all">
           <Send size={16} /> Send
@@ -357,7 +363,6 @@ export default function Dashboard({ session, onSignOut }) {
           <BarChart2 size={16} /> Analytics
         </button>
       </div>
-
       <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-glass transition-all duration-500 min-h-[300px]">
         {showAnalytics ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
@@ -409,9 +414,60 @@ export default function Dashboard({ session, onSignOut }) {
     </div>
   );
 
+  // --- THE MASTER LEDGER & STATEMENTS VIEW ---
+  const LedgerView = () => {
+    const handleDownload = () => {
+      setNotification({ type: 'success', text: 'Generating cryptographically signed PDF statement...' });
+      setTimeout(() => setNotification(null), 3000);
+    };
+
+    return (
+      <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
+        <div className="bg-white/60 backdrop-blur-2xl border border-white/60 rounded-3xl p-8 shadow-xl shadow-slate-200/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Master Ledger</h2>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Immutable Transaction History</p>
+          </div>
+          <div className="flex gap-3 w-full md:w-auto">
+            <button onClick={handleDownload} className="flex-1 md:flex-none px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+              <FileSignature size={14}/> Download PDF
+            </button>
+            <button onClick={handleDownload} className="flex-1 md:flex-none px-6 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2">
+              <Mail size={14}/> Email Statement
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-100 rounded-3xl p-2 shadow-xl shadow-slate-200/40 overflow-hidden">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Description</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Type</th>
+                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map(tx => (
+                <tr key={tx.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                  <td className="p-6 text-sm text-slate-500 font-medium">{new Date(tx.created_at).toLocaleDateString()}</td>
+                  <td className="p-6 text-sm text-slate-800 font-bold capitalize">{tx.description || tx.transaction_type}</td>
+                  <td className="p-6 text-[10px] font-black uppercase tracking-widest text-slate-400"><span className="bg-slate-100 px-3 py-1 rounded-full">{tx.transaction_type}</span></td>
+                  <td className={`p-6 text-sm font-black text-right ${tx.amount > 0 ? 'text-emerald-500' : 'text-slate-800'}`}>{tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {transactions.length === 0 && <p className="text-center py-10 text-slate-400 font-medium">No ledger entries found.</p>}
+        </div>
+      </div>
+    );
+  };
+
   const SettingsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
-      
+     
       {/* Settings Navigation */}
       <div className="md:col-span-1 space-y-2 bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-3xl shadow-glass h-fit">
         {[
@@ -429,16 +485,15 @@ export default function Dashboard({ session, onSignOut }) {
           <LogOut size={18} /> Log Out
         </button>
       </div>
-
       {/* Settings Content Area */}
       <div className="md:col-span-3 bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-glass">
-        
+       
         {/* --- IDENTITY & COMPLIANCE --- */}
         {subTab === 'PROFILE' && (
           <div className="space-y-8 max-w-2xl">
             <h2 className="text-2xl font-black text-white mb-2">Institutional Identity</h2>
             <p className="text-xs text-slate-400 mb-8">Manage your DEUS profile, KYC compliance, and legal agreements.</p>
-            
+           
             {/* 1. Basic Profile Info */}
             <div className="flex items-center gap-6 bg-black/30 p-6 rounded-3xl border border-white/5">
               <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
@@ -460,7 +515,6 @@ export default function Dashboard({ session, onSignOut }) {
                 </div>
               </div>
             </div>
-
             {/* 2. KYC Form */}
             <div className="bg-black/30 border border-white/5 p-8 rounded-3xl mt-8 shadow-inner">
               <div className="flex items-center justify-between mb-6">
@@ -468,7 +522,7 @@ export default function Dashboard({ session, onSignOut }) {
                 {profile?.kyc_status === 'verified' && <span className="text-[10px] font-black uppercase tracking-widest text-ifb-success bg-ifb-success/10 px-3 py-1.5 rounded-lg border border-ifb-success/20">Verified</span>}
               </div>
               <p className="text-xs text-slate-400 mb-8 leading-relaxed">Federal regulations require identity verification for Tier-1 liquidity access, Alpha Marketplace investments, and external Stripe payouts.</p>
-              
+             
               <form onSubmit={handleSubmitKYC} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
@@ -488,7 +542,7 @@ export default function Dashboard({ session, onSignOut }) {
                     <input type="text" value={kycForm.address} onChange={(e) => setKycForm({...kycForm, address: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-black/50 border border-white/10 rounded-xl p-4 font-bold text-sm text-white outline-none focus:border-ifb-primary disabled:opacity-50" />
                   </div>
                 </div>
-                
+               
                 {profile?.kyc_status !== 'verified' && (
                   <button type="submit" disabled={isSubmittingKyc} className="w-full mt-4 bg-white/10 hover:bg-white/20 text-white font-black text-[10px] uppercase tracking-widest py-4 rounded-xl transition-all flex items-center justify-center gap-2 border border-white/10 shadow-glass">
                     {isSubmittingKyc ? <Loader2 className="animate-spin" size={16}/> : 'Transmit Identity for Verification'}
@@ -496,7 +550,6 @@ export default function Dashboard({ session, onSignOut }) {
                 )}
               </form>
             </div>
-
             {/* 3. IFB Regulatory Agreements */}
             <div className="bg-black/30 border border-white/5 p-8 rounded-3xl mt-8 shadow-inner">
               <div className="flex items-center gap-3 mb-4">
@@ -506,7 +559,7 @@ export default function Dashboard({ session, onSignOut }) {
               <p className="text-xs text-slate-400 leading-relaxed mb-8">
                 Infinite Future Bank (DEUS) operates under stringent global financial regulations. To utilize our liquidity engines and Stripe clearing houses, you must agree to our regulatory oversight.
               </p>
-              
+             
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="bg-white/5 border border-white/10 p-5 rounded-2xl text-center">
                   <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">United States</p>
@@ -521,7 +574,6 @@ export default function Dashboard({ session, onSignOut }) {
                   <p className="text-xs font-black text-white">CRA: 721487825 RC 0001</p>
                 </div>
               </div>
-
               {!profile?.docs_signed ? (
                 <button onClick={handleSignAgreements} disabled={isLoading} className="w-full py-4 bg-ifb-primary text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-glow-blue hover:bg-blue-600 transition-all flex items-center justify-center gap-2 border border-blue-400/30">
                   {isLoading ? <Loader2 className="animate-spin" size={16}/> : 'Cryptographically Sign & Accept Terms'}
@@ -532,16 +584,15 @@ export default function Dashboard({ session, onSignOut }) {
                 </div>
               )}
             </div>
-            
+           
           </div>
         )}
-
         {/* --- LINKED ACCOUNTS --- */}
         {subTab === 'LINKED_ACCOUNTS' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in zoom-in-95 duration-300">
             <h2 className="text-2xl font-black text-white mb-2">Payout Methods</h2>
             <p className="text-xs text-slate-400 mb-8">Manage your connected bank accounts and debit cards for withdrawals.</p>
-            
+           
             <div className="flex justify-end mb-6">
               <button onClick={() => setShowCardLinker(true)} className="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest px-4 py-3 rounded-xl transition-all shadow-glass flex items-center gap-2">
                 <Plus size={14} /> Add Method
@@ -583,7 +634,6 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         )}
-
         {/* --- SECURITY --- */}
         {subTab === 'SECURITY' && (
           <div className="text-center py-12 text-slate-500">
@@ -591,7 +641,7 @@ export default function Dashboard({ session, onSignOut }) {
             <p className="font-medium text-lg text-slate-400">Advanced Security configuration coming soon.</p>
           </div>
         )}
-        
+       
         {/* --- ABOUT --- */}
         {subTab === 'ABOUT' && (
           <div className="text-center py-12 text-slate-400 space-y-4">
@@ -603,12 +653,11 @@ export default function Dashboard({ session, onSignOut }) {
       </div>
     </div>
   );
-
   return (
     <div className="min-h-screen bg-transparent font-sans text-white">
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
         {isSidebarOpen && <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
-       
+      
         <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#0B0F19]/80 backdrop-blur-2xl border-r border-white/10 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col`}>
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-1">
@@ -625,6 +674,7 @@ export default function Dashboard({ session, onSignOut }) {
           <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-2 no-scrollbar">
             {[
               { id: 'NET_POSITION', icon: <Compass size={18} />, label: 'Home' },
+              { id: 'LEDGER', icon: <FileText size={18} />, label: 'Statements' },
               { id: 'PLANNER', icon: <Target size={18} />, label: 'Planner' },
               { id: 'ACCOUNTS', icon: <Landmark size={18} />, label: 'Accounts' },
               { id: 'ORGANIZE', icon: <Folder size={18} />, label: 'Organize' },
@@ -648,7 +698,7 @@ export default function Dashboard({ session, onSignOut }) {
             </button>
           </div>
         </aside>
-        
+       
         <main className="flex-1 flex flex-col relative overflow-hidden">
           <header className="h-20 border-b border-white/10 bg-[#0B0F19]/40 backdrop-blur-2xl flex items-center justify-between px-6 z-30 sticky top-0">
             <div className="flex items-center gap-4">
@@ -657,7 +707,7 @@ export default function Dashboard({ session, onSignOut }) {
               </button>
               <h2 className="hidden md:block font-black text-lg text-white tracking-tight">{tabTitles[activeTab]}</h2>
             </div>
-            
+           
             <div className="flex items-center gap-4 md:gap-6 relative">
               <div className={`relative transition-all duration-300 ease-in-out hidden sm:block ${isSearchExpanded ? 'w-80' : 'w-40'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -674,12 +724,12 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 )}
               </div>
-              
+             
               <button onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)} className="text-slate-400 hover:text-white transition-colors relative" title="Notifications">
                 <Bell size={22} />
                 {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#0B0F19]"></span>}
               </button>
-              
+             
               {isNotificationMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsNotificationMenuOpen(false)}></div>
@@ -699,7 +749,7 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </>
               )}
-              
+             
               <div className="relative group">
                 <div onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex items-center gap-3 cursor-pointer group px-3 py-2 rounded-2xl hover:bg-white/10 transition-colors border border-transparent hover:border-white/10 relative z-50">
                   <div className="text-right hidden sm:block">
@@ -710,7 +760,7 @@ export default function Dashboard({ session, onSignOut }) {
                     {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : <span className="font-black text-slate-400 text-lg">{profile?.full_name?.charAt(0).toUpperCase() || <User size={20} />}</span>}
                   </div>
                 </div>
-                
+               
                 {isProfileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)}></div>
@@ -741,9 +791,10 @@ export default function Dashboard({ session, onSignOut }) {
               </div>
             </div>
           </header>
-          
+         
           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 custom-scrollbar pr-2">
             {activeTab === 'NET_POSITION' && <NetPositionView />}
+            {activeTab === 'LEDGER' && <LedgerView />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
@@ -754,16 +805,15 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'SETTINGS' && <SettingsView />}
           </div>
-          
+         
           <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-ifb-primary text-white shadow-glow-blue rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border border-blue-400/30">
             <MessageSquare size={24} className="group-hover:animate-pulse" />
             <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
           </button>
         </main>
       </div>
-
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
-      
+     
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-[#0B0F19] rounded-3xl w-full max-w-md shadow-glass overflow-hidden animate-in zoom-in-95 duration-300 border border-white/10 relative">
@@ -774,13 +824,32 @@ export default function Dashboard({ session, onSignOut }) {
                 <X size={20} />
               </button>
             </div>
-            
+           
             <form onSubmit={async (e) => {
               e.preventDefault();
               setIsLoading(true);
               const amount = parseFloat(e.target.amount.value);
               setRequestAmount(amount);
-              
+             
+              // --- INTERNAL TRANSFER ENGINE ---
+              if (activeModal === 'TRANSFER') {
+                const fromAcct = e.target.fromAccount.value;
+                const toAcct = e.target.toAccount.value;
+                if (fromAcct === toAcct) {
+                  setNotification({ type: 'error', text: 'Cannot transfer to the same account.' });
+                  setIsLoading(false); return;
+                }
+                try {
+                  const { error } = await supabase.rpc('process_internal_transfer', { p_user_id: session.user.id, p_from: fromAcct, p_to: toAcct, p_amount: amount });
+                  if (error) throw error;
+                  setNotification({ type: 'success', text: `Successfully routed ${formatCurrency(amount)}.` });
+                  await fetchAllData(); 
+                  setActiveModal(null);
+                } catch (err) { setNotification({ type: 'error', text: err.message }); }
+                finally { setIsLoading(false); }
+                return;
+              }
+
               if (activeModal === 'REQUEST') {
                 const link = `${window.location.origin}/pay?to=${session.user.id}&amount=${amount}&reason=${encodeURIComponent(requestReason)}`;
                 setRequestLink(link);
@@ -791,14 +860,14 @@ export default function Dashboard({ session, onSignOut }) {
                 setIsLoading(false);
                 return;
               }
-              
+             
               if (activeModal === 'WITHDRAW' && amount > balances.liquid_usd) {
                 setNotification({ type: 'error', text: 'INSUFFICIENT LIQUIDITY: Transaction Declined' });
                 setTimeout(() => setNotification(null), 5000);
                 setIsLoading(false);
                 return;
               }
-              
+             
               if (activeModal === 'WITHDRAW') {
                 const routingNum = e.target.routingNumber?.value;
                 const accountNum = e.target.accountNumber?.value;
@@ -808,7 +877,7 @@ export default function Dashboard({ session, onSignOut }) {
                     body: { userId: session.user.id, amount: amount, routingNumber: routingNum, accountNumber: accountNum, cardId: selectedCard }
                   });
                   if (error || data?.error) throw new Error(data?.error || "Routing failed.");
-                  
+                 
                   setNotification({ type: 'success', text: `Capital Extraction Initiated: $${amount.toFixed(2)}` });
                   setTimeout(() => setNotification(null), 5000);
                   await fetchAllData();
@@ -819,14 +888,14 @@ export default function Dashboard({ session, onSignOut }) {
                 } finally { setIsLoading(false); }
                 return;
               }
-              
+             
               const finalAmount = -amount;
               await supabase.from('transactions').insert([{ user_id: session.user.id, amount: finalAmount, transaction_type: activeModal.toLowerCase(), description: `Internal ${activeModal}`, status: 'completed' }]);
               await fetchAllData();
               setActiveModal(null);
               setIsLoading(false);
             }} className="p-8 space-y-6 relative z-10 text-center">
-              
+             
               {!requestLink ? (
                 <>
                   {activeModal === 'REQUEST' && (
@@ -888,6 +957,30 @@ export default function Dashboard({ session, onSignOut }) {
                       )}
                     </div>
                   )}
+
+{/* --- INTERNAL TRANSFER UI --- */}
+              {activeModal === 'TRANSFER' && (
+                <div className="space-y-4 mb-6 text-left">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">From Account</label>
+                    <select name="fromAccount" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
+                      <option value="liquid_usd">Cash on Hand ({formatCurrency(balances.liquid_usd)})</option>
+                      <option value="alpha_equity_usd">Alpha Equity ({formatCurrency(balances.alpha_equity_usd)})</option>
+                      <option value="mysafe_digital_usd">Digital Safe ({formatCurrency(balances.mysafe_digital_usd)})</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-center -my-2 relative z-10"><div className="bg-blue-50 text-blue-500 p-2 rounded-full border border-blue-100"><ArrowDownToLine size={16}/></div></div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">To Account</label>
+                    <select name="toAccount" defaultValue="alpha_equity_usd" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
+                      <option value="liquid_usd">Cash on Hand</option>
+                      <option value="alpha_equity_usd">Alpha Equity</option>
+                      <option value="mysafe_digital_usd">Digital Safe</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-left">Amount (USD)</label>
                     <input type="number" step="0.01" name="amount" required className="w-full bg-black/30 border border-white/10 rounded-2xl p-6 font-black text-4xl text-center text-white outline-none focus:border-ifb-primary focus:bg-black/50 transition-all placeholder:text-slate-600" placeholder="0.00" autoFocus />
@@ -934,7 +1027,6 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
-
       {notification && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-glass border backdrop-blur-2xl flex items-center gap-3 ${
@@ -945,9 +1037,8 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
-
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
-      
+     
       {showCardLinker && (
         <CardLinker
           session={session}

@@ -61,7 +61,7 @@ export default function AccountHub({ balances, profile }) {
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center justify-between">
                   USD • United States <Wallet size={12} className="text-ifb-primary"/>
                 </p>
-                <p className="text-2xl font-black text-white tracking-tight relative z-10">{formatCurrency(balances.liquid_usd)}</p>
+                <p className="text-2xl font-black text-white tracking-tight relative z-10">{formatCurrency(balances?.liquid_usd)}</p>
               </div>
               
               <div className="p-6 bg-black/40 rounded-2xl border border-white/10 shadow-inner relative overflow-hidden group hover:border-white/20 transition-colors">
@@ -94,6 +94,29 @@ export default function AccountHub({ balances, profile }) {
               <h3 className="text-lg font-black text-white mb-2 relative z-10">Kids & Teens</h3>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed mb-6 relative z-10">Dedicated spending cards and supervised sub-apps for the next generation.</p>
               <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-ifb-logoB group-hover:gap-2 transition-all relative z-10">Create Profile <ArrowRight size={14}/></div>
+            </div>
+          </div>
+
+          {/* Institutional Credit Line */}
+          <div className="bg-gradient-to-br from-black to-[#0B0F19] border border-white/10 p-8 rounded-[3rem] shadow-glass mt-8 group hover:border-ifb-primary/30 transition-colors">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-ifb-primary/20 flex items-center justify-center text-ifb-primary border border-ifb-primary/30 shadow-glow-blue"><Briefcase size={24}/></div>
+                <div>
+                  <h3 className="text-lg font-black text-white mb-1">Institutional Credit Line</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Borrow against your Alpha Equity at 2.4% APR</p>
+                </div>
+              </div>
+              <span className="bg-white/10 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/20">Pre-Approved</span>
+            </div>
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between mt-8 border-t border-white/10 pt-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Available Leverage</p>
+                <p className="text-2xl font-black text-white">{formatCurrency((balances?.alpha_equity_usd || 0) * 0.4)}</p>
+              </div>
+              <button className="w-full md:w-auto px-6 py-4 bg-ifb-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-glow-blue hover:bg-blue-600 transition-all border border-blue-400/30">
+                Draw Capital
+              </button>
             </div>
           </div>
         </div>
