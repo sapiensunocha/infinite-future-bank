@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, KeyRound, User } from 'lucide-react';
+// 1. Added Eye and EyeOff icons
+import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, KeyRound, User, Eye, EyeOff } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
@@ -17,6 +18,14 @@ function MainApp() {
   const [nameValue, setNameValue] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
+  
+  // 2. State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Reset password visibility when changing views
+  useEffect(() => {
+    setShowPassword(false);
+  }, [currentView]);
 
   useEffect(() => {
     const initializeUser = async (currentSession) => {
@@ -134,6 +143,30 @@ function MainApp() {
     }
   };
 
+  // 3. REUSABLE PASSWORD COMPONENT
+  const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLength }) => (
+    <div className="relative">
+      <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+      <input 
+        type={showPassword ? "text" : "password"} 
+        required 
+        minLength={minLength}
+        autoFocus={autoFocus}
+        value={value} 
+        onChange={onChange} 
+        placeholder={placeholder} 
+        className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner" 
+      />
+      <button 
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
+      >
+        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    </div>
+  );
+
   if (session && currentView !== 'update_password') {
     return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
   }
@@ -188,10 +221,13 @@ function MainApp() {
               <h2 className="text-2xl font-black tracking-tight mb-2">Welcome Back</h2>
               <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
               <form onSubmit={handleLogin} className="space-y-6">
-                <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  <input type="password" required autoFocus value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Password" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner" />
-                </div>
+                {/* 4. REPLACED WITH PASSWORD COMPONENT */}
+                <PasswordInput 
+                  value={passwordValue} 
+                  onChange={(e) => setPasswordValue(e.target.value)} 
+                  placeholder="Password" 
+                  autoFocus={true} 
+                />
                 {/* BLUE GRADIENT BUTTON */}
                 <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
@@ -214,10 +250,13 @@ function MainApp() {
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                   <input type="text" required autoFocus value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder="Given Name" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  <input type="password" required minLength={6} value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Set Password" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 shadow-inner" />
-                </div>
+                {/* 4. REPLACED WITH PASSWORD COMPONENT */}
+                <PasswordInput 
+                  value={passwordValue} 
+                  onChange={(e) => setPasswordValue(e.target.value)} 
+                  placeholder="Set Password" 
+                  minLength={6} 
+                />
                 {/* EMERALD GRADIENT BUTTON */}
                 <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600"></div>
@@ -244,7 +283,14 @@ function MainApp() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
               <h2 className="text-2xl font-black mb-8">New Vault Key</h2>
               <form onSubmit={handleUpdatePassword} className="space-y-6">
-                <input type="password" required minLength={6} autoFocus value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="New Password" className="w-full bg-white/50 border border-white/60 rounded-2xl px-6 py-5 text-lg font-black outline-none focus:border-blue-400" />
+                {/* 4. REPLACED WITH PASSWORD COMPONENT */}
+                <PasswordInput 
+                  value={passwordValue} 
+                  onChange={(e) => setPasswordValue(e.target.value)} 
+                  placeholder="New Password" 
+                  autoFocus={true} 
+                  minLength={6} 
+                />
                 <button type="submit" className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Save Password</span>
