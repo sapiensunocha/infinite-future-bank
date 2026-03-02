@@ -321,7 +321,7 @@ export default function Dashboard({ session, onSignOut }) {
     const filePath = `${session.user.id}/ID_${Date.now()}`;
     const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
     if (uploadError) { setNotification({ type: 'error', text: 'ID Scan Failed.' }); setIsUploadingId(false); return; }
-  
+ 
     const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
     setKycForm({ ...kycForm, idDocumentUrl: publicUrl });
     setNotification({ type: 'success', text: 'ID Document Securely Vaulted.' });
@@ -365,7 +365,7 @@ export default function Dashboard({ session, onSignOut }) {
     setIsLoading(true);
     const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaState.factorId });
     if (challengeError) return setIsLoading(false);
-  
+ 
     const { error } = await supabase.auth.mfa.verify({ factorId: mfaState.factorId, challengeId: challenge.id, code: mfaState.verifyCode });
     if (error) { setNotification({ type: 'error', text: 'Invalid Authenticator Code.' }); }
     else {
@@ -514,7 +514,7 @@ export default function Dashboard({ session, onSignOut }) {
     const [activeTxTab, setActiveTxTab] = useState('ALL');
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-   
+  
     const monthTxs = transactions.filter(tx => {
       const d = new Date(tx.created_at);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
@@ -522,7 +522,6 @@ export default function Dashboard({ session, onSignOut }) {
     const moneyIn = monthTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
     const moneyOut = monthTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
     const netChange = moneyIn - moneyOut;
-
     return (
       <div className="space-y-6 animate-in fade-in duration-500 pb-10">
         <div className="flex flex-col xl:flex-row gap-6">
@@ -547,7 +546,6 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         </div>
-
         <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
             <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar">
@@ -569,7 +567,6 @@ export default function Dashboard({ session, onSignOut }) {
               </button>
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -585,9 +582,8 @@ export default function Dashboard({ session, onSignOut }) {
                 {transactions.map(tx => {
                   const isPositive = tx.amount > 0;
                   const uiStatus = tx.status === 'completed' ? 'Succeeded' : tx.status === 'pending' ? 'Pending' : 'Failed';
-                 
+                
                   if (activeTxTab !== 'ALL' && activeTxTab !== uiStatus.toUpperCase()) return null;
-
                   return (
                     <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
                       <td className="p-4 whitespace-nowrap">
@@ -951,6 +947,7 @@ export default function Dashboard({ session, onSignOut }) {
               { id: 'LIFESTYLE', icon: <Globe size={18} />, label: 'Lifestyle' },
               { id: 'TRAINING', icon: <BookOpen size={18} />, label: 'Training' },
               { id: 'AGENTS', icon: <Users size={18} />, label: 'Your Team' },
+              { id: 'SETTINGS', icon: <Settings size={18} />, label: 'Settings' }, // ← SETTINGS RESTORED
             ].map((item) => (
               <button
                 key={item.id}
@@ -967,7 +964,6 @@ export default function Dashboard({ session, onSignOut }) {
             </button>
           </div>
         </aside>
-
         <main className="flex-1 flex flex-col relative overflow-hidden">
           <header className="h-20 border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-30 sticky top-0">
             <div className="flex items-center gap-4">
@@ -1073,7 +1069,6 @@ export default function Dashboard({ session, onSignOut }) {
               </div>
             </div>
           </header>
-
           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar">
             {activeTab === 'NET_POSITION' && <NetPositionView />}
             {activeTab === 'TRANSACTIONS' && <TransactionsView />}
@@ -1087,14 +1082,12 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'SETTINGS' && <SettingsView />}
           </div>
-
           <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20">
             <MessageSquare size={24} className="group-hover:animate-pulse" />
             <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
           </button>
         </main>
       </div>
-
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -1374,7 +1367,6 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
-
       {notification && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
@@ -1387,7 +1379,6 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
-
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
       {showCardLinker && (
         <CardLinker
@@ -1401,7 +1392,6 @@ export default function Dashboard({ session, onSignOut }) {
           }}
         />
       )}
-
       {/* 🧾 STATEMENT GENERATION MODAL */}
       {showStatementModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
@@ -1412,12 +1402,12 @@ export default function Dashboard({ session, onSignOut }) {
                 <X size={20} />
               </button>
             </div>
-           
+          
             <div className="p-8 space-y-6 relative z-10">
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
                 Generate cryptographically signed statements for tax, auditing, or compliance purposes.
               </p>
-             
+            
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Start Date</label>
@@ -1435,7 +1425,7 @@ export default function Dashboard({ session, onSignOut }) {
                   <option value="csv">CSV (Spreadsheet)</option>
                 </select>
               </div>
-             
+            
               <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button
                   onClick={() => {
