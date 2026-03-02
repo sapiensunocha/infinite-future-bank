@@ -22,7 +22,6 @@ import {
   Sun, Moon, Sunrise, Loader2, CreditCard, Scale,
   ArrowDownToLine, FileSignature, Mail, ShieldAlert, Accessibility,
   Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
-  // NEW ICONS
   Filter, Calendar, ArrowDownUp, FileDown,
   CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
@@ -321,7 +320,7 @@ export default function Dashboard({ session, onSignOut }) {
     const filePath = `${session.user.id}/ID_${Date.now()}`;
     const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
     if (uploadError) { setNotification({ type: 'error', text: 'ID Scan Failed.' }); setIsUploadingId(false); return; }
- 
+
     const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
     setKycForm({ ...kycForm, idDocumentUrl: publicUrl });
     setNotification({ type: 'success', text: 'ID Document Securely Vaulted.' });
@@ -365,7 +364,7 @@ export default function Dashboard({ session, onSignOut }) {
     setIsLoading(true);
     const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaState.factorId });
     if (challengeError) return setIsLoading(false);
- 
+
     const { error } = await supabase.auth.mfa.verify({ factorId: mfaState.factorId, challengeId: challenge.id, code: mfaState.verifyCode });
     if (error) { setNotification({ type: 'error', text: 'Invalid Authenticator Code.' }); }
     else {
@@ -479,30 +478,30 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer" onClick={() => setActiveTab('ACCOUNTS')}>
-              <div className="flex justify-between items-start mb-4">
+            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ACCOUNTS')}>
+              <div className="flex justify-between items-start mb-4 w-full">
                 <Landmark className="text-slate-400" size={24} />
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-full">Cash</span>
               </div>
               <p className="text-slate-500 font-medium text-sm mb-1">Cash on Hand</p>
               <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.liquid_usd)}</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer" onClick={() => setActiveTab('INVEST')}>
-              <div className="flex justify-between items-start mb-4">
+            </button>
+            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('INVEST')}>
+              <div className="flex justify-between items-start mb-4 w-full">
                 <Briefcase className="text-blue-500" size={24} />
                 <span className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-full">Alpha</span>
               </div>
               <p className="text-slate-500 font-medium text-sm mb-1">Investments</p>
               <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.alpha_equity_usd)}</p>
-            </div>
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer" onClick={() => setActiveTab('ORGANIZE')}>
-              <div className="flex justify-between items-start mb-4">
+            </button>
+            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ORGANIZE')}>
+              <div className="flex justify-between items-start mb-4 w-full">
                 <ShieldCheck className="text-indigo-500" size={24} />
                 <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">Vault</span>
               </div>
               <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
               <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
-            </div>
+            </button>
           </div>
         )}
       </div>
@@ -514,7 +513,7 @@ export default function Dashboard({ session, onSignOut }) {
     const [activeTxTab, setActiveTxTab] = useState('ALL');
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-  
+ 
     const monthTxs = transactions.filter(tx => {
       const d = new Date(tx.created_at);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
@@ -548,7 +547,7 @@ export default function Dashboard({ session, onSignOut }) {
         </div>
         <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
           <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-            <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar">
+            <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar scroll-container">
               {['ALL', 'SUCCEEDED', 'PENDING', 'FAILED'].map(tab => (
                 <button
                   key={tab} onClick={() => setActiveTxTab(tab)}
@@ -567,7 +566,7 @@ export default function Dashboard({ session, onSignOut }) {
               </button>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scroll-container">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-white">
@@ -582,7 +581,7 @@ export default function Dashboard({ session, onSignOut }) {
                 {transactions.map(tx => {
                   const isPositive = tx.amount > 0;
                   const uiStatus = tx.status === 'completed' ? 'Succeeded' : tx.status === 'pending' ? 'Pending' : 'Failed';
-                
+                 
                   if (activeTxTab !== 'ALL' && activeTxTab !== uiStatus.toUpperCase()) return null;
                   return (
                     <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
@@ -652,7 +651,7 @@ export default function Dashboard({ session, onSignOut }) {
               <p className="text-xs text-slate-500">Manage your core profile, communication methods, and global KYC status.</p>
             </div>
             <div className="flex items-center gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm">
-              <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
+              <button type="button" className="relative group cursor-pointer border-0 p-0 bg-transparent" onClick={handleAvatarClick}>
                 <div className="w-20 h-20 rounded-2xl bg-slate-200 border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
                   {profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <span className="text-3xl font-black text-slate-400">{profile?.full_name?.charAt(0).toUpperCase() || <User size={40} />}</span>}
                 </div>
@@ -660,7 +659,7 @@ export default function Dashboard({ session, onSignOut }) {
                   <Camera className="text-white" size={24} />
                 </div>
                 <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
-              </div>
+              </button>
               <div className="flex-1 space-y-3">
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500">Display Name</label>
                 <div className="flex gap-3">
@@ -827,14 +826,14 @@ export default function Dashboard({ session, onSignOut }) {
                   <option value="extra_large">Extra Large</option>
                 </select>
               </div>
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between cursor-pointer" onClick={() => handlePreviewAccessibility('contrast', !previewAccess.contrast)}>
+              <button type="button" className="w-full p-6 border-b border-slate-100 flex items-center justify-between text-left hover:bg-slate-50 transition-colors" onClick={() => handlePreviewAccessibility('contrast', !previewAccess.contrast)}>
                 <div><h4 className="text-sm font-bold text-slate-800">Increase Contrast</h4></div>
                 <div className={`w-12 h-6 rounded-full transition-colors relative ${previewAccess.contrast ? 'bg-blue-600' : 'bg-slate-300'}`}><div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${previewAccess.contrast ? 'translate-x-6' : ''}`}></div></div>
-              </div>
-              <div className="p-6 flex items-center justify-between cursor-pointer" onClick={() => handlePreviewAccessibility('motion', !previewAccess.motion)}>
+              </button>
+              <button type="button" className="w-full p-6 flex items-center justify-between text-left hover:bg-slate-50 transition-colors" onClick={() => handlePreviewAccessibility('motion', !previewAccess.motion)}>
                 <div><h4 className="text-sm font-bold text-slate-800">Reduce Motion</h4></div>
                 <div className={`w-12 h-6 rounded-full transition-colors relative ${previewAccess.motion ? 'bg-blue-600' : 'bg-slate-300'}`}><div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${previewAccess.motion ? 'translate-x-6' : ''}`}></div></div>
-              </div>
+              </button>
             </div>
           </div>
         )}
@@ -864,10 +863,10 @@ export default function Dashboard({ session, onSignOut }) {
                 <p className="text-xs text-slate-500 mt-1">CRA: 721487825 RC 0001</p>
               </div>
             </div>
-            <div className="p-6 bg-blue-600 text-white rounded-3xl shadow-lg mt-8 text-center flex flex-col items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors">
+            <button type="button" className="w-full p-6 bg-blue-600 text-white rounded-3xl shadow-lg mt-8 text-center flex flex-col items-center justify-center hover:bg-blue-700 transition-colors">
               <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Support Contact</p>
               <p className="text-lg font-bold">concierge@infinitefuturebank.org</p>
-            </div>
+            </button>
           </div>
         )}
         {subTab === 'LINKED_ACCOUNTS' && (
@@ -921,9 +920,9 @@ export default function Dashboard({ session, onSignOut }) {
       </div>
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
         {isSidebarOpen && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden cursor-pointer" onClick={(e) => { e.preventDefault(); setIsSidebarOpen(false); }} onTouchEnd={(e) => { e.preventDefault(); setIsSidebarOpen(false); }}></div>
         )}
-        <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-100/80 backdrop-blur-xl border-r border-slate-200/60 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col`}>
+        <aside className={`fixed md:static inset-y-0 left-0 z-[150] w-64 bg-slate-100/80 backdrop-blur-xl border-r border-slate-200/60 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]`}>
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <span className="text-4xl font-black text-[#4285F4]">D</span>
@@ -932,11 +931,11 @@ export default function Dashboard({ session, onSignOut }) {
               <span className="text-4xl font-black text-[#34A853]">S</span>
               <Sparkles size={18} className="text-blue-500 ml-1" />
             </div>
-            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-800">
+            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-800 p-2">
               <X size={24} />
             </button>
           </div>
-          <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-2 no-scrollbar">
+          <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-2 no-scrollbar scroll-container">
             {[
               { id: 'NET_POSITION', icon: <Compass size={18} />, label: 'Home' },
               { id: 'TRANSACTIONS', icon: <ArrowDownUp size={18} />, label: 'Transactions' },
@@ -947,7 +946,7 @@ export default function Dashboard({ session, onSignOut }) {
               { id: 'LIFESTYLE', icon: <Globe size={18} />, label: 'Lifestyle' },
               { id: 'TRAINING', icon: <BookOpen size={18} />, label: 'Training' },
               { id: 'AGENTS', icon: <Users size={18} />, label: 'Your Team' },
-              { id: 'SETTINGS', icon: <Settings size={18} />, label: 'Settings' }, // ← SETTINGS RESTORED
+              { id: 'SETTINGS', icon: <Settings size={18} />, label: 'Settings' },
             ].map((item) => (
               <button
                 key={item.id}
@@ -965,9 +964,14 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </aside>
         <main className="flex-1 flex flex-col relative overflow-hidden">
-          <header className="h-20 border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-30 sticky top-0">
+          <header className="border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-[100] sticky top-0 pt-[env(safe-area-inset-top)] min-h-[calc(5rem+env(safe-area-inset-top))]">
             <div className="flex items-center gap-4">
-              <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-800 hover:text-blue-500 transition-colors p-2 -ml-2 rounded-xl hover:bg-white/40">
+              <button 
+                type="button" 
+                onClick={(e) => { e.preventDefault(); setIsSidebarOpen(true); }} 
+                onTouchEnd={(e) => { e.preventDefault(); setIsSidebarOpen(true); }}
+                className="md:hidden text-slate-800 hover:text-blue-500 transition-colors p-2 -ml-2 rounded-xl hover:bg-white/40 active:bg-slate-200 relative z-50 cursor-pointer"
+              >
                 <Menu size={24} />
               </button>
               <h2 className="hidden md:block font-black text-lg text-slate-800 tracking-tight">
@@ -1000,18 +1004,24 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 )}
               </div>
-              <button onClick={() => setIsNotificationMenuOpen(!isNotificationMenuOpen)} className="text-slate-400 hover:text-blue-500 transition-colors relative" title="Notifications">
+              <button 
+                type="button"
+                onClick={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }} 
+                onTouchEnd={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }}
+                className="text-slate-400 hover:text-blue-500 active:text-blue-600 transition-colors relative p-2 cursor-pointer z-50" 
+                title="Notifications"
+              >
                 <Bell size={22} />
-                {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
+                {unreadCount > 0 && <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>}
               </button>
               {isNotificationMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsNotificationMenuOpen(false)}></div>
+                  <div className="fixed inset-0 z-40 cursor-pointer" onClick={(e) => { e.preventDefault(); setIsNotificationMenuOpen(false); }} onTouchEnd={(e) => { e.preventDefault(); setIsNotificationMenuOpen(false); }}></div>
                   <div className="absolute top-full mt-4 right-0 md:right-auto w-80 bg-white/90 backdrop-blur-2xl border border-white/60 shadow-2xl rounded-3xl p-4 z-50 animate-in fade-in slide-in-from-top-4">
                     <div className="flex items-center justify-between mb-4 px-2">
                       <span className="font-black text-sm uppercase tracking-widest text-slate-800">Notifications</span>
                     </div>
-                    <div className="space-y-2 max-h-80 overflow-y-auto no-scrollbar">
+                    <div className="space-y-2 max-h-80 overflow-y-auto no-scrollbar scroll-container">
                       {notifications.length > 0 ? notifications.map((notif) => (
                         <div key={notif.id} className={`p-4 rounded-2xl ${notif.read ? 'bg-slate-50/50' : 'bg-blue-50/50 border border-blue-100'}`}>
                           <p className="text-sm text-slate-700 font-medium leading-tight mb-2">{notif.message}</p>
@@ -1024,18 +1034,23 @@ export default function Dashboard({ session, onSignOut }) {
                 </>
               )}
               <div className="relative group">
-                <div onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)} className="flex items-center gap-3 cursor-pointer group px-3 py-2 rounded-2xl hover:bg-white/40 transition-colors border border-transparent hover:border-white/60 relative z-50">
-                  <div className="text-right hidden sm:block">
+                <button 
+                  type="button" 
+                  onClick={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }} 
+                  onTouchEnd={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }}
+                  className="flex items-center gap-3 w-full text-left group px-3 py-2 rounded-2xl hover:bg-white/40 active:bg-slate-200 transition-colors border border-transparent hover:border-white/60 relative z-50 cursor-pointer"
+                >
+                  <div className="text-right hidden sm:block pointer-events-none">
                     <p className="font-black text-sm text-slate-800 leading-none">{userName}</p>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">{profile?.active_tier || 'Personal'}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden pointer-events-none">
                     {profile?.avatar_url ? <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" /> : <span className="font-black text-slate-400 text-lg">{profile?.full_name?.charAt(0).toUpperCase() || <User size={20} />}</span>}
                   </div>
-                </div>
+                </button>
                 {isProfileMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)}></div>
+                    <div className="fixed inset-0 z-40 cursor-pointer" onClick={(e) => { e.preventDefault(); setIsProfileMenuOpen(false); }} onTouchEnd={(e) => { e.preventDefault(); setIsProfileMenuOpen(false); }}></div>
                     <div className="absolute top-full mt-2 right-0 w-64 bg-white/90 backdrop-blur-2xl border border-white/60 shadow-2xl rounded-3xl p-2 z-50 animate-in fade-in slide-in-from-top-4">
                       <div className="p-4 flex items-center gap-4 border-b border-slate-100 mb-2">
                         <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden flex items-center justify-center">
@@ -1069,7 +1084,7 @@ export default function Dashboard({ session, onSignOut }) {
               </div>
             </div>
           </header>
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar scroll-container pb-[env(safe-area-inset-bottom)]" id="main-scroll">
             {activeTab === 'NET_POSITION' && <NetPositionView />}
             {activeTab === 'TRANSACTIONS' && <TransactionsView />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
@@ -1082,7 +1097,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'SETTINGS' && <SettingsView />}
           </div>
-          <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20">
+          <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20 mb-[env(safe-area-inset-bottom)]">
             <MessageSquare size={24} className="group-hover:animate-pulse" />
             <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
           </button>
@@ -1091,8 +1106,8 @@ export default function Dashboard({ session, onSignOut }) {
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 mt-[env(safe-area-inset-top)] mb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-20">
               <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase">{activeModal}</h3>
               <button onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm">
                 <X size={20} />
@@ -1327,7 +1342,7 @@ export default function Dashboard({ session, onSignOut }) {
                       <QRCode value={requestLink} size={180} fgColor="#0f172a" />
                     </div>
                   ) : (
-                    <div className="bg-slate-50 border-2 border-slate-100 p-4 rounded-xl break-all relative group cursor-pointer" onClick={() => {
+                    <button type="button" className="w-full text-left bg-slate-50 border-2 border-slate-100 p-4 rounded-xl break-all relative group cursor-pointer" onClick={() => {
                       navigator.clipboard.writeText(requestLink);
                       setNotification({ type: 'success', text: 'Link copied to clipboard!' });
                     }}>
@@ -1335,7 +1350,7 @@ export default function Dashboard({ session, onSignOut }) {
                       <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-[1px]">
                         <span className="font-black text-blue-700 text-xs uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-sm">Click to Copy</span>
                       </div>
-                    </div>
+                    </button>
                   )}
                   <div className="flex gap-3">
                     <button
@@ -1368,7 +1383,7 @@ export default function Dashboard({ session, onSignOut }) {
         </div>
       )}
       {notification && (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-300">
+        <div className="fixed top-2 left-1/2 transform -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 fade-in duration-300 mt-[env(safe-area-inset-top)]">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
             notification.type === 'success'
               ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
@@ -1395,14 +1410,14 @@ export default function Dashboard({ session, onSignOut }) {
       {/* 🧾 STATEMENT GENERATION MODAL */}
       {showStatementModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative border border-slate-100">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center relative z-10">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative border border-slate-100 mt-[env(safe-area-inset-top)] mb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center relative z-20 sticky top-0">
               <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase">Export Statements</h3>
               <button onClick={() => setShowStatementModal(false)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
                 <X size={20} />
               </button>
             </div>
-          
+            
             <div className="p-8 space-y-6 relative z-10">
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
                 Generate cryptographically signed statements for tax, auditing, or compliance purposes.

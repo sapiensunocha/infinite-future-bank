@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-// 1. Added Eye and EyeOff icons
-import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, KeyRound, User, Eye, EyeOff } from 'lucide-react';
+// Added Smartphone and DownloadCloud for the Android Prompt
+import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, KeyRound, User, Eye, EyeOff, Smartphone, DownloadCloud } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
@@ -18,9 +18,27 @@ function MainApp() {
   const [nameValue, setNameValue] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
-  
-  // 2. State for password visibility
   const [showPassword, setShowPassword] = useState(false);
+  
+  // NEW: State for the Android APK Download Prompt
+  const [showApkPrompt, setShowApkPrompt] = useState(false);
+
+  // Smart Device Detection
+  useEffect(() => {
+    const checkDevice = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isAndroid = /android/i.test(userAgent);
+      
+      // Safely check if they are ALREADY inside the Capacitor Native App
+      const isNativeApp = window?.Capacitor?.isNativePlatform?.() || window?.Capacitor?.isNative;
+      
+      // If on Android but NOT in the app, show the beautiful download prompt
+      if (isAndroid && !isNativeApp) {
+        setShowApkPrompt(true);
+      }
+    };
+    checkDevice();
+  }, []);
 
   // Reset password visibility when changing views
   useEffect(() => {
@@ -143,7 +161,7 @@ function MainApp() {
     }
   };
 
-  // 3. REUSABLE PASSWORD COMPONENT
+  // REUSABLE PASSWORD COMPONENT
   const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLength }) => (
     <div className="relative">
       <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -177,7 +195,7 @@ function MainApp() {
       
       <div className="relative z-10 w-full max-w-[480px]">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-10 cursor-pointer" onClick={() => setCurrentView('enter_email')}>
+        <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => setCurrentView('enter_email')}>
           <div className="flex items-center gap-1">
             <span className="text-6xl font-black text-[#4285F4]">D</span>
             <span className="text-6xl font-black text-[#EA4335]">E</span>
@@ -221,14 +239,12 @@ function MainApp() {
               <h2 className="text-2xl font-black tracking-tight mb-2">Welcome Back</h2>
               <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
               <form onSubmit={handleLogin} className="space-y-6">
-                {/* 4. REPLACED WITH PASSWORD COMPONENT */}
                 <PasswordInput 
                   value={passwordValue} 
                   onChange={(e) => setPasswordValue(e.target.value)} 
                   placeholder="Password" 
                   autoFocus={true} 
                 />
-                {/* BLUE GRADIENT BUTTON */}
                 <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
                    <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Confirm Access</span>
@@ -250,14 +266,12 @@ function MainApp() {
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                   <input type="text" required autoFocus value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder="Given Name" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
-                {/* 4. REPLACED WITH PASSWORD COMPONENT */}
                 <PasswordInput 
                   value={passwordValue} 
                   onChange={(e) => setPasswordValue(e.target.value)} 
                   placeholder="Set Password" 
                   minLength={6} 
                 />
-                {/* EMERALD GRADIENT BUTTON */}
                 <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Create Vault</span>
@@ -283,7 +297,6 @@ function MainApp() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
               <h2 className="text-2xl font-black mb-8">New Vault Key</h2>
               <form onSubmit={handleUpdatePassword} className="space-y-6">
-                {/* 4. REPLACED WITH PASSWORD COMPONENT */}
                 <PasswordInput 
                   value={passwordValue} 
                   onChange={(e) => setPasswordValue(e.target.value)} 
@@ -300,6 +313,34 @@ function MainApp() {
           )}
 
         </div>
+
+        {/* ========================================================= */}
+        {/* EXCLUSIVE ANDROID APK DOWNLOAD PROMPT                     */}
+        {/* ========================================================= */}
+        {showApkPrompt && (
+          <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20">
+            <a 
+              href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 p-4 rounded-[2rem] shadow-2xl hover:scale-[1.02] transition-transform group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner">
+                  <Smartphone size={24} />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Native Android App</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Optimized & Secure</p>
+                </div>
+              </div>
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                <DownloadCloud size={18} />
+              </div>
+            </a>
+          </div>
+        )}
+
         <div className="mt-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
            <ShieldCheck size={14} className="text-emerald-400" /> Powered by Infinite Future Bank
         </div>

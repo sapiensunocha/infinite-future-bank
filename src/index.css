@@ -5,6 +5,8 @@
 @layer base {
   body {
     @apply antialiased font-sans relative overflow-x-hidden min-h-screen;
+    /* Stop the whole app from "rubber-banding" or bouncing when scrolling */
+    overscroll-behavior-y: none;
   }
 }
 
@@ -32,6 +34,32 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+}
+
+/* ==============================================================
+   DEUS NATIVE MOBILE OPTIMIZATIONS
+   ============================================================== */
+
+/* 1. Kill the 300ms click delay and disable double-tap to zoom */
+* {
+  touch-action: manipulation;
+}
+
+/* 2. Remove the ugly grey flash when tapping a button on mobile */
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 3. Prevent the magnifying glass / text selection on UI elements */
+button, a, .no-select {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  user-select: none; /* Non-prefixed version */
+}
+
+/* 4. Ensure smooth scrolling for lists/menus */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ==============================================================
@@ -76,6 +104,7 @@ html[data-theme="dark"] body {
 /* We must un-invert images, profile pictures, and videos so they look normal in Dark Mode */
 html[data-theme="dark"] img,
 html[data-theme="dark"] video,
-html[data-theme="dark"] [style*="background-image"] {
+html[data-theme="dark"] [style*="background-image"],
+html[data-theme="dark"] svg.lucide {
   filter: invert(1) hue-rotate(180deg);
 }
