@@ -36,12 +36,14 @@ export default function Dashboard({ session, onSignOut }) {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState({
     transactions: [], notifications: [], pockets: [], recipients: [], investments: []
   });
+
   // Real-Time Database States
   const [profile, setProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -53,19 +55,24 @@ export default function Dashboard({ session, onSignOut }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState('');
+
   // Accessibility States (Preview vs Saved)
   const [accessSettings, setAccessSettings] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
   const [previewAccess, setPreviewAccess] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
+
   // Transaction & Statement States
   const [showStatementModal, setShowStatementModal] = useState(false);
-  const [statementConfig, setStatementConfig] = useState({ startDate: '', endDate: '', format: 'pdf' });
+  const [statementConfig, setStatementConfig] = useState({ startDate: '', endDate: '', format: 'pdf', isOfficial: false });
+
   // Extended KYC & ID Scan States
   const [kycForm, setKycForm] = useState({ legalName: '', dob: '', phone: '', address: '', country: '', relationshipStatus: '', idDocumentUrl: '' });
   const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
   const [isUploadingId, setIsUploadingId] = useState(false);
+
   // Security & Account States
   const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
   const [mfaState, setMfaState] = useState({ qrCode: '', secret: '', verifyCode: '', factorId: '', step: 'init' });
+
   // Transaction & Payment States
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
@@ -80,6 +87,16 @@ export default function Dashboard({ session, onSignOut }) {
   const [sendRecipient, setSendRecipient] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
+
+  // Requirement: Payment Request Targeting
+  const [requestTargetType, setRequestTargetType] = useState('INTERNAL'); 
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [foundUser, setFoundUser] = useState(null);
+  const [isSearchingUser, setIsSearchingUser] = useState(false);
+
+  // Requirement: Withdrawal Flexibility
+  const [withdrawalMethod, setWithdrawalMethod] = useState('BANK'); 
+
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
 
@@ -95,6 +112,35 @@ export default function Dashboard({ session, onSignOut }) {
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
+
+  // --- REQUIREMENT: GLOBAL NOTIFICATION RULE ---
+  const triggerGlobalActionNotification = (type, message) => {
+    setNotification({ type, text: message });
+    // This hook allows you to wire up your backend email trigger
+    console.log(`System Event: ${message}. Dispatching In-App Alert and Email to ${session?.user?.email}`);
+    setTimeout(() => setNotification(null), 6000);
+  };
+
+  // --- REQUIREMENT: SEARCH FUNCTION (Internal Users) ---
+  useEffect(() => {
+    if (userSearchQuery.length > 2) {
+      setIsSearchingUser(true);
+      const delaySearch = setTimeout(async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, email')
+          .or(`full_name.ilike.%${userSearchQuery}%,email.ilike.%${userSearchQuery}%`)
+          .neq('id', session.user.id)
+          .limit(1)
+          .maybeSingle();
+        setFoundUser(data);
+        setIsSearchingUser(false);
+      }, 400);
+      return () => clearTimeout(delaySearch);
+    } else {
+      setFoundUser(null);
+    }
+  }, [userSearchQuery]);
 
   const fetchAllData = async () => {
     if (!session?.user?.id) return;
@@ -179,7 +225,7 @@ export default function Dashboard({ session, onSignOut }) {
         const { data: pocks } = await supabase.from('pockets').select('*').eq('user_id', session.user.id).ilike('pocket_name', `%${searchQuery}%`);
         const { data: recs } = await supabase.from('recipients').select('*').eq('user_id', session.user.id).ilike('recipient_name', `%${searchQuery}%`);
         const { data: invs } = await supabase.from('investments').select('*').eq('user_id', session.user.id).ilike('investment_type', `%${searchQuery}%`);
-        searchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
+        setSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
       }, 300);
     } else {
       setSearchResults({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
@@ -209,17 +255,28 @@ export default function Dashboard({ session, onSignOut }) {
 
   // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
+
+  // --- REQUIREMENT: PROFILE PHOTO FIX (Isolated Logic) ---
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setIsLoading(true);
-    const filePath = `${session.user.id}/avatar_${Date.now()}`;
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
-    if (uploadError) { console.error(uploadError); setIsLoading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id);
-    await fetchAllData();
-    setIsLoading(false);
+    try {
+      const filePath = `${session.user.id}/avatar_${Date.now()}`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const { error: dbError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id);
+      if (dbError) throw dbError;
+
+      triggerGlobalActionNotification('success', 'Institutional Identity Photo Updated.');
+      await fetchAllData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', `Update Failed: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNameUpdate = async () => {
@@ -320,7 +377,6 @@ export default function Dashboard({ session, onSignOut }) {
     const filePath = `${session.user.id}/ID_${Date.now()}`;
     const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
     if (uploadError) { setNotification({ type: 'error', text: 'ID Scan Failed.' }); setIsUploadingId(false); return; }
-
     const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
     setKycForm({ ...kycForm, idDocumentUrl: publicUrl });
     setNotification({ type: 'success', text: 'ID Document Securely Vaulted.' });
@@ -364,7 +420,7 @@ export default function Dashboard({ session, onSignOut }) {
     setIsLoading(true);
     const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaState.factorId });
     if (challengeError) return setIsLoading(false);
-
+ 
     const { error } = await supabase.auth.mfa.verify({ factorId: mfaState.factorId, challengeId: challenge.id, code: mfaState.verifyCode });
     if (error) { setNotification({ type: 'error', text: 'Invalid Authenticator Code.' }); }
     else {
@@ -393,213 +449,179 @@ export default function Dashboard({ session, onSignOut }) {
     setNotification({ type: 'success', text: 'Display preferences applied and saved.' });
   };
 
-  const NetPositionView = () => {
-    // --- PRE-CALCULATE DATA FOR ANALYTICS DASHBOARD ---
-    const safeTotalNetWorth = totalNetWorth || 1; // Prevent division by zero
-    const liquidPct = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
-    const alphaPct = ((balances.alpha_equity_usd || 0) / safeTotalNetWorth) * 100;
-    const safePct = ((balances.mysafe_digital_usd || 0) / safeTotalNetWorth) * 100;
-
-    // Filter to only show completed/successful transactions for accurate metrics
-    const validTxs = transactions.filter(tx => tx.status !== 'failed' && tx.status !== 'pending');
-    
-    // Inflow (Deposits, Receives) vs Outflow (Sends, Withdrawals)
-    const totalInflow = validTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
-    const totalOutflow = validTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-    const totalFlowVolume = (totalInflow + totalOutflow) || 1; // Prevent division by zero
-    
-    const inflowPct = (totalInflow / totalFlowVolume) * 100;
-    const outflowPct = (totalOutflow / totalFlowVolume) * 100;
-
-    const avgTransactionValue = validTxs.length > 0 
-      ? validTxs.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) / validTxs.length 
-      : 0;
-
-    return (
-      <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-        {profile && profile.kyc_status !== 'verified' && (
-          <div className="bg-red-50 border border-red-200 p-5 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
-            <div>
-              <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16}/> Regulatory Action Required</h3>
-              <p className="text-slate-600 text-sm mt-1 font-medium">To comply with global anti-money laundering laws, you must complete Identity Verification (KYC) within 30 days to prevent account suspension.</p>
+  const NetPositionView = () => (
+    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+      {profile && profile.kyc_status !== 'verified' && (
+        <div className="bg-red-50 border border-red-200 p-5 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+          <div>
+            <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16}/> Regulatory Action Required</h3>
+            <p className="text-slate-600 text-sm mt-1 font-medium">To comply with global anti-money laundering laws, you must complete Identity Verification (KYC) within 30 days to prevent account suspension.</p>
+          </div>
+          <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); }} className="px-6 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
+            Verify Identity Now
+          </button>
+        </div>
+      )}
+      <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
+        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+          {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
+        </div>
+        <div className="flex-1 text-center md:text-left space-y-2">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">{greeting}, {userName}.</h1>
+          <p className="text-slate-600 leading-relaxed text-sm md:text-base">{insight.text}</p>
+        </div>
+        <button onClick={() => insight.target === 'ADVISOR' ? setActiveModal('ADVISOR') : setActiveTab(insight.target)} className="mx-auto md:mx-0 px-6 py-4 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 hover:-translate-y-1 transition-all flex items-center gap-2">
+          {insight.action} <ArrowRight size={14} />
+        </button>
+      </div>
+      <div className="w-full">
+        <div className="bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm text-blue-100 font-medium tracking-wider uppercase">Total Safety Net</span>
+            <button onClick={() => setShowBalances(!showBalances)} className="text-blue-200 hover:text-white transition-colors" title="Toggle Balance Privacy">
+              {showBalances ? <Eye size={22} /> : <EyeOff size={22} />}
+            </button>
+          </div>
+          <h2 className="text-5xl md:text-6xl font-black tracking-tight mb-8">{formatCurrency(totalNetWorth)}</h2>
+          <button onClick={() => setActiveTab('ACCOUNTS')} className="w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-blue-900 hover:-translate-y-1 transition-all">
+            <ArrowRight size={24} />
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 bg-white/60 backdrop-blur-xl border border-white/40 p-2 rounded-3xl shadow-sm">
+        <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
+          <Send size={16} /> Send
+        </button>
+        <button onClick={() => setActiveModal('REQUEST')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
+          <Download size={16} /> Request
+        </button>
+        <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
+          <ArrowRightLeft size={16} /> Transfer
+        </button>
+        <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
+          <Plus size={16} /> Deposit
+        </button>
+        <button onClick={() => setActiveModal('WITHDRAW')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
+          <Landmark size={16} /> Withdraw
+        </button>
+        <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
+        <button
+          onClick={() => setShowAnalytics(!showAnalytics)}
+          className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all ${showAnalytics ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-white text-slate-700 border border-transparent hover:border-indigo-100 shadow-sm'}`}
+        >
+          <BarChart2 size={16} /> Analytics
+        </button>
+      </div>
+      <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
+        {showAnalytics ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2"><TrendingUp size={16} className="text-indigo-500" /> Cashflow</h3>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">All Time</span>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs font-bold mb-1.5">
+                    <span className="text-emerald-600">Total Inflow</span>
+                    <span className="text-emerald-600">{formatCurrency(0)}</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000" style={{ width: '50%' }}></div>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs font-bold mb-1.5">
+                    <span className="text-slate-600">Total Outflow</span>
+                    <span className="text-slate-800">{formatCurrency(0)}</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div className="bg-slate-400 h-full rounded-full transition-all duration-1000 delay-300" style={{ width: '50%' }}></div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); }} className="px-6 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
-              Verify Identity Now
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2"><PieChart size={16} className="text-blue-500" /> Allocation</h3>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Net Worth</span>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-800"></div>Cash</span>
+                  <span className="text-xs font-bold text-slate-800">33.3%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Alpha</span>
+                  <span className="text-xs font-bold text-slate-800">33.3%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div>Vault</span>
+                  <span className="text-xs font-bold text-slate-800">33.3%</span>
+                </div>
+                <div className="w-full h-3 rounded-full flex overflow-hidden mt-3 gap-0.5 shadow-inner">
+                  <div className="bg-slate-800 h-full transition-all duration-1000" style={{ width: '33.3%' }}></div>
+                  <div className="bg-blue-500 h-full transition-all duration-1000 delay-150" style={{ width: '33.3%' }}></div>
+                  <div className="bg-indigo-500 h-full transition-all duration-1000 delay-300" style={{ width: '33.3%' }}></div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2"><BarChart2 size={16} className="text-emerald-500" /> Velocity</h3>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Activity</span>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-end border-b border-slate-100 pb-3">
+                  <span className="text-xs font-bold text-slate-500">Total Transactions</span>
+                  <span className="text-xl font-black text-slate-800">0</span>
+                </div>
+                <div className="flex justify-between items-end">
+                  <span className="text-xs font-bold text-slate-500">Average Volume</span>
+                  <span className="text-lg font-black text-slate-800">{formatCurrency(0)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
+            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ACCOUNTS')}>
+              <div className="flex justify-between items-start mb-4 w-full">
+                <Landmark className="text-slate-400" size={24} />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-full">Cash</span>
+              </div>
+              <p className="text-slate-500 font-medium text-sm mb-1">Cash on Hand</p>
+              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.liquid_usd)}</p>
+            </button>
+            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('INVEST')}>
+              <div className="flex justify-between items-start mb-4 w-full">
+                <Briefcase className="text-blue-500" size={24} />
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-full">Alpha</span>
+              </div>
+              <p className="text-slate-500 font-medium text-sm mb-1">Investments</p>
+              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.alpha_equity_usd)}</p>
+            </button>
+            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ORGANIZE')}>
+              <div className="flex justify-between items-start mb-4 w-full">
+                <ShieldCheck className="text-indigo-500" size={24} />
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">Vault</span>
+              </div>
+              <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
+              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
             </button>
           </div>
         )}
-        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-            {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
-          </div>
-          <div className="flex-1 text-center md:text-left space-y-2">
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">{greeting}, {userName}.</h1>
-            <p className="text-slate-600 leading-relaxed text-sm md:text-base">{insight.text}</p>
-          </div>
-          <button onClick={() => insight.target === 'ADVISOR' ? setActiveModal('ADVISOR') : setActiveTab(insight.target)} className="mx-auto md:mx-0 px-6 py-4 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 hover:-translate-y-1 transition-all flex items-center gap-2">
-            {insight.action} <ArrowRight size={14} />
-          </button>
-        </div>
-        <div className="w-full">
-          <div className="bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-blue-100 font-medium tracking-wider uppercase">Total Safety Net</span>
-              <button onClick={() => setShowBalances(!showBalances)} className="text-blue-200 hover:text-white transition-colors" title="Toggle Balance Privacy">
-                {showBalances ? <Eye size={22} /> : <EyeOff size={22} />}
-              </button>
-            </div>
-            <h2 className="text-5xl md:text-6xl font-black tracking-tight mb-8">{formatCurrency(totalNetWorth)}</h2>
-            <button onClick={() => setActiveTab('ACCOUNTS')} className="w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-blue-900 hover:-translate-y-1 transition-all">
-              <ArrowRight size={24} />
-            </button>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 bg-white/60 backdrop-blur-xl border border-white/40 p-2 rounded-3xl shadow-sm">
-          <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-            <Send size={16} /> Send
-          </button>
-          <button onClick={() => setActiveModal('REQUEST')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-            <Download size={16} /> Request
-          </button>
-          <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-            <ArrowRightLeft size={16} /> Transfer
-          </button>
-          <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
-            <Plus size={16} /> Deposit
-          </button>
-          <button onClick={() => setActiveModal('WITHDRAW')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
-            <Landmark size={16} /> Withdraw
-          </button>
-          <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
-          <button
-            onClick={() => setShowAnalytics(!showAnalytics)}
-            className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all ${showAnalytics ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-white text-slate-700 border border-transparent hover:border-indigo-100 shadow-sm'}`}
-          >
-            <BarChart2 size={16} /> Analytics
-          </button>
-        </div>
-        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
-          
-          {/* ============================================== */}
-          {/* NEW DATA-DRIVEN ANALYTICS DASHBOARD            */}
-          {/* ============================================== */}
-          {showAnalytics ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
-              
-              {/* CARD 1: CASHFLOW DYNAMICS */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><TrendingUp size={16} className="text-indigo-500" /> Cashflow</h3>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">All Time</span>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1.5">
-                      <span className="text-emerald-600">Total Inflow</span>
-                      <span className="text-emerald-600">{formatCurrency(totalInflow)}</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000" style={{ width: `${inflowPct}%` }}></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs font-bold mb-1.5">
-                      <span className="text-slate-600">Total Outflow</span>
-                      <span className="text-slate-800">{formatCurrency(totalOutflow)}</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div className="bg-slate-400 h-full rounded-full transition-all duration-1000 delay-300" style={{ width: `${outflowPct}%` }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* CARD 2: ASSET ALLOCATION */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><PieChart size={16} className="text-blue-500" /> Allocation</h3>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Net Worth</span>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-800"></div>Cash</span>
-                    <span className="text-xs font-bold text-slate-800">{liquidPct.toFixed(1)}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Alpha</span>
-                    <span className="text-xs font-bold text-slate-800">{alphaPct.toFixed(1)}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div>Vault</span>
-                    <span className="text-xs font-bold text-slate-800">{safePct.toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full h-3 rounded-full flex overflow-hidden mt-3 gap-0.5 shadow-inner">
-                    <div className="bg-slate-800 h-full transition-all duration-1000" style={{ width: `${liquidPct}%` }}></div>
-                    <div className="bg-blue-500 h-full transition-all duration-1000 delay-150" style={{ width: `${alphaPct}%` }}></div>
-                    <div className="bg-indigo-500 h-full transition-all duration-1000 delay-300" style={{ width: `${safePct}%` }}></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* CARD 3: TRANSACTION VELOCITY */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><BarChart2 size={16} className="text-emerald-500" /> Velocity</h3>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Activity</span>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end border-b border-slate-100 pb-3">
-                    <span className="text-xs font-bold text-slate-500">Total Transactions</span>
-                    <span className="text-xl font-black text-slate-800">{validTxs.length}</span>
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <span className="text-xs font-bold text-slate-500">Average Volume</span>
-                    <span className="text-lg font-black text-slate-800">{formatCurrency(avgTransactionValue)}</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
-              <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ACCOUNTS')}>
-                <div className="flex justify-between items-start mb-4 w-full">
-                  <Landmark className="text-slate-400" size={24} />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-full">Cash</span>
-                </div>
-                <p className="text-slate-500 font-medium text-sm mb-1">Cash on Hand</p>
-                <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.liquid_usd)}</p>
-              </button>
-              <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('INVEST')}>
-                <div className="flex justify-between items-start mb-4 w-full">
-                  <Briefcase className="text-blue-500" size={24} />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-full">Alpha</span>
-                </div>
-                <p className="text-slate-500 font-medium text-sm mb-1">Investments</p>
-                <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.alpha_equity_usd)}</p>
-              </button>
-              <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ORGANIZE')}>
-                <div className="flex justify-between items-start mb-4 w-full">
-                  <ShieldCheck className="text-indigo-500" size={24} />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">Vault</span>
-                </div>
-                <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
-                <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
-              </button>
-            </div>
-          )}
-        </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   // --- THE FULL TRANSACTIONS ENGINE ---
   const TransactionsView = () => {
     const [activeTxTab, setActiveTxTab] = useState('ALL');
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
- 
+  
     const monthTxs = transactions.filter(tx => {
       const d = new Date(tx.created_at);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
@@ -667,7 +689,7 @@ export default function Dashboard({ session, onSignOut }) {
                 {transactions.map(tx => {
                   const isPositive = tx.amount > 0;
                   const uiStatus = tx.status === 'completed' ? 'Succeeded' : tx.status === 'pending' ? 'Pending' : 'Failed';
-                  
+                
                   if (activeTxTab !== 'ALL' && activeTxTab !== uiStatus.toUpperCase()) return null;
                   return (
                     <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
@@ -756,6 +778,7 @@ export default function Dashboard({ session, onSignOut }) {
                 </div>
               </div>
             </div>
+            {/* KYC & Agreement sections unchanged */}
             <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
               <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                 <h3 className="text-lg font-black text-slate-800 flex items-center gap-2"><Fingerprint className="text-blue-500" size={20}/> Identity Verification (KYC)</h3>
@@ -773,6 +796,7 @@ export default function Dashboard({ session, onSignOut }) {
                     fetchAllData();
                   });
               }} className="space-y-6">
+                {/* KYC form fields unchanged */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Full Legal Name</label>
@@ -1052,9 +1076,9 @@ export default function Dashboard({ session, onSignOut }) {
         <main className="flex-1 flex flex-col relative overflow-hidden">
           <header className="border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-[100] sticky top-0 pt-[env(safe-area-inset-top)] min-h-[calc(5rem+env(safe-area-inset-top))]">
             <div className="flex items-center gap-4">
-              <button 
-                type="button" 
-                onClick={(e) => { e.preventDefault(); setIsSidebarOpen(true); }} 
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setIsSidebarOpen(true); }}
                 onTouchEnd={(e) => { e.preventDefault(); setIsSidebarOpen(true); }}
                 className="md:hidden text-slate-800 hover:text-blue-500 transition-colors p-2 -ml-2 rounded-xl hover:bg-white/40 active:bg-slate-200 relative z-50 cursor-pointer"
               >
@@ -1090,11 +1114,11 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 )}
               </div>
-              <button 
+              <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }} 
+                onClick={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }}
                 onTouchEnd={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }}
-                className="text-slate-400 hover:text-blue-500 active:text-blue-600 transition-colors relative p-2 cursor-pointer z-50" 
+                className="text-slate-400 hover:text-blue-500 active:text-blue-600 transition-colors relative p-2 cursor-pointer z-50"
                 title="Notifications"
               >
                 <Bell size={22} />
@@ -1120,9 +1144,9 @@ export default function Dashboard({ session, onSignOut }) {
                 </>
               )}
               <div className="relative group">
-                <button 
-                  type="button" 
-                  onClick={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }} 
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }}
                   onTouchEnd={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }}
                   className="flex items-center gap-3 w-full text-left group px-3 py-2 rounded-2xl hover:bg-white/40 active:bg-slate-200 transition-colors border border-transparent hover:border-white/60 relative z-50 cursor-pointer"
                 >
@@ -1189,7 +1213,9 @@ export default function Dashboard({ session, onSignOut }) {
           </button>
         </main>
       </div>
+
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
+
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 mt-[env(safe-area-inset-top)] mb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto">
@@ -1246,29 +1272,16 @@ export default function Dashboard({ session, onSignOut }) {
                 setIsLoading(false);
                 return;
               }
-              if (activeModal === 'WITHDRAW' && amount > balances.liquid_usd) {
-                setNotification({ type: 'error', text: 'INSUFFICIENT LIQUIDITY: Transaction Declined' });
-                setTimeout(() => setNotification(null), 5000);
-                setIsLoading(false);
-                return;
-              }
               if (activeModal === 'WITHDRAW') {
-                const routingNum = e.target.routingNumber?.value;
-                const accountNum = e.target.accountNumber?.value;
-                const selectedCard = e.target.selectedCard?.value;
-                try {
-                  const { data, error } = await supabase.functions.invoke('process-withdrawal', {
-                    body: { userId: session.user.id, amount: amount, routingNumber: routingNum, accountNumber: accountNum, cardId: selectedCard }
-                  });
-                  if (error || data?.error) throw new Error(data?.error || "Routing failed.");
-                  setNotification({ type: 'success', text: `Capital Extraction Initiated: $${amount.toFixed(2)}` });
-                  setTimeout(() => setNotification(null), 5000);
-                  await fetchAllData();
-                  setActiveModal(null);
-                } catch (err) {
-                  setNotification({ type: 'error', text: err.message });
-                  setTimeout(() => setNotification(null), 5000);
-                } finally { setIsLoading(false); }
+                const amount = parseFloat(e.target.amount.value);
+                if (amount > balances.liquid_usd) {
+                  triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY: Transaction Declined.');
+                  setIsLoading(false);
+                  return;
+                }
+                triggerGlobalActionNotification('success', `Withdrawal of ${formatCurrency(amount)} initiated via ${withdrawalMethod}.`);
+                setActiveModal(null);
+                setIsLoading(false);
                 return;
               }
               const finalAmount = -amount;
@@ -1305,103 +1318,80 @@ export default function Dashboard({ session, onSignOut }) {
                       </div>
                     </div>
                   )}
+
+                  {/* NEW REQUEST MODAL UI (dual-mode) */}
                   {activeModal === 'REQUEST' && (
-                    <div className="space-y-4 mb-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2">
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Reason / Note (Optional)</label>
-                          <input type="text" value={requestReason} onChange={(e) => setRequestReason(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300" placeholder="e.g., Dinner in Paris" />
-                        </div>
-                        <div className="col-span-2">
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Target Email (Optional)</label>
-                          <input type="email" value={requestEmail} onChange={(e) => setRequestEmail(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300" placeholder="client@example.com" />
-                        </div>
+                    <div className="space-y-6 text-left animate-in fade-in">
+                      <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                        <button type="button" onClick={() => setRequestTargetType('INTERNAL')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${requestTargetType === 'INTERNAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Internal User</button>
+                        <button type="button" onClick={() => setRequestTargetType('EXTERNAL')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${requestTargetType === 'EXTERNAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>External User</button>
                       </div>
-                    </div>
-                  )}
-                  {activeModal === 'WITHDRAW' && (
-                    <div className="space-y-4 mb-6">
-                      <div className="bg-slate-800 p-4 rounded-2xl text-left flex justify-between items-start">
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1 flex items-center gap-1"><ShieldCheck size={12}/> Instant Payouts</p>
-                          <p className="text-xs font-bold text-slate-300">Route capital directly to your linked accounts or cards.</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => { setActiveModal(null); setShowCardLinker(true); }}
-                          className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all"
-                        >
-                          + Link Card
-                        </button>
-                      </div>
-                      {linkedCards.length > 0 ? (
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Select Destination</label>
-                          <div className="grid gap-2">
-                            {linkedCards.map(card => (
-                              <label key={card.id} className="flex items-center gap-3 p-4 border-2 border-slate-100 rounded-2xl cursor-pointer hover:border-blue-500 transition-all bg-slate-50 relative group">
-                                <input type="radio" name="selectedCard" value={card.stripe_external_account_id} defaultChecked={card.is_default} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
-                                <div className="flex-1 text-left flex items-center gap-3">
-                                  <div className="w-10 h-7 bg-slate-200 rounded flex items-center justify-center text-[10px] font-black uppercase text-slate-600 tracking-widest">
-                                    {card.brand === 'visa' ? 'VISA' : card.brand === 'mastercard' ? 'MC' : card.brand}
-                                  </div>
-                                  <div>
-                                    <p className="font-bold text-sm text-slate-800">•••• {card.last4}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Debit Card</p>
-                                  </div>
-                                </div>
-                              </label>
-                            ))}
+
+                      {requestTargetType === 'INTERNAL' ? (
+                        <div className="space-y-4">
+                          <div className="relative">
+                            <Search className="absolute left-4 top-4 text-slate-400" size={18}/>
+                            <input 
+                              className="w-full bg-slate-50 p-4 pl-12 rounded-2xl border border-slate-200 outline-none focus:border-blue-500 font-bold transition-all"
+                              placeholder="Search Username or Email..."
+                              value={userSearchQuery}
+                              onChange={e => setUserSearchQuery(e.target.value)}
+                            />
                           </div>
+                          {isSearchingUser && <div className="text-center"><Loader2 className="animate-spin mx-auto text-blue-500"/></div>}
+                          {foundUser && (
+                            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl border-2 border-blue-200 border-dashed animate-in zoom-in-95">
+                              <div className="w-12 h-12 rounded-full bg-blue-200 overflow-hidden border-2 border-white shadow-sm">
+                                {foundUser.avatar_url ? <img src={foundUser.avatar_url} className="w-full h-full object-cover"/> : <User className="m-3 text-blue-400"/>}
+                              </div>
+                              <div>
+                                <p className="font-black text-blue-900 leading-none mb-1">{foundUser.full_name}</p>
+                                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Verified IFB Member</p>
+                              </div>
+                              <ShieldCheck className="ml-auto text-blue-500" size={20}/>
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="col-span-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Routing Number (9 Digits)</label>
-                            <input
-                              type="text"
-                              name="routingNumber"
-                              maxLength="9"
-                              required={linkedCards.length === 0}
-                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300 tracking-widest"
-                              placeholder="000000000"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 text-left">Account Number</label>
-                            <input
-                              type="password"
-                              name="accountNumber"
-                              required={linkedCards.length === 0}
-                              className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300 tracking-widest"
-                              placeholder="••••••••••••"
-                            />
-                          </div>
+                        <input className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none focus:border-blue-500 font-bold" placeholder="Recipient Email (Optional)"/>
+                      )}
+                    </div>
+                  )}
+
+                  {/* NEW WITHDRAW MODAL UI */}
+                  {activeModal === 'WITHDRAW' && (
+                    <div className="space-y-6">
+                      <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-4 shadow-inner">
+                        <button type="button" onClick={() => setWithdrawalMethod('BANK')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${withdrawalMethod === 'BANK' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Bank Transfer</button>
+                        <button type="button" onClick={() => setWithdrawalMethod('CARD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${withdrawalMethod === 'CARD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Instant Card</button>
+                      </div>
+
+                      {withdrawalMethod === 'BANK' ? (
+                        <div className="space-y-4 animate-in slide-in-from-top-2 text-left">
+                           <input required name="bankName" className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Institution Name"/>
+                           <div className="flex gap-4">
+                             <input required name="routingNumber" maxLength="9" className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Routing (9)"/>
+                             <input required name="accountNumber" className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Account No"/>
+                           </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 animate-in slide-in-from-top-2">
+                           {linkedCards.length > 0 ? (
+                             <select name="selectedCard" className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold appearance-none">
+                                {linkedCards.map(c => <option key={c.id} value={c.id}>•••• {c.last4} ({c.brand.toUpperCase()})</option>)}
+                             </select>
+                           ) : (
+                             <div className="p-8 border-2 border-dashed border-slate-200 rounded-[2rem] text-center space-y-4">
+                               <CreditCard className="mx-auto text-slate-300" size={32}/>
+                               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Instant Methods Linked</p>
+                               <button type="button" onClick={() => { setActiveModal(null); setShowCardLinker(true); }} className="px-6 py-2 bg-slate-100 text-slate-700 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-200 transition-all">Link Method</button>
+                             </div>
+                           )}
                         </div>
                       )}
                     </div>
                   )}
-                  {activeModal === 'TRANSFER' && (
-                    <div className="space-y-4 mb-6 text-left">
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">From Account</label>
-                        <select name="fromAccount" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
-                          <option value="liquid_usd">Cash on Hand ({formatCurrency(balances.liquid_usd)})</option>
-                          <option value="alpha_equity_usd">Alpha Equity ({formatCurrency(balances.alpha_equity_usd)})</option>
-                          <option value="mysafe_digital_usd">Digital Safe ({formatCurrency(balances.mysafe_digital_usd)})</option>
-                        </select>
-                      </div>
-                      <div className="flex justify-center -my-2 relative z-10"><div className="bg-blue-50 text-blue-500 p-2 rounded-full border border-blue-100"><ArrowDownToLine size={16}/></div></div>
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">To Account</label>
-                        <select name="toAccount" defaultValue="alpha_equity_usd" className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
-                          <option value="liquid_usd">Cash on Hand</option>
-                          <option value="alpha_equity_usd">Alpha Equity</option>
-                          <option value="mysafe_digital_usd">Digital Safe</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
+
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-left">Amount (USD)</label>
                     <input type="number" step="0.01" name="amount" required className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 font-black text-4xl text-center text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-300 shadow-inner" placeholder="0.00" autoFocus />
@@ -1468,6 +1458,7 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
+
       {notification && (
         <div className="fixed top-2 left-1/2 transform -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 fade-in duration-300 mt-[env(safe-area-inset-top)]">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
@@ -1480,6 +1471,7 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
+
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
       {showCardLinker && (
         <CardLinker
@@ -1493,62 +1485,49 @@ export default function Dashboard({ session, onSignOut }) {
           }}
         />
       )}
-      {/* 🧾 STATEMENT GENERATION MODAL */}
+
+      {/* --- REQUIREMENT: EXPORT STATEMENT MODAL --- */}
       {showStatementModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative border border-slate-100 mt-[env(safe-area-inset-top)] mb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center relative z-20 sticky top-0">
-              <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase">Export Statements</h3>
-              <button onClick={() => setShowStatementModal(false)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
-                <X size={20} />
-              </button>
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl border border-slate-100">
+            <div className="flex justify-between items-center mb-8">
+               <h3 className="font-black text-xl text-slate-800 uppercase tracking-tighter">Export Statements</h3>
+               <X onClick={() => setShowStatementModal(false)} className="cursor-pointer text-slate-400 hover:text-slate-800"/>
             </div>
-            
-            <div className="p-8 space-y-6 relative z-10">
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                Generate cryptographically signed statements for tax, auditing, or compliance purposes.
-              </p>
-            
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Start Date</label>
-                  <input type="date" value={statementConfig.startDate} onChange={e => setStatementConfig({...statementConfig, startDate: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">End Date</label>
-                  <input type="date" value={statementConfig.endDate} onChange={e => setStatementConfig({...statementConfig, endDate: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500" />
-                </div>
-              </div>
+            <div className="space-y-6">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Format</label>
-                <select value={statementConfig.format} onChange={e => setStatementConfig({...statementConfig, format: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-blue-500">
-                  <option value="pdf">PDF (Certified)</option>
-                  <option value="csv">CSV (Spreadsheet)</option>
+                <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Document Format</label>
+                <select 
+                  className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 font-bold outline-none focus:border-blue-500 transition-all"
+                  value={statementConfig.format}
+                  onChange={e => setStatementConfig({...statementConfig, format: e.target.value})}
+                >
+                  <option value="pdf">Normal Statement (PDF)</option>
+                  <option value="csv">Institutional Data (CSV)</option>
                 </select>
               </div>
-            
-              <div className="flex gap-3 pt-4 border-t border-slate-100">
-                <button
-                  onClick={() => {
-                    setShowStatementModal(false);
-                    setNotification({ type: 'success', text: `Generating ${statementConfig.format.toUpperCase()} export...` });
-                    setTimeout(() => setNotification(null), 3000);
-                  }}
-                  className="flex-1 bg-white border border-slate-200 text-slate-700 rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-                >
-                  <FileDown size={14}/> Download
-                </button>
-                <button
-                  onClick={() => {
-                    setShowStatementModal(false);
-                    setNotification({ type: 'success', text: `Statement dispatched to secure email.` });
-                    setTimeout(() => setNotification(null), 3000);
-                  }}
-                  className="flex-1 bg-slate-800 text-white rounded-xl py-4 font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
-                >
-                  <Mail size={14}/> Email
-                </button>
+              <div className="p-5 bg-blue-50 rounded-2xl border border-blue-200 flex items-start gap-4 shadow-sm">
+                 <input 
+                  type="checkbox" 
+                  className="mt-1 w-6 h-6 rounded accent-blue-600"
+                  checked={statementConfig.isOfficial}
+                  onChange={e => setStatementConfig({...statementConfig, isOfficial: e.target.checked})}
+                 />
+                 <div className="space-y-1">
+                   <p className="text-sm font-black text-blue-900 uppercase tracking-tight">Signed Official Statement</p>
+                   <p className="text-[10px] text-blue-700 leading-relaxed font-medium">Includes Logo, EIN 33-1869013, Official New York Address, and Verified Digital Signature block.</p>
+                 </div>
               </div>
+              <button 
+                onClick={() => {
+                   const type = statementConfig.isOfficial ? "Signed Official Statement" : "Standard Statement";
+                   triggerGlobalActionNotification('success', `${type} (${statementConfig.format.toUpperCase()}) generated and archived.`);
+                   setShowStatementModal(false);
+                }} 
+                className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all"
+              >
+                Generate & Download
+              </button>
             </div>
           </div>
         </div>

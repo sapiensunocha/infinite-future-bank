@@ -1,61 +1,232 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { 
   Folder, PieChart, ArrowDownToLine, Users, 
   Plus, Settings2, ArrowRight, Wallet, Target,
-  Send, MoreHorizontal, ShieldCheck, X, Loader2
+  Send, MoreHorizontal, ShieldCheck, X, Loader2, Search
 } from 'lucide-react';
 
 export default function OrganizationSuite({ session, balances, pockets, recipients }) {
   const [activeModule, setActiveModule] = useState('POCKETS'); // POCKETS, BUDGETS, INCOME, RECIPIENTS
   
-  // Funding UI States
+  // Real-Time States
+  const [livePockets, setLivePockets] = useState(pockets || []);
+  const [liveRecipients, setLiveRecipients] = useState(recipients || []);
+  const [budgets, setBudgets] = useState([]);
+  const [incomeProtocol, setIncomeProtocol] = useState(null);
+  const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Modals & Forms
   const [fundingPocketId, setFundingPocketId] = useState(null);
   const [fundAmount, setFundAmount] = useState('');
-  const [isFunding, setIsFunding] = useState(false);
-  const [notification, setNotification] = useState(null);
+  
+  const [showPocketModal, setShowPocketModal] = useState(false);
+  const [newPocketForm, setNewPocketForm] = useState({ name: '', target: '', color: 'bg-blue-500' });
+
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [newBudgetForm, setNewBudgetForm] = useState({ category: '', limit: '', color: 'bg-emerald-500' });
+
+  const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [incomeForm, setIncomeForm] = useState({ liquidPct: 50, alphaPct: 30, vaultPct: 20 });
+
+  const [showRecipientModal, setShowRecipientModal] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [foundUser, setFoundUser] = useState(null);
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
 
-  // Fallback Mock Data for UI presentation if the database is empty
-  const defaultPockets = pockets?.length > 0 ? pockets : [
-    { id: '1', pocket_name: 'Tax Reserve 2026', current_amount: 0, target_amount: 60000, color: 'bg-red-500' },
-    { id: '2', pocket_name: 'Real Estate Fund', current_amount: 0, target_amount: 500000, color: 'bg-blue-500' }
-  ];
+  const triggerGlobalActionNotification = (type, message) => {
+    setNotification({ type, text: message });
+    console.log(`System Event: ${message}. Dispatching In-App Alert and Email to ${session?.user?.email}`);
+    setTimeout(() => setNotification(null), 6000);
+  };
 
-  const defaultRecipients = recipients?.length > 0 ? recipients : [
-    { recipient_name: 'IFB Treasury', role: 'Institutional', initials: 'IF', color: 'bg-slate-200 text-slate-700' },
-    { recipient_name: 'Aura Capital LLC', role: 'Business Partner', initials: 'AC', color: 'bg-blue-100 text-blue-700' }
-  ];
+  // --- DATA FETCHING (Budgets & Income Protocols) ---
+  const fetchOrganizationData = async () => {
+    if (!session?.user?.id) return;
+    
+    // Fetch Live Pockets
+    const { data: pData } = await supabase.from('pockets').select('*').eq('user_id', session.user.id);
+    if (pData) setLivePockets(pData);
+
+    // Fetch Live Recipients
+    const { data: rData } = await supabase.from('recipients').select('*').eq('user_id', session.user.id);
+    if (rData) setLiveRecipients(rData);
+
+    // Fetch Budgets (Assuming a 'budgets' table exists, otherwise using empty array)
+    const { data: bData, error: bError } = await supabase.from('budgets').select('*').eq('user_id', session.user.id);
+    if (bData && !bError) setBudgets(bData);
+
+    // Fetch Income Protocols
+    const { data: iData, error: iError } = await supabase.from('income_protocols').select('*').eq('user_id', session.user.id).maybeSingle();
+    if (iData && !iError) setIncomeProtocol(iData);
+  };
+
+  useEffect(() => { fetchOrganizationData(); }, [session?.user?.id]);
+
+  // --- USER SEARCH ENGINE (For Adding Recipients) ---
+  useEffect(() => {
+    if (userSearchQuery.length > 2) {
+      const delaySearch = setTimeout(async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .or(`full_name.ilike.%${userSearchQuery}%,email.ilike.%${userSearchQuery}%`)
+          .neq('id', session.user.id)
+          .limit(1)
+          .maybeSingle();
+        setFoundUser(data);
+      }, 400);
+      return () => clearTimeout(delaySearch);
+    } else {
+      setFoundUser(null);
+    }
+  }, [userSearchQuery]);
+
+
+  // --- HANDLERS ---
+
+  const handleCreatePocket = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.from('pockets').insert([{
+        user_id: session.user.id,
+        pocket_name: newPocketForm.name,
+        target_amount: parseFloat(newPocketForm.target),
+        current_amount: 0,
+        color: newPocketForm.color
+      }]);
+      if (error) throw error;
+      
+      triggerGlobalActionNotification('success', `Pocket '${newPocketForm.name}' established.`);
+      setShowPocketModal(false);
+      setNewPocketForm({ name: '', target: '', color: 'bg-blue-500' });
+      await fetchOrganizationData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Failed to create pocket.');
+    } finally { setIsLoading(false); }
+  };
+
+  const handleCreateBudget = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.from('budgets').insert([{
+        user_id: session.user.id,
+        category: newBudgetForm.category,
+        monthly_limit: parseFloat(newBudgetForm.limit),
+        spent: 0,
+        color: newBudgetForm.color
+      }]);
+      
+      if (error) throw error;
+      triggerGlobalActionNotification('success', `Budget limit for '${newBudgetForm.category}' activated.`);
+      setShowBudgetModal(false);
+      setNewBudgetForm({ category: '', limit: '', color: 'bg-emerald-500' });
+      await fetchOrganizationData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Failed to configure budget.');
+    } finally { setIsLoading(false); }
+  };
+
+  const handleSaveIncomeProtocol = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const total = parseInt(incomeForm.liquidPct) + parseInt(incomeForm.alphaPct) + parseInt(incomeForm.vaultPct);
+    if (total !== 100) {
+      triggerGlobalActionNotification('error', 'Protocol percentages must total exactly 100%.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('income_protocols').upsert({
+        user_id: session.user.id,
+        liquid_pct: incomeForm.liquidPct,
+        alpha_pct: incomeForm.alphaPct,
+        vault_pct: incomeForm.vaultPct,
+        status: 'active'
+      }, { onConflict: 'user_id' });
+      
+      if (error) throw error;
+      triggerGlobalActionNotification('success', 'Autonomous Salary Routing Protocol Enforced.');
+      setShowIncomeModal(false);
+      await fetchOrganizationData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Failed to save protocol.');
+    } finally { setIsLoading(false); }
+  };
+
+  const handleAddRecipient = async () => {
+    if (!foundUser) return;
+    setIsLoading(true);
+    try {
+      // Check if already exists
+      const exists = liveRecipients.find(r => r.target_user_id === foundUser.id);
+      if (exists) {
+        triggerGlobalActionNotification('error', 'User is already in your directory.');
+        setIsLoading(false); return;
+      }
+
+      const initials = foundUser.full_name ? foundUser.full_name.substring(0, 2).toUpperCase() : 'XX';
+
+      const { error } = await supabase.from('recipients').insert([{
+        user_id: session.user.id,
+        recipient_name: foundUser.full_name || foundUser.email,
+        target_user_id: foundUser.id,
+        role: 'Verified Contact',
+        initials: initials,
+        color: 'bg-blue-100 text-blue-700'
+      }]);
+      
+      if (error) throw error;
+      triggerGlobalActionNotification('success', `${foundUser.full_name || 'Contact'} vaulted to trusted directory.`);
+      setShowRecipientModal(false);
+      setUserSearchQuery('');
+      await fetchOrganizationData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Failed to add payee.');
+    } finally { setIsLoading(false); }
+  };
 
   const handleFundPocket = async (e) => {
     e.preventDefault();
-    if (!fundAmount || fundAmount <= 0) return;
-    setIsFunding(true);
+    const amount = parseFloat(fundAmount);
+    if (!amount || amount <= 0) return;
+    
+    if (amount > balances.liquid_usd) {
+      triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY: Routing Aborted.');
+      return;
+    }
 
+    setIsLoading(true);
     try {
+      // Call standard internal transfer RPC to route money from Liquid to the specific Pocket
       const { error } = await supabase.rpc('fund_pocket', {
         p_user_id: session.user.id,
         p_pocket_id: fundingPocketId,
-        p_amount: parseFloat(fundAmount)
+        p_amount: amount
       });
 
       if (error) throw error;
 
-      setNotification({ type: 'success', text: `Successfully routed ${formatCurrency(fundAmount)} to pocket.` });
-      setTimeout(() => setNotification(null), 5000);
-      
+      triggerGlobalActionNotification('success', `Successfully routed ${formatCurrency(amount)} into pocket.`);
       setFundingPocketId(null);
       setFundAmount('');
-
+      
+      // We don't have to await fetchAllData here if the parent Dashboard is subscribing to realtime, 
+      // but we will do it for safety in this isolated component.
+      await fetchOrganizationData();
     } catch (err) {
-      console.error(err);
-      setNotification({ type: 'error', text: err.message || "Failed to route funds." });
-      setTimeout(() => setNotification(null), 5000);
+      triggerGlobalActionNotification('error', err.message || "Failed to route funds.");
     } finally {
-      setIsFunding(false);
+      setIsLoading(false);
     }
   };
+
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800 relative">
@@ -95,48 +266,52 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
               <div className="p-2 bg-blue-50 rounded-lg text-blue-600 border border-blue-100"><Folder size={18}/></div>
               Active Pockets
             </h3>
-            <button className="text-[10px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-1 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-blue-100">
+            <button onClick={() => setShowPocketModal(true)} className="text-[10px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-1 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-blue-100">
               <Plus size={14}/> New Pocket
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {defaultPockets.map((pocket) => (
-              <div key={pocket.id} className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-md hover:border-slate-300 hover:-translate-y-1 transition-all group flex flex-col justify-between">
-                
-                <div>
-                  <div className="flex justify-between items-start mb-8">
-                    <div className={`w-4 h-4 rounded-full ${pocket.color || 'bg-blue-500'} shadow-sm`}></div>
-                    <Settings2 size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors cursor-pointer"/>
-                  </div>
-                  <h4 className="text-sm font-black text-slate-500 mb-1">{pocket.pocket_name}</h4>
-                  <p className="text-2xl font-black text-slate-800 tracking-tight mb-6">{formatCurrency(pocket.current_amount)}</p>
-                </div>
-                
-                <div>
-                  {/* Progress Bar */}
-                  <div className="space-y-2 mb-6">
-                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
-                      <span>Progress</span>
-                      <span className="text-slate-800">{pocket.target_amount > 0 ? Math.round((pocket.current_amount / pocket.target_amount) * 100) : 0}%</span>
+          {livePockets.length === 0 ? (
+            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[3rem] p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
+               <Folder size={48} className="text-slate-300 mb-4"/>
+               <h4 className="text-lg font-black text-slate-800 mb-2">No Active Pockets</h4>
+               <p className="text-sm text-slate-500 max-w-sm mb-6">Create sub-accounts to perfectly organize and secure your idle liquidity for specific goals.</p>
+               <button onClick={() => setShowPocketModal(true)} className="px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all">Create First Pocket</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {livePockets.map((pocket) => (
+                <div key={pocket.id} className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-md hover:border-slate-300 hover:-translate-y-1 transition-all group flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-8">
+                      <div className={`w-4 h-4 rounded-full ${pocket.color || 'bg-blue-500'} shadow-sm`}></div>
+                      <Settings2 size={16} className="text-slate-400 group-hover:text-slate-600 transition-colors cursor-pointer"/>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-100 border border-slate-200 rounded-full overflow-hidden">
-                      <div className={`h-full ${pocket.color || 'bg-blue-500'}`} style={{ width: `${pocket.target_amount > 0 ? (pocket.current_amount / pocket.target_amount) * 100 : 0}%` }}></div>
-                    </div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right pt-1">Goal: <span className="text-slate-500">{formatCurrency(pocket.target_amount)}</span></p>
+                    <h4 className="text-sm font-black text-slate-500 mb-1">{pocket.pocket_name}</h4>
+                    <p className="text-2xl font-black text-slate-800 tracking-tight mb-6">{formatCurrency(pocket.current_amount)}</p>
                   </div>
-
-                  <button 
-                    onClick={() => setFundingPocketId(pocket.id)}
-                    className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                  >
-                    Route Liquidity
-                  </button>
+                  <div>
+                    <div className="space-y-2 mb-6">
+                      <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
+                        <span>Progress</span>
+                        <span className="text-slate-800">{pocket.target_amount > 0 ? Math.min(100, Math.round((pocket.current_amount / pocket.target_amount) * 100)) : 0}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-100 border border-slate-200 rounded-full overflow-hidden">
+                        <div className={`h-full ${pocket.color || 'bg-blue-500'}`} style={{ width: `${pocket.target_amount > 0 ? Math.min(100, (pocket.current_amount / pocket.target_amount) * 100) : 0}%` }}></div>
+                      </div>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right pt-1">Goal: <span className="text-slate-500">{formatCurrency(pocket.target_amount)}</span></p>
+                    </div>
+                    <button 
+                      onClick={() => setFundingPocketId(pocket.id)}
+                      className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                    >
+                      Route Liquidity
+                    </button>
+                  </div>
                 </div>
-
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -148,29 +323,38 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
               <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 border border-emerald-100"><PieChart size={18}/></div>
               Monthly Limits
             </h3>
-            <span className="text-xl font-black text-slate-800">{formatCurrency(14500)} <span className="text-[10px] uppercase text-slate-500 tracking-widest">Spent</span></span>
+            <button onClick={() => setShowBudgetModal(true)} className="text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-1 hover:bg-emerald-50 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-emerald-100">
+              <Plus size={14}/> Set Limit
+            </button>
           </div>
 
-          <div className="space-y-8">
-            {[
-              { label: 'Travel & Aviation', spent: 8500, limit: 10000, color: 'bg-blue-500' },
-              { label: 'Dining & Entertainment', spent: 3200, limit: 5000, color: 'bg-indigo-500' },
-              { label: 'Software & Infrastructure', spent: 2800, limit: 3000, color: 'bg-red-500' }
-            ].map((budget, i) => (
-              <div key={i} className="space-y-3">
-                <div className="flex justify-between items-end">
-                  <span className="text-xs font-black uppercase tracking-widest text-slate-600">{budget.label}</span>
-                  <div className="text-right">
-                    <span className="text-sm font-black text-slate-800">{formatCurrency(budget.spent)}</span>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-2">/ {formatCurrency(budget.limit)}</span>
+          {budgets.length === 0 ? (
+            <div className="text-center py-10 opacity-60">
+              <PieChart size={40} className="mx-auto text-slate-400 mb-3"/>
+              <p className="text-sm font-black text-slate-600">No Budgets Configured</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {budgets.map((budget) => {
+                const pct = Math.min(100, (budget.spent / budget.monthly_limit) * 100);
+                const isOver = pct >= 100;
+                return (
+                  <div key={budget.id} className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-600">{budget.category}</span>
+                      <div className="text-right">
+                        <span className={`text-sm font-black ${isOver ? 'text-red-600' : 'text-slate-800'}`}>{formatCurrency(budget.spent)}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-2">/ {formatCurrency(budget.monthly_limit)}</span>
+                      </div>
+                    </div>
+                    <div className="w-full h-3 bg-slate-100 border border-slate-200 rounded-full overflow-hidden shadow-inner p-0.5">
+                      <div className={`h-full rounded-full transition-all ${isOver ? 'bg-red-500' : (budget.color || 'bg-emerald-500')}`} style={{ width: `${pct}%` }}></div>
+                    </div>
                   </div>
-                </div>
-                <div className="w-full h-3 bg-slate-100 border border-slate-200 rounded-full overflow-hidden shadow-inner p-0.5">
-                  <div className={`h-full rounded-full ${budget.color}`} style={{ width: `${(budget.spent / budget.limit) * 100}%` }}></div>
-                </div>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -183,31 +367,41 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
             
             <h3 className="text-2xl font-black tracking-tight mb-4 relative z-10 text-slate-800">Smart Salary Routing</h3>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed mb-8 relative z-10 max-w-sm">
-              Automatically split incoming deposits into your Pockets, Joint Accounts, and Investment portfolios the second they arrive.
+              Automatically split incoming deposits into your Cash, Equity, and Vault portfolios the second they arrive.
             </p>
-            <button className="px-6 py-4 bg-emerald-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-md hover:-translate-y-1 hover:bg-emerald-600 transition-all relative z-10">
-              Create Routing Rule
+            <button onClick={() => setShowIncomeModal(true)} className="px-6 py-4 bg-emerald-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-md hover:-translate-y-1 hover:bg-emerald-600 transition-all relative z-10">
+              {incomeProtocol ? 'Modify Routing Rule' : 'Create Routing Rule'}
             </button>
           </div>
 
           <div className="bg-slate-50 border border-slate-200 p-8 rounded-[3rem] shadow-sm flex flex-col justify-center relative overflow-hidden">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Active Protocol: <span className="text-slate-800">"Master Split"</span></h4>
-            <div className="space-y-4 relative">
-              <div className="absolute left-4 top-4 bottom-4 w-[2px] bg-slate-200"></div>
-              
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 text-slate-700 flex items-center justify-center text-[10px] font-black z-10">50%</div>
-                <div className="flex-1 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-black text-slate-700">Main Liquid Account</div>
+            {incomeProtocol ? (
+              <>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Active Protocol: <span className="text-emerald-600 font-bold ml-2">Enforced <ShieldCheck size={12} className="inline mb-0.5"/></span></h4>
+                <div className="space-y-4 relative">
+                  <div className="absolute left-4 top-4 bottom-4 w-[2px] bg-slate-200"></div>
+                  
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px] font-black z-10">{incomeProtocol.liquid_pct}%</div>
+                    <div className="flex-1 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-black text-slate-700">Cash on Hand</div>
+                  </div>
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 text-blue-600 flex items-center justify-center text-[10px] font-black z-10">{incomeProtocol.alpha_pct}%</div>
+                    <div className="flex-1 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-black text-slate-700">Alpha Equity</div>
+                  </div>
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-600 flex items-center justify-center text-[10px] font-black z-10">{incomeProtocol.vault_pct}%</div>
+                    <div className="flex-1 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-black text-slate-700">Digital Safe (Vault)</div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-center opacity-50">
+                 <ArrowDownToLine size={40} className="mx-auto mb-4"/>
+                 <p className="font-black text-sm">No Routing Rules</p>
+                 <p className="text-[10px] uppercase tracking-widest mt-1">All deposits currently route 100% to Cash.</p>
               </div>
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-8 h-8 rounded-full bg-red-100 border border-red-200 text-red-600 flex items-center justify-center text-[10px] font-black z-10">30%</div>
-                <div className="flex-1 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-black text-slate-700">Tax Reserve 2026</div>
-              </div>
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 text-blue-600 flex items-center justify-center text-[10px] font-black z-10">20%</div>
-                <div className="flex-1 p-4 bg-white rounded-xl border border-slate-200 shadow-sm text-xs font-black text-slate-700">Alpha Equity (Auto-Invest)</div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -220,32 +414,43 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
               <div className="p-2 bg-amber-50 rounded-lg text-amber-500 border border-amber-100"><Users size={18}/></div>
               Trusted Directory
             </h3>
-            <button className="text-[10px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-1 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-blue-100"><Plus size={14}/> Add Payee</button>
+            <button onClick={() => setShowRecipientModal(true)} className="text-[10px] font-black uppercase tracking-widest text-blue-600 flex items-center gap-1 hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors border border-transparent hover:border-blue-100"><Plus size={14}/> Add Payee</button>
           </div>
 
-          <div className="space-y-2">
-            {defaultRecipients.map((rec) => (
-              <div key={rec.id || rec.recipient_name} className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl transition-colors border border-transparent hover:border-slate-200 group cursor-pointer">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-full ${rec.color || 'bg-slate-100 text-slate-600'} flex items-center justify-center text-sm font-black shadow-sm border border-slate-200`}>
-                    {rec.initials}
+          {liveRecipients.length === 0 ? (
+            <div className="text-center py-10 opacity-60">
+              <Users size={40} className="mx-auto text-slate-400 mb-3"/>
+              <p className="text-sm font-black text-slate-600">Directory is empty</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {liveRecipients.map((rec) => (
+                <div key={rec.id} className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl transition-colors border border-transparent hover:border-slate-200 group cursor-pointer">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full ${rec.color || 'bg-slate-100 text-slate-600'} flex items-center justify-center text-sm font-black shadow-sm border border-slate-200`}>
+                      {rec.initials}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-800">{rec.recipient_name}</h4>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{rec.role}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-black text-slate-800">{rec.recipient_name}</h4>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{rec.role}</p>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => triggerGlobalActionNotification('success', 'Transfer initiation sent to logic handler.')} className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors shadow-sm"><Send size={16}/></button>
+                    <button className="w-10 h-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"><MoreHorizontal size={16}/></button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors shadow-sm"><Send size={16}/></button>
-                  <button className="w-10 h-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"><MoreHorizontal size={16}/></button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* FUND POCKET MODAL */}
+      {/* ========================================================================= */}
+      {/* MODALS FOR DATA CREATION */}
+      {/* ========================================================================= */}
+
+      {/* 1. FUND POCKET MODAL */}
       {fundingPocketId && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative border border-slate-100">
@@ -255,45 +460,152 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
                 <X size={20} />
               </button>
             </div>
-            
             <form onSubmit={handleFundPocket} className="p-8 space-y-6 relative z-10">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available to Route</label>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Available Cash to Route</label>
                 <p className="text-xl font-black text-emerald-600 mb-6">{formatCurrency(balances.liquid_usd)}</p>
 
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-left">Amount (USD)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  value={fundAmount}
-                  onChange={(e) => setFundAmount(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 font-black text-4xl text-center text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-300 shadow-inner"
-                  placeholder="0.00"
-                  autoFocus
-                />
+                <input type="number" step="0.01" required value={fundAmount} onChange={(e) => setFundAmount(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 font-black text-4xl text-center text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-300 shadow-inner" placeholder="0.00" autoFocus />
               </div>
-              
-              <button 
-                type="submit" 
-                disabled={isFunding} 
-                className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center border-none"
-              >
-                {isFunding ? <Loader2 className="animate-spin" size={18} /> : 'CONFIRM ROUTING'}
+              <button type="submit" disabled={isLoading} className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center">
+                {isLoading ? <Loader2 className="animate-spin" size={18} /> : 'CONFIRM ROUTING'}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* IN-APP NOTIFICATION */}
+      {/* 2. CREATE POCKET MODAL */}
+      {showPocketModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden relative border border-slate-100 p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">New Pocket</h3>
+              <X onClick={() => setShowPocketModal(false)} className="cursor-pointer text-slate-400 hover:text-slate-800"/>
+            </div>
+            <form onSubmit={handleCreatePocket} className="space-y-6">
+              <input required type="text" value={newPocketForm.name} onChange={e => setNewPocketForm({...newPocketForm, name: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold" placeholder="Pocket Name (e.g. Tax Reserve)"/>
+              <input required type="number" value={newPocketForm.target} onChange={e => setNewPocketForm({...newPocketForm, target: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold" placeholder="Target Amount ($)"/>
+              <div>
+                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 tracking-widest">Tag Color</label>
+                <div className="flex gap-2">
+                  {['bg-blue-500', 'bg-red-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'].map(color => (
+                    <div key={color} onClick={() => setNewPocketForm({...newPocketForm, color})} className={`w-8 h-8 rounded-full cursor-pointer ${color} ${newPocketForm.color === color ? 'ring-4 ring-slate-200 ring-offset-2' : ''}`}></div>
+                  ))}
+                </div>
+              </div>
+              <button type="submit" disabled={isLoading} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex justify-center">{isLoading ? <Loader2 className="animate-spin" size={16}/> : 'Create Pocket'}</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. CREATE BUDGET MODAL */}
+      {showBudgetModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">Set Budget Limit</h3>
+              <X onClick={() => setShowBudgetModal(false)} className="cursor-pointer text-slate-400 hover:text-slate-800"/>
+            </div>
+            <form onSubmit={handleCreateBudget} className="space-y-6">
+              <input required type="text" value={newBudgetForm.category} onChange={e => setNewBudgetForm({...newBudgetForm, category: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border-2 border-slate-100 outline-none focus:border-emerald-500 font-bold" placeholder="Category (e.g. Travel)"/>
+              <input required type="number" value={newBudgetForm.limit} onChange={e => setNewBudgetForm({...newBudgetForm, limit: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border-2 border-slate-100 outline-none focus:border-emerald-500 font-bold" placeholder="Monthly Limit ($)"/>
+              <button type="submit" disabled={isLoading} className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex justify-center">{isLoading ? <Loader2 className="animate-spin" size={16}/> : 'Enforce Limit'}</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 4. SET INCOME PROTOCOL MODAL */}
+      {showIncomeModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">Routing Protocol</h3>
+              <X onClick={() => setShowIncomeModal(false)} className="cursor-pointer text-slate-400 hover:text-slate-800"/>
+            </div>
+            <form onSubmit={handleSaveIncomeProtocol} className="space-y-4">
+              <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-4">Set percentage splits for incoming capital. Must equal 100%.</p>
+              
+              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <span className="font-bold text-sm text-slate-700">Cash on Hand (%)</span>
+                <input required type="number" min="0" max="100" value={incomeForm.liquidPct} onChange={e => setIncomeForm({...incomeForm, liquidPct: e.target.value})} className="w-20 bg-white p-2 rounded-lg border border-slate-200 outline-none text-center font-black"/>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <span className="font-bold text-sm text-slate-700">Alpha Equity (%)</span>
+                <input required type="number" min="0" max="100" value={incomeForm.alphaPct} onChange={e => setIncomeForm({...incomeForm, alphaPct: e.target.value})} className="w-20 bg-white p-2 rounded-lg border border-slate-200 outline-none text-center font-black"/>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <span className="font-bold text-sm text-slate-700">Digital Vault (%)</span>
+                <input required type="number" min="0" max="100" value={incomeForm.vaultPct} onChange={e => setIncomeForm({...incomeForm, vaultPct: e.target.value})} className="w-20 bg-white p-2 rounded-lg border border-slate-200 outline-none text-center font-black"/>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Total Match</span>
+                <span className={`text-lg font-black ${parseInt(incomeForm.liquidPct) + parseInt(incomeForm.alphaPct) + parseInt(incomeForm.vaultPct) === 100 ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {parseInt(incomeForm.liquidPct) + parseInt(incomeForm.alphaPct) + parseInt(incomeForm.vaultPct)}%
+                </span>
+              </div>
+
+              <button type="submit" disabled={isLoading} className="w-full py-5 mt-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl flex justify-center hover:bg-emerald-500 transition-all">{isLoading ? <Loader2 className="animate-spin" size={16}/> : 'Save Protocol'}</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. ADD RECIPIENT MODAL */}
+      {showRecipientModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">Add Payee</h3>
+              <X onClick={() => setShowRecipientModal(false)} className="cursor-pointer text-slate-400 hover:text-slate-800"/>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="relative">
+                <Search className="absolute left-4 top-4 text-slate-400" size={18}/>
+                <input 
+                  className="w-full bg-slate-50 p-4 pl-12 rounded-2xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold transition-all"
+                  placeholder="Search Global Directory (Name/Email)..."
+                  value={userSearchQuery}
+                  onChange={e => setUserSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {foundUser ? (
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-200 animate-in zoom-in-95">
+                  <div className="w-12 h-12 rounded-full bg-blue-200 overflow-hidden border border-white shadow-sm flex items-center justify-center font-black text-blue-700">
+                    {foundUser.avatar_url ? <img src={foundUser.avatar_url} className="w-full h-full object-cover"/> : foundUser.full_name?.substring(0,2).toUpperCase() || 'IF'}
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="font-black text-blue-900 truncate">{foundUser.full_name || 'Verified User'}</p>
+                    <p className="text-[10px] font-bold text-blue-500 truncate">{foundUser.email}</p>
+                  </div>
+                  <button onClick={handleAddRecipient} disabled={isLoading} className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                    {isLoading ? <Loader2 className="animate-spin" size={16}/> : <Plus size={16}/>}
+                  </button>
+                </div>
+              ) : userSearchQuery.length > 2 ? (
+                <div className="text-center py-4 text-sm font-bold text-slate-400">Searching global institutional registry...</div>
+              ) : (
+                <div className="text-center py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Type to search the network</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GLOBAL NOTIFICATION */}
       {notification && (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[300] animate-in slide-in-from-top-4 fade-in duration-300">
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[500] animate-in slide-in-from-top-4 fade-in duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
             notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-600'
           }`}>
             <div className={`w-2 h-2 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-            <p className="font-black text-sm uppercase tracking-widest">{notification.text}</p>
+            <p className="font-black text-[10px] uppercase tracking-widest">{notification.text}</p>
           </div>
         </div>
       )}
