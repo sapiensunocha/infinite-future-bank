@@ -250,7 +250,6 @@ export default function Dashboard({ session, onSignOut }) {
   // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
 
-  // --- REQUIREMENT: PROFILE PHOTO FIX (Isolated Logic) ---
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1275,9 +1274,43 @@ export default function Dashboard({ session, onSignOut }) {
                   setIsLoading(false);
                   return;
                 }
-                triggerGlobalActionNotification('success', `Withdrawal of ${formatCurrency(amount)} initiated via ${withdrawalMethod}.`);
-                setActiveModal(null);
-                setIsLoading(false);
+
+                try {
+                  // 1. Package the Bank or Card details
+                  const payload = {
+                    userId: session.user.id,
+                    amount: amount,
+                    method: withdrawalMethod,
+                    details: withdrawalMethod === 'BANK' ? {
+                      bankName: e.target.bankName.value,
+                      routing: e.target.routingNumber.value,
+                      account: e.target.accountNumber.value
+                    } : {
+                      number: e.target.cardNumber.value,
+                      expiry: e.target.expiry.value,
+                      cvc: e.target.cvc.value
+                    }
+                  };
+
+                  // 2. Send the data to your newly deployed Edge Function
+                  const { data, error } = await supabase.functions.invoke('process-payout', {
+                    body: payload
+                  });
+
+                  if (error || data?.error) {
+                    throw new Error(data?.error || "Routing failed. Check network.");
+                  }
+
+                  // 3. Success! Update UI and sync new balances
+                  triggerGlobalActionNotification('success', `Withdrawal of ${formatCurrency(amount)} initiated via ${withdrawalMethod}.`);
+                  await fetchAllData(); 
+                  setActiveModal(null);
+                } catch (err) {
+                  console.error(err);
+                  triggerGlobalActionNotification('error', err.message || 'Capital Extraction Failed.');
+                } finally {
+                  setIsLoading(false);
+                }
                 return;
               }
             }} className="p-8 space-y-6 relative z-10 text-center">
