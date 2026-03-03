@@ -8,6 +8,15 @@ import {
 } from 'lucide-react';
 
 const CABINET = [
+  // NEW AGENT: ABRAHAM - THE IFB MENTOR
+  { 
+    id: 'abraham', 
+    name: 'Abraham', 
+    title: 'IFB Mentor', 
+    icon: <Target className="text-teal-600"/>, 
+    scoreName: 'CRS', 
+    mission: 'Structured Entrepreneurial Infrastructure: Execute Founder Diagnostics, Business Blueprints, Document Review, and Capital Readiness Scoring.' 
+  },
   { id: 'aurelius', name: 'Aurelius', title: 'Chief Capital Architect', icon: <Landmark className="text-blue-600"/>, scoreName: 'CRR', mission: 'Design and continuously optimize the user’s complete capital architecture across horizons.' },
   { id: 'vance', name: 'Vance', title: 'Enterprise Strategist', icon: <TrendingUp className="text-emerald-600"/>, scoreName: 'IGI', mission: 'Increase earning power and optimize business financial efficiency.' },
   { id: 'atlas', name: 'Atlas', title: 'Risk Sentinel', icon: <ShieldCheck className="text-indigo-600"/>, scoreName: 'Safety', mission: 'Preserve wealth and detect threats before they materialize.' },
