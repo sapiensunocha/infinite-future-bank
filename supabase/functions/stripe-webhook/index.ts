@@ -25,8 +25,7 @@ serve(async (req: Request) => {
       cryptoProvider
     )
 
-    // Initialize Admin Database Connection (bypasses RLS to forcefully update balance and ledger)
-    // NOTE: Using fallback to SERVICE_ROLE_SECRET just in case
+    // Initialize Admin Database Connection (bypasses RLS)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SERVICE_ROLE_SECRET') ?? ''
@@ -34,79 +33,52 @@ serve(async (req: Request) => {
 
     // 3. IF USING THE CHECKOUT REDIRECT LINK
     if (event.type === 'checkout.session.completed') {
-      // deno-lint-ignore no-explicit-any
       const session = event.data.object as any
       const userId = session.client_reference_id
-      const depositAmount = session.amount_total / 100 // Stripe counts in cents
+      const depositAmount = session.amount_total / 100 
 
       if (userId) {
-        // A. Fetch current balance
-        const { data: currentRecord } = await supabaseAdmin
-          .from('balances')
-          .select('liquid_usd')
-          .eq('user_id', userId)
-          .single()
-
+        const { data: currentRecord } = await supabaseAdmin.from('balances').select('liquid_usd').eq('user_id', userId).single()
         const newBalance = (currentRecord?.liquid_usd || 0) + depositAmount
 
-        // B. Inject new balance
-        await supabaseAdmin
-          .from('balances')
-          .update({ liquid_usd: newBalance })
-          .eq('user_id', userId)
+        await supabaseAdmin.from('balances').update({ liquid_usd: newBalance }).eq('user_id', userId)
 
-        // C. WRITE TO IMMUTABLE LEDGER
-        await supabaseAdmin
-          .from('transactions')
-          .insert({
+        await supabaseAdmin.from('transactions').insert({
             user_id: userId,
-            type: 'deposit',
+            transaction_type: 'deposit', // FIXED SCHEMA
             amount: depositAmount,
             status: 'completed',
-            description: 'Capital Injection via Checkout',
-            metadata: { stripe_session_id: session.id }
+            description: 'Capital Injection via Checkout'
           })
-
-        console.log(`Successfully deposited $${depositAmount} for user ${userId} and logged to ledger.`)
       }
     }
     
     // 4. IF USING THE NEW EMBEDDED DEUS UI
     else if (event.type === 'payment_intent.succeeded') {
-      // deno-lint-ignore no-explicit-any
       const intent = event.data.object as any
       const userId = intent.metadata?.userId 
       const depositAmount = intent.amount / 100
 
       if (userId) {
         // A. Fetch current balance
-        const { data: currentRecord } = await supabaseAdmin
-          .from('balances')
-          .select('liquid_usd')
-          .eq('user_id', userId)
-          .single()
-
+        const { data: currentRecord } = await supabaseAdmin.from('balances').select('liquid_usd').eq('user_id', userId).single()
         const newBalance = (currentRecord?.liquid_usd || 0) + depositAmount
 
         // B. Inject new balance
-        await supabaseAdmin
-          .from('balances')
-          .update({ liquid_usd: newBalance })
-          .eq('user_id', userId)
+        const { error: balanceError } = await supabaseAdmin.from('balances').update({ liquid_usd: newBalance }).eq('user_id', userId)
+        if (balanceError) console.error('Balance Update Error:', balanceError)
           
         // C. WRITE TO IMMUTABLE LEDGER
-        await supabaseAdmin
-          .from('transactions')
-          .insert({
+        const { error: txError } = await supabaseAdmin.from('transactions').insert({
             user_id: userId,
-            type: 'deposit',
+            transaction_type: 'deposit', // FIXED SCHEMA
             amount: depositAmount,
             status: 'completed',
-            description: 'Capital Injection via Secure UI',
-            metadata: { stripe_intent_id: intent.id }
+            description: 'Capital Injection via Secure UI'
           })
+        if (txError) console.error('Transaction Insert Error:', txError)
           
-        console.log(`PaymentIntent successful: Deposited $${depositAmount} for user ${userId} and logged to ledger.`)
+        console.log(`PaymentIntent successful: Deposited $${depositAmount} for user ${userId}`)
       }
     }
 

@@ -179,7 +179,7 @@ export default function Dashboard({ session, onSignOut }) {
         const { data: pocks } = await supabase.from('pockets').select('*').eq('user_id', session.user.id).ilike('pocket_name', `%${searchQuery}%`);
         const { data: recs } = await supabase.from('recipients').select('*').eq('user_id', session.user.id).ilike('recipient_name', `%${searchQuery}%`);
         const { data: invs } = await supabase.from('investments').select('*').eq('user_id', session.user.id).ilike('investment_type', `%${searchQuery}%`);
-        setSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
+        searchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
       }, 300);
     } else {
       setSearchResults({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
@@ -393,120 +393,206 @@ export default function Dashboard({ session, onSignOut }) {
     setNotification({ type: 'success', text: 'Display preferences applied and saved.' });
   };
 
-  const NetPositionView = () => (
-    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-      {profile && profile.kyc_status !== 'verified' && (
-        <div className="bg-red-50 border border-red-200 p-5 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
-          <div>
-            <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16}/> Regulatory Action Required</h3>
-            <p className="text-slate-600 text-sm mt-1 font-medium">To comply with global anti-money laundering laws, you must complete Identity Verification (KYC) within 30 days to prevent account suspension.</p>
-          </div>
-          <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); }} className="px-6 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
-            Verify Identity Now
-          </button>
-        </div>
-      )}
-      <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-          {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
-        </div>
-        <div className="flex-1 text-center md:text-left space-y-2">
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">{greeting}, {userName}.</h1>
-          <p className="text-slate-600 leading-relaxed text-sm md:text-base">{insight.text}</p>
-        </div>
-        <button onClick={() => insight.target === 'ADVISOR' ? setActiveModal('ADVISOR') : setActiveTab(insight.target)} className="mx-auto md:mx-0 px-6 py-4 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 hover:-translate-y-1 transition-all flex items-center gap-2">
-          {insight.action} <ArrowRight size={14} />
-        </button>
-      </div>
-      <div className="w-full">
-        <div className="bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-blue-100 font-medium tracking-wider uppercase">Total Safety Net</span>
-            <button onClick={() => setShowBalances(!showBalances)} className="text-blue-200 hover:text-white transition-colors" title="Toggle Balance Privacy">
-              {showBalances ? <Eye size={22} /> : <EyeOff size={22} />}
-            </button>
-          </div>
-          <h2 className="text-5xl md:text-6xl font-black tracking-tight mb-8">{formatCurrency(totalNetWorth)}</h2>
-          <button onClick={() => setActiveTab('ACCOUNTS')} className="w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-blue-900 hover:-translate-y-1 transition-all">
-            <ArrowRight size={24} />
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-3 bg-white/60 backdrop-blur-xl border border-white/40 p-2 rounded-3xl shadow-sm">
-        <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-          <Send size={16} /> Send
-        </button>
-        <button onClick={() => setActiveModal('REQUEST')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-          <Download size={16} /> Request
-        </button>
-        <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-          <ArrowRightLeft size={16} /> Transfer
-        </button>
-        <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
-          <Plus size={16} /> Deposit
-        </button>
-        <button onClick={() => setActiveModal('WITHDRAW')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
-          <Landmark size={16} /> Withdraw
-        </button>
-        <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
-        <button
-          onClick={() => setShowAnalytics(!showAnalytics)}
-          className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all ${showAnalytics ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-white text-slate-700 border border-transparent hover:border-indigo-100 shadow-sm'}`}
-        >
-          <BarChart2 size={16} /> Analytics
-        </button>
-      </div>
-      <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
-        {showAnalytics ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
-            <div className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 flex flex-col items-center justify-center text-center space-y-4">
-              <TrendingUp className="text-indigo-500" size={32} />
-              <h3 className="font-bold text-slate-800">Growth & Trends</h3>
-              <p className="text-sm text-slate-500">Your cashflow trajectory will appear here.</p>
+  const NetPositionView = () => {
+    // --- PRE-CALCULATE DATA FOR ANALYTICS DASHBOARD ---
+    const safeTotalNetWorth = totalNetWorth || 1; // Prevent division by zero
+    const liquidPct = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
+    const alphaPct = ((balances.alpha_equity_usd || 0) / safeTotalNetWorth) * 100;
+    const safePct = ((balances.mysafe_digital_usd || 0) / safeTotalNetWorth) * 100;
+
+    // Filter to only show completed/successful transactions for accurate metrics
+    const validTxs = transactions.filter(tx => tx.status !== 'failed' && tx.status !== 'pending');
+    
+    // Inflow (Deposits, Receives) vs Outflow (Sends, Withdrawals)
+    const totalInflow = validTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
+    const totalOutflow = validTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+    const totalFlowVolume = (totalInflow + totalOutflow) || 1; // Prevent division by zero
+    
+    const inflowPct = (totalInflow / totalFlowVolume) * 100;
+    const outflowPct = (totalOutflow / totalFlowVolume) * 100;
+
+    const avgTransactionValue = validTxs.length > 0 
+      ? validTxs.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) / validTxs.length 
+      : 0;
+
+    return (
+      <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+        {profile && profile.kyc_status !== 'verified' && (
+          <div className="bg-red-50 border border-red-200 p-5 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+            <div>
+              <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16}/> Regulatory Action Required</h3>
+              <p className="text-slate-600 text-sm mt-1 font-medium">To comply with global anti-money laundering laws, you must complete Identity Verification (KYC) within 30 days to prevent account suspension.</p>
             </div>
-            <div className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 flex flex-col items-center justify-center text-center space-y-4">
-              <PieChart className="text-indigo-500" size={32} />
-              <h3 className="font-bold text-slate-800">Asset Allocation</h3>
-              <p className="text-sm text-slate-500">Breakdown of your liquid vs invested assets.</p>
-            </div>
-            <div className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 flex flex-col items-center justify-center text-center space-y-4">
-              <Globe className="text-indigo-500" size={32} />
-              <h3 className="font-bold text-slate-800">Global Spending Map</h3>
-              <p className="text-sm text-slate-500">Visualize where your money goes worldwide.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
-            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ACCOUNTS')}>
-              <div className="flex justify-between items-start mb-4 w-full">
-                <Landmark className="text-slate-400" size={24} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-full">Cash</span>
-              </div>
-              <p className="text-slate-500 font-medium text-sm mb-1">Cash on Hand</p>
-              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.liquid_usd)}</p>
-            </button>
-            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('INVEST')}>
-              <div className="flex justify-between items-start mb-4 w-full">
-                <Briefcase className="text-blue-500" size={24} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-full">Alpha</span>
-              </div>
-              <p className="text-slate-500 font-medium text-sm mb-1">Investments</p>
-              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.alpha_equity_usd)}</p>
-            </button>
-            <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ORGANIZE')}>
-              <div className="flex justify-between items-start mb-4 w-full">
-                <ShieldCheck className="text-indigo-500" size={24} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">Vault</span>
-              </div>
-              <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
-              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
+            <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); }} className="px-6 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
+              Verify Identity Now
             </button>
           </div>
         )}
+        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
+          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+            {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
+          </div>
+          <div className="flex-1 text-center md:text-left space-y-2">
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">{greeting}, {userName}.</h1>
+            <p className="text-slate-600 leading-relaxed text-sm md:text-base">{insight.text}</p>
+          </div>
+          <button onClick={() => insight.target === 'ADVISOR' ? setActiveModal('ADVISOR') : setActiveTab(insight.target)} className="mx-auto md:mx-0 px-6 py-4 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 hover:-translate-y-1 transition-all flex items-center gap-2">
+            {insight.action} <ArrowRight size={14} />
+          </button>
+        </div>
+        <div className="w-full">
+          <div className="bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm text-blue-100 font-medium tracking-wider uppercase">Total Safety Net</span>
+              <button onClick={() => setShowBalances(!showBalances)} className="text-blue-200 hover:text-white transition-colors" title="Toggle Balance Privacy">
+                {showBalances ? <Eye size={22} /> : <EyeOff size={22} />}
+              </button>
+            </div>
+            <h2 className="text-5xl md:text-6xl font-black tracking-tight mb-8">{formatCurrency(totalNetWorth)}</h2>
+            <button onClick={() => setActiveTab('ACCOUNTS')} className="w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-blue-900 hover:-translate-y-1 transition-all">
+              <ArrowRight size={24} />
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 bg-white/60 backdrop-blur-xl border border-white/40 p-2 rounded-3xl shadow-sm">
+          <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
+            <Send size={16} /> Send
+          </button>
+          <button onClick={() => setActiveModal('REQUEST')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
+            <Download size={16} /> Request
+          </button>
+          <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
+            <ArrowRightLeft size={16} /> Transfer
+          </button>
+          <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
+            <Plus size={16} /> Deposit
+          </button>
+          <button onClick={() => setActiveModal('WITHDRAW')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
+            <Landmark size={16} /> Withdraw
+          </button>
+          <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
+          <button
+            onClick={() => setShowAnalytics(!showAnalytics)}
+            className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all ${showAnalytics ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-white text-slate-700 border border-transparent hover:border-indigo-100 shadow-sm'}`}
+          >
+            <BarChart2 size={16} /> Analytics
+          </button>
+        </div>
+        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
+          
+          {/* ============================================== */}
+          {/* NEW DATA-DRIVEN ANALYTICS DASHBOARD            */}
+          {/* ============================================== */}
+          {showAnalytics ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
+              
+              {/* CARD 1: CASHFLOW DYNAMICS */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><TrendingUp size={16} className="text-indigo-500" /> Cashflow</h3>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">All Time</span>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-xs font-bold mb-1.5">
+                      <span className="text-emerald-600">Total Inflow</span>
+                      <span className="text-emerald-600">{formatCurrency(totalInflow)}</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000" style={{ width: `${inflowPct}%` }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs font-bold mb-1.5">
+                      <span className="text-slate-600">Total Outflow</span>
+                      <span className="text-slate-800">{formatCurrency(totalOutflow)}</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div className="bg-slate-400 h-full rounded-full transition-all duration-1000 delay-300" style={{ width: `${outflowPct}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 2: ASSET ALLOCATION */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><PieChart size={16} className="text-blue-500" /> Allocation</h3>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Net Worth</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-800"></div>Cash</span>
+                    <span className="text-xs font-bold text-slate-800">{liquidPct.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Alpha</span>
+                    <span className="text-xs font-bold text-slate-800">{alphaPct.toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-500"></div>Vault</span>
+                    <span className="text-xs font-bold text-slate-800">{safePct.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full h-3 rounded-full flex overflow-hidden mt-3 gap-0.5 shadow-inner">
+                    <div className="bg-slate-800 h-full transition-all duration-1000" style={{ width: `${liquidPct}%` }}></div>
+                    <div className="bg-blue-500 h-full transition-all duration-1000 delay-150" style={{ width: `${alphaPct}%` }}></div>
+                    <div className="bg-indigo-500 h-full transition-all duration-1000 delay-300" style={{ width: `${safePct}%` }}></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 3: TRANSACTION VELOCITY */}
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2"><BarChart2 size={16} className="text-emerald-500" /> Velocity</h3>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Activity</span>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end border-b border-slate-100 pb-3">
+                    <span className="text-xs font-bold text-slate-500">Total Transactions</span>
+                    <span className="text-xl font-black text-slate-800">{validTxs.length}</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <span className="text-xs font-bold text-slate-500">Average Volume</span>
+                    <span className="text-lg font-black text-slate-800">{formatCurrency(avgTransactionValue)}</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
+              <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ACCOUNTS')}>
+                <div className="flex justify-between items-start mb-4 w-full">
+                  <Landmark className="text-slate-400" size={24} />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-full">Cash</span>
+                </div>
+                <p className="text-slate-500 font-medium text-sm mb-1">Cash on Hand</p>
+                <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.liquid_usd)}</p>
+              </button>
+              <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('INVEST')}>
+                <div className="flex justify-between items-start mb-4 w-full">
+                  <Briefcase className="text-blue-500" size={24} />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-full">Alpha</span>
+                </div>
+                <p className="text-slate-500 font-medium text-sm mb-1">Investments</p>
+                <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.alpha_equity_usd)}</p>
+              </button>
+              <button type="button" className="text-left bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full" onClick={() => setActiveTab('ORGANIZE')}>
+                <div className="flex justify-between items-start mb-4 w-full">
+                  <ShieldCheck className="text-indigo-500" size={24} />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">Vault</span>
+                </div>
+                <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
+                <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // --- THE FULL TRANSACTIONS ENGINE ---
   const TransactionsView = () => {
@@ -581,7 +667,7 @@ export default function Dashboard({ session, onSignOut }) {
                 {transactions.map(tx => {
                   const isPositive = tx.amount > 0;
                   const uiStatus = tx.status === 'completed' ? 'Succeeded' : tx.status === 'pending' ? 'Pending' : 'Failed';
-                 
+                  
                   if (activeTxTab !== 'ALL' && activeTxTab !== uiStatus.toUpperCase()) return null;
                   return (
                     <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
