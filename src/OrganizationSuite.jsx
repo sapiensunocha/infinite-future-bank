@@ -16,7 +16,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
   const [incomeProtocol, setIncomeProtocol] = useState(null);
   const [notification, setNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [profile, setProfile] = useState(null); // Needed for two-way sync
+  const [profile, setProfile] = useState(null);
 
   // Modals & Forms
   const [fundingPocketId, setFundingPocketId] = useState(null);
@@ -33,7 +33,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
 
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [foundUsers, setFoundUsers] = useState([]); // Changed to Array for suggestions
+  const [foundUsers, setFoundUsers] = useState([]); 
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
 
@@ -46,7 +46,6 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
   const fetchOrganizationData = async () => {
     if (!session?.user?.id) return;
     
-    // Fetch Current User Profile (for two-way sync identity)
     const { data: profData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
     if (profData) setProfile(profData);
 
@@ -70,13 +69,12 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
     if (userSearchQuery.length > 2) {
       setIsLoading(true);
       const delaySearch = setTimeout(async () => {
-        // Will safely search email now that the SQL column is added
         const { data, error } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url, email')
           .or(`full_name.ilike.%${userSearchQuery}%,email.ilike.%${userSearchQuery}%`)
           .neq('id', session.user.id)
-          .limit(5); // Get up to 5 suggestions
+          .limit(5);
           
         if (!error && data) {
           setFoundUsers(data);
@@ -173,7 +171,6 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
     setIsLoading(true);
     
     try {
-      // 1. Check if already exists in YOUR directory
       const exists = liveRecipients.find(r => r.target_user_id === selectedUser.id);
       if (exists) {
         triggerGlobalActionNotification('error', 'User is already in your directory.');
@@ -184,10 +181,10 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
       const myInitials = profile?.full_name ? profile.full_name.substring(0, 2).toUpperCase() : 'IF';
       const myDisplayName = profile?.full_name || session.user.email;
 
-      // 2. Add THEM to YOUR directory
+      // FIXED: Using "name" instead of "recipient_name"
       const { error: err1 } = await supabase.from('recipients').insert([{
         user_id: session.user.id,
-        recipient_name: selectedUser.full_name || selectedUser.email || 'Verified Member',
+        name: selectedUser.full_name || selectedUser.email || 'Verified Member',
         target_user_id: selectedUser.id,
         role: 'Verified Contact',
         initials: targetInitials,
@@ -195,14 +192,13 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
       }]);
       if (err1) throw err1;
 
-      // 3. Add YOU to THEIR directory (Two-Way Sync)
-      // Check if you are already in their directory first to prevent unique constraint errors
       const { data: theirDir } = await supabase.from('recipients').select('id').eq('user_id', selectedUser.id).eq('target_user_id', session.user.id).maybeSingle();
       
       if (!theirDir) {
+        // FIXED: Using "name" instead of "recipient_name"
         await supabase.from('recipients').insert([{
           user_id: selectedUser.id,
-          recipient_name: myDisplayName,
+          name: myDisplayName,
           target_user_id: session.user.id,
           role: 'Verified Contact',
           initials: myInitials,
@@ -459,7 +455,8 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
                       {rec.initials}
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-slate-800">{rec.recipient_name}</h4>
+                      {/* FIXED: Using rec.name */}
+                      <h4 className="text-sm font-black text-slate-800">{rec.name}</h4>
                       <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{rec.role}</p>
                     </div>
                   </div>
