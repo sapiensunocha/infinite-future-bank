@@ -219,7 +219,7 @@ export default function Dashboard({ session, onSignOut }) {
         const { data: pocks } = await supabase.from('pockets').select('*').eq('user_id', session.user.id).ilike('pocket_name', `%${searchQuery}%`);
         const { data: recs } = await supabase.from('recipients').select('*').eq('user_id', session.user.id).ilike('recipient_name', `%${searchQuery}%`);
         const { data: invs } = await supabase.from('investments').select('*').eq('user_id', session.user.id).ilike('investment_type', `%${searchQuery}%`);
-        searchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
+        setSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
       }, 300);
     } else {
       setSearchResults({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
@@ -433,7 +433,8 @@ export default function Dashboard({ session, onSignOut }) {
     setNotification({ type: 'success', text: 'Display preferences applied and saved.' });
   };
 
-  const NetPositionView = () => {
+  // FIX: Converted from Component to Render Function
+  const renderNetPositionView = () => {
     // --- PRE-CALCULATE DATA FOR ANALYTICS DASHBOARD ---
     const safeTotalNetWorth = totalNetWorth || 1; // Prevent division by zero
     const liquidPct = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
@@ -634,8 +635,8 @@ export default function Dashboard({ session, onSignOut }) {
     );
   };
 
-  // --- THE FULL TRANSACTIONS ENGINE ---
-  const TransactionsView = () => {
+  // FIX: Converted from Component to Render Function
+  const renderTransactionsView = () => {
     const [activeTxTab, setActiveTxTab] = useState('ALL');
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -750,7 +751,8 @@ export default function Dashboard({ session, onSignOut }) {
     );
   };
 
-  const SettingsView = () => (
+  // FIX: Converted from Component to Render Function
+  const renderSettingsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
       <div className="md:col-span-1 space-y-2 bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm h-fit">
         {[
@@ -1188,8 +1190,8 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </header>
           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar scroll-container pb-[env(safe-area-inset-bottom)]" id="main-scroll">
-            {activeTab === 'NET_POSITION' && <NetPositionView />}
-            {activeTab === 'TRANSACTIONS' && <TransactionsView />}
+            {activeTab === 'NET_POSITION' && renderNetPositionView()}
+            {activeTab === 'TRANSACTIONS' && renderTransactionsView()}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
@@ -1198,7 +1200,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} />}
             {activeTab === 'TRAINING' && <Training session={session} />}
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
-            {activeTab === 'SETTINGS' && <SettingsView />}
+            {activeTab === 'SETTINGS' && renderSettingsView()}
           </div>
           <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20 mb-[env(safe-area-inset-bottom)]">
             <MessageSquare size={24} className="group-hover:animate-pulse" />

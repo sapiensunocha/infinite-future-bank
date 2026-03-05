@@ -1,11 +1,36 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-// Added Smartphone and DownloadCloud for the Android Prompt
 import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, KeyRound, User, Eye, EyeOff, Smartphone, DownloadCloud } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
+
+// ==========================================
+// REUSABLE COMPONENTS (MUST BE OUTSIDE MAIN APP TO PREVENT FOCUS LOSS)
+// ==========================================
+const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLength, showPassword, togglePassword }) => (
+  <div className="relative">
+    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+    <input 
+      type={showPassword ? "text" : "password"} 
+      required 
+      minLength={minLength}
+      autoFocus={autoFocus}
+      value={value} 
+      onChange={onChange} 
+      placeholder={placeholder} 
+      className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner" 
+    />
+    <button 
+      type="button"
+      onClick={togglePassword}
+      className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
+    >
+      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+    </button>
+  </div>
+);
 
 // ==========================================
 // MAIN DEUS APP & LOGIN UI (PROGRESSIVE FLOW)
@@ -161,30 +186,6 @@ function MainApp() {
     }
   };
 
-  // REUSABLE PASSWORD COMPONENT
-  const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLength }) => (
-    <div className="relative">
-      <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-      <input 
-        type={showPassword ? "text" : "password"} 
-        required 
-        minLength={minLength}
-        autoFocus={autoFocus}
-        value={value} 
-        onChange={onChange} 
-        placeholder={placeholder} 
-        className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner" 
-      />
-      <button 
-        type="button"
-        onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
-      >
-        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-      </button>
-    </div>
-  );
-
   if (session && currentView !== 'update_password') {
     return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
   }
@@ -244,6 +245,8 @@ function MainApp() {
                   onChange={(e) => setPasswordValue(e.target.value)} 
                   placeholder="Password" 
                   autoFocus={true} 
+                  showPassword={showPassword}
+                  togglePassword={() => setShowPassword(!showPassword)}
                 />
                 <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
@@ -271,6 +274,8 @@ function MainApp() {
                   onChange={(e) => setPasswordValue(e.target.value)} 
                   placeholder="Set Password" 
                   minLength={6} 
+                  showPassword={showPassword}
+                  togglePassword={() => setShowPassword(!showPassword)}
                 />
                 <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600"></div>
@@ -303,6 +308,8 @@ function MainApp() {
                   placeholder="New Password" 
                   autoFocus={true} 
                   minLength={6} 
+                  showPassword={showPassword}
+                  togglePassword={() => setShowPassword(!showPassword)}
                 />
                 <button type="submit" className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
