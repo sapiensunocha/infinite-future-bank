@@ -65,24 +65,31 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
 
   useEffect(() => { fetchOrganizationData(); }, [session?.user?.id]);
 
-  // --- USER SEARCH ENGINE (For Adding Recipients) ---
+  // --- USER SEARCH ENGINE (FIXED: Searching only by full_name to avoid 400 error) ---
   useEffect(() => {
     if (userSearchQuery.length > 2) {
+      setIsLoading(true);
       const delaySearch = setTimeout(async () => {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, email')
-          .or(`full_name.ilike.%${userSearchQuery}%,email.ilike.%${userSearchQuery}%`)
+          .select('id, full_name, avatar_url')
+          .ilike('full_name', `%${userSearchQuery}%`)
           .neq('id', session.user.id)
           .limit(1)
           .maybeSingle();
-        setFoundUser(data);
+          
+        if (!error && data) {
+          setFoundUser(data);
+        } else {
+          setFoundUser(null);
+        }
+        setIsLoading(false);
       }, 400);
       return () => clearTimeout(delaySearch);
     } else {
       setFoundUser(null);
     }
-  }, [userSearchQuery]);
+  }, [userSearchQuery, session?.user?.id]);
 
 
   // --- HANDLERS ---
@@ -171,11 +178,11 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
         setIsLoading(false); return;
       }
 
-      const initials = foundUser.full_name ? foundUser.full_name.substring(0, 2).toUpperCase() : 'XX';
+      const initials = foundUser.full_name ? foundUser.full_name.substring(0, 2).toUpperCase() : 'IF';
 
       const { error } = await supabase.from('recipients').insert([{
         user_id: session.user.id,
-        recipient_name: foundUser.full_name || foundUser.email,
+        recipient_name: foundUser.full_name || 'Verified Member',
         target_user_id: foundUser.id,
         role: 'Verified Contact',
         initials: initials,
@@ -204,7 +211,6 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
 
     setIsLoading(true);
     try {
-      // Call standard internal transfer RPC to route money from Liquid to the specific Pocket
       const { error } = await supabase.rpc('fund_pocket', {
         p_user_id: session.user.id,
         p_pocket_id: fundingPocketId,
@@ -217,8 +223,6 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
       setFundingPocketId(null);
       setFundAmount('');
       
-      // We don't have to await fetchAllData here if the parent Dashboard is subscribing to realtime, 
-      // but we will do it for safety in this isolated component.
       await fetchOrganizationData();
     } catch (err) {
       triggerGlobalActionNotification('error', err.message || "Failed to route funds.");
@@ -569,7 +573,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
                 <Search className="absolute left-4 top-4 text-slate-400" size={18}/>
                 <input 
                   className="w-full bg-slate-50 p-4 pl-12 rounded-2xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold transition-all"
-                  placeholder="Search Global Directory (Name/Email)..."
+                  placeholder="Search Global Directory (Name)..."
                   value={userSearchQuery}
                   onChange={e => setUserSearchQuery(e.target.value)}
                 />
@@ -582,7 +586,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <p className="font-black text-blue-900 truncate">{foundUser.full_name || 'Verified User'}</p>
-                    <p className="text-[10px] font-bold text-blue-500 truncate">{foundUser.email}</p>
+                    <p className="text-[10px] font-bold text-blue-500 truncate uppercase tracking-widest mt-1">Verified IFB Member</p>
                   </div>
                   <button onClick={handleAddRecipient} disabled={isLoading} className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
                     {isLoading ? <Loader2 className="animate-spin" size={16}/> : <Plus size={16}/>}
