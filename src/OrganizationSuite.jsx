@@ -3,11 +3,11 @@ import { supabase } from './services/supabaseClient';
 import { 
   Folder, PieChart, ArrowDownToLine, Users, 
   Plus, Settings2, ArrowRight, Wallet, Target,
-  Send, MoreHorizontal, ShieldCheck, X, Loader2, Search
+  Send, MoreHorizontal, ShieldCheck, X, Loader2, Search, User
 } from 'lucide-react';
 
 export default function OrganizationSuite({ session, balances, pockets, recipients }) {
-  const [activeModule, setActiveModule] = useState('POCKETS'); // POCKETS, BUDGETS, INCOME, RECIPIENTS
+  const [activeModule, setActiveModule] = useState('POCKETS'); 
   
   // Real-Time States
   const [livePockets, setLivePockets] = useState(pockets || []);
@@ -16,6 +16,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
   const [incomeProtocol, setIncomeProtocol] = useState(null);
   const [notification, setNotification] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState(null); // Needed for two-way sync
 
   // Modals & Forms
   const [fundingPocketId, setFundingPocketId] = useState(null);
@@ -32,62 +33,61 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
 
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [foundUser, setFoundUser] = useState(null);
+  const [foundUsers, setFoundUsers] = useState([]); // Changed to Array for suggestions
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
 
   const triggerGlobalActionNotification = (type, message) => {
     setNotification({ type, text: message });
-    console.log(`System Event: ${message}. Dispatching In-App Alert and Email to ${session?.user?.email}`);
     setTimeout(() => setNotification(null), 6000);
   };
 
-  // --- DATA FETCHING (Budgets & Income Protocols) ---
+  // --- DATA FETCHING ---
   const fetchOrganizationData = async () => {
     if (!session?.user?.id) return;
     
-    // Fetch Live Pockets
+    // Fetch Current User Profile (for two-way sync identity)
+    const { data: profData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+    if (profData) setProfile(profData);
+
     const { data: pData } = await supabase.from('pockets').select('*').eq('user_id', session.user.id);
     if (pData) setLivePockets(pData);
 
-    // Fetch Live Recipients
     const { data: rData } = await supabase.from('recipients').select('*').eq('user_id', session.user.id);
     if (rData) setLiveRecipients(rData);
 
-    // Fetch Budgets (Assuming a 'budgets' table exists, otherwise using empty array)
     const { data: bData, error: bError } = await supabase.from('budgets').select('*').eq('user_id', session.user.id);
     if (bData && !bError) setBudgets(bData);
 
-    // Fetch Income Protocols
     const { data: iData, error: iError } = await supabase.from('income_protocols').select('*').eq('user_id', session.user.id).maybeSingle();
     if (iData && !iError) setIncomeProtocol(iData);
   };
 
   useEffect(() => { fetchOrganizationData(); }, [session?.user?.id]);
 
-  // --- USER SEARCH ENGINE (FIXED: Searching only by full_name to avoid 400 error) ---
+  // --- MULTI-USER SUGGESTION ENGINE ---
   useEffect(() => {
     if (userSearchQuery.length > 2) {
       setIsLoading(true);
       const delaySearch = setTimeout(async () => {
+        // Will safely search email now that the SQL column is added
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url')
-          .ilike('full_name', `%${userSearchQuery}%`)
+          .select('id, full_name, avatar_url, email')
+          .or(`full_name.ilike.%${userSearchQuery}%,email.ilike.%${userSearchQuery}%`)
           .neq('id', session.user.id)
-          .limit(1)
-          .maybeSingle();
+          .limit(5); // Get up to 5 suggestions
           
         if (!error && data) {
-          setFoundUser(data);
+          setFoundUsers(data);
         } else {
-          setFoundUser(null);
+          setFoundUsers([]);
         }
         setIsLoading(false);
       }, 400);
       return () => clearTimeout(delaySearch);
     } else {
-      setFoundUser(null);
+      setFoundUsers([]);
     }
   }, [userSearchQuery, session?.user?.id]);
 
@@ -167,36 +167,60 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
     } finally { setIsLoading(false); }
   };
 
-  const handleAddRecipient = async () => {
-    if (!foundUser) return;
+  // --- TWO-WAY SYNC RECIPIENT ADDITION ---
+  const handleAddRecipient = async (selectedUser) => {
+    if (!selectedUser) return;
     setIsLoading(true);
+    
     try {
-      // Check if already exists
-      const exists = liveRecipients.find(r => r.target_user_id === foundUser.id);
+      // 1. Check if already exists in YOUR directory
+      const exists = liveRecipients.find(r => r.target_user_id === selectedUser.id);
       if (exists) {
         triggerGlobalActionNotification('error', 'User is already in your directory.');
         setIsLoading(false); return;
       }
 
-      const initials = foundUser.full_name ? foundUser.full_name.substring(0, 2).toUpperCase() : 'IF';
+      const targetInitials = selectedUser.full_name ? selectedUser.full_name.substring(0, 2).toUpperCase() : 'IF';
+      const myInitials = profile?.full_name ? profile.full_name.substring(0, 2).toUpperCase() : 'IF';
+      const myDisplayName = profile?.full_name || session.user.email;
 
-      const { error } = await supabase.from('recipients').insert([{
+      // 2. Add THEM to YOUR directory
+      const { error: err1 } = await supabase.from('recipients').insert([{
         user_id: session.user.id,
-        recipient_name: foundUser.full_name || 'Verified Member',
-        target_user_id: foundUser.id,
+        recipient_name: selectedUser.full_name || selectedUser.email || 'Verified Member',
+        target_user_id: selectedUser.id,
         role: 'Verified Contact',
-        initials: initials,
+        initials: targetInitials,
         color: 'bg-blue-100 text-blue-700'
       }]);
+      if (err1) throw err1;
+
+      // 3. Add YOU to THEIR directory (Two-Way Sync)
+      // Check if you are already in their directory first to prevent unique constraint errors
+      const { data: theirDir } = await supabase.from('recipients').select('id').eq('user_id', selectedUser.id).eq('target_user_id', session.user.id).maybeSingle();
       
-      if (error) throw error;
-      triggerGlobalActionNotification('success', `${foundUser.full_name || 'Contact'} vaulted to trusted directory.`);
+      if (!theirDir) {
+        await supabase.from('recipients').insert([{
+          user_id: selectedUser.id,
+          recipient_name: myDisplayName,
+          target_user_id: session.user.id,
+          role: 'Verified Contact',
+          initials: myInitials,
+          color: 'bg-emerald-100 text-emerald-700'
+        }]);
+      }
+      
+      triggerGlobalActionNotification('success', `Bidirectional Link Established with ${selectedUser.full_name || 'Contact'}.`);
       setShowRecipientModal(false);
       setUserSearchQuery('');
+      setFoundUsers([]);
       await fetchOrganizationData();
     } catch (err) {
-      triggerGlobalActionNotification('error', 'Failed to add payee.');
-    } finally { setIsLoading(false); }
+      console.error(err);
+      triggerGlobalActionNotification('error', 'Failed to establish connection.');
+    } finally { 
+      setIsLoading(false); 
+    }
   };
 
   const handleFundPocket = async (e) => {
@@ -559,44 +583,55 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
         </div>
       )}
 
-      {/* 5. ADD RECIPIENT MODAL */}
+      {/* 5. ADD RECIPIENT MODAL - UPDATED SUGGESTION ENGINE */}
       {showRecipientModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8 relative overflow-visible">
             <div className="flex justify-between items-center mb-8">
               <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">Add Payee</h3>
-              <X onClick={() => setShowRecipientModal(false)} className="cursor-pointer text-slate-400 hover:text-slate-800"/>
+              <X onClick={() => { setShowRecipientModal(false); setFoundUsers([]); setUserSearchQuery(''); }} className="cursor-pointer text-slate-400 hover:text-slate-800"/>
             </div>
             
             <div className="space-y-6">
-              <div className="relative">
+              <div className="relative z-50">
                 <Search className="absolute left-4 top-4 text-slate-400" size={18}/>
                 <input 
-                  className="w-full bg-slate-50 p-4 pl-12 rounded-2xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold transition-all"
-                  placeholder="Search Global Directory (Name)..."
+                  className="w-full bg-slate-50 p-4 pl-12 rounded-2xl border-2 border-slate-100 outline-none focus:border-blue-500 font-bold transition-all relative z-50"
+                  placeholder="Search Global Directory..."
                   value={userSearchQuery}
                   onChange={e => setUserSearchQuery(e.target.value)}
                 />
+                
+                {/* SUGGESTION DROPDOWN */}
+                {userSearchQuery.length > 2 && (
+                  <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden animate-in slide-in-from-top-2">
+                    {isLoading ? (
+                      <div className="p-6 flex justify-center"><Loader2 className="animate-spin text-blue-500"/></div>
+                    ) : foundUsers.length > 0 ? (
+                      <div className="max-h-60 overflow-y-auto no-scrollbar">
+                        {foundUsers.map(user => (
+                          <div key={user.id} className="flex items-center justify-between p-4 hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-black text-xs shrink-0">
+                                {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full rounded-full object-cover"/> : <User size={16}/>}
+                              </div>
+                              <div className="overflow-hidden">
+                                <p className="font-black text-slate-800 text-sm truncate leading-tight">{user.full_name || 'Verified User'}</p>
+                                {user.email && <p className="text-[9px] font-bold text-slate-400 truncate">{user.email}</p>}
+                              </div>
+                            </div>
+                            <button onClick={() => handleAddRecipient(user)} disabled={isLoading} className="ml-2 shrink-0 px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-colors">
+                              Add
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-sm font-bold text-slate-400">No members found matching "{userSearchQuery}"</div>
+                    )}
+                  </div>
+                )}
               </div>
-
-              {foundUser ? (
-                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl border border-blue-200 animate-in zoom-in-95">
-                  <div className="w-12 h-12 rounded-full bg-blue-200 overflow-hidden border border-white shadow-sm flex items-center justify-center font-black text-blue-700">
-                    {foundUser.avatar_url ? <img src={foundUser.avatar_url} className="w-full h-full object-cover"/> : foundUser.full_name?.substring(0,2).toUpperCase() || 'IF'}
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <p className="font-black text-blue-900 truncate">{foundUser.full_name || 'Verified User'}</p>
-                    <p className="text-[10px] font-bold text-blue-500 truncate uppercase tracking-widest mt-1">Verified IFB Member</p>
-                  </div>
-                  <button onClick={handleAddRecipient} disabled={isLoading} className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
-                    {isLoading ? <Loader2 className="animate-spin" size={16}/> : <Plus size={16}/>}
-                  </button>
-                </div>
-              ) : userSearchQuery.length > 2 ? (
-                <div className="text-center py-4 text-sm font-bold text-slate-400">Searching global institutional registry...</div>
-              ) : (
-                <div className="text-center py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Type to search the network</div>
-              )}
             </div>
           </div>
         </div>
