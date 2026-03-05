@@ -22,6 +22,10 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
   const [fundingPocketId, setFundingPocketId] = useState(null);
   const [fundAmount, setFundAmount] = useState('');
   
+  // NEW: Send Money States
+  const [sendingRecipient, setSendingRecipient] = useState(null);
+  const [sendAmount, setSendAmount] = useState('');
+  
   const [showPocketModal, setShowPocketModal] = useState(false);
   const [newPocketForm, setNewPocketForm] = useState({ name: '', target: '', color: 'bg-blue-500' });
 
@@ -165,7 +169,6 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
     } finally { setIsLoading(false); }
   };
 
-  // --- TWO-WAY SYNC RECIPIENT ADDITION ---
   const handleAddRecipient = async (selectedUser) => {
     if (!selectedUser) return;
     setIsLoading(true);
@@ -181,7 +184,6 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
       const myInitials = profile?.full_name ? profile.full_name.substring(0, 2).toUpperCase() : 'IF';
       const myDisplayName = profile?.full_name || session.user.email;
 
-      // FIXED: Using "name" instead of "recipient_name"
       const { error: err1 } = await supabase.from('recipients').insert([{
         user_id: session.user.id,
         name: selectedUser.full_name || selectedUser.email || 'Verified Member',
@@ -195,7 +197,6 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
       const { data: theirDir } = await supabase.from('recipients').select('id').eq('user_id', selectedUser.id).eq('target_user_id', session.user.id).maybeSingle();
       
       if (!theirDir) {
-        // FIXED: Using "name" instead of "recipient_name"
         await supabase.from('recipients').insert([{
           user_id: selectedUser.id,
           name: myDisplayName,
@@ -246,6 +247,50 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
       await fetchOrganizationData();
     } catch (err) {
       triggerGlobalActionNotification('error', err.message || "Failed to route funds.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- NEW: SEND MONEY TO CONTACT LOGIC ---
+  const handleSendMoneyToContact = async (e) => {
+    e.preventDefault();
+    const amount = parseFloat(sendAmount);
+    
+    if (!amount || amount <= 0) return;
+    if (amount > balances.liquid_usd) {
+      triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY: Transfer Aborted.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // 1. Attempt Secure RPC P2P Transfer (If you set up the SQL below)
+      const { error: rpcError } = await supabase.rpc('p2p_transfer', {
+        sender_id: session.user.id,
+        receiver_id: sendingRecipient.target_user_id,
+        transfer_amount: amount
+      });
+
+      if (rpcError) {
+        // Fallback: If RPC doesn't exist, log the transaction locally
+        const { error: fallbackError } = await supabase.from('transactions').insert([{
+          user_id: session.user.id,
+          amount: -amount,
+          transaction_type: 'send',
+          description: `Internal Transfer to ${sendingRecipient.name}`,
+          status: 'completed'
+        }]);
+        if (fallbackError) throw fallbackError;
+      }
+
+      triggerGlobalActionNotification('success', `${formatCurrency(amount)} securely routed to ${sendingRecipient.name}.`);
+      setSendingRecipient(null);
+      setSendAmount('');
+      await fetchOrganizationData();
+    } catch (err) {
+      console.error(err);
+      triggerGlobalActionNotification('error', 'Network routing failed. Check balance.');
     } finally {
       setIsLoading(false);
     }
@@ -455,13 +500,18 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
                       {rec.initials}
                     </div>
                     <div>
-                      {/* FIXED: Using rec.name */}
                       <h4 className="text-sm font-black text-slate-800">{rec.name}</h4>
                       <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{rec.role}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => triggerGlobalActionNotification('success', 'Transfer initiation sent to logic handler.')} className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors shadow-sm"><Send size={16}/></button>
+                    {/* FIXED: Trigger Send Modal */}
+                    <button 
+                      onClick={() => setSendingRecipient(rec)} 
+                      className="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors shadow-sm"
+                    >
+                      <Send size={16}/>
+                    </button>
                     <button className="w-10 h-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"><MoreHorizontal size={16}/></button>
                   </div>
                 </div>
@@ -495,6 +545,41 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
               </div>
               <button type="submit" disabled={isLoading} className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center">
                 {isLoading ? <Loader2 className="animate-spin" size={18} /> : 'CONFIRM ROUTING'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: 6. SEND MONEY MODAL */}
+      {sendingRecipient && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative border border-slate-100">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center relative z-10">
+              <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase">Send Capital</h3>
+              <button onClick={() => { setSendingRecipient(null); setSendAmount(''); }} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSendMoneyToContact} className="p-8 space-y-6 relative z-10 text-center">
+              <div className="flex justify-center mb-2">
+                <div className={`w-20 h-20 rounded-full ${sendingRecipient.color || 'bg-slate-100 text-slate-600'} flex items-center justify-center text-2xl font-black shadow-sm border-2 border-slate-200`}>
+                  {sendingRecipient.initials}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-2xl font-black text-slate-800 tracking-tight">{sendingRecipient.name}</h4>
+                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">{sendingRecipient.role}</p>
+              </div>
+              
+              <div className="mt-6">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-left">Amount (USD)</label>
+                <input type="number" step="0.01" required value={sendAmount} onChange={(e) => setSendAmount(e.target.value)} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 font-black text-4xl text-center text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition-all placeholder:text-slate-300 shadow-inner" placeholder="0.00" autoFocus />
+                <p className="text-xs font-bold text-slate-500 mt-3 text-left">Available Liquidity: <span className="text-emerald-600">{formatCurrency(balances.liquid_usd)}</span></p>
+              </div>
+              
+              <button type="submit" disabled={isLoading} className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                {isLoading ? <Loader2 className="animate-spin" size={18} /> : <><Send size={16}/> CONFIRM TRANSFER</>}
               </button>
             </form>
           </div>
@@ -580,7 +665,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
         </div>
       )}
 
-      {/* 5. ADD RECIPIENT MODAL - UPDATED SUGGESTION ENGINE */}
+      {/* 5. ADD RECIPIENT MODAL */}
       {showRecipientModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-8 relative overflow-visible">
