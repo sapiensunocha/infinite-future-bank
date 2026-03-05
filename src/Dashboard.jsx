@@ -36,6 +36,9 @@ export default function Dashboard({ session, onSignOut }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
 
+  // --- FIX: Moved Transactions Tab State to the Top ---
+  const [activeTxTab, setActiveTxTab] = useState('ALL');
+
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -433,7 +436,6 @@ export default function Dashboard({ session, onSignOut }) {
     setNotification({ type: 'success', text: 'Display preferences applied and saved.' });
   };
 
-  // FIX: Converted from Component to Render Function
   const renderNetPositionView = () => {
     // --- PRE-CALCULATE DATA FOR ANALYTICS DASHBOARD ---
     const safeTotalNetWorth = totalNetWorth || 1; // Prevent division by zero
@@ -635,9 +637,7 @@ export default function Dashboard({ session, onSignOut }) {
     );
   };
 
-  // FIX: Converted from Component to Render Function
   const renderTransactionsView = () => {
-    const [activeTxTab, setActiveTxTab] = useState('ALL');
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
  
@@ -751,7 +751,6 @@ export default function Dashboard({ session, onSignOut }) {
     );
   };
 
-  // FIX: Converted from Component to Render Function
   const renderSettingsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
       <div className="md:col-span-1 space-y-2 bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm h-fit">
