@@ -22,7 +22,7 @@ import {
   ArrowDownToLine, FileSignature, Mail, ShieldAlert, Accessibility,
   Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
   Filter, Calendar, ArrowDownUp, FileDown,
-  CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight
+  CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Building
 } from 'lucide-react';
 
 export default function Dashboard({ session, onSignOut }) {
@@ -36,7 +36,6 @@ export default function Dashboard({ session, onSignOut }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   
-  // --- FIX: Moved Transactions Tab State to the Top ---
   const [activeTxTab, setActiveTxTab] = useState('ALL');
   
   // Search States
@@ -57,8 +56,13 @@ export default function Dashboard({ session, onSignOut }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState('');
+
+  // --- NEW: COMMERCIAL ONBOARDING STATES ---
+  const [commercialProfile, setCommercialProfile] = useState(null);
+  const [commercialForm, setCommercialForm] = useState({ company_name: '', sector: '', registration_country: '', annual_revenue: '', monthly_burn_rate: '', debt_to_equity_ratio: '' });
+  const [isSubmittingCommercial, setIsSubmittingCommercial] = useState(false);
   
-  // Accessibility States (Preview vs Saved)
+  // Accessibility States
   const [accessSettings, setAccessSettings] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
   const [previewAccess, setPreviewAccess] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
   
@@ -88,38 +92,38 @@ export default function Dashboard({ session, onSignOut }) {
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   
-  // Requirement: Payment Request Targeting
+  // Payment Request Targeting
   const [requestTargetType, setRequestTargetType] = useState('INTERNAL');
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [foundUser, setFoundUser] = useState(null);
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   
-  // Requirement: Withdrawal Flexibility
+  // Withdrawal Flexibility
   const [withdrawalMethod, setWithdrawalMethod] = useState('BANK');
   
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
+
+  // ADDED: Commercial Hub to Tab Titles
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
     PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
-    SETTINGS: 'Settings', AGENTS: 'Your Team', TRANSACTIONS: 'Transactions'
+    SETTINGS: 'Settings', AGENTS: 'Your Team', TRANSACTIONS: 'Transactions',
+    COMMERCIAL_HUB: 'Commercial Underwriting'
   };
 
-  // 1. AUTOMATIC URL CLEANER
   useEffect(() => {
     if (window.location.hash.includes('access_token') || window.location.hash.includes('error')) {
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
 
-  // --- REQUIREMENT: GLOBAL NOTIFICATION RULE ---
   const triggerGlobalActionNotification = (type, message) => {
     setNotification({ type, text: message });
     console.log(`System Event: ${message}. Dispatching In-App Alert and Email to ${session?.user?.email}`);
     setTimeout(() => setNotification(null), 6000);
   };
 
-  // --- REQUIREMENT: SEARCH FUNCTION (Internal Users) ---
   useEffect(() => {
     if (userSearchQuery.length > 2) {
       setIsSearchingUser(true);
@@ -144,6 +148,21 @@ export default function Dashboard({ session, onSignOut }) {
     if (!session?.user?.id) return;
     const { data: pData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
     const { data: bData } = await supabase.from('balances').select('*').eq('user_id', session.user.id).maybeSingle();
+    
+    // --- NEW: Fetch Commercial Profile ---
+    const { data: commData } = await supabase.from('commercial_profiles').select('*').eq('id', session.user.id).maybeSingle();
+    if (commData) {
+      setCommercialProfile(commData);
+      setCommercialForm({
+        company_name: commData.company_name || '',
+        sector: commData.sector || '',
+        registration_country: commData.registration_country || '',
+        annual_revenue: commData.annual_revenue || '',
+        monthly_burn_rate: commData.monthly_burn_rate || '',
+        debt_to_equity_ratio: commData.debt_to_equity_ratio || ''
+      });
+    }
+
     if (pData) {
       setProfile(pData);
       setEditedName(pData.full_name || '');
@@ -331,7 +350,6 @@ export default function Dashboard({ session, onSignOut }) {
     await fetchAllData();
   };
 
-  // --- INTERACTIVE REQUEST HANDLERS ---
   const handleConfirmRequest = async (notif) => {
     setIsLoading(true);
     try {
@@ -341,39 +359,26 @@ export default function Dashboard({ session, onSignOut }) {
             return;
         }
 
-        // 1. Deduct from current user
-        await supabase.from('transactions').insert([{
-            user_id: session.user.id,
-            amount: -notif.amount,
-            transaction_type: 'send',
-            description: `Fulfilled request from ${notif.requester_name || 'User'}`,
-            status: 'completed'
-        }]);
+        const { error: rpcError } = await supabase.rpc('p2p_transfer', {
+            sender_id: session.user.id,
+            receiver_id: notif.metadata?.requester_id || notif.related_user_id,
+            transfer_amount: notif.amount || notif.metadata?.amount
+        });
+        if (rpcError) throw rpcError;
 
-        // 2. Add to requester
-        await supabase.from('transactions').insert([{
-            user_id: notif.related_user_id,
-            amount: notif.amount,
-            transaction_type: 'receive',
-            description: `Request fulfilled by ${userName}`,
-            status: 'completed'
-        }]);
-
-        // 3. Mark notification as completed
         await supabase.from('notifications').update({ 
             status: 'completed', 
             read: true, 
             message: notif.message + ' (Confirmed)' 
         }).eq('id', notif.id);
 
-        // 4. Notify the requester
         await supabase.from('notifications').insert([{
-            user_id: notif.related_user_id,
-            message: `${userName} confirmed your payment request for ${formatCurrency(notif.amount)}.`,
+            user_id: notif.metadata?.requester_id || notif.related_user_id,
+            message: `${userName} confirmed your payment request for ${formatCurrency(notif.amount || notif.metadata?.amount)}.`,
             type: 'system'
         }]);
 
-        setNotification({ type: 'success', text: `Successfully routed ${formatCurrency(notif.amount)}.` });
+        setNotification({ type: 'success', text: `Successfully routed ${formatCurrency(notif.amount || notif.metadata?.amount)}.` });
         await fetchAllData();
     } catch (err) {
         setNotification({ type: 'error', text: 'Failed to process the request.' });
@@ -385,17 +390,15 @@ export default function Dashboard({ session, onSignOut }) {
   const handleDeclineRequest = async (notif) => {
     setIsLoading(true);
     try {
-        // 1. Mark notification as declined
         await supabase.from('notifications').update({ 
             status: 'declined', 
             read: true, 
             message: notif.message + ' (Declined)' 
         }).eq('id', notif.id);
         
-        // 2. Notify the requester
         await supabase.from('notifications').insert([{
-            user_id: notif.related_user_id,
-            message: `${userName} declined your payment request for ${formatCurrency(notif.amount)}.`,
+            user_id: notif.metadata?.requester_id || notif.related_user_id,
+            message: `${userName} declined your payment request for ${formatCurrency(notif.amount || notif.metadata?.amount)}.`,
             type: 'system'
         }]);
 
@@ -507,19 +510,42 @@ export default function Dashboard({ session, onSignOut }) {
     setNotification({ type: 'success', text: 'Display preferences applied and saved.' });
   };
 
+  // --- NEW: COMMERCIAL SUBMIT HANDLER ---
+  const handleCommercialSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingCommercial(true);
+    try {
+      const { error } = await supabase.from('commercial_profiles').upsert({
+        id: session.user.id,
+        company_name: commercialForm.company_name,
+        sector: commercialForm.sector,
+        registration_country: commercialForm.registration_country,
+        annual_revenue: parseFloat(commercialForm.annual_revenue),
+        monthly_burn_rate: parseFloat(commercialForm.monthly_burn_rate),
+        debt_to_equity_ratio: parseFloat(commercialForm.debt_to_equity_ratio),
+        pascaline_status: 'pending_review' 
+      });
+      if (error) throw error;
+      triggerGlobalActionNotification('success', 'Corporate telemetry submitted. Pascaline AI audit initiated.');
+      await fetchAllData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', err.message || 'Submission failed.');
+    } finally {
+      setIsSubmittingCommercial(false);
+    }
+  };
+
   const renderNetPositionView = () => {
-    // --- PRE-CALCULATE DATA FOR ANALYTICS DASHBOARD ---
-    const safeTotalNetWorth = totalNetWorth || 1; // Prevent division by zero
+    const safeTotalNetWorth = totalNetWorth || 1; 
     const liquidPct = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
     const alphaPct = ((balances.alpha_equity_usd || 0) / safeTotalNetWorth) * 100;
     const safePct = ((balances.mysafe_digital_usd || 0) / safeTotalNetWorth) * 100;
-    // Filter to only show completed/successful transactions for accurate metrics
+    
     const validTxs = transactions.filter(tx => tx.status !== 'failed' && tx.status !== 'pending');
     
-    // Inflow (Deposits, Receives) vs Outflow (Sends, Withdrawals)
     const totalInflow = validTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
     const totalOutflow = validTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-    const totalFlowVolume = (totalInflow + totalOutflow) || 1; // Prevent division by zero
+    const totalFlowVolume = (totalInflow + totalOutflow) || 1; 
     
     const inflowPct = (totalInflow / totalFlowVolume) * 100;
     const outflowPct = (totalOutflow / totalFlowVolume) * 100;
@@ -592,13 +618,8 @@ export default function Dashboard({ session, onSignOut }) {
           </button>
         </div>
         <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
-          
-          {/* ============================================== */}
-          {/* NEW DATA-DRIVEN ANALYTICS DASHBOARD */}
-          {/* ============================================== */}
           {showAnalytics ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
-              
               {/* CARD 1: CASHFLOW DYNAMICS */}
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-6">
@@ -1081,6 +1102,65 @@ export default function Dashboard({ session, onSignOut }) {
     </div>
   );
 
+  // --- NEW: COMMERCIAL HUB UI ---
+  const renderCommercialHub = () => (
+    <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500">
+      <div className="bg-slate-900 border border-slate-800 p-10 rounded-[3rem] shadow-xl text-white mb-8 relative overflow-hidden">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black tracking-tight mb-2 flex items-center gap-3"><Building className="text-blue-400"/> Corporate Underwriting</h2>
+          <p className="text-sm text-slate-400 max-w-xl leading-relaxed">Submit your financial telemetry to Pascaline. If your metrics meet institutional safety thresholds, you will be cleared to raise capital directly within the IFB Dark Pool.</p>
+        </div>
+      </div>
+
+      {commercialProfile?.pascaline_status === 'eligible_for_funding' ? (
+        <div className="bg-white border border-emerald-200 p-10 rounded-[3rem] shadow-sm text-center">
+          <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"><ShieldCheck size={40}/></div>
+          <h3 className="text-2xl font-black text-slate-800 mb-2">Approved for Capital Deployment</h3>
+          <p className="text-sm text-slate-500 mb-8">Pascaline has audited your telemetry and underwritten your Dual-Insurance policy. You are now live in the Private Equity Vault.</p>
+          <button onClick={() => setActiveTab('INVEST')} className="px-8 py-4 bg-emerald-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg">Manage Syndicate Parameters</button>
+        </div>
+      ) : commercialProfile?.pascaline_status === 'pending_review' ? (
+        <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm text-center">
+          <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6"><Loader2 size={40} className="animate-spin"/></div>
+          <h3 className="text-2xl font-black text-slate-800 mb-2">Pascaline Audit in Progress</h3>
+          <p className="text-sm text-slate-500">The AI engine is currently validating your revenue models and calculating your risk parameters.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleCommercialSubmit} className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Legal Corporate Name</label>
+              <input required type="text" value={commercialForm.company_name} onChange={e => setCommercialForm({...commercialForm, company_name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" placeholder="e.g. SpaceX" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Industry Sector</label>
+              <input required type="text" value={commercialForm.sector} onChange={e => setCommercialForm({...commercialForm, sector: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" placeholder="e.g. Aerospace" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Registration Country</label>
+              <input required type="text" value={commercialForm.registration_country} onChange={e => setCommercialForm({...commercialForm, registration_country: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" placeholder="e.g. United States" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Annual Revenue (USD)</label>
+              <input required type="number" value={commercialForm.annual_revenue} onChange={e => setCommercialForm({...commercialForm, annual_revenue: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" placeholder="e.g. 5000000" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Monthly Burn Rate (USD)</label>
+              <input required type="number" value={commercialForm.monthly_burn_rate} onChange={e => setCommercialForm({...commercialForm, monthly_burn_rate: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" placeholder="e.g. 150000" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Debt-to-Equity Ratio</label>
+              <input required type="number" step="0.01" value={commercialForm.debt_to_equity_ratio} onChange={e => setCommercialForm({...commercialForm, debt_to_equity_ratio: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" placeholder="e.g. 1.2" />
+            </div>
+          </div>
+          <button type="submit" disabled={isSubmittingCommercial} className="w-full py-5 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl disabled:opacity-50">
+            {isSubmittingCommercial ? 'Submitting to Pascaline...' : 'Submit Financial Telemetry for Audit'}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200">
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
@@ -1112,6 +1192,7 @@ export default function Dashboard({ session, onSignOut }) {
               { id: 'ACCOUNTS', icon: <Landmark size={18} />, label: 'Accounts' },
               { id: 'ORGANIZE', icon: <Folder size={18} />, label: 'Organize' },
               { id: 'INVEST', icon: <Briefcase size={18} />, label: 'Wealth' },
+              { id: 'COMMERCIAL_HUB', icon: <Building size={18} />, label: 'Commercial' },
               { id: 'LIFESTYLE', icon: <Globe size={18} />, label: 'Lifestyle' },
               { id: 'TRAINING', icon: <BookOpen size={18} />, label: 'Training' },
               { id: 'AGENTS', icon: <Users size={18} />, label: 'Your Team' },
@@ -1240,7 +1321,7 @@ export default function Dashboard({ session, onSignOut }) {
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <button onClick={() => { setActiveTab('ACCOUNTS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 transition-all">
+                        <button onClick={() => { setActiveTab('COMMERCIAL_HUB'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 transition-all">
                           <Briefcase size={16} /> Switch to Commercial
                         </button>
                         <button onClick={() => { setActiveTab('ACCOUNTS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:bg-indigo-50 transition-all">
@@ -1268,6 +1349,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
+            {activeTab === 'COMMERCIAL_HUB' && renderCommercialHub()}
             {activeTab === 'PLANNER' && <FinancialPlanner balances={balances} />}
             {activeTab === 'LIFESTYLE' && <GlobalLifestyle session={session} profile={profile} balances={balances} />}
             {activeTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} />}
@@ -1601,7 +1683,6 @@ export default function Dashboard({ session, onSignOut }) {
         </div>
       )}
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
-      {/* --- REQUIREMENT: EXPORT STATEMENT MODAL --- */}
       {showStatementModal && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl border border-slate-100">
