@@ -4,7 +4,7 @@ import {
   TrendingUp, Wallet, Shield, 
   BarChart3, Zap, ChevronRight,
   X, Loader2, RefreshCw, BrainCircuit,
-  Cpu, Database, Hexagon, Activity, Network
+  Cpu, Database, Hexagon, Activity, Network, ShieldCheck
 } from 'lucide-react';
 
 export default function WealthInvest({ session, balances, profile }) {

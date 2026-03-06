@@ -331,6 +331,83 @@ export default function Dashboard({ session, onSignOut }) {
     await fetchAllData();
   };
 
+  // --- INTERACTIVE REQUEST HANDLERS ---
+  const handleConfirmRequest = async (notif) => {
+    setIsLoading(true);
+    try {
+        if (balances.liquid_usd < notif.amount) {
+            setNotification({ type: 'error', text: 'Insufficient cash on hand to fulfill this request.' });
+            setIsLoading(false);
+            return;
+        }
+
+        // 1. Deduct from current user
+        await supabase.from('transactions').insert([{
+            user_id: session.user.id,
+            amount: -notif.amount,
+            transaction_type: 'send',
+            description: `Fulfilled request from ${notif.requester_name || 'User'}`,
+            status: 'completed'
+        }]);
+
+        // 2. Add to requester
+        await supabase.from('transactions').insert([{
+            user_id: notif.related_user_id,
+            amount: notif.amount,
+            transaction_type: 'receive',
+            description: `Request fulfilled by ${userName}`,
+            status: 'completed'
+        }]);
+
+        // 3. Mark notification as completed
+        await supabase.from('notifications').update({ 
+            status: 'completed', 
+            read: true, 
+            message: notif.message + ' (Confirmed)' 
+        }).eq('id', notif.id);
+
+        // 4. Notify the requester
+        await supabase.from('notifications').insert([{
+            user_id: notif.related_user_id,
+            message: `${userName} confirmed your payment request for ${formatCurrency(notif.amount)}.`,
+            type: 'system'
+        }]);
+
+        setNotification({ type: 'success', text: `Successfully routed ${formatCurrency(notif.amount)}.` });
+        await fetchAllData();
+    } catch (err) {
+        setNotification({ type: 'error', text: 'Failed to process the request.' });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  const handleDeclineRequest = async (notif) => {
+    setIsLoading(true);
+    try {
+        // 1. Mark notification as declined
+        await supabase.from('notifications').update({ 
+            status: 'declined', 
+            read: true, 
+            message: notif.message + ' (Declined)' 
+        }).eq('id', notif.id);
+        
+        // 2. Notify the requester
+        await supabase.from('notifications').insert([{
+            user_id: notif.related_user_id,
+            message: `${userName} declined your payment request for ${formatCurrency(notif.amount)}.`,
+            type: 'system'
+        }]);
+
+        setNotification({ type: 'success', text: 'Request officially declined.' });
+        await fetchAllData();
+    } catch (err) {
+        setNotification({ type: 'error', text: 'Failed to decline request.' });
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   const handleDeposit = async (amount) => {
     const { data, error } = await supabase.functions.invoke('create-checkout', { body: { userId: session.user.id, email: session.user.email, amount: amount } });
     if (data?.url) window.location.href = data.url;
@@ -1118,7 +1195,16 @@ export default function Dashboard({ session, onSignOut }) {
                         <div key={notif.id} className={`p-4 rounded-2xl ${notif.read ? 'bg-slate-50/50' : 'bg-blue-50/50 border border-blue-100'}`}>
                           <p className="text-sm text-slate-700 font-medium leading-tight mb-2">{notif.message}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(notif.created_at).toLocaleDateString()}</p>
-                          {!notif.read && <button onClick={() => markAsRead(notif.id)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest mt-2 hover:underline">Mark as read</button>}
+                          
+                          {/* INTERACTIVE REQUEST BUTTONS */}
+                          {notif.type === 'payment_request' && notif.status === 'pending' && (
+                            <div className="flex gap-2 mt-3">
+                              <button onClick={() => handleConfirmRequest(notif)} className="flex-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-emerald-500 transition-colors shadow-sm">Confirm</button>
+                              <button onClick={() => handleDeclineRequest(notif)} className="flex-1 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">Decline</button>
+                            </div>
+                          )}
+
+                          {!notif.read && notif.type !== 'payment_request' && <button onClick={() => markAsRead(notif.id)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest mt-2 hover:underline">Mark as read</button>}
                         </div>
                       )) : <p className="text-sm text-slate-500 text-center py-4">No notifications</p>}
                     </div>
@@ -1245,6 +1331,32 @@ export default function Dashboard({ session, onSignOut }) {
               }
               if (activeModal === 'REQUEST') {
                 const amount = parseFloat(e.target.amount.value);
+                
+                // --- NEW: Handle Internal Requests ---
+                if (requestTargetType === 'INTERNAL' && foundUser) {
+                    try {
+                        await supabase.from('notifications').insert([{
+                            user_id: foundUser.id,
+                            type: 'payment_request',
+                            message: `${userName} is requesting ${formatCurrency(amount)}.`,
+                            amount: amount,
+                            related_user_id: session.user.id,
+                            status: 'pending',
+                            requester_name: userName
+                        }]);
+                        setNotification({ type: 'success', text: `Request successfully dispatched to ${foundUser.full_name}` });
+                    } catch (err) {
+                        setNotification({ type: 'error', text: 'Failed to dispatch request.' });
+                    }
+                    
+                    setIsLoading(false);
+                    setActiveModal(null);
+                    setUserSearchQuery('');
+                    setFoundUser(null);
+                    return;
+                }
+                
+                // --- Existing External Logic ---
                 const link = `${window.location.origin}/pay?to=${session.user.id}&amount=${amount}&reason=${encodeURIComponent(requestReason)}`;
                 setRequestLink(link);
                 if (requestEmail) {
