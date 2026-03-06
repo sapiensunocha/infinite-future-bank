@@ -35,17 +35,17 @@ export default function Dashboard({ session, onSignOut }) {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
-
+  
   // --- FIX: Moved Transactions Tab State to the Top ---
   const [activeTxTab, setActiveTxTab] = useState('ALL');
-
+  
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState({
     transactions: [], notifications: [], pockets: [], recipients: [], investments: []
   });
-
+  
   // Real-Time Database States
   const [profile, setProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -57,24 +57,24 @@ export default function Dashboard({ session, onSignOut }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState('');
-
+  
   // Accessibility States (Preview vs Saved)
   const [accessSettings, setAccessSettings] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
   const [previewAccess, setPreviewAccess] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
-
+  
   // Transaction & Statement States
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [statementConfig, setStatementConfig] = useState({ startDate: '', endDate: '', format: 'pdf', isOfficial: false });
-
+  
   // Extended KYC & ID Scan States
   const [kycForm, setKycForm] = useState({ legalName: '', dob: '', phone: '', address: '', country: '', relationshipStatus: '', idDocumentUrl: '' });
   const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
   const [isUploadingId, setIsUploadingId] = useState(false);
-
+  
   // Security & Account States
   const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
   const [mfaState, setMfaState] = useState({ qrCode: '', secret: '', verifyCode: '', factorId: '', step: 'init' });
-
+  
   // Transaction & Payment States
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
@@ -87,19 +87,18 @@ export default function Dashboard({ session, onSignOut }) {
   const [sendRecipient, setSendRecipient] = useState('');
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
-
+  
   // Requirement: Payment Request Targeting
-  const [requestTargetType, setRequestTargetType] = useState('INTERNAL'); 
+  const [requestTargetType, setRequestTargetType] = useState('INTERNAL');
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [foundUser, setFoundUser] = useState(null);
   const [isSearchingUser, setIsSearchingUser] = useState(false);
-
+  
   // Requirement: Withdrawal Flexibility
-  const [withdrawalMethod, setWithdrawalMethod] = useState('BANK'); 
-
+  const [withdrawalMethod, setWithdrawalMethod] = useState('BANK');
+  
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
-
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
     PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
@@ -247,12 +246,10 @@ export default function Dashboard({ session, onSignOut }) {
     if (((month >= 5 && month <= 7) || month === 11) && balances.liquid_usd > 3000) return { text: "As the season changes, we want to ensure you are taking care of yourself. Remember that your Lifestyle perks grant you VIP lounge access and global connectivity for your upcoming travels.", action: "Access Lifestyle", target: "LIFESTYLE" };
     return { text: "Your safety net is perfectly secure and your accounts are thriving. We are proud to support your journey. Whenever you are ready, reach out to your AI advisor to discuss your next strategic move.", action: "Chat with Advisor", target: "ADVISOR" };
   };
-
   const insight = getHomeInsight();
 
   // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
-
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -261,11 +258,9 @@ export default function Dashboard({ session, onSignOut }) {
       const filePath = `${session.user.id}/avatar_${Date.now()}`;
       const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
       if (uploadError) throw uploadError;
-
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
       const { error: dbError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', session.user.id);
       if (dbError) throw dbError;
-
       triggerGlobalActionNotification('success', 'Institutional Identity Photo Updated.');
       await fetchAllData();
     } catch (err) {
@@ -407,7 +402,6 @@ export default function Dashboard({ session, onSignOut }) {
     setIsLoading(true);
     const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: mfaState.factorId });
     if (challengeError) return setIsLoading(false);
- 
     const { error } = await supabase.auth.mfa.verify({ factorId: mfaState.factorId, challengeId: challenge.id, code: mfaState.verifyCode });
     if (error) { setNotification({ type: 'error', text: 'Invalid Authenticator Code.' }); }
     else {
@@ -442,7 +436,6 @@ export default function Dashboard({ session, onSignOut }) {
     const liquidPct = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
     const alphaPct = ((balances.alpha_equity_usd || 0) / safeTotalNetWorth) * 100;
     const safePct = ((balances.mysafe_digital_usd || 0) / safeTotalNetWorth) * 100;
-
     // Filter to only show completed/successful transactions for accurate metrics
     const validTxs = transactions.filter(tx => tx.status !== 'failed' && tx.status !== 'pending');
     
@@ -453,9 +446,8 @@ export default function Dashboard({ session, onSignOut }) {
     
     const inflowPct = (totalInflow / totalFlowVolume) * 100;
     const outflowPct = (totalOutflow / totalFlowVolume) * 100;
-
-    const avgTransactionValue = validTxs.length > 0 
-      ? validTxs.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) / validTxs.length 
+    const avgTransactionValue = validTxs.length > 0
+      ? validTxs.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) / validTxs.length
       : 0;
 
     return (
@@ -525,7 +517,7 @@ export default function Dashboard({ session, onSignOut }) {
         <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
           
           {/* ============================================== */}
-          {/* NEW DATA-DRIVEN ANALYTICS DASHBOARD            */}
+          {/* NEW DATA-DRIVEN ANALYTICS DASHBOARD */}
           {/* ============================================== */}
           {showAnalytics ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
@@ -557,7 +549,6 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </div>
               </div>
-
               {/* CARD 2: ASSET ALLOCATION */}
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-4">
@@ -584,7 +575,6 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </div>
               </div>
-
               {/* CARD 3: TRANSACTION VELOCITY */}
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-4">
@@ -602,7 +592,6 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </div>
               </div>
-
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
@@ -640,7 +629,6 @@ export default function Dashboard({ session, onSignOut }) {
   const renderTransactionsView = () => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
- 
     const monthTxs = transactions.filter(tx => {
       const d = new Date(tx.created_at);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
@@ -1070,9 +1058,9 @@ export default function Dashboard({ session, onSignOut }) {
         <main className="flex-1 flex flex-col relative overflow-hidden">
           <header className="border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-[100] sticky top-0 pt-[env(safe-area-inset-top)] min-h-[calc(5rem+env(safe-area-inset-top))]">
             <div className="flex items-center gap-4">
-              <button 
-                type="button" 
-                onClick={(e) => { e.preventDefault(); setIsSidebarOpen(true); }} 
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setIsSidebarOpen(true); }}
                 onTouchEnd={(e) => { e.preventDefault(); setIsSidebarOpen(true); }}
                 className="md:hidden text-slate-800 hover:text-blue-500 transition-colors p-2 -ml-2 rounded-xl hover:bg-white/40 active:bg-slate-200 relative z-50 cursor-pointer"
               >
@@ -1108,11 +1096,11 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 )}
               </div>
-              <button 
+              <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }} 
+                onClick={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }}
                 onTouchEnd={(e) => { e.preventDefault(); setIsNotificationMenuOpen(!isNotificationMenuOpen); }}
-                className="text-slate-400 hover:text-blue-500 active:text-blue-600 transition-colors relative p-2 cursor-pointer z-50" 
+                className="text-slate-400 hover:text-blue-500 active:text-blue-600 transition-colors relative p-2 cursor-pointer z-50"
                 title="Notifications"
               >
                 <Bell size={22} />
@@ -1138,9 +1126,9 @@ export default function Dashboard({ session, onSignOut }) {
                 </>
               )}
               <div className="relative group">
-                <button 
-                  type="button" 
-                  onClick={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }} 
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }}
                   onTouchEnd={(e) => { e.preventDefault(); setIsProfileMenuOpen(!isProfileMenuOpen); }}
                   className="flex items-center gap-3 w-full text-left group px-3 py-2 rounded-2xl hover:bg-white/40 active:bg-slate-200 transition-colors border border-transparent hover:border-white/60 relative z-50 cursor-pointer"
                 >
@@ -1207,9 +1195,7 @@ export default function Dashboard({ session, onSignOut }) {
           </button>
         </main>
       </div>
-
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
-
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 mt-[env(safe-area-inset-top)] mb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto">
@@ -1275,7 +1261,6 @@ export default function Dashboard({ session, onSignOut }) {
                   setIsLoading(false);
                   return;
                 }
-
                 try {
                   // 1. Package the Bank or Card details
                   const payload = {
@@ -1292,19 +1277,16 @@ export default function Dashboard({ session, onSignOut }) {
                       cvc: e.target.cvc.value
                     }
                   };
-
                   // 2. Send the data to your newly deployed Edge Function
                   const { data, error } = await supabase.functions.invoke('process-payout', {
                     body: payload
                   });
-
                   if (error || data?.error) {
                     throw new Error(data?.error || "Routing failed. Check network.");
                   }
-
                   // 3. Success! Update UI and sync new balances
                   triggerGlobalActionNotification('success', `Withdrawal of ${formatCurrency(amount)} initiated via ${withdrawalMethod}.`);
-                  await fetchAllData(); 
+                  await fetchAllData();
                   setActiveModal(null);
                 } catch (err) {
                   console.error(err);
@@ -1343,7 +1325,6 @@ export default function Dashboard({ session, onSignOut }) {
                       </div>
                     </div>
                   )}
-
                   {/* NEW REQUEST MODAL UI (dual-mode) */}
                   {activeModal === 'REQUEST' && (
                     <div className="space-y-6 text-left animate-in fade-in">
@@ -1351,12 +1332,11 @@ export default function Dashboard({ session, onSignOut }) {
                         <button type="button" onClick={() => setRequestTargetType('INTERNAL')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${requestTargetType === 'INTERNAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Internal User</button>
                         <button type="button" onClick={() => setRequestTargetType('EXTERNAL')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${requestTargetType === 'EXTERNAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>External User</button>
                       </div>
-
                       {requestTargetType === 'INTERNAL' ? (
                         <div className="space-y-4">
                           <div className="relative">
                             <Search className="absolute left-4 top-4 text-slate-400" size={18}/>
-                            <input 
+                            <input
                               className="w-full bg-slate-50 p-4 pl-12 rounded-2xl border border-slate-200 outline-none focus:border-blue-500 font-bold transition-all"
                               placeholder="Search Username or Email..."
                               value={userSearchQuery}
@@ -1382,7 +1362,6 @@ export default function Dashboard({ session, onSignOut }) {
                       )}
                     </div>
                   )}
-
                   {/* NEW WITHDRAW MODAL UI (Bank vs Instant Card Form) */}
                   {activeModal === 'WITHDRAW' && (
                     <div className="space-y-6">
@@ -1390,7 +1369,6 @@ export default function Dashboard({ session, onSignOut }) {
                         <button type="button" onClick={() => setWithdrawalMethod('BANK')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${withdrawalMethod === 'BANK' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Bank Transfer</button>
                         <button type="button" onClick={() => setWithdrawalMethod('CARD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${withdrawalMethod === 'CARD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Instant Card</button>
                       </div>
-
                       {withdrawalMethod === 'BANK' ? (
                         <div className="space-y-4 animate-in slide-in-from-top-2 text-left">
                            <input required name="bankName" className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Institution Name"/>
@@ -1411,7 +1389,6 @@ export default function Dashboard({ session, onSignOut }) {
                       )}
                     </div>
                   )}
-
                   {activeModal === 'TRANSFER' && (
                     <div className="space-y-4 mb-6 text-left">
                       <div>
@@ -1499,7 +1476,6 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
-
       {notification && (
         <div className="fixed top-2 left-1/2 transform -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 fade-in duration-300 mt-[env(safe-area-inset-top)]">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
@@ -1512,9 +1488,7 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
-
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
-
       {/* --- REQUIREMENT: EXPORT STATEMENT MODAL --- */}
       {showStatementModal && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
@@ -1526,7 +1500,7 @@ export default function Dashboard({ session, onSignOut }) {
             <div className="space-y-6">
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Document Format</label>
-                <select 
+                <select
                   className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 font-bold outline-none focus:border-blue-500 transition-all"
                   value={statementConfig.format}
                   onChange={e => setStatementConfig({...statementConfig, format: e.target.value})}
@@ -1536,8 +1510,8 @@ export default function Dashboard({ session, onSignOut }) {
                 </select>
               </div>
               <div className="p-5 bg-blue-50 rounded-2xl border border-blue-200 flex items-start gap-4 shadow-sm">
-                 <input 
-                  type="checkbox" 
+                 <input
+                  type="checkbox"
                   className="mt-1 w-6 h-6 rounded accent-blue-600"
                   checked={statementConfig.isOfficial}
                   onChange={e => setStatementConfig({...statementConfig, isOfficial: e.target.checked})}
@@ -1547,12 +1521,12 @@ export default function Dashboard({ session, onSignOut }) {
                    <p className="text-[10px] text-blue-700 leading-relaxed font-medium">Includes Logo, EIN 33-1869013, Official New York Address, and Verified Digital Signature block.</p>
                  </div>
               </div>
-              <button 
+              <button
                 onClick={() => {
                    const type = statementConfig.isOfficial ? "Signed Official Statement" : "Standard Statement";
                    triggerGlobalActionNotification('success', `${type} (${statementConfig.format.toUpperCase()}) generated and archived.`);
                    setShowStatementModal(false);
-                }} 
+                }}
                 className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all"
               >
                 Generate & Download
