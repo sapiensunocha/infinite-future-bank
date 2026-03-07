@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { X, Landmark, Smartphone, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Navigation, Star, User } from 'lucide-react';
-import { supabase } from './services/supabaseClient'; // <-- YOUR REAL SUPABASE CLIENT
+import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Navigation, Star, User } from 'lucide-react';
+import { supabase } from './services/supabaseClient';
+
+// --- NEW: Map Imports ---
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default Leaflet icons missing in React builds
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Helper component to auto-center the map when the user's location loads
+function MapController({ center }) {
+  const map = useMap();
+  useEffect(() => { if (center) map.setView(center, 13); }, [center, map]);
+  return null;
+}
 
 export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuccess }) {
   const [step, setStep] = useState(1);
@@ -14,49 +34,10 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
   const [p2pMethod, setP2pMethod] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   
-  // Real Database State
+  // Real Database Map State
   const [nearbyBankers, setNearbyBankers] = useState([]);
   const [isLoadingBankers, setIsLoadingBankers] = useState(false);
-
-  // FETCH REAL BANKERS WHEN USER REACHES STEP 3
-  useEffect(() => {
-    if (step === 3 && method === 'P2P') {
-      fetchRealBankers();
-    }
-  }, [step, method]);
-
-  const fetchRealBankers = async () => {
-    setIsLoadingBankers(true);
-    try {
-      // Fetching real users who have 'is_banker' flipped to true
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, banker_rating, total_banker_trades')
-        .eq('is_banker', true)
-        .neq('id', userId) // Don't show the user themselves
-        .limit(5);
-
-      if (error) throw error;
-      
-      // Formatting the real data to match the UI requirements
-      // (In the future, you can pull methods and distance from a banker_locations table)
-      const formattedBankers = data.map(banker => ({
-        id: banker.id,
-        name: banker.full_name || 'Anonymous Banker',
-        rating: banker.banker_rating || 5.0,
-        trades: banker.total_banker_trades || 0,
-        distance: 'Local Area', // Placeholder until GPS PostGIS is active
-        methods: ['Orange Money', 'M-Pesa', 'Physical Cash'] // Assuming these for now
-      }));
-
-      setNearbyBankers(formattedBankers);
-    } catch (err) {
-      console.error("Error fetching bankers:", err);
-      setError("Failed to locate local bankers. Please check your connection.");
-    } finally {
-      setIsLoadingBankers(false);
-    }
-  };
+  const [userLocation, setUserLocation] = useState(null); // [latitude, longitude]
 
   const handleAmountSubmit = (e) => {
     e.preventDefault();
@@ -68,6 +49,58 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     }
   };
 
+  // --- NEW: Real Geolocation & Map Data Fetching ---
+  const initializeMapDiscovery = () => {
+    setIsLoadingBankers(true);
+    setStep(3);
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation([latitude, longitude]);
+        
+        try {
+          // 1. Update the user's own location in the DB so they are on the grid
+          await supabase.from('profiles').update({ latitude, longitude }).eq('id', userId);
+          
+          // 2. Fetch real bankers within 50km using the SQL RPC algorithm
+          const { data, error } = await supabase.rpc('get_nearby_bankers', {
+            user_lat: latitude,
+            user_lon: longitude,
+            radius_km: 50 
+          });
+          
+          if (error) throw error;
+          
+          // 3. Format the data for the map UI
+          const formattedBankers = (data || []).map(b => ({
+            id: b.id,
+            name: b.full_name || 'Anonymous Banker',
+            rating: b.banker_rating || 5.0,
+            trades: b.total_banker_trades || 0,
+            distance: `${b.distance_km.toFixed(1)} km`,
+            latitude: b.latitude,
+            longitude: b.longitude,
+            methods: ['Physical Cash', 'Airtel Money', 'M-Pesa'] // Assume these until you add preferred_methods to the profiles table
+          }));
+
+          setNearbyBankers(formattedBankers);
+        } catch (err) {
+          console.error(err);
+          setError("Failed to load map data. Make sure you ran the SQL functions.");
+        } finally {
+          setIsLoadingBankers(false);
+        }
+      }, (err) => {
+        setError("Location access denied. Please allow GPS access to find nearby cashpoints.");
+        setIsLoadingBankers(false);
+      });
+    } else {
+      setError("Geolocation is not supported by your browser.");
+      setIsLoadingBankers(false);
+    }
+  };
+
   const handleProcessWithdrawal = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -76,20 +109,30 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     try {
       if (method === 'P2P') {
         // REAL DATABASE ESCROW LOCK
-        const { data, error } = await supabase.rpc('initiate_p2p_withdrawal', {
+        const { data: tradeId, error } = await supabase.rpc('initiate_p2p_withdrawal', {
           p_user_id: userId,
           p_amount: parseFloat(amount),
           p_local_method: p2pMethod,
           p_phone_number: phoneNumber,
-          // We pass the specific banker ID so the request goes directly to them
           p_target_banker_id: selectedBanker.id 
         });
 
         if (error) throw error;
+
+        // SEND REAL-TIME NOTIFICATION TO THE BANKER
+        await supabase.from('notifications').insert([{
+          user_id: selectedBanker.id,
+          type: 'p2p_withdrawal_request',
+          message: `A nearby user is requesting ${parseFloat(amount).toFixed(2)} USD in ${p2pMethod}.`,
+          amount: parseFloat(amount),
+          related_user_id: userId,
+          status: 'pending',
+          metadata: { trade_id: tradeId } // Attach the trade ID so they can accept it
+        }]);
+
         setStep(4);
       } 
       else if (method === 'BANK') {
-        // REAL DATABASE STANDARD WITHDRAWAL
         const { error } = await supabase
           .from('standard_withdrawals')
           .insert({
@@ -160,13 +203,16 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
           {/* STEP 2: METHOD SELECTION */}
           {step === 2 && (
             <div className="space-y-4 animate-in slide-in-from-right-4">
-              <button onClick={() => { setMethod('P2P'); setStep(3); }} className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 transition-all text-left relative overflow-hidden">
+              <button 
+                onClick={() => { setMethod('P2P'); initializeMapDiscovery(); }} 
+                className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 transition-all text-left relative overflow-hidden"
+              >
                 <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-2 py-1 rounded-bl-lg">ZERO FEES</div>
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl"><MapPin size={24} /></div>
                   <div>
                     <p className="font-black text-slate-800">Local Banker (P2P)</p>
-                    <p className="text-xs font-bold text-emerald-600 mt-0.5">Find cashpoints near you</p>
+                    <p className="text-xs font-bold text-emerald-600 mt-0.5">Find cashpoints on map</p>
                   </div>
                 </div>
                 <ArrowRight size={18} className="text-emerald-400" />
@@ -182,106 +228,93 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                 </div>
                 <ArrowRight size={18} className="text-slate-300" />
               </button>
-
-              <div className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-slate-50 bg-slate-50/50 opacity-60 text-left relative">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-slate-200 text-slate-400 rounded-xl"><Lock size={24} /></div>
-                  <div>
-                    <p className="font-black text-slate-500">Physical Vault Pickup</p>
-                    <p className="text-xs font-bold text-slate-400 mt-0.5">Requires hardware access</p>
-                  </div>
-                </div>
-                <span className="text-xs font-black bg-slate-200 text-slate-500 px-2 py-1 rounded-md">SOON</span>
-              </div>
             </div>
           )}
 
-          {/* STEP 3: P2P REAL DATABASE RADAR */}
-          {step === 3 && method === 'P2P' && !selectedBanker && (
+          {/* STEP 3: P2P REAL AIRBNB MAP */}
+          {step === 3 && method === 'P2P' && (
             <div className="space-y-4 animate-in slide-in-from-right-4">
-              <div className="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between overflow-hidden relative">
-                <div className="absolute -right-4 -top-4 opacity-10"><Navigation size={100} /></div>
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Locating Nodes</p>
-                  <p className="text-lg font-black">{isLoadingBankers ? 'Scanning database...' : 'Bankers Found'}</p>
+              
+              {!userLocation ? (
+                <div className="text-center py-12">
+                  <Loader2 className="animate-spin mx-auto text-blue-500 mb-4" size={40} />
+                  <p className="font-black text-slate-800">Accessing GPS Grid...</p>
+                  <p className="text-xs font-bold text-slate-400 mt-1">Locating active nodes near you.</p>
                 </div>
-                {isLoadingBankers && (
-                  <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center animate-pulse">
-                    <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                  </div>
-                )}
-              </div>
+              ) : (
+                <>
+                  <div className="h-64 w-full rounded-2xl overflow-hidden border-2 border-slate-200 relative z-0">
+                    <MapContainer center={userLocation} zoom={13} style={{ height: '100%', width: '100%' }}>
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <MapController center={userLocation} />
+                      
+                      {/* 1. The User's Own Location */}
+                      <Marker position={userLocation}>
+                        <Popup><b>You are here</b></Popup>
+                      </Marker>
 
-              <div className="space-y-3 pt-2">
-                {!isLoadingBankers && nearbyBankers.length === 0 && (
-                  <p className="text-center text-slate-500 font-bold py-4">No active bankers found in your area.</p>
-                )}
-                
-                {nearbyBankers.map((banker) => (
-                  <div key={banker.id} onClick={() => setSelectedBanker(banker)} className="p-4 border-2 border-slate-100 rounded-2xl hover:border-emerald-400 hover:bg-emerald-50/30 cursor-pointer transition-all flex flex-col gap-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500"><User size={20}/></div>
+                      {/* 2. The Bankers loaded from Supabase */}
+                      {nearbyBankers.map(banker => (
+                        <Marker key={banker.id} position={[banker.latitude, banker.longitude]}>
+                          <Popup>
+                            <div className="text-center pb-2 min-w-[120px]">
+                              <p className="font-black text-slate-800 text-sm mb-1">{banker.name}</p>
+                              <p className="text-[10px] font-bold text-slate-500 mb-3 flex items-center justify-center gap-1">
+                                <Star size={10} className="text-yellow-500 fill-yellow-500"/> {banker.rating} • {banker.distance} away
+                              </p>
+                              <button 
+                                onClick={() => setSelectedBanker(banker)} 
+                                className="w-full bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-black hover:bg-emerald-600 transition-colors"
+                              >
+                                Select Node
+                              </button>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
+                  </div>
+
+                  {/* If no bankers are found in a 50km radius */}
+                  {!isLoadingBankers && nearbyBankers.length === 0 && (
+                     <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                       <p className="text-sm font-bold text-slate-500">No active bankers found within 50km of your coordinates.</p>
+                     </div>
+                  )}
+
+                  {/* STEP 3.5: FINALIZE REAL P2P REQUEST (Slides up when a pin is clicked) */}
+                  {selectedBanker && (
+                    <form onSubmit={handleProcessWithdrawal} className="space-y-4 bg-white border-2 border-emerald-100 p-4 rounded-2xl animate-in slide-in-from-bottom-2 shadow-lg relative -mt-6 z-10">
+                      <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                         <div>
-                          <p className="font-black text-slate-800 flex items-center gap-2">
-                            {banker.name} 
-                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                          </p>
-                          <p className="text-xs font-bold text-slate-400 flex items-center gap-1"><MapPin size={10}/> {banker.distance}</p>
+                          <p className="text-[10px] font-black uppercase text-emerald-600">Routing to</p>
+                          <p className="font-black text-slate-800">{selectedBanker.name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black uppercase text-slate-400">Distance</p>
+                          <p className="font-black text-slate-800">{selectedBanker.distance}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-black flex items-center gap-1 text-slate-700"><Star size={14} className="text-yellow-400 fill-yellow-400"/> {banker.rating}</p>
-                        <p className="text-[10px] font-bold text-slate-400">{banker.trades} trades</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {banker.methods.map(m => (
-                        <span key={m} className="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-1 rounded-md">{m}</span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setStep(2)} className="w-full text-center text-sm font-bold text-slate-400 pt-4 hover:text-slate-600">Cancel Search</button>
+                      
+                      <select required value={p2pMethod} onChange={(e) => setP2pMethod(e.target.value)} className="w-full bg-slate-50 p-3 rounded-xl border border-slate-200 outline-none font-bold text-slate-700 text-sm">
+                        <option value="">How do you want the cash?</option>
+                        {selectedBanker.methods.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      
+                      <input required type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Your Phone / Account ID" className="w-full bg-slate-50 p-3 rounded-xl border border-slate-200 outline-none font-bold placeholder:text-slate-400 text-sm"/>
+
+                      <button type="submit" disabled={isProcessing} className="w-full bg-emerald-600 text-white p-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-emerald-500 flex justify-center gap-2 transition-colors">
+                        {isProcessing ? <Loader2 className="animate-spin" size={18} /> : 'Lock Escrow & Send Request'}
+                      </button>
+                    </form>
+                  )}
+                  
+                  {!selectedBanker && (
+                    <button onClick={() => setStep(2)} className="w-full text-center text-xs font-bold text-slate-400 pt-2 hover:text-slate-600 uppercase tracking-widest">Cancel Search</button>
+                  )}
+                </>
+              )}
             </div>
-          )}
-
-          {/* STEP 3.5: FINALIZE REAL P2P REQUEST */}
-          {step === 3 && method === 'P2P' && selectedBanker && (
-            <form onSubmit={handleProcessWithdrawal} className="space-y-6 animate-in slide-in-from-right-4">
-              <div className="bg-emerald-50 p-4 rounded-xl flex items-center justify-between border border-emerald-100">
-                <div>
-                  <p className="text-xs font-bold text-emerald-600 uppercase">Routing to</p>
-                  <p className="text-lg font-black text-slate-800">{selectedBanker.name}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-emerald-600 uppercase">Amount</p>
-                  <p className="text-xl font-black text-slate-800">${parseFloat(amount).toFixed(2)}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <select required value={p2pMethod} onChange={(e) => setP2pMethod(e.target.value)} className="w-full bg-white p-4 rounded-2xl border-2 border-slate-100 outline-none font-bold text-slate-700">
-                  <option value="">How do you want the cash?</option>
-                  {selectedBanker.methods.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-                
-                <input required type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Your Phone Number / Account ID" className="w-full bg-white p-4 rounded-2xl border-2 border-slate-100 outline-none font-bold placeholder:text-slate-300"/>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-start gap-3">
-                <ShieldCheck className="text-blue-600 shrink-0 mt-0.5" size={20}/>
-                <p className="text-xs font-bold text-blue-800 leading-relaxed">Your ${parseFloat(amount).toFixed(2)} will be locked in Escrow. It is only released to {selectedBanker.name} once you confirm receipt.</p>
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setSelectedBanker(null)} className="w-1/3 bg-slate-100 text-slate-600 p-4 rounded-2xl font-black">Back</button>
-                <button type="submit" disabled={isProcessing} className="w-2/3 bg-emerald-500 text-white p-4 rounded-2xl font-black text-lg hover:bg-emerald-600 flex justify-center gap-2">
-                  {isProcessing ? <Loader2 className="animate-spin" size={20} /> : 'Lock Escrow'}
-                </button>
-              </div>
-            </form>
           )}
 
           {/* STEP 4: SUCCESS */}
@@ -293,7 +326,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
               <h3 className="text-2xl font-black text-slate-800">Escrow Locked 🔒</h3>
               <p className="text-slate-500 font-medium px-4">
                 {method === 'P2P' 
-                  ? `Your request has been securely routed to ${selectedBanker?.name}. Waiting for them to confirm...` 
+                  ? `Your request has been securely routed to ${selectedBanker?.name}. Wait for them to accept the ping in their Dashboard.` 
                   : 'Your withdrawal is processing.'}
               </p>
               <button onClick={() => { if(onSuccess) onSuccess(); onClose(); }} className="mt-8 w-full bg-slate-100 text-slate-800 p-4 rounded-2xl font-black hover:bg-slate-200">
