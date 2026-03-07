@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Navigation, Star, User } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// --- NEW: Map Imports ---
+// --- Map Imports ---
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -49,7 +49,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     }
   };
 
-  // --- NEW: Real Geolocation & Map Data Fetching ---
+  // --- Real Geolocation & Map Data Fetching ---
   const initializeMapDiscovery = () => {
     setIsLoadingBankers(true);
     setStep(3);
@@ -203,6 +203,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
           {/* STEP 2: METHOD SELECTION */}
           {step === 2 && (
             <div className="space-y-4 animate-in slide-in-from-right-4">
+              {/* Option 1: P2P */}
               <button 
                 onClick={() => { setMethod('P2P'); initializeMapDiscovery(); }} 
                 className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 transition-all text-left relative overflow-hidden"
@@ -218,6 +219,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                 <ArrowRight size={18} className="text-emerald-400" />
               </button>
 
+              {/* Option 2: Standard Bank */}
               <button onClick={() => { setMethod('BANK'); setStep(3); }} className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-slate-100 hover:border-blue-100 hover:bg-slate-50 transition-all text-left">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-slate-100 text-slate-600 rounded-xl"><Landmark size={24} /></div>
@@ -228,6 +230,18 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                 </div>
                 <ArrowRight size={18} className="text-slate-300" />
               </button>
+
+              {/* Option 3: Physical Vault (Coming Soon) */}
+              <div className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-slate-50 bg-slate-50 opacity-60 text-left relative cursor-not-allowed">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-slate-200 text-slate-500 rounded-xl"><Lock size={24} /></div>
+                  <div>
+                    <p className="font-black text-slate-600">Physical Vault Pickup</p>
+                    <p className="text-xs font-bold text-slate-400 mt-0.5">Hardware Required • IFB Skylink</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black bg-slate-200 text-slate-500 px-3 py-1 rounded-lg uppercase tracking-widest">Soon</span>
+              </div>
             </div>
           )}
 
