@@ -3,7 +3,8 @@ import { supabase } from './services/supabaseClient';
 import { 
   BookOpen, BrainCircuit, Play, CheckCircle2, 
   ChevronRight, Send, Loader2, Bot, Sparkles, User,
-  ShieldCheck, TrendingUp, Target, Lock, ArrowLeft, X
+  ShieldCheck, TrendingUp, Target, Lock, ArrowLeft, X,
+  Landmark // NEW ICON FOR BANKER TRAINING
 } from 'lucide-react';
 
 // --- REAL INSTITUTIONAL TRAINING DATA ---
@@ -77,6 +78,24 @@ const TRAINING_MODULES = [
       { type: 'example', title: 'The Vendor Compromise', text: 'Your legal firm sends an invoice from their real email (which was hacked), stating: "We have updated our banking details. Please route this month\'s retainer to the new routing number attached." You wire the funds. The money is gone permanently.' },
       { type: 'quiz', question: 'What is the required protocol when a vendor changes their banking details via email?', options: ['A) Process it immediately to avoid late fees', 'B) Execute a secondary out-of-band verification (e.g., a phone call to a known number)', 'C) Email them back to confirm'], answer: 1 }
     ]
+  },
+  // --- NEW: COMPREHENSIVE BANKER TRAINING MODULE ---
+  {
+    id: 'TRK6_MOD1',
+    track: 'Network Operations',
+    title: 'Banker Node Certification',
+    icon: <Landmark size={18}/>,
+    points: 50,
+    metricTarget: 'compliance_score',
+    screens: [
+      { type: 'statement', text: 'To become an IFB Banker is to become a vital pillar of local financial infrastructure. You are the bridge between digital wealth and physical reality.' },
+      { type: 'explanation', title: 'The Escrow Mechanism', text: 'As a Banker, your primary role is fulfilling cash withdrawal requests for nearby users. When a user requests $100 from you, IFB immediately locks that $100 in an Escrow Smart Contract. The money cannot be spent or reversed by the user once locked. It is guaranteed by the protocol.' },
+      { type: 'explanation', title: 'Physical Hand-off & Safety', text: 'You will arrange to meet the user in a safe, public location, or transfer the equivalent amount via local mobile money (like Airtel Money or M-Pesa). Never hand over the physical cash or mobile money until you have visually verified the user\'s identity matches their IFB profile.' },
+      { type: 'example', title: 'The Release Protocol', text: 'Scenario: You meet John. He requested $50. You verify his face. You hand him a $50 bill. HE must then click "Confirm Receipt" on his phone. Instantly, the $50 in the Escrow contract is transferred permanently into your IFB Liquid Balance.' },
+      { type: 'explanation', title: 'Dispute Resolution', text: 'If a user receives the cash but refuses to click "Confirm Receipt", do not panic. The funds remain locked in Escrow. You must file an immediate dispute with IFB Support. If you used Mobile Money, provide the transaction receipt. If you met in person, IFB will review GPS logs and chat history. If fraud is detected, the user is permanently banned and your funds are released.' },
+      { type: 'quiz', question: 'What must happen before you hand over physical cash to a user?', options: ['A) You must wait 24 hours', 'B) You must verify their identity matches their IFB profile', 'C) You must ask for a 10% fee'], answer: 1 },
+      { type: 'quiz', question: 'If a user takes your cash and runs without clicking "Confirm", what happens to the money?', options: ['A) It is lost forever', 'B) It returns to the user automatically', 'C) It remains locked in Escrow pending IFB Dispute Resolution'], answer: 2 }
+    ]
   }
 ];
 
@@ -101,7 +120,7 @@ export default function Training({ session }) {
 
   // AI Mentor States
   const [chatHistory, setChatHistory] = useState([
-    { role: 'ai', text: 'Institutional Training Mentor initialized. Request clarity on any financial protocol or execution strategy.' }
+    { role: 'ai', text: 'Welcome. I am your Institutional Training Mentor. How can I clarify your financial operations today?' }
   ]);
   const [userInput, setUserInput] = useState('');
   const [isAiTyping, setIsAiTyping] = useState(false);
@@ -158,7 +177,19 @@ export default function Training({ session }) {
       if (selectedAnswer === null) return;
       if (selectedAnswer === currentScreen.answer) {
         setQuizStatus('correct');
-        setTimeout(() => completeModule(), 1500);
+        
+        // Check if there are more steps after this quiz (like in the Banker training)
+        if (currentStep < activeModule.screens.length - 1) {
+             setTimeout(() => {
+                 setQuizStatus(null);
+                 setSelectedAnswer(null);
+                 setCurrentStep(prev => prev + 1);
+             }, 1500);
+        } else {
+             // If it's the last step, complete the module
+             setTimeout(() => completeModule(), 1500);
+        }
+
       } else {
         setQuizStatus('incorrect');
         setTimeout(() => setQuizStatus(null), 2000);
@@ -224,9 +255,10 @@ export default function Training({ session }) {
 
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      const prompt = `You are the IFB Institutional Mentor, an elite financial educator for high-net-worth individuals and founders. 
+      const prompt = `You are the IFB Institutional Mentor, an elite financial educator. You are speaking to a high-net-worth user or ambitious founder. 
+      Speak in a way that is highly knowledgeable, objective, and structured, but retain a slight touch of approachable humanity (be a guide, not a robot). 
       The user is asking: "${userInput}". 
-      Provide a highly structural, institutional, and objective answer. No motivational fluff. Give specific, actionable banking or corporate finance advice. Keep it under 2 paragraphs. Do not use asterisks or markdown bolding.`;
+      Provide a specific, actionable answer regarding banking, corporate finance, or IFB protocols. Keep it under 2 paragraphs. Do not use asterisks or markdown bolding.`;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
