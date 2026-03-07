@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from './services/supabaseClient'; // Ensure correct path
+import { supabase } from './services/supabaseClient';
 import Chat from './Chat';
 import AccountHub from './AccountHub';
 import OrganizationSuite from './OrganizationSuite';
@@ -10,7 +10,12 @@ import EmergencySOS from './EmergencySOS';
 import Training from './Training';
 import Agents from './Agents';
 import DepositInterface from './DepositInterface';
-import WithdrawalPage from './WithdrawalPage'; // NEW: Import the Withdrawal Engine
+import WithdrawalPage from './WithdrawalPage';
+import PayMeCard from './PayMeCard'; 
+// NEW MODULES
+import Payroll from './Payroll';
+import PayBills from './PayBills';
+import SmartContracts from './SmartContracts';
 import QRCode from "react-qr-code";
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
@@ -23,7 +28,8 @@ import {
   ArrowDownToLine, FileSignature, Mail, ShieldAlert, Accessibility,
   Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
   Filter, Calendar, ArrowDownUp, FileDown,
-  CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Building
+  CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Building, QrCode, 
+  LayoutGrid, Receipt, FileCode // NEW ICONS
 } from 'lucide-react';
 
 export default function Dashboard({ session, onSignOut }) {
@@ -37,6 +43,10 @@ export default function Dashboard({ session, onSignOut }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   
+  // NEW: App Drawer States
+  const [isAppDrawerOpen, setIsAppDrawerOpen] = useState(false);
+  const [activeAppPopup, setActiveAppPopup] = useState(null); // 'PAYROLL', 'BILLS', or 'CONTRACTS'
+
   const [activeTxTab, setActiveTxTab] = useState('ALL');
   
   // Search States
@@ -83,7 +93,8 @@ export default function Dashboard({ session, onSignOut }) {
   // Payment States
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
-  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false); // NEW: Controls the Full P2P Withdrawal Page
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false); 
+  const [showPayMe, setShowPayMe] = useState(false); 
   const [requestEmail, setRequestEmail] = useState('');
   const [requestLink, setRequestLink] = useState(null);
   const [requestReason, setRequestReason] = useState('');
@@ -315,7 +326,7 @@ export default function Dashboard({ session, onSignOut }) {
         full_legal_name: kycForm.legalName,
         dob: kycForm.dob,
         phone: kycForm.phone,
-        residential_address: kycForm.address,
+        address: kycForm.address,
         kyc_status: 'verified'
       }).eq('id', session.user.id);
       if (error) throw error;
@@ -384,16 +395,13 @@ export default function Dashboard({ session, onSignOut }) {
     }
   };
 
-  // --- NEW: Handle Banker Accepting P2P Escrow Request ---
   const handleAcceptP2PWithdrawal = async (notif) => {
     setIsLoading(true);
     try {
-      // If we had the trade_id in the metadata, we update it in the trades table.
       if (notif.metadata?.trade_id) {
         await supabase.from('p2p_trades').update({ status: 'in_progress' }).eq('id', notif.metadata.trade_id);
       }
       
-      // Update notification status
       await supabase.from('notifications').update({ 
         read: true, 
         status: 'accepted', 
@@ -614,6 +622,7 @@ export default function Dashboard({ session, onSignOut }) {
             </button>
           </div>
         </div>
+        
         <div className="flex flex-wrap items-center gap-3 bg-white/60 backdrop-blur-xl border border-white/40 p-2 rounded-3xl shadow-sm">
           <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
             <Send size={16} /> Send
@@ -621,18 +630,18 @@ export default function Dashboard({ session, onSignOut }) {
           <button onClick={() => setActiveModal('REQUEST')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
             <Download size={16} /> Request
           </button>
+          <button onClick={() => setShowPayMe(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border border-blue-200 shadow-sm transition-all hover:bg-blue-100 hover:scale-105">
+            <QrCode size={16} /> Pay Me
+          </button>
           <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
             <ArrowRightLeft size={16} /> Transfer
           </button>
           <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
             <Plus size={16} /> Deposit
           </button>
-          
-          {/* NEW: Updated Withdraw Button to Open the WithdrawalPage Engine */}
           <button onClick={() => setIsWithdrawOpen(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
             <Landmark size={16} /> Withdraw
           </button>
-          
           <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
           <button
             onClick={() => setShowAnalytics(!showAnalytics)}
@@ -641,10 +650,10 @@ export default function Dashboard({ session, onSignOut }) {
             <BarChart2 size={16} /> Analytics
           </button>
         </div>
+        
         <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
           {showAnalytics ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
-              {/* CARD 1: CASHFLOW DYNAMICS */}
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2"><TrendingUp size={16} className="text-indigo-500" /> Cashflow</h3>
@@ -671,7 +680,6 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </div>
               </div>
-              {/* CARD 2: ASSET ALLOCATION */}
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2"><PieChart size={16} className="text-blue-500" /> Allocation</h3>
@@ -697,7 +705,6 @@ export default function Dashboard({ session, onSignOut }) {
                   </div>
                 </div>
               </div>
-              {/* CARD 3: TRANSACTION VELOCITY */}
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2"><BarChart2 size={16} className="text-emerald-500" /> Velocity</h3>
@@ -1251,7 +1258,66 @@ export default function Dashboard({ session, onSignOut }) {
                 {tabTitles[activeTab]}
               </h2>
             </div>
+            
             <div className="flex items-center gap-4 md:gap-6 relative">
+              
+              {/* --- NEW: THE APP DRAWER ICON (LinkedIn Style) --- */}
+              <div className="relative">
+                <button 
+                  onClick={() => setIsAppDrawerOpen(!isAppDrawerOpen)}
+                  className="text-slate-400 hover:text-blue-600 transition-colors p-2 z-50 relative focus:outline-none"
+                  title="Other Features"
+                >
+                  <LayoutGrid size={22} />
+                </button>
+
+                {/* THE APP DRAWER DROPDOWN */}
+                {isAppDrawerOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsAppDrawerOpen(false)}></div>
+                    <div className="absolute top-full mt-4 right-0 w-80 bg-white/95 backdrop-blur-3xl border border-slate-200 shadow-2xl rounded-[2rem] p-6 z-50 animate-in slide-in-from-top-4 fade-in">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 px-2">Corporate & Tools</h3>
+                      
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* Payroll Button */}
+                        <button 
+                          onClick={() => { setActiveAppPopup('PAYROLL'); setIsAppDrawerOpen(false); }}
+                          className="flex flex-col items-center gap-3 p-3 rounded-2xl hover:bg-blue-50 transition-colors group"
+                        >
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors shadow-sm">
+                            <Users size={20} />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-700">Payroll</span>
+                        </button>
+
+                        {/* Pay Bills Button */}
+                        <button 
+                          onClick={() => { setActiveAppPopup('BILLS'); setIsAppDrawerOpen(false); }}
+                          className="flex flex-col items-center gap-3 p-3 rounded-2xl hover:bg-emerald-50 transition-colors group"
+                        >
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors shadow-sm">
+                            <Receipt size={20} />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-700">Pay Bills</span>
+                        </button>
+
+                        {/* Smart Contracts Button */}
+                        <button 
+                          onClick={() => { setActiveAppPopup('CONTRACTS'); setIsAppDrawerOpen(false); }}
+                          className="flex flex-col items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition-colors group"
+                        >
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors shadow-sm">
+                            <FileCode size={20} />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-700 leading-tight">Smart<br/>Contracts</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              {/* ----------------------------------------------- */}
+
               <div className={`relative transition-all duration-300 ease-in-out hidden sm:block ${isSearchExpanded ? 'w-80' : 'w-40'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
@@ -1308,11 +1374,38 @@ export default function Dashboard({ session, onSignOut }) {
                             </div>
                           )}
 
-                          {/* NEW: P2P WITHDRAWAL REQUESTS FOR BANKERS TO ACCEPT */}
+                          {/* P2P WITHDRAWAL REQUESTS FOR BANKERS TO ACCEPT */}
                           {notif.type === 'p2p_withdrawal_request' && notif.status === 'pending' && (
                             <div className="flex gap-2 mt-3">
                               <button onClick={() => handleAcceptP2PWithdrawal(notif)} className="flex-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-emerald-500 transition-colors shadow-sm">Accept Request</button>
                               <button onClick={() => handleDeclineRequest(notif)} className="flex-1 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">Decline</button>
+                            </div>
+                          )}
+
+                          {/* ESCROW RELEASE (For the User to confirm they got the cash) */}
+                          {notif.type === 'p2p_withdrawal_request' && notif.status === 'accepted' && notif.related_user_id === session.user.id && (
+                            <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col gap-2">
+                              <p className="text-xs font-bold text-emerald-800 mb-1">Did you receive the cash?</p>
+                              <button 
+                                onClick={async () => {
+                                  setIsLoading(true);
+                                  try {
+                                    const { error } = await supabase.rpc('finalize_p2p_trade', { p_trade_id: notif.metadata.trade_id });
+                                    if (error) throw error;
+                                    
+                                    await supabase.from('notifications').update({ status: 'completed', message: 'Trade Finalized. Funds released.', read: true }).eq('id', notif.id);
+                                    triggerGlobalActionNotification('success', 'Escrow Released. Trade complete.');
+                                    await fetchAllData();
+                                  } catch (err) {
+                                    triggerGlobalActionNotification('error', err.message);
+                                  } finally {
+                                    setIsLoading(false);
+                                  }
+                                }} 
+                                className="w-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg shadow-sm hover:bg-emerald-500"
+                              >
+                                Confirm Receipt
+                              </button>
                             </div>
                           )}
 
@@ -1394,11 +1487,34 @@ export default function Dashboard({ session, onSignOut }) {
           </button>
         </main>
       </div>
+
+      {/* --- ALL OVERLAYS & POPUPS BELLOW --- */}
+
+      {/* 1. App Drawer Popups (The new features) */}
+      {activeAppPopup && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-5xl h-[90vh] shadow-2xl overflow-hidden flex flex-col relative border border-slate-100 animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-20">
+               <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">
+                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills & Vendors' : 'Smart Contracts'}
+               </h3>
+               <button onClick={() => setActiveAppPopup(null)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+                 <X size={20} />
+               </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
+               {activeAppPopup === 'PAYROLL' && <Payroll session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} />}
+               {activeAppPopup === 'BILLS' && <PayBills session={session} balances={balances} fetchAllData={fetchAllData} />}
+               {activeAppPopup === 'CONTRACTS' && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. AI Advisor Chat */}
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
       
-      {/* NEW: The full Withdrawal Page overlay. 
-        Instead of the old generic modal, this opens your specialized withdrawal engine 
-      */}
+      {/* 3. P2P Local Banker Map */}
       {isWithdrawOpen && (
         <WithdrawalPage 
           userBalance={balances.liquid_usd} 
@@ -1408,6 +1524,7 @@ export default function Dashboard({ session, onSignOut }) {
         />
       )}
 
+      {/* 4. Main Transaction Modals (Send, Request, Transfer) */}
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 mt-[env(safe-area-inset-top)] mb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto">
@@ -1458,7 +1575,6 @@ export default function Dashboard({ session, onSignOut }) {
               if (activeModal === 'REQUEST') {
                 const amount = parseFloat(e.target.amount.value);
                 
-                // INTERNAL REQUESTS
                 if (requestTargetType === 'INTERNAL' && foundUser) {
                     try {
                         await supabase.from('notifications').insert([{
@@ -1482,7 +1598,6 @@ export default function Dashboard({ session, onSignOut }) {
                     return;
                 }
                 
-                // EXTERNAL REQUESTS
                 const link = `${window.location.origin}/pay?to=${session.user.id}&amount=${amount}&reason=${encodeURIComponent(requestReason)}`;
                 setRequestLink(link);
                 if (requestEmail) {
@@ -1644,8 +1759,10 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
+
+      {/* 5. Global Toasts */}
       {notification && (
-        <div className="fixed top-2 left-1/2 transform -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 fade-in duration-300 mt-[env(safe-area-inset-top)]">
+        <div className="fixed top-2 left-1/2 transform -translate-x-1/2 z-[300] animate-in slide-in-from-top-4 fade-in duration-300 mt-[env(safe-area-inset-top)]">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 ${
             notification.type === 'success'
               ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
@@ -1656,7 +1773,19 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
+
+      {/* 6. Deposit Stripe UI */}
       {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
+      
+      {/* 7. Pay Me Digital Card */}
+      {showPayMe && (
+        <PayMeCard 
+          profile={profile} 
+          onClose={() => setShowPayMe(false)} 
+        />
+      )}
+
+      {/* 8. Export Statement Modal */}
       {showStatementModal && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl border border-slate-100">
