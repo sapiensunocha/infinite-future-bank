@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Landmark, Smartphone, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Navigation, Star, User } from 'lucide-react';
-import { supabase } from '../supabaseClient'; // <-- YOUR REAL SUPABASE CLIENT
+import { supabase } from './services/supabaseClient'; // <-- YOUR REAL SUPABASE CLIENT
 
 export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuccess }) {
   const [step, setStep] = useState(1);
