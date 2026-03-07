@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from './services/supabaseClient';
+import { supabase } from './services/supabaseClient'; // Ensure correct path
 import Chat from './Chat';
 import AccountHub from './AccountHub';
 import OrganizationSuite from './OrganizationSuite';
@@ -10,6 +10,7 @@ import EmergencySOS from './EmergencySOS';
 import Training from './Training';
 import Agents from './Agents';
 import DepositInterface from './DepositInterface';
+import WithdrawalPage from './WithdrawalPage'; // NEW: Import the Withdrawal Engine
 import QRCode from "react-qr-code";
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
@@ -57,7 +58,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState('');
 
-  // --- NEW: COMMERCIAL ONBOARDING STATES ---
+  // Commercial Onboarding States
   const [commercialProfile, setCommercialProfile] = useState(null);
   const [commercialForm, setCommercialForm] = useState({ company_name: '', sector: '', registration_country: '', annual_revenue: '', monthly_burn_rate: '', debt_to_equity_ratio: '' });
   const [isSubmittingCommercial, setIsSubmittingCommercial] = useState(false);
@@ -79,9 +80,10 @@ export default function Dashboard({ session, onSignOut }) {
   const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
   const [mfaState, setMfaState] = useState({ qrCode: '', secret: '', verifyCode: '', factorId: '', step: 'init' });
   
-  // Transaction & Payment States
+  // Payment States
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false); // NEW: Controls the Full P2P Withdrawal Page
   const [requestEmail, setRequestEmail] = useState('');
   const [requestLink, setRequestLink] = useState(null);
   const [requestReason, setRequestReason] = useState('');
@@ -98,13 +100,9 @@ export default function Dashboard({ session, onSignOut }) {
   const [foundUser, setFoundUser] = useState(null);
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   
-  // Withdrawal Flexibility
-  const [withdrawalMethod, setWithdrawalMethod] = useState('BANK');
-  
   const fileInputRef = useRef(null);
   const searchDebounce = useRef(null);
 
-  // ADDED: Commercial Hub to Tab Titles
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
     PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
@@ -149,7 +147,6 @@ export default function Dashboard({ session, onSignOut }) {
     const { data: pData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
     const { data: bData } = await supabase.from('balances').select('*').eq('user_id', session.user.id).maybeSingle();
     
-    // --- NEW: Fetch Commercial Profile ---
     const { data: commData } = await supabase.from('commercial_profiles').select('*').eq('id', session.user.id).maybeSingle();
     if (commData) {
       setCommercialProfile(commData);
@@ -240,7 +237,7 @@ export default function Dashboard({ session, onSignOut }) {
         const { data: pocks } = await supabase.from('pockets').select('*').eq('user_id', session.user.id).ilike('pocket_name', `%${searchQuery}%`);
         const { data: recs } = await supabase.from('recipients').select('*').eq('user_id', session.user.id).ilike('recipient_name', `%${searchQuery}%`);
         const { data: invs } = await supabase.from('investments').select('*').eq('user_id', session.user.id).ilike('investment_type', `%${searchQuery}%`);
-        setSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
+        searchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
       }, 300);
     } else {
       setSearchResults({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
@@ -387,6 +384,31 @@ export default function Dashboard({ session, onSignOut }) {
     }
   };
 
+  // --- NEW: Handle Banker Accepting P2P Escrow Request ---
+  const handleAcceptP2PWithdrawal = async (notif) => {
+    setIsLoading(true);
+    try {
+      // If we had the trade_id in the metadata, we update it in the trades table.
+      if (notif.metadata?.trade_id) {
+        await supabase.from('p2p_trades').update({ status: 'in_progress' }).eq('id', notif.metadata.trade_id);
+      }
+      
+      // Update notification status
+      await supabase.from('notifications').update({ 
+        read: true, 
+        status: 'accepted', 
+        message: notif.message + ' (Accepted & Locked in Escrow)' 
+      }).eq('id', notif.id);
+
+      triggerGlobalActionNotification('success', 'P2P Request Accepted. Please fulfill the cash delivery to the user.');
+      await fetchAllData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Failed to accept P2P request.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDeclineRequest = async (notif) => {
     setIsLoading(true);
     try {
@@ -398,7 +420,7 @@ export default function Dashboard({ session, onSignOut }) {
         
         await supabase.from('notifications').insert([{
             user_id: notif.metadata?.requester_id || notif.related_user_id,
-            message: `${userName} declined your payment request for ${formatCurrency(notif.amount || notif.metadata?.amount)}.`,
+            message: `${userName} declined your request.`,
             type: 'system'
         }]);
 
@@ -510,7 +532,6 @@ export default function Dashboard({ session, onSignOut }) {
     setNotification({ type: 'success', text: 'Display preferences applied and saved.' });
   };
 
-  // --- NEW: COMMERCIAL SUBMIT HANDLER ---
   const handleCommercialSubmit = async (e) => {
     e.preventDefault();
     setIsSubmittingCommercial(true);
@@ -606,9 +627,12 @@ export default function Dashboard({ session, onSignOut }) {
           <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
             <Plus size={16} /> Deposit
           </button>
-          <button onClick={() => setActiveModal('WITHDRAW')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
+          
+          {/* NEW: Updated Withdraw Button to Open the WithdrawalPage Engine */}
+          <button onClick={() => setIsWithdrawOpen(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
             <Landmark size={16} /> Withdraw
           </button>
+          
           <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
           <button
             onClick={() => setShowAnalytics(!showAnalytics)}
@@ -1102,7 +1126,6 @@ export default function Dashboard({ session, onSignOut }) {
     </div>
   );
 
-  // --- NEW: COMMERCIAL HUB UI ---
   const renderCommercialHub = () => (
     <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500">
       <div className="bg-slate-900 border border-slate-800 p-10 rounded-[3rem] shadow-xl text-white mb-8 relative overflow-hidden">
@@ -1277,7 +1300,7 @@ export default function Dashboard({ session, onSignOut }) {
                           <p className="text-sm text-slate-700 font-medium leading-tight mb-2">{notif.message}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(notif.created_at).toLocaleDateString()}</p>
                           
-                          {/* INTERACTIVE REQUEST BUTTONS */}
+                          {/* STANDARD PAYMENT REQUESTS */}
                           {notif.type === 'payment_request' && notif.status === 'pending' && (
                             <div className="flex gap-2 mt-3">
                               <button onClick={() => handleConfirmRequest(notif)} className="flex-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-emerald-500 transition-colors shadow-sm">Confirm</button>
@@ -1285,7 +1308,15 @@ export default function Dashboard({ session, onSignOut }) {
                             </div>
                           )}
 
-                          {!notif.read && notif.type !== 'payment_request' && <button onClick={() => markAsRead(notif.id)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest mt-2 hover:underline">Mark as read</button>}
+                          {/* NEW: P2P WITHDRAWAL REQUESTS FOR BANKERS TO ACCEPT */}
+                          {notif.type === 'p2p_withdrawal_request' && notif.status === 'pending' && (
+                            <div className="flex gap-2 mt-3">
+                              <button onClick={() => handleAcceptP2PWithdrawal(notif)} className="flex-1 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-emerald-500 transition-colors shadow-sm">Accept Request</button>
+                              <button onClick={() => handleDeclineRequest(notif)} className="flex-1 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest py-2 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">Decline</button>
+                            </div>
+                          )}
+
+                          {!notif.read && notif.type !== 'payment_request' && notif.type !== 'p2p_withdrawal_request' && <button onClick={() => markAsRead(notif.id)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest mt-2 hover:underline">Mark as read</button>}
                         </div>
                       )) : <p className="text-sm text-slate-500 text-center py-4">No notifications</p>}
                     </div>
@@ -1364,6 +1395,19 @@ export default function Dashboard({ session, onSignOut }) {
         </main>
       </div>
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
+      
+      {/* NEW: The full Withdrawal Page overlay. 
+        Instead of the old generic modal, this opens your specialized withdrawal engine 
+      */}
+      {isWithdrawOpen && (
+        <WithdrawalPage 
+          userBalance={balances.liquid_usd} 
+          userId={session.user.id} 
+          onClose={() => setIsWithdrawOpen(false)} 
+          onSuccess={fetchAllData} 
+        />
+      )}
+
       {activeModal && activeModal !== 'ADVISOR' && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 mt-[env(safe-area-inset-top)] mb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto">
@@ -1414,7 +1458,7 @@ export default function Dashboard({ session, onSignOut }) {
               if (activeModal === 'REQUEST') {
                 const amount = parseFloat(e.target.amount.value);
                 
-                // --- NEW: Handle Internal Requests ---
+                // INTERNAL REQUESTS
                 if (requestTargetType === 'INTERNAL' && foundUser) {
                     try {
                         await supabase.from('notifications').insert([{
@@ -1438,7 +1482,7 @@ export default function Dashboard({ session, onSignOut }) {
                     return;
                 }
                 
-                // --- Existing External Logic ---
+                // EXTERNAL REQUESTS
                 const link = `${window.location.origin}/pay?to=${session.user.id}&amount=${amount}&reason=${encodeURIComponent(requestReason)}`;
                 setRequestLink(link);
                 if (requestEmail) {
@@ -1446,48 +1490,6 @@ export default function Dashboard({ session, onSignOut }) {
                   setTimeout(() => setNotification(null), 5000);
                 }
                 setIsLoading(false);
-                return;
-              }
-              if (activeModal === 'WITHDRAW') {
-                const amount = parseFloat(e.target.amount.value);
-                if (amount > balances.liquid_usd) {
-                  triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY: Transaction Declined.');
-                  setIsLoading(false);
-                  return;
-                }
-                try {
-                  // 1. Package the Bank or Card details
-                  const payload = {
-                    userId: session.user.id,
-                    amount: amount,
-                    method: withdrawalMethod,
-                    details: withdrawalMethod === 'BANK' ? {
-                      bankName: e.target.bankName.value,
-                      routing: e.target.routingNumber.value,
-                      account: e.target.accountNumber.value
-                    } : {
-                      number: e.target.cardNumber.value,
-                      expiry: e.target.expiry.value,
-                      cvc: e.target.cvc.value
-                    }
-                  };
-                  // 2. Send the data to your newly deployed Edge Function
-                  const { data, error } = await supabase.functions.invoke('process-payout', {
-                    body: payload
-                  });
-                  if (error || data?.error) {
-                    throw new Error(data?.error || "Routing failed. Check network.");
-                  }
-                  // 3. Success! Update UI and sync new balances
-                  triggerGlobalActionNotification('success', `Withdrawal of ${formatCurrency(amount)} initiated via ${withdrawalMethod}.`);
-                  await fetchAllData();
-                  setActiveModal(null);
-                } catch (err) {
-                  console.error(err);
-                  triggerGlobalActionNotification('error', err.message || 'Capital Extraction Failed.');
-                } finally {
-                  setIsLoading(false);
-                }
                 return;
               }
             }} className="p-8 space-y-6 relative z-10 text-center">
@@ -1519,7 +1521,6 @@ export default function Dashboard({ session, onSignOut }) {
                       </div>
                     </div>
                   )}
-                  {/* NEW REQUEST MODAL UI (dual-mode) */}
                   {activeModal === 'REQUEST' && (
                     <div className="space-y-6 text-left animate-in fade-in">
                       <div className="flex bg-slate-100 p-1.5 rounded-2xl">
@@ -1553,33 +1554,6 @@ export default function Dashboard({ session, onSignOut }) {
                         </div>
                       ) : (
                         <input className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none focus:border-blue-500 font-bold" placeholder="Recipient Email (Optional)"/>
-                      )}
-                    </div>
-                  )}
-                  {/* NEW WITHDRAW MODAL UI (Bank vs Instant Card Form) */}
-                  {activeModal === 'WITHDRAW' && (
-                    <div className="space-y-6">
-                      <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-4 shadow-inner">
-                        <button type="button" onClick={() => setWithdrawalMethod('BANK')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${withdrawalMethod === 'BANK' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Bank Transfer</button>
-                        <button type="button" onClick={() => setWithdrawalMethod('CARD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${withdrawalMethod === 'CARD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Instant Card</button>
-                      </div>
-                      {withdrawalMethod === 'BANK' ? (
-                        <div className="space-y-4 animate-in slide-in-from-top-2 text-left">
-                           <input required name="bankName" className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Institution Name"/>
-                           <div className="flex gap-4">
-                             <input required name="routingNumber" maxLength="9" className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Routing (9)"/>
-                             <input required name="accountNumber" className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Account No"/>
-                           </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4 animate-in slide-in-from-top-2 text-left">
-                           <input required type="text" name="cardNumber" maxLength="16" className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="Card Number (16 Digits)"/>
-                           <div className="flex gap-4">
-                             <input required type="text" name="expiry" maxLength="5" className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="MM/YY"/>
-                             <input required type="text" name="cvc" maxLength="4" className="w-24 bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none font-bold placeholder:text-slate-400" placeholder="CVC"/>
-                           </div>
-                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2 flex items-center gap-1"><ShieldCheck size={10}/> Card details are encrypted and processed for single-use only.</p>
-                        </div>
                       )}
                     </div>
                   )}
