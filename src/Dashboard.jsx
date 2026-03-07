@@ -16,6 +16,7 @@ import PayMeCard from './PayMeCard';
 import Payroll from './Payroll';
 import PayBills from './PayBills';
 import SmartContracts from './SmartContracts';
+import Loans from './Loans';
 import QRCode from "react-qr-code";
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
@@ -29,7 +30,7 @@ import {
   Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
   Filter, Calendar, ArrowDownUp, FileDown,
   CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Building, QrCode, 
-  LayoutGrid, Receipt, FileCode // NEW ICONS
+  LayoutGrid, Receipt, FileCode, HandCoins
 } from 'lucide-react';
 
 export default function Dashboard({ session, onSignOut }) {
@@ -43,9 +44,9 @@ export default function Dashboard({ session, onSignOut }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   
-  // NEW: App Drawer States
+  // App Drawer States
   const [isAppDrawerOpen, setIsAppDrawerOpen] = useState(false);
-  const [activeAppPopup, setActiveAppPopup] = useState(null); // 'PAYROLL', 'BILLS', or 'CONTRACTS'
+  const [activeAppPopup, setActiveAppPopup] = useState(null); 
 
   const [activeTxTab, setActiveTxTab] = useState('ALL');
   
@@ -73,18 +74,17 @@ export default function Dashboard({ session, onSignOut }) {
   const [commercialForm, setCommercialForm] = useState({ company_name: '', sector: '', registration_country: '', annual_revenue: '', monthly_burn_rate: '', debt_to_equity_ratio: '' });
   const [isSubmittingCommercial, setIsSubmittingCommercial] = useState(false);
   
-  // Accessibility States
+  // Settings & Preferences
   const [accessSettings, setAccessSettings] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
   const [previewAccess, setPreviewAccess] = useState({ theme: 'system', contrast: false, textSize: 'default', motion: false });
+  const [notificationPrefs, setNotificationPrefs] = useState({ payment_requests: true, system_alerts: true, market_loans: true });
   
   // Transaction & Statement States
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [statementConfig, setStatementConfig] = useState({ startDate: '', endDate: '', format: 'pdf', isOfficial: false });
   
-  // Extended KYC & ID Scan States
-  const [kycForm, setKycForm] = useState({ legalName: '', dob: '', phone: '', address: '', country: '', relationshipStatus: '', idDocumentUrl: '' });
-  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
-  const [isUploadingId, setIsUploadingId] = useState(false);
+  // Extended KYC States 
+  const [kycForm, setKycForm] = useState({ legalName: '', dob: '', phone: '', address: '', country: '', relationshipStatus: '' });
   
   // Security & Account States
   const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
@@ -129,7 +129,6 @@ export default function Dashboard({ session, onSignOut }) {
 
   const triggerGlobalActionNotification = (type, message) => {
     setNotification({ type, text: message });
-    console.log(`System Event: ${message}. Dispatching In-App Alert and Email to ${session?.user?.email}`);
     setTimeout(() => setNotification(null), 6000);
   };
 
@@ -180,8 +179,7 @@ export default function Dashboard({ session, onSignOut }) {
         phone: pData.phone || '',
         address: pData.residential_address || '',
         country: pData.country || '',
-        relationshipStatus: pData.relationship_status || '',
-        idDocumentUrl: pData.id_document_url || ''
+        relationshipStatus: pData.relationship_status || ''
       });
       const loadedAccess = {
         theme: pData.theme_preference || 'system',
@@ -191,6 +189,12 @@ export default function Dashboard({ session, onSignOut }) {
       };
       setAccessSettings(loadedAccess);
       setPreviewAccess(loadedAccess);
+      // Load Notification Preferences (Fallback to true if undefined)
+      setNotificationPrefs({
+        payment_requests: pData.pref_notif_payments ?? true,
+        system_alerts: pData.pref_notif_system ?? true,
+        market_loans: pData.pref_notif_loans ?? true,
+      });
     }
     if (bData) setBalances(bData);
     const { data: tData } = await supabase.from('transactions').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
@@ -236,6 +240,11 @@ export default function Dashboard({ session, onSignOut }) {
       setNotification({ type: 'error', text: 'Deposit routing aborted.' });
       window.history.replaceState(null, '', window.location.pathname);
     }
+    if (query.get('status') === 'kyc_submitted') {
+      setNotification({ type: 'success', text: 'Biometric Scan Complete. AI is verifying your identity.' });
+      window.history.replaceState(null, '', window.location.pathname);
+      setTimeout(fetchAllData, 2000);
+    }
     if (query.has('status')) setTimeout(() => setNotification(null), 5000);
   }, [session.user.id]);
 
@@ -259,7 +268,16 @@ export default function Dashboard({ session, onSignOut }) {
   const formatCurrency = (val) => showBalances ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0) : 'XXXX';
   const totalNetWorth = (balances.liquid_usd || 0) + (balances.alpha_equity_usd || 0) + (balances.mysafe_digital_usd || 0);
   const userName = profile?.full_name?.split('@')[0] || 'Client';
-  const unreadCount = notifications.filter(n => !n.read).length;
+  
+  // Filter notifications based on user preferences before counting/rendering
+  const visibleNotifications = notifications.filter(n => {
+    if (n.type === 'payment_request' && !notificationPrefs.payment_requests) return false;
+    if (n.type === 'system' && !notificationPrefs.system_alerts) return false;
+    if (n.type === 'market_loan' && !notificationPrefs.market_loans) return false;
+    return true;
+  });
+  const unreadCount = visibleNotifications.filter(n => !n.read).length;
+  
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
@@ -318,25 +336,18 @@ export default function Dashboard({ session, onSignOut }) {
     }).eq('id', session.user.id);
   };
 
-  const handleSubmitKYC = async (e) => {
-    e.preventDefault();
-    setIsSubmittingKyc(true);
-    try {
-      const { error } = await supabase.from('profiles').update({
-        full_legal_name: kycForm.legalName,
-        dob: kycForm.dob,
-        phone: kycForm.phone,
-        address: kycForm.address,
-        kyc_status: 'verified'
-      }).eq('id', session.user.id);
-      if (error) throw error;
-      setNotification({ type: 'success', text: 'Identity verified to Tier-1 Standards.' });
-      await fetchAllData();
-    } catch (err) {
-      setNotification({ type: 'error', text: 'KYC Submission Failed.' });
-    } finally {
-      setIsSubmittingKyc(false);
-    }
+  const handleSaveNotificationPrefs = async (key, value) => {
+    const updated = { ...notificationPrefs, [key]: value };
+    setNotificationPrefs(updated);
+    
+    // Save to database
+    await supabase.from('profiles').update({
+      pref_notif_payments: updated.payment_requests,
+      pref_notif_system: updated.system_alerts,
+      pref_notif_loans: updated.market_loans
+    }).eq('id', session.user.id);
+    
+    triggerGlobalActionNotification('success', 'Notification preferences updated.');
   };
 
   const handleSignAgreements = async () => {
@@ -460,19 +471,6 @@ export default function Dashboard({ session, onSignOut }) {
       setNotification({ type: 'error', text: 'Failed to dispatch invoice. Please try again.' });
       setTimeout(() => setNotification(null), 5000);
     } finally { setIsSendingEmail(false); }
-  };
-
-  const handleIdDocumentUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setIsUploadingId(true);
-    const filePath = `${session.user.id}/ID_${Date.now()}`;
-    const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
-    if (uploadError) { setNotification({ type: 'error', text: 'ID Scan Failed.' }); setIsUploadingId(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(filePath);
-    setKycForm({ ...kycForm, idDocumentUrl: publicUrl });
-    setNotification({ type: 'success', text: 'ID Document Securely Vaulted.' });
-    setIsUploadingId(false);
   };
 
   const handleEmailChangeRequest = async () => {
@@ -874,6 +872,7 @@ export default function Dashboard({ session, onSignOut }) {
         {[
           { id: 'PROFILE', label: 'Identity & Legal', icon: <User size={18} /> },
           { id: 'SECURITY', label: 'Security & Access', icon: <Shield size={18} /> },
+          { id: 'NOTIFICATIONS', label: 'Notifications', icon: <Bell size={18} /> },
           { id: 'LINKED_ACCOUNTS', label: 'Saved Banks', icon: <Landmark size={18} /> },
           { id: 'ACCESSIBILITY', label: 'Accessibility', icon: <Eye size={18} /> },
           { id: 'ABOUT', label: 'About IFB', icon: <Info size={18} /> },
@@ -923,38 +922,31 @@ export default function Dashboard({ session, onSignOut }) {
                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200"><RefreshCw size={12} className="inline mr-1 animate-spin"/> AI Review Pending</span>
                 ) : null}
               </div>
-              <form onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!kycForm.idDocumentUrl) return setNotification({type: 'error', text: 'Government ID scan is required.'});
-                  supabase.from('profiles').update({ ...kycForm, kyc_status: 'pending_review' }).eq('id', session.user.id).then(() => {
-                    setNotification({ type: 'success', text: 'Documents submitted. AI Verification processing.'});
-                    fetchAllData();
-                  });
-              }} className="space-y-6">
+              <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Full Legal Name</label>
-                    <input type="text" value={kycForm.legalName} onChange={(e) => setKycForm({...kycForm, legalName: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
+                    <input type="text" value={kycForm.legalName} onChange={(e) => setKycForm({...kycForm, legalName: e.target.value})} disabled={profile?.kyc_status === 'verified'} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Date of Birth</label>
-                    <input type="date" value={kycForm.dob} onChange={(e) => setKycForm({...kycForm, dob: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
+                    <input type="date" value={kycForm.dob} onChange={(e) => setKycForm({...kycForm, dob: e.target.value})} disabled={profile?.kyc_status === 'verified'} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2"><MapPin size={12} className="inline mr-1"/> Country of Residence</label>
-                    <input type="text" value={kycForm.country} onChange={(e) => setKycForm({...kycForm, country: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" placeholder="e.g. United States" />
+                    <input type="text" value={kycForm.country} onChange={(e) => setKycForm({...kycForm, country: e.target.value})} disabled={profile?.kyc_status === 'verified'} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" placeholder="e.g. United States" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Residential Address</label>
-                    <input type="text" value={kycForm.address} onChange={(e) => setKycForm({...kycForm, address: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
+                    <input type="text" value={kycForm.address} onChange={(e) => setKycForm({...kycForm, address: e.target.value})} disabled={profile?.kyc_status === 'verified'} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Phone Number</label>
-                    <input type="tel" value={kycForm.phone} onChange={(e) => setKycForm({...kycForm, phone: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
+                    <input type="tel" value={kycForm.phone} onChange={(e) => setKycForm({...kycForm, phone: e.target.value})} disabled={profile?.kyc_status === 'verified'} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2"><Heart size={12} className="inline mr-1"/> Relationship Status</label>
-                    <select value={kycForm.relationshipStatus} onChange={(e) => setKycForm({...kycForm, relationshipStatus: e.target.value})} disabled={profile?.kyc_status === 'verified'} required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50">
+                    <select value={kycForm.relationshipStatus} onChange={(e) => setKycForm({...kycForm, relationshipStatus: e.target.value})} disabled={profile?.kyc_status === 'verified'} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 disabled:opacity-50">
                       <option value="">Select Status...</option>
                       <option value="single">Single</option>
                       <option value="married">Married</option>
@@ -962,27 +954,48 @@ export default function Dashboard({ session, onSignOut }) {
                     </select>
                   </div>
                 </div>
+                
+                {/* STRIPE IDENTITY SECURE CAMERA TRIGGER */}
                 <div className="mt-4 p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-center relative">
-                  {kycForm.idDocumentUrl ? (
-                    <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold"><ShieldCheck size={20}/> ID Document Scanned Successfully</div>
-                  ) : (
-                    <>
-                      <UploadCloud size={32} className="mx-auto text-blue-500 mb-2"/>
-                      <p className="text-sm font-bold text-slate-800">Scan Government ID</p>
-                      <p className="text-xs text-slate-500 mb-4">Required by international anti-money laundering laws.</p>
-                      <button type="button" onClick={() => document.getElementById('idUpload').click()} disabled={isUploadingId} className="px-6 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-black uppercase tracking-widest shadow-sm hover:bg-slate-50">
-                        {isUploadingId ? 'Scanning...' : 'Select File'}
-                      </button>
-                      <input type="file" id="idUpload" className="hidden" accept="image/*,.pdf" onChange={handleIdDocumentUpload} />
-                    </>
-                  )}
-                </div>
-                {profile?.kyc_status !== 'verified' && profile?.kyc_status !== 'pending_review' && (
-                  <button type="submit" disabled={isSubmittingKyc} className="w-full bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-xl shadow-lg hover:bg-blue-600 transition-all">
-                    Submit KYC to Compliance
+                  <ShieldCheck size={32} className="mx-auto text-blue-500 mb-2"/>
+                  <p className="text-sm font-bold text-slate-800">Biometric Verification</p>
+                  <p className="text-xs text-slate-500 mb-4 px-4">You will be securely redirected to scan your Government ID and complete a live facial recognition check.</p>
+                  
+                  <button 
+                    type="button" 
+                    onClick={async () => {
+                      setIsLoading(true);
+                      try {
+                        // 1. Save the profile data entered above first
+                        const { error: dbError } = await supabase.from('profiles').update({
+                          full_legal_name: kycForm.legalName,
+                          dob: kycForm.dob,
+                          phone: kycForm.phone,
+                          residential_address: kycForm.address,
+                          country: kycForm.country,
+                          relationship_status: kycForm.relationshipStatus,
+                        }).eq('id', session.user.id);
+                        if (dbError) throw dbError;
+
+                        // 2. Open Stripe Identity Camera
+                        const { data, error } = await supabase.functions.invoke('create-kyc-session', {
+                          body: { userId: session.user.id }
+                        });
+                        if (error) throw error;
+                        
+                        window.location.href = data.url; 
+                      } catch (err) {
+                        setNotification({ type: 'error', text: 'Failed to initialize secure camera.' });
+                        setIsLoading(false);
+                      }
+                    }} 
+                    disabled={isLoading || profile?.kyc_status === 'verified'} 
+                    className="w-full py-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin" size={16}/> : 'Open Secure Scanner'}
                   </button>
-                )}
-              </form>
+                </div>
+              </div>
             </div>
             <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl shadow-sm">
               <div className="flex items-center gap-3 mb-4"><Scale className="text-slate-500" size={24} /><h3 className="text-lg font-black text-slate-800">Master Service Agreement</h3></div>
@@ -1041,6 +1054,44 @@ export default function Dashboard({ session, onSignOut }) {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+        {/* NEW: NOTIFICATIONS PREFERENCES TAB */}
+        {subTab === 'NOTIFICATIONS' && (
+          <div className="space-y-8 max-w-2xl animate-in fade-in">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 mb-2">Notification Preferences</h2>
+              <p className="text-xs text-slate-500">Control what alerts appear in your inbox.</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Payment Requests</h4>
+                  <p className="text-xs text-slate-500 mt-1">Alerts when someone requests money from you.</p>
+                </div>
+                <button type="button" onClick={() => handleSaveNotificationPrefs('payment_requests', !notificationPrefs.payment_requests)} className={`w-12 h-6 rounded-full transition-colors relative ${notificationPrefs.payment_requests ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${notificationPrefs.payment_requests ? 'translate-x-6' : ''}`}></div>
+                </button>
+              </div>
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Community Loan Requests</h4>
+                  <p className="text-xs text-slate-500 mt-1">Alerts when new raises are posted in the credit market.</p>
+                </div>
+                <button type="button" onClick={() => handleSaveNotificationPrefs('market_loans', !notificationPrefs.market_loans)} className={`w-12 h-6 rounded-full transition-colors relative ${notificationPrefs.market_loans ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${notificationPrefs.market_loans ? 'translate-x-6' : ''}`}></div>
+                </button>
+              </div>
+              <div className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">System & Security Alerts</h4>
+                  <p className="text-xs text-slate-500 mt-1">Critical account warnings and platform updates.</p>
+                </div>
+                <button type="button" onClick={() => handleSaveNotificationPrefs('system_alerts', !notificationPrefs.system_alerts)} className={`w-12 h-6 rounded-full transition-colors relative ${notificationPrefs.system_alerts ? 'bg-emerald-600' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${notificationPrefs.system_alerts ? 'translate-x-6' : ''}`}></div>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1261,7 +1312,7 @@ export default function Dashboard({ session, onSignOut }) {
             
             <div className="flex items-center gap-4 md:gap-6 relative">
               
-              {/* --- NEW: THE APP DRAWER ICON (LinkedIn Style) --- */}
+              {/* THE APP DRAWER ICON (LinkedIn Style) */}
               <div className="relative">
                 <button 
                   onClick={() => setIsAppDrawerOpen(!isAppDrawerOpen)}
@@ -1271,52 +1322,49 @@ export default function Dashboard({ session, onSignOut }) {
                   <LayoutGrid size={22} />
                 </button>
 
-                {/* THE APP DRAWER DROPDOWN */}
                 {isAppDrawerOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsAppDrawerOpen(false)}></div>
                     <div className="absolute top-full mt-4 right-0 w-80 bg-white/95 backdrop-blur-3xl border border-slate-200 shadow-2xl rounded-[2rem] p-6 z-50 animate-in slide-in-from-top-4 fade-in">
                       <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 px-2">Corporate & Tools</h3>
                       
-                      <div className="grid grid-cols-3 gap-4">
-                        {/* Payroll Button */}
+                      <div className="grid grid-cols-4 gap-4">
                         <button 
                           onClick={() => { setActiveAppPopup('PAYROLL'); setIsAppDrawerOpen(false); }}
-                          className="flex flex-col items-center gap-3 p-3 rounded-2xl hover:bg-blue-50 transition-colors group"
+                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-blue-50 transition-colors group"
                         >
-                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors shadow-sm">
-                            <Users size={20} />
-                          </div>
-                          <span className="text-[10px] font-black text-slate-700">Payroll</span>
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors shadow-sm"><Users size={20} /></div>
+                          <span className="text-[9px] font-black text-slate-700">Payroll</span>
                         </button>
 
-                        {/* Pay Bills Button */}
                         <button 
                           onClick={() => { setActiveAppPopup('BILLS'); setIsAppDrawerOpen(false); }}
-                          className="flex flex-col items-center gap-3 p-3 rounded-2xl hover:bg-emerald-50 transition-colors group"
+                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-emerald-50 transition-colors group"
                         >
-                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors shadow-sm">
-                            <Receipt size={20} />
-                          </div>
-                          <span className="text-[10px] font-black text-slate-700">Pay Bills</span>
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors shadow-sm"><Receipt size={20} /></div>
+                          <span className="text-[9px] font-black text-slate-700">Pay Bills</span>
                         </button>
 
-                        {/* Smart Contracts Button */}
                         <button 
                           onClick={() => { setActiveAppPopup('CONTRACTS'); setIsAppDrawerOpen(false); }}
-                          className="flex flex-col items-center gap-3 p-3 rounded-2xl hover:bg-indigo-50 transition-colors group"
+                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-indigo-50 transition-colors group"
                         >
-                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors shadow-sm">
-                            <FileCode size={20} />
-                          </div>
-                          <span className="text-[10px] font-black text-slate-700 leading-tight">Smart<br/>Contracts</span>
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors shadow-sm"><FileCode size={20} /></div>
+                          <span className="text-[9px] font-black text-slate-700 leading-tight text-center">Smart<br/>Contracts</span>
+                        </button>
+
+                        <button 
+                          onClick={() => { setActiveAppPopup('LOANS'); setIsAppDrawerOpen(false); }}
+                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-amber-50 transition-colors group"
+                        >
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors shadow-sm"><HandCoins size={20} /></div>
+                          <span className="text-[9px] font-black text-slate-700">Lending</span>
                         </button>
                       </div>
                     </div>
                   </>
                 )}
               </div>
-              {/* ----------------------------------------------- */}
 
               <div className={`relative transition-all duration-300 ease-in-out hidden sm:block ${isSearchExpanded ? 'w-80' : 'w-40'}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -1361,7 +1409,7 @@ export default function Dashboard({ session, onSignOut }) {
                       <span className="font-black text-sm uppercase tracking-widest text-slate-800">Notifications</span>
                     </div>
                     <div className="space-y-2 max-h-80 overflow-y-auto no-scrollbar scroll-container">
-                      {notifications.length > 0 ? notifications.map((notif) => (
+                      {visibleNotifications.length > 0 ? visibleNotifications.map((notif) => (
                         <div key={notif.id} className={`p-4 rounded-2xl ${notif.read ? 'bg-slate-50/50' : 'bg-blue-50/50 border border-blue-100'}`}>
                           <p className="text-sm text-slate-700 font-medium leading-tight mb-2">{notif.message}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(notif.created_at).toLocaleDateString()}</p>
@@ -1382,7 +1430,7 @@ export default function Dashboard({ session, onSignOut }) {
                             </div>
                           )}
 
-                          {/* ESCROW RELEASE (For the User to confirm they got the cash) */}
+                          {/* ESCROW RELEASE */}
                           {notif.type === 'p2p_withdrawal_request' && notif.status === 'accepted' && notif.related_user_id === session.user.id && (
                             <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col gap-2">
                               <p className="text-xs font-bold text-emerald-800 mb-1">Did you receive the cash?</p>
@@ -1392,15 +1440,11 @@ export default function Dashboard({ session, onSignOut }) {
                                   try {
                                     const { error } = await supabase.rpc('finalize_p2p_trade', { p_trade_id: notif.metadata.trade_id });
                                     if (error) throw error;
-                                    
                                     await supabase.from('notifications').update({ status: 'completed', message: 'Trade Finalized. Funds released.', read: true }).eq('id', notif.id);
                                     triggerGlobalActionNotification('success', 'Escrow Released. Trade complete.');
                                     await fetchAllData();
-                                  } catch (err) {
-                                    triggerGlobalActionNotification('error', err.message);
-                                  } finally {
-                                    setIsLoading(false);
-                                  }
+                                  } catch (err) { triggerGlobalActionNotification('error', err.message); } 
+                                  finally { setIsLoading(false); }
                                 }} 
                                 className="w-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-lg shadow-sm hover:bg-emerald-500"
                               >
@@ -1408,7 +1452,6 @@ export default function Dashboard({ session, onSignOut }) {
                               </button>
                             </div>
                           )}
-
                           {!notif.read && notif.type !== 'payment_request' && notif.type !== 'p2p_withdrawal_request' && <button onClick={() => markAsRead(notif.id)} className="text-blue-500 text-[10px] font-black uppercase tracking-widest mt-2 hover:underline">Mark as read</button>}
                         </div>
                       )) : <p className="text-sm text-slate-500 text-center py-4">No notifications</p>}
@@ -1490,13 +1533,13 @@ export default function Dashboard({ session, onSignOut }) {
 
       {/* --- ALL OVERLAYS & POPUPS BELLOW --- */}
 
-      {/* 1. App Drawer Popups (The new features) */}
+      {/* 1. App Drawer Popups */}
       {activeAppPopup && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-5xl h-[90vh] shadow-2xl overflow-hidden flex flex-col relative border border-slate-100 animate-in zoom-in-95">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-20">
                <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">
-                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills & Vendors' : 'Smart Contracts'}
+                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills & Vendors' : activeAppPopup === 'CONTRACTS' ? 'Smart Contracts' : 'P2P Credit Market'}
                </h3>
                <button onClick={() => setActiveAppPopup(null)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
                  <X size={20} />
@@ -1506,6 +1549,7 @@ export default function Dashboard({ session, onSignOut }) {
                {activeAppPopup === 'PAYROLL' && <Payroll session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} />}
                {activeAppPopup === 'BILLS' && <PayBills session={session} balances={balances} fetchAllData={fetchAllData} />}
                {activeAppPopup === 'CONTRACTS' && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
+               {activeAppPopup === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
             </div>
           </div>
         </div>
