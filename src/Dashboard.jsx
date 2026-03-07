@@ -17,6 +17,7 @@ import Payroll from './Payroll';
 import PayBills from './PayBills';
 import SmartContracts from './SmartContracts';
 import Loans from './Loans';
+import NpoHub from './NpoHub'; 
 import QRCode from "react-qr-code";
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
@@ -30,7 +31,7 @@ import {
   Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
   Filter, Calendar, ArrowDownUp, FileDown,
   CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Building, QrCode, 
-  LayoutGrid, Receipt, FileCode, HandCoins
+  LayoutGrid, Receipt, FileCode, HandCoins, HeartHandshake
 } from 'lucide-react';
 
 export default function Dashboard({ session, onSignOut }) {
@@ -189,6 +190,7 @@ export default function Dashboard({ session, onSignOut }) {
       };
       setAccessSettings(loadedAccess);
       setPreviewAccess(loadedAccess);
+      
       // Load Notification Preferences (Fallback to true if undefined)
       setNotificationPrefs({
         payment_requests: pData.pref_notif_payments ?? true,
@@ -340,7 +342,6 @@ export default function Dashboard({ session, onSignOut }) {
     const updated = { ...notificationPrefs, [key]: value };
     setNotificationPrefs(updated);
     
-    // Save to database
     await supabase.from('profiles').update({
       pref_notif_payments: updated.payment_requests,
       pref_notif_system: updated.system_alerts,
@@ -1057,7 +1058,7 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         )}
-        {/* NEW: NOTIFICATIONS PREFERENCES TAB */}
+        {/* NOTIFICATIONS PREFERENCES TAB */}
         {subTab === 'NOTIFICATIONS' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div>
@@ -1312,7 +1313,7 @@ export default function Dashboard({ session, onSignOut }) {
             
             <div className="flex items-center gap-4 md:gap-6 relative">
               
-              {/* THE APP DRAWER ICON (LinkedIn Style) */}
+              {/* THE APP DRAWER ICON */}
               <div className="relative">
                 <button 
                   onClick={() => setIsAppDrawerOpen(!isAppDrawerOpen)}
@@ -1325,40 +1326,30 @@ export default function Dashboard({ session, onSignOut }) {
                 {isAppDrawerOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsAppDrawerOpen(false)}></div>
-                    <div className="absolute top-full mt-4 right-0 w-80 bg-white/95 backdrop-blur-3xl border border-slate-200 shadow-2xl rounded-[2rem] p-6 z-50 animate-in slide-in-from-top-4 fade-in">
+                    <div className="absolute top-full mt-4 right-0 w-80 md:w-96 bg-white/95 backdrop-blur-3xl border border-slate-200 shadow-2xl rounded-[2rem] p-6 z-50 animate-in slide-in-from-top-4 fade-in">
                       <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 px-2">Corporate & Tools</h3>
                       
-                      <div className="grid grid-cols-4 gap-4">
-                        <button 
-                          onClick={() => { setActiveAppPopup('PAYROLL'); setIsAppDrawerOpen(false); }}
-                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-blue-50 transition-colors group"
-                        >
+                      <div className="grid grid-cols-3 gap-4">
+                        <button onClick={() => { setActiveAppPopup('PAYROLL'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-blue-50 transition-colors group">
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors shadow-sm"><Users size={20} /></div>
                           <span className="text-[9px] font-black text-slate-700">Payroll</span>
                         </button>
-
-                        <button 
-                          onClick={() => { setActiveAppPopup('BILLS'); setIsAppDrawerOpen(false); }}
-                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-emerald-50 transition-colors group"
-                        >
+                        <button onClick={() => { setActiveAppPopup('BILLS'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-emerald-50 transition-colors group">
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors shadow-sm"><Receipt size={20} /></div>
                           <span className="text-[9px] font-black text-slate-700">Pay Bills</span>
                         </button>
-
-                        <button 
-                          onClick={() => { setActiveAppPopup('CONTRACTS'); setIsAppDrawerOpen(false); }}
-                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-indigo-50 transition-colors group"
-                        >
+                        <button onClick={() => { setActiveAppPopup('CONTRACTS'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-indigo-50 transition-colors group">
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors shadow-sm"><FileCode size={20} /></div>
                           <span className="text-[9px] font-black text-slate-700 leading-tight text-center">Smart<br/>Contracts</span>
                         </button>
-
-                        <button 
-                          onClick={() => { setActiveAppPopup('LOANS'); setIsAppDrawerOpen(false); }}
-                          className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-amber-50 transition-colors group"
-                        >
+                        <button onClick={() => { setActiveAppPopup('LOANS'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-amber-50 transition-colors group">
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors shadow-sm"><HandCoins size={20} /></div>
                           <span className="text-[9px] font-black text-slate-700">Lending</span>
+                        </button>
+                        {/* NPO HUB BUTTON */}
+                        <button onClick={() => { setActiveAppPopup('NPO'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-rose-50 transition-colors group">
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-rose-100 group-hover:text-rose-500 transition-colors shadow-sm"><HeartHandshake size={20} /></div>
+                          <span className="text-[9px] font-black text-slate-700">NPO Hub</span>
                         </button>
                       </div>
                     </div>
@@ -1539,7 +1530,7 @@ export default function Dashboard({ session, onSignOut }) {
           <div className="bg-white rounded-3xl w-full max-w-5xl h-[90vh] shadow-2xl overflow-hidden flex flex-col relative border border-slate-100 animate-in zoom-in-95">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-20">
                <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">
-                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills & Vendors' : activeAppPopup === 'CONTRACTS' ? 'Smart Contracts' : 'P2P Credit Market'}
+                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills & Vendors' : activeAppPopup === 'CONTRACTS' ? 'Smart Contracts' : activeAppPopup === 'NPO' ? 'Philanthropy Hub' : 'P2P Credit Market'}
                </h3>
                <button onClick={() => setActiveAppPopup(null)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
                  <X size={20} />
@@ -1550,6 +1541,7 @@ export default function Dashboard({ session, onSignOut }) {
                {activeAppPopup === 'BILLS' && <PayBills session={session} balances={balances} fetchAllData={fetchAllData} />}
                {activeAppPopup === 'CONTRACTS' && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
                {activeAppPopup === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
+               {activeAppPopup === 'NPO' && <NpoHub session={session} />}
             </div>
           </div>
         </div>
