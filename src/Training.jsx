@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 // 🔥 IMPORT THE SEPARATED DATA
-import { TRAINING_MODULES } from '../data/trainingData'; 
+import { TRAINING_MODULES } from './data/trainingData'; 
 
 export default function Training({ session }) {
   const [activeTab, setActiveTab] = useState('ACADEMY'); 
