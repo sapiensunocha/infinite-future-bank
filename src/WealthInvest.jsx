@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function WealthInvest({ session, balances, profile }) {
-  const [activeCategory, setActiveCategory] = useState('INVESTOR_PORTFOLIO'); // INVESTOR_PORTFOLIO, PUBLIC_MARKETS, PASCALINE_CORE, PRIVATE_DEALS, APPLY_FOR_CAPITAL, RISK_SHIELD
+  const [activeCategory, setActiveCategory] = useState('PORTFOLIO'); // PORTFOLIO, PUBLIC_MARKETS, PRIVATE_EQUITY, RAISE_CAPITAL, AI_MODELS, RISK_MANAGEMENT
 
   // Public Market States
   const [searchSymbol, setSearchSymbol] = useState('');
@@ -59,7 +59,6 @@ export default function WealthInvest({ session, balances, profile }) {
   const fetchInvestorPortfolio = async () => {
     setIsLoadingPortfolio(true);
     try {
-      // Fetch Private Equity (Join with ifb_companies to get names/valuations)
       const { data: privateData, error: privateError } = await supabase
         .from('private_cap_table')
         .select(`investment_amount, equity_percentage, ifb_companies ( name, sector, valuation )`)
@@ -67,16 +66,14 @@ export default function WealthInvest({ session, balances, profile }) {
       
       if (privateError) throw privateError;
 
-      // Fetch Public Stocks (Transactions Ledger)
       const { data: publicData, error: publicError } = await supabase
-        .from('transactions')
+        .from('market_transactions')
         .select('asset, side, execution_price, quantity')
         .eq('user_id', session?.user?.id)
         .eq('status', 'COMPLETED');
 
       if (publicError) throw publicError;
 
-      // Process Private
       let privTotal = 0;
       const privFormatted = (privateData || []).map(item => {
         privTotal += parseFloat(item.investment_amount);
@@ -89,7 +86,6 @@ export default function WealthInvest({ session, balances, profile }) {
         };
       });
 
-      // Process Public (Aggregate fractional shares)
       const holdings = {};
       (publicData || []).forEach(tx => {
         if (!holdings[tx.asset]) holdings[tx.asset] = { qty: 0, invested: 0 };
@@ -118,15 +114,15 @@ export default function WealthInvest({ session, balances, profile }) {
         totalValue: privTotal + pubTotal
       });
     } catch (err) {
-      triggerGlobalActionNotification('error', 'Failed to load portfolio ledgers.');
+      triggerGlobalActionNotification('error', 'Failed to load portfolio.');
     } finally {
       setIsLoadingPortfolio(false);
     }
   };
 
   useEffect(() => {
-    if (activeCategory === 'INVESTOR_PORTFOLIO') fetchInvestorPortfolio();
-    if (activeCategory === 'PRIVATE_DEALS') fetchPrivateDeals();
+    if (activeCategory === 'PORTFOLIO') fetchInvestorPortfolio();
+    if (activeCategory === 'PRIVATE_EQUITY') fetchPrivateDeals();
   }, [activeCategory]);
 
   // --- PUBLIC MARKET DATA FETCHING ---
@@ -150,7 +146,7 @@ export default function WealthInvest({ session, balances, profile }) {
         strategy: 'Momentum Breakout'
       });
     } catch (error) {
-      triggerGlobalActionNotification('error', 'Failed to connect to Market Intelligence Engine.');
+      triggerGlobalActionNotification('error', 'Failed to connect to market data.');
     } finally {
       setIsSearchingMarket(false);
     }
@@ -166,10 +162,10 @@ export default function WealthInvest({ session, balances, profile }) {
     }
 
     const plan = [
-      "Verifying user liquid USD balances",
-      "Routing signal to GCP Intelligence Core",
-      "Executing live market order via Alpaca API",
-      "Writing immutable record to Supabase Ledger"
+      "Verifying available funds",
+      "Routing order to market",
+      "Executing trade",
+      "Updating portfolio ledger"
     ];
     setExecutionPlan(plan);
     setCurrentStepIndex(0);
@@ -186,7 +182,7 @@ export default function WealthInvest({ session, balances, profile }) {
       await new Promise(resolve => setTimeout(resolve, 1200));
       setCurrentStepIndex(3);
 
-      await supabase.from('transactions').insert({
+      await supabase.from('market_transactions').insert({
         user_id: session?.user?.id,
         asset: marketAsset.symbol,
         side: side.toUpperCase(),
@@ -222,7 +218,7 @@ export default function WealthInvest({ session, balances, profile }) {
       if (error) throw error;
       setPrivateDeals(data || []);
     } catch (error) {
-      triggerGlobalActionNotification('error', 'Failed to load IFB Private Markets.');
+      triggerGlobalActionNotification('error', 'Failed to load Private Equity listings.');
     } finally {
       setIsLoadingDeals(false);
     }
@@ -255,31 +251,31 @@ export default function WealthInvest({ session, balances, profile }) {
 
       if (error) throw error;
 
-      triggerGlobalActionNotification('success', `Pitch Evaluated by DEUS. Score: ${score}/100. Listed!`);
+      triggerGlobalActionNotification('success', `Company Evaluated. AI Score: ${score}/100. Listed on platform.`);
       setFounderForm({name: '', sector: '', valuation: '', fundraisingGoal: '', revenueGrowth: '', marketSize: '', founderExp: '', profitMargin: '', stability: ''});
-      setActiveCategory('PRIVATE_DEALS');
+      setActiveCategory('PRIVATE_EQUITY');
     } catch (err) {
-      triggerGlobalActionNotification('error', 'Submission failed. Check database connection.');
+      triggerGlobalActionNotification('error', 'Submission failed. Please try again.');
     } finally {
       setIsSubmittingPitch(false);
     }
   };
 
   // --- PRIVATE EQUITY EXECUTION (With Transparency UI) ---
-  const handlePascalineExecution = async (e) => {
+  const handlePrivateExecution = async (e) => {
     e.preventDefault();
     const amount = parseFloat(investAmount);
     if (!amount || amount <= 0) return;
     if (amount > balances.liquid_usd) {
-      triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY: Execution Blocked.');
+      triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY.');
       return;
     }
 
     const plan = [
-      "Evaluating Private Company Telemetry via AI",
-      "Structuring Dual-Insurance Underwriting Policies",
-      "Routing Internal IFB Liquidity to Vault",
-      "Securing Immutable On-Chain Cap Table Audit"
+      "Verifying company metrics",
+      "Generating insurance policy",
+      "Routing funds to escrow",
+      "Updating ownership ledger"
     ];
     setExecutionPlan(plan);
     setCurrentStepIndex(0);
@@ -303,11 +299,11 @@ export default function WealthInvest({ session, balances, profile }) {
       });
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      triggerGlobalActionNotification('success', `Capital Deployed & Insured. Added to Cap Table.`);
+      triggerGlobalActionNotification('success', `Investment Successful. Added to Portfolio.`);
       setInvestModalItem(null);
       setInvestAmount('');
     } catch (err) {
-      triggerGlobalActionNotification('error', err.message || "Execution Terminated.");
+      triggerGlobalActionNotification('error', err.message || "Execution Failed.");
     } finally {
       setIsInvesting(false);
       setExecutionPlan([]);
@@ -323,7 +319,7 @@ export default function WealthInvest({ session, balances, profile }) {
     return (
       <div className="bg-[#111] border border-slate-800 rounded-3xl p-8 text-slate-300 w-full animate-in zoom-in-95 shadow-2xl mt-6">
         <div className="flex justify-between items-center mb-8">
-           <h4 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2"><Cpu size={18} className="text-blue-500" /> IFB Execution Plan</h4>
+           <h4 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2"><Cpu size={18} className="text-blue-500" /> Processing Transaction</h4>
            <span className="bg-blue-900/50 text-blue-400 text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full border border-blue-800 animate-pulse">Live</span>
         </div>
         <div className="space-y-6 mb-10">
@@ -343,10 +339,18 @@ export default function WealthInvest({ session, balances, profile }) {
         <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
            <div className="h-full bg-white transition-all duration-500 ease-out" style={{ width: `${progressPct}%` }}></div>
         </div>
-        <p className="text-[9px] text-slate-500 text-center uppercase tracking-[0.2em] mt-6">Processing Transaction...</p>
       </div>
     );
   };
+
+  const menuItems = [
+    { id: 'PORTFOLIO', label: 'Portfolio' },
+    { id: 'PUBLIC_MARKETS', label: 'Public Markets' },
+    { id: 'PRIVATE_EQUITY', label: 'Private Equity' },
+    { id: 'RAISE_CAPITAL', label: 'Raise Capital' },
+    { id: 'AI_MODELS', label: 'AI Models' },
+    { id: 'RISK_MANAGEMENT', label: 'Risk & Insurance' }
+  ];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800 relative">
@@ -355,19 +359,19 @@ export default function WealthInvest({ session, balances, profile }) {
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl text-white">
         <div>
           <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
-            <BrainCircuit className="text-blue-400" size={28}/> IFB WEALTH ENGINE
+            <TrendingUp className="text-blue-400" size={28}/> Wealth Management
           </h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2">Autonomous Quant Fund & Dual-Insured Equity</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2">Invest in Stocks, Crypto, and Private Companies</p>
         </div>
         
         <div className="flex bg-slate-800 p-2 rounded-2xl border border-slate-700 w-full xl:w-auto overflow-x-auto no-scrollbar">
-          {['INVESTOR_PORTFOLIO', 'PUBLIC_MARKETS', 'PRIVATE_DEALS', 'APPLY_FOR_CAPITAL', 'PASCALINE_CORE', 'RISK_SHIELD'].map((cat) => (
+          {menuItems.map((item) => (
             <button 
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeCategory === cat ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
+              key={item.id}
+              onClick={() => setActiveCategory(item.id)}
+              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeCategory === item.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
             >
-              {cat.replace(/_/g, ' ')}
+              {item.label}
             </button>
           ))}
         </div>
@@ -375,30 +379,28 @@ export default function WealthInvest({ session, balances, profile }) {
 
       {/* 📈 DYNAMIC CONTENT AREA */}
 
-      {/* 📊 SECTION: INVESTOR PORTFOLIO (CAP TABLE) */}
-      {activeCategory === 'INVESTOR_PORTFOLIO' && (
+      {/* 📊 SECTION: PORTFOLIO */}
+      {activeCategory === 'PORTFOLIO' && (
         <div className="space-y-6 animate-in slide-in-from-left-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Top Stat Cards */}
             <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-xl text-white">
-              <div className="flex items-center gap-3 text-slate-400 mb-2"><PieChart size={18}/> <h3 className="text-[10px] font-black uppercase tracking-widest">Total Wealth Engine Value</h3></div>
+              <div className="flex items-center gap-3 text-slate-400 mb-2"><PieChart size={18}/> <h3 className="text-[10px] font-black uppercase tracking-widest">Total Investment Value</h3></div>
               <h2 className="text-4xl font-black tracking-tighter mt-2">{formatCurrency(portfolio.totalValue)}</h2>
             </div>
             <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
-              <div className="flex items-center gap-3 text-slate-500 mb-2"><Briefcase size={18} className="text-indigo-600"/> <h3 className="text-[10px] font-black uppercase tracking-widest">Private Equity Ownership</h3></div>
+              <div className="flex items-center gap-3 text-slate-500 mb-2"><Briefcase size={18} className="text-indigo-600"/> <h3 className="text-[10px] font-black uppercase tracking-widest">Private Equity</h3></div>
               <h2 className="text-3xl font-black tracking-tighter text-slate-900 mt-2">{formatCurrency(portfolio.privateValue)}</h2>
             </div>
             <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
-              <div className="flex items-center gap-3 text-slate-500 mb-2"><Globe size={18} className="text-blue-600"/> <h3 className="text-[10px] font-black uppercase tracking-widest">Public Market Allocations</h3></div>
+              <div className="flex items-center gap-3 text-slate-500 mb-2"><Globe size={18} className="text-blue-600"/> <h3 className="text-[10px] font-black uppercase tracking-widest">Public Markets</h3></div>
               <h2 className="text-3xl font-black tracking-tighter text-slate-900 mt-2">{formatCurrency(portfolio.publicValue)}</h2>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            {/* Private Cap Table */}
             <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-6 flex items-center gap-2">
-                 <Briefcase size={16} className="text-indigo-600"/> Private Cap Table
+                 <Briefcase size={16} className="text-indigo-600"/> Private Holdings
               </h3>
               {isLoadingPortfolio ? (
                 <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-500"/></div>
@@ -422,10 +424,9 @@ export default function WealthInvest({ session, balances, profile }) {
               )}
             </div>
 
-            {/* Public Assets Ledger */}
             <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-6 flex items-center gap-2">
-                 <Globe size={16} className="text-blue-600"/> Public Stock Ledger
+                 <Globe size={16} className="text-blue-600"/> Public Holdings
               </h3>
               {isLoadingPortfolio ? (
                 <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-500"/></div>
@@ -459,8 +460,8 @@ export default function WealthInvest({ session, balances, profile }) {
             <div className="mb-8 border-b border-slate-100 pb-6 flex items-center gap-3">
               <Globe className="text-blue-600" size={24} />
               <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Global Public Markets</h3>
-                <p className="text-xs text-slate-500 mt-1">Trade US Stocks & Crypto via IFB Intelligence Core.</p>
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Public Markets</h3>
+                <p className="text-xs text-slate-500 mt-1">Trade US Stocks & Crypto.</p>
               </div>
             </div>
 
@@ -479,7 +480,7 @@ export default function WealthInvest({ session, balances, profile }) {
                 className="bg-slate-900 text-white px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2"
               >
                 {isSearchingMarket ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
-                Analyze
+                Search
               </button>
             </form>
 
@@ -488,12 +489,12 @@ export default function WealthInvest({ session, balances, profile }) {
                 <div className="flex justify-between items-start mb-8 relative z-10">
                   <div>
                     <h4 className="text-3xl font-black text-slate-900 tracking-tight">{marketAsset.symbol}</h4>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-2">Live Market Price</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-2">Live Price</p>
                   </div>
                   <div className="text-right">
                     <h4 className="text-3xl font-black text-slate-900 tracking-tight">{formatCurrency(marketAsset.price)}</h4>
                     <p className={`text-[10px] font-black uppercase tracking-widest mt-2 ${marketAsset.signal === 'BUY' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                      AI SIGNAL: {marketAsset.signal} ({marketAsset.confidence}%)
+                      AI Analysis: {marketAsset.signal}
                     </p>
                   </div>
                 </div>
@@ -503,7 +504,7 @@ export default function WealthInvest({ session, balances, profile }) {
                 ) : (
                   <div className="flex flex-col md:flex-row gap-4 relative z-10 items-end">
                     <div className="flex-1">
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Investment Amount (USD)</label>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Amount (USD)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -519,14 +520,14 @@ export default function WealthInvest({ session, balances, profile }) {
                         disabled={!publicInvestAmount}
                         className="flex-1 md:w-32 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-50"
                       >
-                        BUY ASSET
+                        Buy
                       </button>
                       <button 
                         onClick={() => handlePublicTrade('sell')}
                         disabled={!publicInvestAmount}
                         className="flex-1 md:w-32 py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all disabled:opacity-50"
                       >
-                        SELL ASSET
+                        Sell
                       </button>
                     </div>
                   </div>
@@ -537,16 +538,16 @@ export default function WealthInvest({ session, balances, profile }) {
         </div>
       )}
 
-      {/* SECTION 2: PRIVATE EQUITY DEALS */}
-      {activeCategory === 'PRIVATE_DEALS' && (
+      {/* SECTION 2: PRIVATE EQUITY */}
+      {activeCategory === 'PRIVATE_EQUITY' && (
         <div className="space-y-6 animate-in slide-in-from-left-4">
           <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-sm relative">
             <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
               <div>
                 <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                  Internal IFB Deal Flow <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></span>
+                  Private Equity Offerings <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">Live startups vetted by DEUS AI and ready for capital.</p>
+                <p className="text-xs text-slate-500 mt-1">Invest directly in evaluated startups.</p>
               </div>
               <button onClick={fetchPrivateDeals} disabled={isLoadingDeals} className="p-3 bg-slate-50 text-slate-500 rounded-xl hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-200">
                 <RefreshCw size={18} className={isLoadingDeals ? 'animate-spin' : ''} />
@@ -556,13 +557,13 @@ export default function WealthInvest({ session, balances, profile }) {
             {isLoadingDeals ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-400">
                 <Loader2 size={32} className="animate-spin mb-4 text-blue-500"/>
-                <p className="text-[10px] font-black uppercase tracking-widest">Querying DEUS Ledger...</p>
+                <p className="text-[10px] font-black uppercase tracking-widest">Loading Opportunities...</p>
               </div>
             ) : privateDeals.length === 0 ? (
                <div className="text-center py-16 text-slate-400">
                  <Building size={48} className="mx-auto mb-4 opacity-30" />
-                 <h4 className="font-black text-lg text-slate-800">No Startups Found</h4>
-                 <p className="text-sm mt-2">Founders: Apply for Capital to be listed here.</p>
+                 <h4 className="font-black text-lg text-slate-800">No Startups Available</h4>
+                 <p className="text-sm mt-2">Check back later for new offerings.</p>
                </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
@@ -579,7 +580,7 @@ export default function WealthInvest({ session, balances, profile }) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">DEUS Score</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">AI Rating</p>
                         <p className="text-2xl font-black text-emerald-600 tracking-tighter">{item.deus_score}/100</p>
                       </div>
                     </div>
@@ -590,7 +591,7 @@ export default function WealthInvest({ session, balances, profile }) {
                           <p className="text-sm font-black text-blue-900">{formatCurrency(item.valuation)}</p>
                        </div>
                        <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-500 mb-1 flex items-center gap-1"><Activity size={12}/> Raising</p>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-500 mb-1 flex items-center gap-1"><Activity size={12}/> Target Raise</p>
                           <p className="text-sm font-black text-indigo-900">{formatCurrency(item.fundraising_goal)}</p>
                        </div>
                     </div>
@@ -599,7 +600,7 @@ export default function WealthInvest({ session, balances, profile }) {
                       onClick={() => setInvestModalItem(item)}
                       className="w-full py-5 bg-slate-900 border border-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 hover:border-blue-600 transition-all shadow-md"
                     >
-                      Initialize Allocation
+                      Invest
                     </button>
                   </div>
                 ))}
@@ -609,14 +610,14 @@ export default function WealthInvest({ session, balances, profile }) {
         </div>
       )}
 
-      {/* SECTION 3: APPLY FOR CAPITAL */}
-      {activeCategory === 'APPLY_FOR_CAPITAL' && (
+      {/* SECTION 3: RAISE CAPITAL */}
+      {activeCategory === 'RAISE_CAPITAL' && (
         <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-sm animate-in slide-in-from-left-4">
           <div className="mb-8 border-b border-slate-100 pb-6">
             <h3 className="text-xl font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-              <FileText className="text-blue-600" /> Register Company for IFB Capital
+              <FileText className="text-blue-600" /> Apply for Funding
             </h3>
-            <p className="text-sm text-slate-500 mt-2">Submit your metrics. The DEUS AI will evaluate your company in seconds.</p>
+            <p className="text-sm text-slate-500 mt-2">Submit your company details for AI evaluation and platform listing.</p>
           </div>
 
           <form onSubmit={submitStartupPitch} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -638,60 +639,56 @@ export default function WealthInvest({ session, balances, profile }) {
             </div>
             
             <div className="col-span-1 md:col-span-2 mt-4 mb-2">
-              <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2">Quantitative Telemetry (For AI Scoring)</h4>
+              <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2">Business Metrics</h4>
             </div>
 
             <input required type="number" placeholder="YoY Revenue Growth (%)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.revenueGrowth} onChange={e => setFounderForm({...founderForm, revenueGrowth: e.target.value})} />
             <input required type="number" placeholder="Profit Margin (%)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.profitMargin} onChange={e => setFounderForm({...founderForm, profitMargin: e.target.value})} />
             <input required type="number" max="100" placeholder="Market Size Score (1-100)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.marketSize} onChange={e => setFounderForm({...founderForm, marketSize: e.target.value})} />
-            <input required type="number" max="100" placeholder="Founder Exp. Score (1-100)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.founderExp} onChange={e => setFounderForm({...founderForm, founderExp: e.target.value})} />
+            <input required type="number" max="100" placeholder="Founder Experience Score (1-100)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.founderExp} onChange={e => setFounderForm({...founderForm, founderExp: e.target.value})} />
             <input required type="number" max="100" placeholder="Financial Stability Score (1-100)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.stability} onChange={e => setFounderForm({...founderForm, stability: e.target.value})} />
             
             <button type="submit" disabled={isSubmittingPitch} className="col-span-1 md:col-span-2 py-5 bg-blue-700 text-white rounded-2xl font-black tracking-widest uppercase hover:bg-blue-600 transition-all shadow-lg mt-6 flex items-center justify-center gap-2">
-              {isSubmittingPitch ? <><Loader2 className="animate-spin" size={20} /> DEUS AI Analyzing...</> : 'Submit to DEUS Engine'}
+              {isSubmittingPitch ? <><Loader2 className="animate-spin" size={20} /> Evaluating Application...</> : 'Submit Application'}
             </button>
           </form>
         </div>
       )}
 
-      {/* SECTION 4 & 5 (Pascaline Core & Risk Shield) */}
-      {activeCategory === 'PASCALINE_CORE' && (
+      {/* SECTION 4 & 5 */}
+      {activeCategory === 'AI_MODELS' && (
         <div className="space-y-8 animate-in slide-in-from-left-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
-               <div className="flex items-center gap-3 mb-6 text-blue-600"><Cpu size={20}/><h4 className="font-black text-sm uppercase tracking-widest">Internal ML Engine</h4></div>
+               <div className="flex items-center gap-3 mb-6 text-blue-600"><Cpu size={20}/><h4 className="font-black text-sm uppercase tracking-widest">Growth Models</h4></div>
                <div className="space-y-4">
-                 <div><p className="text-xs font-bold text-slate-500 flex justify-between"><span>XGBoost Growth Model</span> <span className="text-emerald-600">Active</span></p><div className="w-full h-1 bg-slate-100 rounded-full mt-1"><div className="w-[100%] h-full bg-emerald-500 rounded-full"></div></div></div>
-                 <div><p className="text-xs font-bold text-slate-500 flex justify-between"><span>Founder History NLP</span> <span className="text-emerald-600">Active</span></p><div className="w-full h-1 bg-slate-100 rounded-full mt-1"><div className="w-[100%] h-full bg-emerald-500 rounded-full"></div></div></div>
-                 <div><p className="text-xs font-bold text-slate-500 flex justify-between"><span>Bayesian Risk Telemetry</span> <span className="text-amber-500">Syncing</span></p><div className="w-full h-1 bg-slate-100 rounded-full mt-1"><div className="w-[65%] h-full bg-amber-500 rounded-full"></div></div></div>
+                 <div><p className="text-xs font-bold text-slate-500 flex justify-between"><span>XGBoost Valuation</span> <span className="text-emerald-600">Active</span></p><div className="w-full h-1 bg-slate-100 rounded-full mt-1"><div className="w-[100%] h-full bg-emerald-500 rounded-full"></div></div></div>
+                 <div><p className="text-xs font-bold text-slate-500 flex justify-between"><span>Market Sentiment NLP</span> <span className="text-emerald-600">Active</span></p><div className="w-full h-1 bg-slate-100 rounded-full mt-1"><div className="w-[100%] h-full bg-emerald-500 rounded-full"></div></div></div>
+                 <div><p className="text-xs font-bold text-slate-500 flex justify-between"><span>Risk Telemetry</span> <span className="text-amber-500">Syncing</span></p><div className="w-full h-1 bg-slate-100 rounded-full mt-1"><div className="w-[65%] h-full bg-amber-500 rounded-full"></div></div></div>
                </div>
             </div>
 
             <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
-               <div className="flex items-center gap-3 mb-6 text-indigo-600"><ShieldCheck size={20}/><h4 className="font-black text-sm uppercase tracking-widest">Dual Insurance Logic</h4></div>
+               <div className="flex items-center gap-3 mb-6 text-indigo-600"><ShieldCheck size={20}/><h4 className="font-black text-sm uppercase tracking-widest">Active Protections</h4></div>
                <ul className="space-y-4">
-                 <li className="flex justify-between items-center text-sm font-bold"><span className="text-slate-600">User Capital Hedge</span> <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">Enabled</span></li>
-                 <li className="flex justify-between items-center text-sm font-bold"><span className="text-slate-600">Corporate Op-Risk</span> <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">Enabled</span></li>
-                 <li className="flex justify-between items-center text-sm font-bold"><span className="text-slate-600">Reinsurance Backing</span> <span className="text-slate-900 bg-slate-100 px-3 py-1 rounded-lg">Swiss Re</span></li>
-                 <li className="flex justify-between items-center text-sm font-bold"><span className="text-slate-600">Continuous Learning</span> <span className="text-slate-900 bg-slate-100 px-3 py-1 rounded-lg">Active</span></li>
+                 <li className="flex justify-between items-center text-sm font-bold"><span className="text-slate-600">Capital Protection</span> <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">Enabled</span></li>
+                 <li className="flex justify-between items-center text-sm font-bold"><span className="text-slate-600">Volatility Hedge</span> <span className="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">Enabled</span></li>
+                 <li className="flex justify-between items-center text-sm font-bold"><span className="text-slate-600">Rebalancing</span> <span className="text-slate-900 bg-slate-100 px-3 py-1 rounded-lg">Auto</span></li>
                </ul>
             </div>
 
             <div className="bg-gradient-to-br from-blue-700 to-indigo-800 border border-blue-600 p-8 rounded-[2.5rem] shadow-lg text-white flex flex-col justify-between relative overflow-hidden">
                <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl"></div>
                <div className="relative z-10">
-                 <h4 className="font-black text-2xl tracking-tight mb-2">Private Equity Vault</h4>
-                 <p className="text-[10px] uppercase tracking-widest text-blue-200 leading-relaxed">Pascaline evaluates private market syndicates and binds dual-insurance policies prior to internal capital deployment.</p>
+                 <h4 className="font-black text-2xl tracking-tight mb-2">Algorithm Status</h4>
+                 <p className="text-[10px] uppercase tracking-widest text-blue-200 leading-relaxed">All trading models are currently running normally and scanning markets.</p>
                </div>
-               <button onClick={() => setActiveCategory('PRIVATE_DEALS')} className="w-full py-4 mt-6 bg-white text-blue-900 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all">
-                 View Internal Syndicates
-               </button>
             </div>
           </div>
         </div>
       )}
 
-      {activeCategory === 'RISK_SHIELD' && (
+      {activeCategory === 'RISK_MANAGEMENT' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-left-4">
           <div className="space-y-6">
             <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
@@ -699,16 +696,16 @@ export default function WealthInvest({ session, balances, profile }) {
               <div className="relative z-10">
                 <div className="flex items-center gap-2 text-emerald-400 mb-4"><ShieldCheck size={16}/> <span className="text-[10px] font-black uppercase tracking-widest">Investor Protection Pool</span></div>
                 <h3 className="text-3xl font-black tracking-tight mb-1">{formatCurrency(userInsurancePool)}</h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Secures Internal Capital Deployment</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Secures user investments against catastrophic loss.</p>
               </div>
             </div>
 
             <div className="bg-indigo-950 border border-indigo-900 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
               <div className="absolute -top-10 -right-10 text-indigo-900 opacity-50"><Building size={120}/></div>
               <div className="relative z-10">
-                <div className="flex items-center gap-2 text-indigo-400 mb-4"><Activity size={16}/> <span className="text-[10px] font-black uppercase tracking-widest">Corporate Runway Pool</span></div>
+                <div className="flex items-center gap-2 text-indigo-400 mb-4"><Activity size={16}/> <span className="text-[10px] font-black uppercase tracking-widest">Corporate Liquidity Pool</span></div>
                 <h3 className="text-3xl font-black tracking-tight mb-1">{formatCurrency(companyInsurancePool)}</h3>
-                <p className="text-[10px] text-indigo-400/60 font-bold uppercase tracking-widest mb-6">Secures Operational Continuity</p>
+                <p className="text-[10px] text-indigo-400/60 font-bold uppercase tracking-widest mb-6">Ensures platform operational continuity.</p>
               </div>
             </div>
           </div>
@@ -718,7 +715,7 @@ export default function WealthInvest({ session, balances, profile }) {
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-100 shrink-0"><Hexagon size={24}/></div>
               <div>
                 <h4 className="text-sm font-black text-slate-800">Immutable Audit Trail</h4>
-                <p className="text-xs text-slate-500 mt-1 mb-2">Internal transfers & policies logged on-chain.</p>
+                <p className="text-xs text-slate-500 mt-1 mb-2">All transactions and ownership records are secured.</p>
                 <p className="text-[10px] font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block border border-blue-100">{hashRate}</p>
               </div>
             </div>
@@ -726,8 +723,8 @@ export default function WealthInvest({ session, balances, profile }) {
             <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm flex items-center gap-6 h-full">
               <div className="w-16 h-16 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center border border-slate-200 shrink-0"><Network size={24}/></div>
               <div className="w-full">
-                <h4 className="text-sm font-black text-slate-800 mb-1">Global Reinsurance</h4>
-                <p className="text-xs text-slate-500 mb-3">Catastrophic tail-risk underwritten by partners.</p>
+                <h4 className="text-sm font-black text-slate-800 mb-1">Reinsurance Partners</h4>
+                <p className="text-xs text-slate-500 mb-3">Backed by global institutional partners.</p>
                 <div className="flex gap-2">
                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg">Swiss Re</span>
                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg">Munich Re</span>
@@ -738,13 +735,13 @@ export default function WealthInvest({ session, balances, profile }) {
         </div>
       )}
       
-      {/* 🚀 PASCALINE EXECUTION MODAL */}
+      {/* 🚀 PRIVATE EQUITY EXECUTION MODAL */}
       {investModalItem && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden relative">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center relative z-10 bg-slate-50/50">
-              <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase flex items-center gap-2"><Cpu size={18} className="text-blue-600"/> Execute Allocation</h3>
-              <button onClick={() => { !isInvesting && setInvestModalItem(null); setInvestAmount(''); setExecutionStep(''); }} disabled={isInvesting} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200 disabled:opacity-30">
+              <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase flex items-center gap-2"><Briefcase size={18} className="text-blue-600"/> Invest in Startup</h3>
+              <button onClick={() => { !isInvesting && setInvestModalItem(null); setInvestAmount(''); setCurrentStepIndex(-1); setExecutionPlan([]) }} disabled={isInvesting} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200 disabled:opacity-30">
                 <X size={20} />
               </button>
             </div>
@@ -753,35 +750,35 @@ export default function WealthInvest({ session, balances, profile }) {
               {isInvesting ? (
                 <ExecutionProgressUI />
               ) : (
-                <form onSubmit={handlePascalineExecution} className="space-y-6">
+                <form onSubmit={handlePrivateExecution} className="space-y-6">
                   <div>
                     <div className="flex justify-between items-center mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Target Syndicate</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Company</p>
                         <p className="text-lg font-black text-slate-900">{investModalItem.name}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">DEUS Score</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">AI Score</p>
                         <p className="text-lg font-black text-emerald-600">{investModalItem.deus_score}/100</p>
                       </div>
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1"><Shield size={12}/> Select Insurance Protocol</label>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1"><Shield size={12}/> Select Insurance Coverage</label>
                         <select 
                             value={insuranceTier} 
                             onChange={(e) => setInsuranceTier(e.target.value)} 
                             className="w-full bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-4 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                         >
-                            <option value="basic">Basic (80% User Cov. / $5M Corp Cov.)</option>
-                            <option value="premium">Premium (99% User Cov. / $25M Corp Cov.)</option>
+                            <option value="basic">Standard Coverage (80% Protection)</option>
+                            <option value="premium">Premium Coverage (99% Protection)</option>
                         </select>
                     </div>
 
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Available Capital</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Available Balance</label>
                     <p className="text-xl font-black text-slate-800 mb-4">{formatCurrency(balances.liquid_usd)}</p>
 
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Allocation Size (USD)</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Investment Amount (USD)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -798,7 +795,7 @@ export default function WealthInvest({ session, balances, profile }) {
                     disabled={parseFloat(investAmount) > balances.liquid_usd} 
                     className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    DEPLOY INTERNAL CAPITAL
+                    Confirm Investment
                   </button>
                 </form>
               )}
