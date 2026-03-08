@@ -1,106 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { 
-  BookOpen, BrainCircuit, Play, CheckCircle2, 
-  ChevronRight, Send, Loader2, Bot, Sparkles, User,
-  ShieldCheck, TrendingUp, Target, Lock, ArrowLeft, X,
-  Landmark // NEW ICON FOR BANKER TRAINING
+  BrainCircuit, Play, CheckCircle2, 
+  Send, Loader2, Bot, Sparkles, User, Target, ArrowLeft, X
 } from 'lucide-react';
 
-// --- REAL INSTITUTIONAL TRAINING DATA ---
-const TRAINING_MODULES = [
-  {
-    id: 'TRK1_MOD1',
-    track: 'Financial Foundations',
-    title: 'Cash Flow vs. Profit',
-    icon: <TrendingUp size={18}/>,
-    points: 15,
-    metricTarget: 'financial_intelligence',
-    screens: [
-      { type: 'statement', text: 'Cash flow kills more startups than bad ideas.' },
-      { type: 'explanation', title: 'The Illusion of Profit', text: 'Profit is a theoretical number on an income statement. Cash flow is the actual oxygen your business breathes. You can be highly profitable on paper and still go bankrupt if clients take 90 days to pay while payroll is due tomorrow.' },
-      { type: 'example', title: 'Real-World Execution', text: 'Company X secures a $500k contract (Profit). But the client pays in 60 days. Company X has $50k in cash and $80k in monthly expenses. Result: Operational bankruptcy in month 1, despite being "profitable".' },
-      { type: 'quiz', question: 'What dictates a company\'s immediate survival?', options: ['A) Profit Margins', 'B) Liquid Cash on Hand', 'C) Valuation'], answer: 1 }
-    ]
-  },
-  {
-    id: 'TRK2_MOD1',
-    track: 'Capital Readiness',
-    title: 'Debt vs. Equity Strategy',
-    icon: <Target size={18}/>,
-    points: 20,
-    metricTarget: 'capital_readiness',
-    screens: [
-      { type: 'statement', text: 'Equity is the most expensive money you will ever take.' },
-      { type: 'explanation', title: 'Cost of Capital', text: 'Founders default to raising equity because it lacks monthly repayments. However, giving up 20% of a company that will be worth $100M costs you $20M. Debt costs a fixed interest rate. Only use equity for high-risk, unproven expansion.' },
-      { type: 'example', title: 'Strategic Leverage', text: 'A SaaS company with predictable $50k MRR needs $200k to scale marketing. Instead of diluting equity, they secure revenue-based financing (Debt) at a 12% fee, preserving millions in future enterprise value.' },
-      { type: 'quiz', question: 'When is taking on Debt superior to raising Equity?', options: ['A) When you have no revenue', 'B) When cashflows are predictable and proven', 'C) When you want to avoid paying interest'], answer: 1 }
-    ]
-  },
-  {
-    id: 'TRK3_MOD1',
-    track: 'Banking & Compliance',
-    title: 'Navigating AML Triggers',
-    icon: <ShieldCheck size={18}/>,
-    points: 25,
-    metricTarget: 'compliance_score',
-    screens: [
-      { type: 'statement', text: 'Banks do not block accounts maliciously. They block unpredictable behavior.' },
-      { type: 'explanation', title: 'Algorithmic Surveillance', text: 'Anti-Money Laundering (AML) algorithms monitor velocity, volume, and jurisdiction. Sudden spikes in volume, rapid structuring (breaking up large transfers), or unexpected international wires trigger automated institutional freezes.' },
-      { type: 'example', title: 'The Freeze Scenario', text: 'A founder receives a $2M seed round, then immediately wires $500k to three different international contractors without prior history. The algorithm flags this as capital flight, and the account is frozen pending manual review.' },
-      { type: 'quiz', question: 'What is the correct protocol for receiving a massive, uncharacteristic inbound wire?', options: ['A) Move it out of the account instantly', 'B) Break it into smaller transactions to avoid detection', 'C) Provide institutional heads-up and documentation to your banker prior to receipt'], answer: 2 }
-    ]
-  },
-  {
-    id: 'TRK4_MOD1',
-    track: 'Entrepreneur Execution',
-    title: 'Burn Rate Mechanics',
-    icon: <BookOpen size={18}/>,
-    points: 15,
-    metricTarget: 'financial_intelligence',
-    screens: [
-      { type: 'statement', text: 'Your runway is a countdown timer to irrelevance.' },
-      { type: 'explanation', title: 'Gross vs. Net Burn', text: 'Gross Burn is your total monthly expenses. Net Burn is your total expenses minus your monthly revenue. Institutions only care about your Net Burn and how many months you have left before you hit zero.' },
-      { type: 'example', title: 'The Default Alive State', text: 'Startup Y has $1M in the bank. Gross expenses are $100k/mo. Revenue is $40k/mo. Net Burn is $60k/mo. Their runway is 16.6 months. If they increase revenue to $100k/mo, Net Burn hits $0. They are now "Default Alive".' },
-      { type: 'quiz', question: 'What does "Default Alive" mean?', options: ['A) Having raised Series A capital', 'B) Revenue covers or exceeds operational expenses', 'C) Having 12 months of runway'], answer: 1 }
-    ]
-  },
-  {
-    id: 'TRK5_MOD1',
-    track: 'Digital Security',
-    title: 'Institutional Phishing',
-    icon: <Lock size={18}/>,
-    points: 15,
-    metricTarget: 'compliance_score',
-    screens: [
-      { type: 'statement', text: 'Hackers no longer target networks. They target operational psychology.' },
-      { type: 'explanation', title: 'Spear Phishing', text: 'Modern attacks bypass firewalls by impersonating vendors, executives, or banking institutions. They intercept invoice threads and change routing numbers, tricking finance teams into authorizing legitimate transfers to fraudulent accounts.' },
-      { type: 'example', title: 'The Vendor Compromise', text: 'Your legal firm sends an invoice from their real email (which was hacked), stating: "We have updated our banking details. Please route this month\'s retainer to the new routing number attached." You wire the funds. The money is gone permanently.' },
-      { type: 'quiz', question: 'What is the required protocol when a vendor changes their banking details via email?', options: ['A) Process it immediately to avoid late fees', 'B) Execute a secondary out-of-band verification (e.g., a phone call to a known number)', 'C) Email them back to confirm'], answer: 1 }
-    ]
-  },
-  // --- NEW: COMPREHENSIVE BANKER TRAINING MODULE ---
-  {
-    id: 'TRK6_MOD1',
-    track: 'Network Operations',
-    title: 'Banker Node Certification',
-    icon: <Landmark size={18}/>,
-    points: 50,
-    metricTarget: 'compliance_score',
-    screens: [
-      { type: 'statement', text: 'To become an IFB Banker is to become a vital pillar of local financial infrastructure. You are the bridge between digital wealth and physical reality.' },
-      { type: 'explanation', title: 'The Escrow Mechanism', text: 'As a Banker, your primary role is fulfilling cash withdrawal requests for nearby users. When a user requests $100 from you, IFB immediately locks that $100 in an Escrow Smart Contract. The money cannot be spent or reversed by the user once locked. It is guaranteed by the protocol.' },
-      { type: 'explanation', title: 'Physical Hand-off & Safety', text: 'You will arrange to meet the user in a safe, public location, or transfer the equivalent amount via local mobile money (like Airtel Money or M-Pesa). Never hand over the physical cash or mobile money until you have visually verified the user\'s identity matches their IFB profile.' },
-      { type: 'example', title: 'The Release Protocol', text: 'Scenario: You meet John. He requested $50. You verify his face. You hand him a $50 bill. HE must then click "Confirm Receipt" on his phone. Instantly, the $50 in the Escrow contract is transferred permanently into your IFB Liquid Balance.' },
-      { type: 'explanation', title: 'Dispute Resolution', text: 'If a user receives the cash but refuses to click "Confirm Receipt", do not panic. The funds remain locked in Escrow. You must file an immediate dispute with IFB Support. If you used Mobile Money, provide the transaction receipt. If you met in person, IFB will review GPS logs and chat history. If fraud is detected, the user is permanently banned and your funds are released.' },
-      { type: 'quiz', question: 'What must happen before you hand over physical cash to a user?', options: ['A) You must wait 24 hours', 'B) You must verify their identity matches their IFB profile', 'C) You must ask for a 10% fee'], answer: 1 },
-      { type: 'quiz', question: 'If a user takes your cash and runs without clicking "Confirm", what happens to the money?', options: ['A) It is lost forever', 'B) It returns to the user automatically', 'C) It remains locked in Escrow pending IFB Dispute Resolution'], answer: 2 }
-    ]
-  }
-];
+// 🔥 IMPORT THE SEPARATED DATA
+import { TRAINING_MODULES } from '../data/trainingData'; 
 
 export default function Training({ session }) {
-  const [activeTab, setActiveTab] = useState('ACADEMY'); // ACADEMY, AI_MENTOR
+  const [activeTab, setActiveTab] = useState('ACADEMY'); 
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState(null);
 
@@ -116,7 +25,7 @@ export default function Training({ session }) {
   const [activeModule, setActiveModule] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [quizStatus, setQuizStatus] = useState(null); // 'correct', 'incorrect', null
+  const [quizStatus, setQuizStatus] = useState(null);
 
   // AI Mentor States
   const [chatHistory, setChatHistory] = useState([
@@ -126,10 +35,8 @@ export default function Training({ session }) {
   const [isAiTyping, setIsAiTyping] = useState(false);
   const chatEndRef = useRef(null);
 
-  // --- REQUIREMENT: GLOBAL NOTIFICATION RULE ---
   const triggerGlobalActionNotification = (type, message) => {
     setNotification({ type, text: message });
-    console.log(`System Event: ${message}. Dispatching In-App Alert and Email to ${session?.user?.email}`);
     setTimeout(() => setNotification(null), 6000);
   };
 
@@ -137,7 +44,6 @@ export default function Training({ session }) {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isAiTyping]);
 
-  // --- FETCH USER PROGRESS ---
   const fetchUserTrainingData = async () => {
     if (!session?.user?.id) return;
     try {
@@ -152,7 +58,6 @@ export default function Training({ session }) {
       if (data) {
         setUserProfile(data);
       } else {
-        // Create initial profile if none exists
         const { data: newProfile, error: insertError } = await supabase
           .from('user_training_profiles')
           .insert([{ user_id: session.user.id }])
@@ -169,7 +74,6 @@ export default function Training({ session }) {
 
   useEffect(() => { fetchUserTrainingData(); }, [session?.user?.id]);
 
-  // --- ENGINE LOGIC ---
   const handleNextStep = () => {
     const currentScreen = activeModule.screens[currentStep];
 
@@ -178,7 +82,6 @@ export default function Training({ session }) {
       if (selectedAnswer === currentScreen.answer) {
         setQuizStatus('correct');
         
-        // Check if there are more steps after this quiz (like in the Banker training)
         if (currentStep < activeModule.screens.length - 1) {
              setTimeout(() => {
                  setQuizStatus(null);
@@ -186,7 +89,6 @@ export default function Training({ session }) {
                  setCurrentStep(prev => prev + 1);
              }, 1500);
         } else {
-             // If it's the last step, complete the module
              setTimeout(() => completeModule(), 1500);
         }
 
@@ -201,13 +103,11 @@ export default function Training({ session }) {
 
   const completeModule = async () => {
     if (userProfile.completed_modules.includes(activeModule.id)) {
-      // Already completed, just exit
       setActiveModule(null);
       return;
     }
 
     try {
-      // Update Database
       const newScore = userProfile[activeModule.metricTarget] + activeModule.points;
       const newCompleted = [...userProfile.completed_modules, activeModule.id];
 
@@ -221,14 +121,13 @@ export default function Training({ session }) {
 
       if (error) throw error;
 
-      // Update Local State
       setUserProfile(prev => ({
         ...prev,
         [activeModule.metricTarget]: Math.min(100, newScore),
         completed_modules: newCompleted
       }));
 
-      triggerGlobalActionNotification('success', `Intelligence Protocol Completed. +${activeModule.points} Points applied to your behavioral record.`);
+      triggerGlobalActionNotification('success', `Intelligence Protocol Completed. +${activeModule.points} Points applied.`);
     } catch (err) {
       console.error("Failed to save progress", err);
     } finally {
@@ -243,7 +142,6 @@ export default function Training({ session }) {
     setQuizStatus(null);
   };
 
-  // --- AI MENTOR API CALL ---
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!userInput.trim()) return;
@@ -255,10 +153,7 @@ export default function Training({ session }) {
 
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      const prompt = `You are the IFB Institutional Mentor, an elite financial educator. You are speaking to a high-net-worth user or ambitious founder. 
-      Speak in a way that is highly knowledgeable, objective, and structured, but retain a slight touch of approachable humanity (be a guide, not a robot). 
-      The user is asking: "${userInput}". 
-      Provide a specific, actionable answer regarding banking, corporate finance, or IFB protocols. Keep it under 2 paragraphs. Do not use asterisks or markdown bolding.`;
+      const prompt = `You are the IFB Institutional Mentor. The user is asking: "${userInput}". Keep it under 2 paragraphs. Do not use markdown bolding.`;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
@@ -277,11 +172,8 @@ export default function Training({ session }) {
     }
   };
 
-  if (isLoading) {
-    return <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={32}/></div>;
-  }
+  if (isLoading) return <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={32}/></div>;
 
-  // Calculate Overall Progress
   const totalAvailable = TRAINING_MODULES.length;
   const completedCount = userProfile.completed_modules.length;
   const overallProgress = totalAvailable === 0 ? 0 : Math.round((completedCount / totalAvailable) * 100);
@@ -289,7 +181,6 @@ export default function Training({ session }) {
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800">
       
-      {/* 🏛️ Header & Navigation */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border border-slate-200 p-6 rounded-[2.5rem] shadow-sm">
         <div>
           <h2 className="text-2xl font-black text-slate-800 tracking-tight">IFB Academy</h2>
@@ -312,13 +203,8 @@ export default function Training({ session }) {
         </div>
       </div>
 
-      {/* 📈 DYNAMIC CONTENT */}
-
-      {/* MODE 1: ACADEMY HUB */}
       {activeTab === 'ACADEMY' && !activeModule && (
         <div className="space-y-8 animate-in slide-in-from-left-4">
-          
-          {/* Behavioral Metrics Dashboard */}
           <div className="bg-slate-900 text-white p-8 md:p-10 rounded-[3rem] shadow-xl border border-slate-800 flex flex-col md:flex-row gap-10">
             <div className="flex-1 border-b md:border-b-0 md:border-r border-slate-700 pb-8 md:pb-0 md:pr-8">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Behavioral Analysis</h3>
@@ -326,13 +212,6 @@ export default function Training({ session }) {
                 <span className="text-6xl font-black tracking-tighter text-blue-400">{overallProgress}%</span>
               </div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sovereign Foundation Mastered</p>
-              
-              {/* Rewards Hint hidden logic */}
-              {overallProgress === 100 && (
-                <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded-lg">
-                  <CheckCircle2 size={12}/> Tier Upgrade Unlocked
-                </div>
-              )}
             </div>
 
             <div className="flex-1 space-y-6 flex flex-col justify-center">
@@ -354,7 +233,6 @@ export default function Training({ session }) {
             </div>
           </div>
 
-          {/* Module Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TRAINING_MODULES.map((mod) => {
               const isCompleted = userProfile.completed_modules.includes(mod.id);
@@ -377,8 +255,6 @@ export default function Training({ session }) {
                   <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-6 relative z-10">
                     Reward: +{mod.points} PTs
                   </div>
-
-                  {/* Completion overlay indicator */}
                   {isCompleted && <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-[2.5rem] pointer-events-none"></div>}
                 </div>
               );
@@ -387,12 +263,10 @@ export default function Training({ session }) {
         </div>
       )}
 
-      {/* REVOLUT-STYLE LEARNING ENGINE */}
       {activeTab === 'ACADEMY' && activeModule && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
           <div className="bg-white rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden relative border border-slate-100 h-[600px] flex flex-col">
             
-            {/* Engine Header & Progress */}
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <button onClick={() => setActiveModule(null)} className="p-2 text-slate-400 hover:text-slate-800 bg-white rounded-xl shadow-sm"><ArrowLeft size={16}/></button>
               <div className="flex-1 px-6 flex items-center gap-1">
@@ -403,7 +277,6 @@ export default function Training({ session }) {
               <button onClick={() => setActiveModule(null)} className="p-2 text-slate-400 hover:text-slate-800 bg-white rounded-xl shadow-sm"><X size={16}/></button>
             </div>
             
-            {/* Dynamic Screen Content */}
             <div className="flex-1 p-8 md:p-10 overflow-y-auto flex flex-col justify-center animate-in slide-in-from-right-4 duration-300" key={currentStep}>
               
               {activeModule.screens[currentStep].type === 'statement' && (
@@ -475,7 +348,6 @@ export default function Training({ session }) {
 
             </div>
 
-            {/* Engine Footer */}
             <div className="p-6 border-t border-slate-100 bg-white">
               <button 
                 onClick={handleNextStep}
@@ -552,7 +424,6 @@ export default function Training({ session }) {
         </div>
       )}
 
-      {/* 🟢 GLOBAL NOTIFICATION LAYER */}
       {notification && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-top-10 duration-500">
            <div className={`px-8 py-5 rounded-3xl shadow-2xl border-2 backdrop-blur-2xl flex items-center gap-4 ${notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
