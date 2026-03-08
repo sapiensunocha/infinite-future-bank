@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { 
   ArrowLeft, ShieldCheck, Zap, Send, Loader2, 
-  CheckCircle2, Circle, Square, User, CreditCard, LogIn, Mail
+  CheckCircle2, Circle, Square, User, CreditCard, LogIn, Mail, QrCode
 } from 'lucide-react';
 
 export default function PayInterface() {
@@ -47,7 +47,11 @@ export default function PayInterface() {
         const targetId = params.get('to');
 
         if (!targetId) throw new Error('Invalid Routing Link. No destination ID provided.');
-        if (currentSession && targetId === currentSession.user.id) throw new Error('You cannot initiate a payment to your own vault.');
+        
+        // CUSTOM SELF-SCAN DETECTION
+        if (currentSession && targetId === currentSession.user.id) {
+          throw new Error('SELF_SCAN');
+        }
 
         // 3. Fetch Receiver's Public Info
         const { data: receiverData, error: receiverError } = await supabase
@@ -81,7 +85,6 @@ export default function PayInterface() {
       setIsProcessing(true);
       
       try {
-        // Call your Stripe Edge Function to generate a Checkout URL
         const { data, error } = await supabase.functions.invoke('create-checkout', {
           body: {
             amount: numAmount,
@@ -93,7 +96,7 @@ export default function PayInterface() {
 
         if (error) throw error;
         if (data?.url) {
-          window.location.href = data.url; // Redirect to Stripe
+          window.location.href = data.url; 
         } else {
           throw new Error("Failed to generate secure card link.");
         }
@@ -167,14 +170,26 @@ export default function PayInterface() {
   // --- VIEW: LOADING ---
   if (isLoading) return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
 
-  // --- VIEW: ERROR (Invalid link) ---
+  // --- VIEW: ERROR / SELF-SCAN DETECTED ---
   if (error) {
+    const isSelfScan = error === 'SELF_SCAN';
+    
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in">
-        <div className="w-20 h-20 bg-red-100 text-red-500 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm"><ShieldCheck size={32}/></div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2">Secure Routing Failed</h2>
-        <p className="text-sm text-slate-500 max-w-sm">{error}</p>
-        <button onClick={() => window.location.href = '/'} className="mt-8 px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all">Return to Hub</button>
+        <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm ${isSelfScan ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-500'}`}>
+          {isSelfScan ? <QrCode size={32}/> : <ShieldCheck size={32}/>}
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 mb-2">
+          {isSelfScan ? "This is your own card!" : "Secure Routing Failed"}
+        </h2>
+        <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
+          {isSelfScan 
+            ? "You successfully scanned your own Pay Me link. Share this QR code or link with clients and friends so they can route capital directly to your IFB Vault." 
+            : error}
+        </p>
+        <button onClick={() => window.location.href = '/'} className="mt-8 px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all">
+          Return to Hub
+        </button>
       </div>
     );
   }
@@ -244,7 +259,7 @@ export default function PayInterface() {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             disabled={isProcessing}
-            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-16 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-500 transition-colors disabled:opacity-50 shadow-inner"
+            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-16 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-50 transition-colors disabled:opacity-50 shadow-inner"
           />
         </div>
 
