@@ -6,7 +6,7 @@ import {
   X, Loader2, RefreshCw, BrainCircuit,
   Cpu, Database, Hexagon, Activity, Network, 
   ShieldCheck, Building, Lock, Globe, FileText, 
-  CheckCircle, Circle, PieChart, Briefcase
+  CheckCircle, Circle, PieChart, Briefcase, Zap as ZapIcon
 } from 'lucide-react';
 
 export default function WealthInvest({ session, balances, profile }) {
@@ -54,6 +54,14 @@ export default function WealthInvest({ session, balances, profile }) {
     setNotification({ type, text: message });
     setTimeout(() => setNotification(null), 6000);
   };
+
+  // --- AI SUGGESTED MARKET PICKS (Pre-loaded Feed) ---
+  const topMarketPicks = [
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 875.28, signal: 'BUY', confidence: 94.2, color: 'bg-green-100 text-green-700' },
+    { symbol: 'BTC/USD', name: 'Bitcoin', price: 64230.00, signal: 'BUY', confidence: 89.5, color: 'bg-orange-100 text-orange-700' },
+    { symbol: 'AAPL', name: 'Apple Inc.', price: 172.62, signal: 'BUY', confidence: 82.1, color: 'bg-slate-200 text-slate-800' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', price: 175.34, signal: 'HOLD', confidence: 61.4, color: 'bg-red-100 text-red-700' }
+  ];
 
   // --- 📊 FETCH INVESTOR PORTFOLIO & CAP TABLE ---
   const fetchInvestorPortfolio = async () => {
@@ -230,32 +238,41 @@ export default function WealthInvest({ session, balances, profile }) {
     setIsSubmittingPitch(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      const score = Math.floor(Math.random() * 15) + 75; 
-
-      const { error } = await supabase.from('ifb_companies').insert({
-        founder_id: session?.user?.id,
+      const payload = {
+        founderId: session?.user?.id,
         name: founderForm.name,
         sector: founderForm.sector,
         valuation: parseFloat(founderForm.valuation),
-        fundraising_goal: parseFloat(founderForm.fundraisingGoal),
-        revenue_growth_pct: parseFloat(founderForm.revenueGrowth),
-        market_size_score: parseInt(founderForm.marketSize),
-        founder_exp_score: parseInt(founderForm.founderExp),
-        profit_margin_pct: parseFloat(founderForm.profitMargin),
-        financial_stability: parseInt(founderForm.stability),
-        deus_score: score,
-        risk_level: `Level ${score >= 85 ? '2' : '3'} - Evaluated`,
-        status: 'APPROVED' 
+        fundraisingGoal: parseFloat(founderForm.fundraisingGoal),
+        revenueGrowthPct: parseFloat(founderForm.revenueGrowth),
+        marketSizeScore: parseInt(founderForm.marketSize),
+        founderExpScore: parseInt(founderForm.founderExp),
+        profitMarginPct: parseFloat(founderForm.profitMargin),
+        financialStability: parseInt(founderForm.stability)
+      };
+
+      const res = await fetch('https://ifb-intelligence-core-382117221028.us-central1.run.app/api/evaluate-pitch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
-      if (error) throw error;
+      if (!res.ok) throw new Error("GCP Backend execution failed");
+      
+      const result = await res.json();
 
-      triggerGlobalActionNotification('success', `Company Evaluated. AI Score: ${score}/100. Listed on platform.`);
+      triggerGlobalActionNotification('success', `Evaluated by DEUS AI. Score: ${result.deus_score}/100. Status: ${result.status}`);
       setFounderForm({name: '', sector: '', valuation: '', fundraisingGoal: '', revenueGrowth: '', marketSize: '', founderExp: '', profitMargin: '', stability: ''});
-      setActiveCategory('PRIVATE_EQUITY');
+      
+      if(result.status === 'APPROVED') {
+        setActiveCategory('PRIVATE_EQUITY');
+      } else {
+        triggerGlobalActionNotification('error', `Company Risk Too High. Status: ${result.status}`);
+      }
+      
     } catch (err) {
-      triggerGlobalActionNotification('error', 'Submission failed. Please try again.');
+      console.error(err);
+      triggerGlobalActionNotification('error', 'DEUS Engine timeout. Please try again.');
     } finally {
       setIsSubmittingPitch(false);
     }
@@ -484,9 +501,64 @@ export default function WealthInvest({ session, balances, profile }) {
               </button>
             </form>
 
+            {/* If NO asset searched yet, show AI Suggestions Feed */}
+            {!marketAsset && (
+              <div className="mt-8 animate-in fade-in">
+                <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-2">
+                  <ZapIcon size={14} className="text-blue-500" />
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">DEUS AI Top Recommendations</h4>
+                </div>
+                <div className="space-y-3">
+                  {topMarketPicks.map((pick) => (
+                    <div 
+                      key={pick.symbol} 
+                      onClick={() => setMarketAsset({ symbol: pick.symbol, price: pick.price, signal: pick.signal, confidence: pick.confidence })}
+                      className="flex flex-col md:flex-row md:items-center justify-between p-5 bg-slate-50 border border-slate-200 rounded-2xl hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-4 mb-3 md:mb-0">
+                        <div className={`w-12 h-12 flex items-center justify-center rounded-xl font-black ${pick.color}`}>
+                          {pick.symbol[0]}
+                        </div>
+                        <div>
+                          <h5 className="font-black text-slate-900">{pick.name}</h5>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{pick.symbol}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between md:gap-8 w-full md:w-auto">
+                        <div className="text-left md:text-right">
+                          <p className="font-black text-slate-900">{formatCurrency(pick.price)}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Live Price</p>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className={`text-sm font-black flex items-center gap-1 justify-end ${pick.signal === 'BUY' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {pick.signal} <span className="text-[10px] text-slate-400">({pick.confidence}%)</span>
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">AI Signal</p>
+                        </div>
+
+                        <button className="px-5 py-2 bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all shadow-sm">
+                          Trade
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* If an asset IS searched or selected, show Execution Terminal */}
             {marketAsset && (
               <div className="border border-slate-200 p-8 rounded-[2.5rem] bg-slate-50 relative overflow-hidden animate-in zoom-in-95">
-                <div className="flex justify-between items-start mb-8 relative z-10">
+                <button 
+                  onClick={() => { setMarketAsset(null); setPublicInvestAmount(''); }} 
+                  className="absolute top-6 right-6 p-2 bg-white border border-slate-200 rounded-full text-slate-400 hover:text-slate-800 shadow-sm z-20"
+                >
+                  <X size={16} />
+                </button>
+
+                <div className="flex justify-between items-start mb-8 relative z-10 pr-10">
                   <div>
                     <h4 className="text-3xl font-black text-slate-900 tracking-tight">{marketAsset.symbol}</h4>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-2">Live Price</p>
@@ -494,7 +566,7 @@ export default function WealthInvest({ session, balances, profile }) {
                   <div className="text-right">
                     <h4 className="text-3xl font-black text-slate-900 tracking-tight">{formatCurrency(marketAsset.price)}</h4>
                     <p className={`text-[10px] font-black uppercase tracking-widest mt-2 ${marketAsset.signal === 'BUY' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                      AI Analysis: {marketAsset.signal}
+                      AI Analysis: {marketAsset.signal} ({marketAsset.confidence}%)
                     </p>
                   </div>
                 </div>
@@ -503,7 +575,7 @@ export default function WealthInvest({ session, balances, profile }) {
                   <ExecutionProgressUI />
                 ) : (
                   <div className="flex flex-col md:flex-row gap-4 relative z-10 items-end">
-                    <div className="flex-1">
+                    <div className="flex-1 w-full">
                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Amount (USD)</label>
                       <input
                         type="number"
@@ -518,14 +590,14 @@ export default function WealthInvest({ session, balances, profile }) {
                       <button 
                         onClick={() => handlePublicTrade('buy')}
                         disabled={!publicInvestAmount}
-                        className="flex-1 md:w-32 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-50"
+                        className="flex-1 md:w-32 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-50 shadow-md"
                       >
                         Buy
                       </button>
                       <button 
                         onClick={() => handlePublicTrade('sell')}
                         disabled={!publicInvestAmount}
-                        className="flex-1 md:w-32 py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all disabled:opacity-50"
+                        className="flex-1 md:w-32 py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all disabled:opacity-50 shadow-md"
                       >
                         Sell
                       </button>
