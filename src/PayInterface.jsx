@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { 
   ArrowLeft, ShieldCheck, Zap, Send, Loader2, 
-  CheckCircle2, Circle, Square, User, CreditCard, LogIn, Mail, QrCode
+  CheckCircle2, Circle, Square, User, CreditCard, LogIn, Mail
 } from 'lucide-react';
 
 export default function PayInterface() {
@@ -48,7 +48,7 @@ export default function PayInterface() {
 
         if (!targetId) throw new Error('Invalid Routing Link. No destination ID provided.');
         
-        // CUSTOM SELF-SCAN DETECTION
+        // CUSTOM SELF-SCAN DETECTION (Sets specific error code)
         if (currentSession && targetId === currentSession.user.id) {
           throw new Error('SELF_SCAN');
         }
@@ -170,24 +170,43 @@ export default function PayInterface() {
   // --- VIEW: LOADING ---
   if (isLoading) return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
 
-  // --- VIEW: ERROR / SELF-SCAN DETECTED ---
-  if (error) {
-    const isSelfScan = error === 'SELF_SCAN';
-    
+  // =========================================================
+  // --- VIEW: SELF-SCAN (FUNNY & CONVERSATIONAL) ---
+  // =========================================================
+  if (error === 'SELF_SCAN') {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in">
-        <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm ${isSelfScan ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-500'}`}>
-          {isSelfScan ? <QrCode size={32}/> : <ShieldCheck size={32}/>}
-        </div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2">
-          {isSelfScan ? "This is your own card!" : "Secure Routing Failed"}
-        </h2>
-        <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
-          {isSelfScan 
-            ? "You successfully scanned your own Pay Me link. Share this QR code or link with clients and friends so they can route capital directly to your IFB Vault." 
-            : error}
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in relative overflow-hidden">
+        {/* Top Glow */}
+        <div className="absolute top-[-10%] w-[80vw] h-[80vw] bg-blue-300/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+        {/* 🕺 Dancing Emoji Person */}
+        <div className="text-8xl mb-6 animate-bounce">🕺</div>
+        
+        {/* Conversational Message */}
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">Nice try! 😉</h2>
+        <p className="text-base font-medium text-slate-600 max-w-xs leading-relaxed">
+          That’s your own QR code. While sendin’ cash to yourself sounds like a blast, this is for <span className='font-bold text-slate-800'>other people</span> to pay <span className='font-bold text-slate-800'>you</span>.
         </p>
-        <button onClick={() => window.location.href = '/'} className="mt-8 px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all">
+        <p className='text-sm text-slate-400 mt-5'>Go show this code to someone else! 💸</p>
+        
+        {/* Regular Action Button */}
+        <button onClick={() => window.location.href = '/'} className="mt-10 px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all">
+          Back to my Hub
+        </button>
+      </div>
+    );
+  }
+
+  // --- VIEW: ERROR (Technical Routing Fail) ---
+  if (error) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in relative overflow-hidden">
+        <div className="w-20 h-20 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm bg-red-100 text-red-500">
+          <ShieldCheck size={32}/>
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 mb-2">Routing Link Interrupted</h2>
+        <p className="text-sm text-slate-500 max-w-sm leading-relaxed">{error}</p>
+        <button onClick={() => window.location.href = '/'} className="mt-10 px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all">
           Return to Hub
         </button>
       </div>
@@ -197,7 +216,7 @@ export default function PayInterface() {
   // --- VIEW: SUCCESS (Internal Transfer Only) ---
   if (isSuccess) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-emerald-50 p-6 text-center animate-in fade-in">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-emerald-50 p-6 text-center animate-in fade-in relative overflow-hidden">
         <div className="absolute top-0 w-full h-1/2 bg-emerald-400/20 blur-[100px] rounded-full pointer-events-none"></div>
         <div className="w-28 h-28 bg-white text-emerald-500 rounded-[3rem] flex items-center justify-center mb-8 shadow-xl relative z-10 border-4 border-emerald-100 animate-in zoom-in">
           <CheckCircle2 size={50}/>
@@ -259,7 +278,7 @@ export default function PayInterface() {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             disabled={isProcessing}
-            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-16 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-50 transition-colors disabled:opacity-50 shadow-inner"
+            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-16 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-500 transition-colors disabled:opacity-50 shadow-inner"
           />
         </div>
 
