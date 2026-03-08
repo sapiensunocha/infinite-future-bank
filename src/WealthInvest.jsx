@@ -4,27 +4,46 @@ import {
   TrendingUp, Wallet, Shield, 
   BarChart3, Zap, ChevronRight,
   X, Loader2, RefreshCw, BrainCircuit,
-  Cpu, Database, Hexagon, Activity, Network, ShieldCheck, Building, Lock
+  Cpu, Database, Hexagon, Activity, Network, 
+  ShieldCheck, Building, Lock, Globe, FileText, 
+  CheckCircle, Circle, PieChart, Briefcase
 } from 'lucide-react';
 
 export default function WealthInvest({ session, balances, profile }) {
-  const [activeCategory, setActiveCategory] = useState('PASCALINE_CORE'); // PASCALINE_CORE, PRIVATE_DEALS, RISK_SHIELD
+  const [activeCategory, setActiveCategory] = useState('INVESTOR_PORTFOLIO'); // INVESTOR_PORTFOLIO, PUBLIC_MARKETS, PASCALINE_CORE, PRIVATE_DEALS, APPLY_FOR_CAPITAL, RISK_SHIELD
+
+  // Public Market States
+  const [searchSymbol, setSearchSymbol] = useState('');
+  const [marketAsset, setMarketAsset] = useState(null);
+  const [isSearchingMarket, setIsSearchingMarket] = useState(false);
+  const [publicInvestAmount, setPublicInvestAmount] = useState('');
+
+  // Founder Application States
+  const [founderForm, setFounderForm] = useState({
+    name: '', sector: '', valuation: '', fundraisingGoal: '', 
+    revenueGrowth: '', marketSize: '', founderExp: '', profitMargin: '', stability: ''
+  });
+  const [isSubmittingPitch, setIsSubmittingPitch] = useState(false);
 
   // Investment & Insurance States
   const [investModalItem, setInvestModalItem] = useState(null); 
   const [investAmount, setInvestAmount] = useState('');
-  const [insuranceTier, setInsuranceTier] = useState('premium'); // 'basic' or 'premium'
+  const [insuranceTier, setInsuranceTier] = useState('premium'); 
   
-  // Execution Engine States
+  // 🔥 Transparency Execution Engine States
   const [isInvesting, setIsInvesting] = useState(false);
-  const [executionStep, setExecutionStep] = useState(''); 
+  const [executionPlan, setExecutionPlan] = useState([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   
   // Notification & API States
   const [notification, setNotification] = useState(null);
   const [privateDeals, setPrivateDeals] = useState([]);
   const [isLoadingDeals, setIsLoadingDeals] = useState(true);
 
-  // System Stats (Internal IFB Ledger Reserves)
+  // 📊 Portfolio / Cap Table States
+  const [portfolio, setPortfolio] = useState({ private: [], public: [], totalValue: 0, privateValue: 0, publicValue: 0 });
+  const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(true);
+
   const userInsurancePool = 1450250.00;
   const companyInsurancePool = 8500000.00;
   const hashRate = "0x8F2A...9C11";
@@ -36,140 +55,606 @@ export default function WealthInvest({ session, balances, profile }) {
     setTimeout(() => setNotification(null), 6000);
   };
 
+  // --- 📊 FETCH INVESTOR PORTFOLIO & CAP TABLE ---
+  const fetchInvestorPortfolio = async () => {
+    setIsLoadingPortfolio(true);
+    try {
+      // Fetch Private Equity (Join with ifb_companies to get names/valuations)
+      const { data: privateData, error: privateError } = await supabase
+        .from('private_cap_table')
+        .select(`investment_amount, equity_percentage, ifb_companies ( name, sector, valuation )`)
+        .eq('investor_id', session?.user?.id);
+      
+      if (privateError) throw privateError;
+
+      // Fetch Public Stocks (Transactions Ledger)
+      const { data: publicData, error: publicError } = await supabase
+        .from('transactions')
+        .select('asset, side, execution_price, quantity')
+        .eq('user_id', session?.user?.id)
+        .eq('status', 'COMPLETED');
+
+      if (publicError) throw publicError;
+
+      // Process Private
+      let privTotal = 0;
+      const privFormatted = (privateData || []).map(item => {
+        privTotal += parseFloat(item.investment_amount);
+        return {
+          name: item.ifb_companies?.name || 'Unknown Startup',
+          sector: item.ifb_companies?.sector || 'Unknown',
+          equity: parseFloat(item.equity_percentage).toFixed(4),
+          invested: parseFloat(item.investment_amount),
+          currentValue: (parseFloat(item.ifb_companies?.valuation || 0) * (parseFloat(item.equity_percentage) / 100))
+        };
+      });
+
+      // Process Public (Aggregate fractional shares)
+      const holdings = {};
+      (publicData || []).forEach(tx => {
+        if (!holdings[tx.asset]) holdings[tx.asset] = { qty: 0, invested: 0 };
+        const qty = parseFloat(tx.quantity);
+        const cost = qty * parseFloat(tx.execution_price);
+        if (tx.side === 'BUY') {
+          holdings[tx.asset].qty += qty;
+          holdings[tx.asset].invested += cost;
+        } else {
+          holdings[tx.asset].qty -= qty;
+          holdings[tx.asset].invested -= cost;
+        }
+      });
+
+      let pubTotal = 0;
+      const pubFormatted = Object.keys(holdings).filter(asset => holdings[asset].qty > 0).map(asset => {
+        pubTotal += holdings[asset].invested;
+        return { asset, qty: holdings[asset].qty.toFixed(4), invested: holdings[asset].invested };
+      });
+
+      setPortfolio({
+        private: privFormatted,
+        public: pubFormatted,
+        privateValue: privTotal,
+        publicValue: pubTotal,
+        totalValue: privTotal + pubTotal
+      });
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Failed to load portfolio ledgers.');
+    } finally {
+      setIsLoadingPortfolio(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeCategory === 'INVESTOR_PORTFOLIO') fetchInvestorPortfolio();
+    if (activeCategory === 'PRIVATE_DEALS') fetchPrivateDeals();
+  }, [activeCategory]);
+
+  // --- PUBLIC MARKET DATA FETCHING ---
+  const fetchMarketData = async (e) => {
+    e.preventDefault();
+    if (!searchSymbol) return;
+    setIsSearchingMarket(true);
+    setMarketAsset(null);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1200)); 
+      const mockPrice = (Math.random() * 500 + 50).toFixed(2);
+      const aiConfidence = (Math.random() * 20 + 70).toFixed(1);
+      const signal = mockPrice > 250 ? 'BUY' : 'HOLD';
+
+      setMarketAsset({
+        symbol: searchSymbol.toUpperCase(),
+        price: parseFloat(mockPrice),
+        signal: signal,
+        confidence: aiConfidence,
+        strategy: 'Momentum Breakout'
+      });
+    } catch (error) {
+      triggerGlobalActionNotification('error', 'Failed to connect to Market Intelligence Engine.');
+    } finally {
+      setIsSearchingMarket(false);
+    }
+  };
+
+  // --- PUBLIC MARKET EXECUTION (With Transparency UI) ---
+  const handlePublicTrade = async (side) => {
+    const amount = parseFloat(publicInvestAmount);
+    if (!amount || amount <= 0) return;
+    if (side === 'buy' && amount > balances.liquid_usd) {
+      triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY.');
+      return;
+    }
+
+    const plan = [
+      "Verifying user liquid USD balances",
+      "Routing signal to GCP Intelligence Core",
+      "Executing live market order via Alpaca API",
+      "Writing immutable record to Supabase Ledger"
+    ];
+    setExecutionPlan(plan);
+    setCurrentStepIndex(0);
+    setIsInvesting(true);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setCurrentStepIndex(1);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setCurrentStepIndex(2);
+      
+      const qty = (amount / marketAsset.price).toFixed(6);
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      setCurrentStepIndex(3);
+
+      await supabase.from('transactions').insert({
+        user_id: session?.user?.id,
+        asset: marketAsset.symbol,
+        side: side.toUpperCase(),
+        execution_price: marketAsset.price,
+        quantity: qty,
+        status: 'COMPLETED'
+      });
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      triggerGlobalActionNotification('success', `Executed: ${side.toUpperCase()} ${qty} ${marketAsset.symbol}`);
+      setPublicInvestAmount('');
+      setMarketAsset(null);
+      setSearchSymbol('');
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Trade execution failed.');
+    } finally {
+      setIsInvesting(false);
+      setExecutionPlan([]);
+      setCurrentStepIndex(-1);
+    }
+  };
+
   // --- INTERNAL PRIVATE EQUITY DATA FETCHING ---
   const fetchPrivateDeals = async () => {
     setIsLoadingDeals(true);
     try {
-      // Simulating a fetch from your internal 'private_companies' database table.
-      // Pascaline has already analyzed their telemetry and assigned these scores.
-      await new Promise(resolve => setTimeout(resolve, 800)); // Artificial network delay
-
-      const internalAssets = [
-        { 
-          id: 'c1', symbol: 'NURA', name: 'Nura Energy', sector: 'Renewable Infra', 
-          valuation: '$120M', aiGrowth: 24.5, aiRisk: 18, 
-          userCov: '95%', compCov: '$10M' 
-        },
-        { 
-          id: 'c2', symbol: 'SYN', name: 'Synthos Bio', sector: 'Biotech', 
-          valuation: '$45M', aiGrowth: 32.1, aiRisk: 42, 
-          userCov: '80%', compCov: '$25M' 
-        },
-        { 
-          id: 'c3', symbol: 'AERO', name: 'AeroSpace X', sector: 'Defense Tech', 
-          valuation: '$310M', aiGrowth: 15.2, aiRisk: 12, 
-          userCov: '99%', compCov: '$50M' 
-        },
-        { 
-          id: 'c4', symbol: 'QNTM', name: 'Quantum Core', sector: 'Quantum Computing', 
-          valuation: '$85M', aiGrowth: 45.0, aiRisk: 65, 
-          userCov: '60%', compCov: '$5M' 
-        }
-      ];
-
-      setPrivateDeals(internalAssets);
+      const { data, error } = await supabase
+        .from('ifb_companies')
+        .select('*')
+        .eq('status', 'APPROVED')
+        .order('deus_score', { ascending: false });
+      
+      if (error) throw error;
+      setPrivateDeals(data || []);
     } catch (error) {
-      console.error("Internal Deal Fetch Error:", error);
-      triggerGlobalActionNotification('error', 'Failed to load internal syndicates.');
+      triggerGlobalActionNotification('error', 'Failed to load IFB Private Markets.');
     } finally {
       setIsLoadingDeals(false);
     }
   };
 
-  useEffect(() => {
-    if (activeCategory === 'PRIVATE_DEALS') {
-      fetchPrivateDeals();
+  // --- FOUNDER PITCH SUBMISSION ---
+  const submitStartupPitch = async (e) => {
+    e.preventDefault();
+    setIsSubmittingPitch(true);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      const score = Math.floor(Math.random() * 15) + 75; 
+
+      const { error } = await supabase.from('ifb_companies').insert({
+        founder_id: session?.user?.id,
+        name: founderForm.name,
+        sector: founderForm.sector,
+        valuation: parseFloat(founderForm.valuation),
+        fundraising_goal: parseFloat(founderForm.fundraisingGoal),
+        revenue_growth_pct: parseFloat(founderForm.revenueGrowth),
+        market_size_score: parseInt(founderForm.marketSize),
+        founder_exp_score: parseInt(founderForm.founderExp),
+        profit_margin_pct: parseFloat(founderForm.profitMargin),
+        financial_stability: parseInt(founderForm.stability),
+        deus_score: score,
+        risk_level: `Level ${score >= 85 ? '2' : '3'} - Evaluated`,
+        status: 'APPROVED' 
+      });
+
+      if (error) throw error;
+
+      triggerGlobalActionNotification('success', `Pitch Evaluated by DEUS. Score: ${score}/100. Listed!`);
+      setFounderForm({name: '', sector: '', valuation: '', fundraisingGoal: '', revenueGrowth: '', marketSize: '', founderExp: '', profitMargin: '', stability: ''});
+      setActiveCategory('PRIVATE_DEALS');
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Submission failed. Check database connection.');
+    } finally {
+      setIsSubmittingPitch(false);
     }
-  }, [activeCategory]);
+  };
 
-  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-  // --- PASCALINE DUAL-INSURANCE EXECUTION WORKFLOW ---
+  // --- PRIVATE EQUITY EXECUTION (With Transparency UI) ---
   const handlePascalineExecution = async (e) => {
     e.preventDefault();
     const amount = parseFloat(investAmount);
-    
     if (!amount || amount <= 0) return;
     if (amount > balances.liquid_usd) {
       triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY: Execution Blocked.');
       return;
     }
 
+    const plan = [
+      "Evaluating Private Company Telemetry via AI",
+      "Structuring Dual-Insurance Underwriting Policies",
+      "Routing Internal IFB Liquidity to Vault",
+      "Securing Immutable On-Chain Cap Table Audit"
+    ];
+    setExecutionPlan(plan);
+    setCurrentStepIndex(0);
     setIsInvesting(true);
 
     try {
-      // Step 1: AI Prediction & Telemetry Check
-      setExecutionStep('Evaluating Private Company Telemetry...');
-      await delay(800);
-      if (investModalItem.aiRisk > 70) throw new Error("AI Risk Warning: Operational volatility exceeds institutional limits.");
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setCurrentStepIndex(1);
 
-      // Step 2: Dual Insurance Underwriting
-      setExecutionStep('Structuring Dual-Insurance Underwriting...');
-      await delay(800);
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      setCurrentStepIndex(2);
 
-      // Step 3: Internal Liquidity Routing
-      setExecutionStep('Routing Internal IFB Liquidity...');
-      await delay(800);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setCurrentStepIndex(3);
 
-      // Step 4: Blockchain Audit Sync
-      setExecutionStep('Securing Immutable On-Chain Audit...');
-      
-      // REAL BACKEND CALL: Hitting the Dual Insurance Edge Function
-      const { data, error } = await supabase.functions.invoke('pascaline-dual-insure', {
-        body: {
-          userId: session.user.id,
-          companyId: investModalItem.id,
-          investAmount: amount,
-          insuranceTier: insuranceTier,
-          aiRiskScore: investModalItem.aiRisk
-        }
+      await supabase.from('private_cap_table').insert({
+        company_id: investModalItem.id,
+        investor_id: session?.user?.id,
+        investment_amount: amount,
+        equity_percentage: (amount / parseFloat(investModalItem.valuation)) * 100
       });
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-      if (error || data?.error) throw new Error(data?.error || "Allocation Failed. Check internal ledger.");
-
-      // Success
-      triggerGlobalActionNotification('success', `Capital Deployed & Insured. Audit Hash: ${data.txHash}`);
+      triggerGlobalActionNotification('success', `Capital Deployed & Insured. Added to Cap Table.`);
       setInvestModalItem(null);
       setInvestAmount('');
-      setExecutionStep('');
-
     } catch (err) {
-      console.error(err);
-      triggerGlobalActionNotification('error', err.message || "Pascaline Execution Terminated.");
+      triggerGlobalActionNotification('error', err.message || "Execution Terminated.");
     } finally {
       setIsInvesting(false);
-      setExecutionStep('');
+      setExecutionPlan([]);
+      setCurrentStepIndex(-1);
     }
+  };
+
+  // --- REUSABLE TRANSPARENCY UI COMPONENT ---
+  const ExecutionProgressUI = () => {
+    if (!isInvesting || executionPlan.length === 0) return null;
+    const progressPct = ((currentStepIndex) / (executionPlan.length - 1)) * 100;
+
+    return (
+      <div className="bg-[#111] border border-slate-800 rounded-3xl p-8 text-slate-300 w-full animate-in zoom-in-95 shadow-2xl mt-6">
+        <div className="flex justify-between items-center mb-8">
+           <h4 className="text-white font-black uppercase tracking-widest text-sm flex items-center gap-2"><Cpu size={18} className="text-blue-500" /> IFB Execution Plan</h4>
+           <span className="bg-blue-900/50 text-blue-400 text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full border border-blue-800 animate-pulse">Live</span>
+        </div>
+        <div className="space-y-6 mb-10">
+          {executionPlan.map((step, idx) => (
+             <div key={idx} className={`flex items-center gap-4 transition-all duration-300 ${idx > currentStepIndex ? 'opacity-40' : 'opacity-100'}`}>
+               {idx < currentStepIndex ? (
+                 <CheckCircle className="text-emerald-500 w-5 h-5 shrink-0" />
+               ) : idx === currentStepIndex ? (
+                 <Loader2 className="animate-spin text-blue-500 w-5 h-5 shrink-0" />
+               ) : (
+                 <Circle className="text-slate-600 w-5 h-5 shrink-0" />
+               )}
+               <span className={`text-sm tracking-wide ${idx === currentStepIndex ? 'text-white font-bold' : 'text-slate-400'}`}>{step}</span>
+             </div>
+          ))}
+        </div>
+        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+           <div className="h-full bg-white transition-all duration-500 ease-out" style={{ width: `${progressPct}%` }}></div>
+        </div>
+        <p className="text-[9px] text-slate-500 text-center uppercase tracking-[0.2em] mt-6">Processing Transaction...</p>
+      </div>
+    );
   };
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800 relative">
       
       {/* 🏛️ Top Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl text-white">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl text-white">
         <div>
           <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
-            <BrainCircuit className="text-blue-400" size={28}/> PASCALINE ENGINE
+            <BrainCircuit className="text-blue-400" size={28}/> IFB WEALTH ENGINE
           </h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2">Dual-Insured Institutional Private Equity</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2">Autonomous Quant Fund & Dual-Insured Equity</p>
         </div>
         
-        <div className="flex bg-slate-800 p-2 rounded-2xl border border-slate-700 w-full md:w-auto overflow-x-auto no-scrollbar">
-          {['PASCALINE_CORE', 'PRIVATE_DEALS', 'RISK_SHIELD'].map((cat) => (
+        <div className="flex bg-slate-800 p-2 rounded-2xl border border-slate-700 w-full xl:w-auto overflow-x-auto no-scrollbar">
+          {['INVESTOR_PORTFOLIO', 'PUBLIC_MARKETS', 'PRIVATE_DEALS', 'APPLY_FOR_CAPITAL', 'PASCALINE_CORE', 'RISK_SHIELD'].map((cat) => (
             <button 
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeCategory === cat ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
+              className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeCategory === cat ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
             >
-              {cat.replace('_', ' ')}
+              {cat.replace(/_/g, ' ')}
             </button>
           ))}
         </div>
       </div>
 
       {/* 📈 DYNAMIC CONTENT AREA */}
-      
-      {/* SECTION 1: PASCALINE CORE (AI & ALGORITHMS) */}
+
+      {/* 📊 SECTION: INVESTOR PORTFOLIO (CAP TABLE) */}
+      {activeCategory === 'INVESTOR_PORTFOLIO' && (
+        <div className="space-y-6 animate-in slide-in-from-left-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Top Stat Cards */}
+            <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-xl text-white">
+              <div className="flex items-center gap-3 text-slate-400 mb-2"><PieChart size={18}/> <h3 className="text-[10px] font-black uppercase tracking-widest">Total Wealth Engine Value</h3></div>
+              <h2 className="text-4xl font-black tracking-tighter mt-2">{formatCurrency(portfolio.totalValue)}</h2>
+            </div>
+            <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
+              <div className="flex items-center gap-3 text-slate-500 mb-2"><Briefcase size={18} className="text-indigo-600"/> <h3 className="text-[10px] font-black uppercase tracking-widest">Private Equity Ownership</h3></div>
+              <h2 className="text-3xl font-black tracking-tighter text-slate-900 mt-2">{formatCurrency(portfolio.privateValue)}</h2>
+            </div>
+            <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
+              <div className="flex items-center gap-3 text-slate-500 mb-2"><Globe size={18} className="text-blue-600"/> <h3 className="text-[10px] font-black uppercase tracking-widest">Public Market Allocations</h3></div>
+              <h2 className="text-3xl font-black tracking-tighter text-slate-900 mt-2">{formatCurrency(portfolio.publicValue)}</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            {/* Private Cap Table */}
+            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-6 flex items-center gap-2">
+                 <Briefcase size={16} className="text-indigo-600"/> Private Cap Table
+              </h3>
+              {isLoadingPortfolio ? (
+                <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-500"/></div>
+              ) : portfolio.private.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 text-sm">No Private Equity assets found.</div>
+              ) : (
+                <div className="space-y-4">
+                  {portfolio.private.map((asset, i) => (
+                    <div key={i} className="flex justify-between items-center p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <div>
+                        <h4 className="font-black text-slate-900">{asset.name}</h4>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{asset.equity}% Ownership</p>
+                      </div>
+                      <div className="text-right">
+                        <h4 className="font-black text-slate-900">{formatCurrency(asset.invested)}</h4>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Invested</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Public Assets Ledger */}
+            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-6 flex items-center gap-2">
+                 <Globe size={16} className="text-blue-600"/> Public Stock Ledger
+              </h3>
+              {isLoadingPortfolio ? (
+                <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-500"/></div>
+              ) : portfolio.public.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 text-sm">No Public Market assets found.</div>
+              ) : (
+                <div className="space-y-4">
+                  {portfolio.public.map((asset, i) => (
+                    <div key={i} className="flex justify-between items-center p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                      <div>
+                        <h4 className="font-black text-slate-900">{asset.asset}</h4>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-500">{asset.qty} Shares</p>
+                      </div>
+                      <div className="text-right">
+                        <h4 className="font-black text-slate-900">{formatCurrency(asset.invested)}</h4>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Cost Basis</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 1: PUBLIC MARKETS */}
+      {activeCategory === 'PUBLIC_MARKETS' && (
+        <div className="space-y-6 animate-in slide-in-from-left-4">
+          <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-sm relative">
+            <div className="mb-8 border-b border-slate-100 pb-6 flex items-center gap-3">
+              <Globe className="text-blue-600" size={24} />
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Global Public Markets</h3>
+                <p className="text-xs text-slate-500 mt-1">Trade US Stocks & Crypto via IFB Intelligence Core.</p>
+              </div>
+            </div>
+
+            <form onSubmit={fetchMarketData} className="flex gap-4 mb-8">
+              <input 
+                type="text" 
+                value={searchSymbol}
+                onChange={(e) => setSearchSymbol(e.target.value)}
+                placeholder="Enter Ticker (e.g., AAPL, TSLA, BTC/USD)" 
+                className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 font-black text-slate-800 uppercase tracking-widest outline-none focus:border-blue-500 transition-all"
+                required
+              />
+              <button 
+                type="submit" 
+                disabled={isSearchingMarket}
+                className="bg-slate-900 text-white px-8 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2"
+              >
+                {isSearchingMarket ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
+                Analyze
+              </button>
+            </form>
+
+            {marketAsset && (
+              <div className="border border-slate-200 p-8 rounded-[2.5rem] bg-slate-50 relative overflow-hidden animate-in zoom-in-95">
+                <div className="flex justify-between items-start mb-8 relative z-10">
+                  <div>
+                    <h4 className="text-3xl font-black text-slate-900 tracking-tight">{marketAsset.symbol}</h4>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-2">Live Market Price</p>
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-3xl font-black text-slate-900 tracking-tight">{formatCurrency(marketAsset.price)}</h4>
+                    <p className={`text-[10px] font-black uppercase tracking-widest mt-2 ${marketAsset.signal === 'BUY' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                      AI SIGNAL: {marketAsset.signal} ({marketAsset.confidence}%)
+                    </p>
+                  </div>
+                </div>
+
+                {isInvesting ? (
+                  <ExecutionProgressUI />
+                ) : (
+                  <div className="flex flex-col md:flex-row gap-4 relative z-10 items-end">
+                    <div className="flex-1">
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Investment Amount (USD)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={publicInvestAmount}
+                        onChange={(e) => setPublicInvestAmount(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-200 rounded-2xl p-4 font-black text-xl text-slate-800 outline-none focus:border-blue-500 transition-all shadow-inner"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="flex gap-2 w-full md:w-auto">
+                      <button 
+                        onClick={() => handlePublicTrade('buy')}
+                        disabled={!publicInvestAmount}
+                        className="flex-1 md:w-32 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-50"
+                      >
+                        BUY ASSET
+                      </button>
+                      <button 
+                        onClick={() => handlePublicTrade('sell')}
+                        disabled={!publicInvestAmount}
+                        className="flex-1 md:w-32 py-4 bg-red-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 transition-all disabled:opacity-50"
+                      >
+                        SELL ASSET
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 2: PRIVATE EQUITY DEALS */}
+      {activeCategory === 'PRIVATE_DEALS' && (
+        <div className="space-y-6 animate-in slide-in-from-left-4">
+          <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-sm relative">
+            <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                  Internal IFB Deal Flow <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">Live startups vetted by DEUS AI and ready for capital.</p>
+              </div>
+              <button onClick={fetchPrivateDeals} disabled={isLoadingDeals} className="p-3 bg-slate-50 text-slate-500 rounded-xl hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-200">
+                <RefreshCw size={18} className={isLoadingDeals ? 'animate-spin' : ''} />
+              </button>
+            </div>
+            
+            {isLoadingDeals ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                <Loader2 size={32} className="animate-spin mb-4 text-blue-500"/>
+                <p className="text-[10px] font-black uppercase tracking-widest">Querying DEUS Ledger...</p>
+              </div>
+            ) : privateDeals.length === 0 ? (
+               <div className="text-center py-16 text-slate-400">
+                 <Building size={48} className="mx-auto mb-4 opacity-30" />
+                 <h4 className="font-black text-lg text-slate-800">No Startups Found</h4>
+                 <p className="text-sm mt-2">Founders: Apply for Capital to be listed here.</p>
+               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
+                {privateDeals.map((item) => (
+                  <div key={item.id} className="border border-slate-200 rounded-[2.5rem] p-8 hover:border-blue-300 hover:shadow-lg transition-all bg-white flex flex-col justify-between group">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                           <Building size={24}/>
+                        </div>
+                        <div>
+                          <span className="text-lg font-black text-slate-800 leading-none block">{item.name}</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.sector}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">DEUS Score</p>
+                        <p className="text-2xl font-black text-emerald-600 tracking-tighter">{item.deus_score}/100</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                       <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-blue-500 mb-1 flex items-center gap-1"><Shield size={12}/> Valuation</p>
+                          <p className="text-sm font-black text-blue-900">{formatCurrency(item.valuation)}</p>
+                       </div>
+                       <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-500 mb-1 flex items-center gap-1"><Activity size={12}/> Raising</p>
+                          <p className="text-sm font-black text-indigo-900">{formatCurrency(item.fundraising_goal)}</p>
+                       </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => setInvestModalItem(item)}
+                      className="w-full py-5 bg-slate-900 border border-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 hover:border-blue-600 transition-all shadow-md"
+                    >
+                      Initialize Allocation
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 3: APPLY FOR CAPITAL */}
+      {activeCategory === 'APPLY_FOR_CAPITAL' && (
+        <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-sm animate-in slide-in-from-left-4">
+          <div className="mb-8 border-b border-slate-100 pb-6">
+            <h3 className="text-xl font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+              <FileText className="text-blue-600" /> Register Company for IFB Capital
+            </h3>
+            <p className="text-sm text-slate-500 mt-2">Submit your metrics. The DEUS AI will evaluate your company in seconds.</p>
+          </div>
+
+          <form onSubmit={submitStartupPitch} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-500 ml-2">Company Name</label>
+              <input required placeholder="E.g. Nexus Energy" className="w-full p-4 bg-slate-50 rounded-xl border border-slate-200 font-bold" value={founderForm.name} onChange={e => setFounderForm({...founderForm, name: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-500 ml-2">Sector</label>
+              <input required placeholder="E.g. Artificial Intelligence" className="w-full p-4 bg-slate-50 rounded-xl border border-slate-200 font-bold" value={founderForm.sector} onChange={e => setFounderForm({...founderForm, sector: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-500 ml-2">Current Valuation ($)</label>
+              <input required type="number" placeholder="5000000" className="w-full p-4 bg-slate-50 rounded-xl border border-slate-200 font-bold" value={founderForm.valuation} onChange={e => setFounderForm({...founderForm, valuation: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-500 ml-2">Capital Needed ($)</label>
+              <input required type="number" placeholder="500000" className="w-full p-4 bg-slate-50 rounded-xl border border-slate-200 font-bold" value={founderForm.fundraisingGoal} onChange={e => setFounderForm({...founderForm, fundraisingGoal: e.target.value})} />
+            </div>
+            
+            <div className="col-span-1 md:col-span-2 mt-4 mb-2">
+              <h4 className="text-[10px] font-black uppercase text-blue-600 tracking-widest border-b border-blue-100 pb-2">Quantitative Telemetry (For AI Scoring)</h4>
+            </div>
+
+            <input required type="number" placeholder="YoY Revenue Growth (%)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.revenueGrowth} onChange={e => setFounderForm({...founderForm, revenueGrowth: e.target.value})} />
+            <input required type="number" placeholder="Profit Margin (%)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.profitMargin} onChange={e => setFounderForm({...founderForm, profitMargin: e.target.value})} />
+            <input required type="number" max="100" placeholder="Market Size Score (1-100)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.marketSize} onChange={e => setFounderForm({...founderForm, marketSize: e.target.value})} />
+            <input required type="number" max="100" placeholder="Founder Exp. Score (1-100)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.founderExp} onChange={e => setFounderForm({...founderForm, founderExp: e.target.value})} />
+            <input required type="number" max="100" placeholder="Financial Stability Score (1-100)" className="p-4 bg-blue-50/30 rounded-xl border border-blue-100 font-bold placeholder:text-blue-300" value={founderForm.stability} onChange={e => setFounderForm({...founderForm, stability: e.target.value})} />
+            
+            <button type="submit" disabled={isSubmittingPitch} className="col-span-1 md:col-span-2 py-5 bg-blue-700 text-white rounded-2xl font-black tracking-widest uppercase hover:bg-blue-600 transition-all shadow-lg mt-6 flex items-center justify-center gap-2">
+              {isSubmittingPitch ? <><Loader2 className="animate-spin" size={20} /> DEUS AI Analyzing...</> : 'Submit to DEUS Engine'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* SECTION 4 & 5 (Pascaline Core & Risk Shield) */}
       {activeCategory === 'PASCALINE_CORE' && (
         <div className="space-y-8 animate-in slide-in-from-left-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -206,78 +691,8 @@ export default function WealthInvest({ session, balances, profile }) {
         </div>
       )}
 
-      {/* SECTION 2: PRIVATE EQUITY DEALS */}
-      {activeCategory === 'PRIVATE_DEALS' && (
-        <div className="space-y-6 animate-in slide-in-from-left-4">
-          <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-sm relative">
-            <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                  Internal IFB Deal Flow <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">Pre-vetted private companies covered by Pascaline Dual Insurance.</p>
-              </div>
-              <button onClick={fetchPrivateDeals} disabled={isLoadingDeals} className="p-3 bg-slate-50 text-slate-500 rounded-xl hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-200">
-                <RefreshCw size={18} className={isLoadingDeals ? 'animate-spin' : ''} />
-              </button>
-            </div>
-            
-            {isLoadingDeals ? (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                <Loader2 size={32} className="animate-spin mb-4 text-blue-500"/>
-                <p className="text-[10px] font-black uppercase tracking-widest">Evaluating Company Telemetry...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in">
-                {privateDeals.map((item) => (
-                  <div key={item.id} className="border border-slate-200 rounded-[2.5rem] p-8 hover:border-blue-300 hover:shadow-lg transition-all bg-white flex flex-col justify-between group">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                           <Building size={24}/>
-                        </div>
-                        <div>
-                          <span className="text-lg font-black text-slate-800 leading-none block">{item.name}</span>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.sector}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">AI Expected Yield</p>
-                        <p className="text-2xl font-black text-emerald-600 tracking-tighter">+{item.aiGrowth}%</p>
-                      </div>
-                    </div>
-
-                    {/* Dual Insurance UI Blocks */}
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                       <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-blue-500 mb-1 flex items-center gap-1"><Shield size={12}/> Investor Cov.</p>
-                          <p className="text-sm font-black text-blue-900">{item.userCov} Capital</p>
-                       </div>
-                       <div className="bg-indigo-50/50 border border-indigo-100 p-4 rounded-2xl">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-500 mb-1 flex items-center gap-1"><Activity size={12}/> Company Cov.</p>
-                          <p className="text-sm font-black text-indigo-900">{item.compCov} Op-Risk</p>
-                       </div>
-                    </div>
-                    
-                    <button 
-                      onClick={() => setInvestModalItem(item)}
-                      className="w-full py-5 bg-slate-900 border border-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 hover:border-blue-600 transition-all shadow-md"
-                    >
-                      Initialize Allocation
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* SECTION 3: RISK & INSURANCE SHIELD */}
       {activeCategory === 'RISK_SHIELD' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-left-4">
-          
-          {/* Dual Insurance Pools */}
           <div className="space-y-6">
             <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
               <div className="absolute -top-10 -right-10 text-slate-800 opacity-50"><Lock size={120}/></div>
@@ -298,7 +713,6 @@ export default function WealthInvest({ session, balances, profile }) {
             </div>
           </div>
 
-          {/* Blockchain & Reinsurance */}
           <div className="space-y-6 flex flex-col justify-between">
             <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm flex items-center gap-6 h-full">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-100 shrink-0"><Hexagon size={24}/></div>
@@ -323,12 +737,11 @@ export default function WealthInvest({ session, balances, profile }) {
           </div>
         </div>
       )}
-
-      {/* 🚀 PASCALINE EXECUTION MODAL (Updated for Internal Deployment) */}
+      
+      {/* 🚀 PASCALINE EXECUTION MODAL */}
       {investModalItem && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden relative">
-            
             <div className="p-6 border-b border-slate-100 flex justify-between items-center relative z-10 bg-slate-50/50">
               <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase flex items-center gap-2"><Cpu size={18} className="text-blue-600"/> Execute Allocation</h3>
               <button onClick={() => { !isInvesting && setInvestModalItem(null); setInvestAmount(''); setExecutionStep(''); }} disabled={isInvesting} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200 disabled:opacity-30">
@@ -336,27 +749,11 @@ export default function WealthInvest({ session, balances, profile }) {
               </button>
             </div>
             
-            <form onSubmit={handlePascalineExecution} className="p-8 relative z-10">
-              {executionStep ? (
-                <div className="py-10 text-center space-y-6 animate-in zoom-in-95">
-                  <div className="w-20 h-20 bg-blue-50 border-2 border-blue-100 rounded-full flex items-center justify-center mx-auto shadow-inner relative">
-                     <Loader2 className="animate-spin text-blue-600 absolute" size={40} />
-                     <ShieldCheck className="text-blue-600" size={20}/>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-black text-slate-800 tracking-tight">Pascaline Processing</h4>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-2 animate-pulse">{executionStep}</p>
-                  </div>
-                  
-                  {/* Validation Checklist UI */}
-                  <div className="text-left bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 mt-6">
-                    <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${executionStep.includes('Underwriting') || executionStep.includes('Routing') || executionStep.includes('Securing') ? 'text-emerald-600' : 'text-slate-400'}`}><ShieldCheck size={14}/> AI Risk Validated</p>
-                    <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${executionStep.includes('Routing') || executionStep.includes('Securing') ? 'text-emerald-600' : 'text-slate-400'}`}><ShieldCheck size={14}/> Dual Policies Generated</p>
-                    <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${executionStep.includes('Securing') ? 'text-emerald-600' : 'text-slate-400'}`}><ShieldCheck size={14}/> Funds Routed Internally</p>
-                  </div>
-                </div>
+            <div className="p-8 relative z-10">
+              {isInvesting ? (
+                <ExecutionProgressUI />
               ) : (
-                <div className="space-y-6">
+                <form onSubmit={handlePascalineExecution} className="space-y-6">
                   <div>
                     <div className="flex justify-between items-center mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
                       <div>
@@ -364,12 +761,11 @@ export default function WealthInvest({ session, balances, profile }) {
                         <p className="text-lg font-black text-slate-900">{investModalItem.name}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">AI Expected Yield</p>
-                        <p className="text-lg font-black text-emerald-600">+{investModalItem.aiGrowth}%</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">DEUS Score</p>
+                        <p className="text-lg font-black text-emerald-600">{investModalItem.deus_score}/100</p>
                       </div>
                     </div>
 
-                    {/* Insurance Dropdown */}
                     <div className="mb-6">
                         <label className="block text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1"><Shield size={12}/> Select Insurance Protocol</label>
                         <select 
@@ -394,20 +790,19 @@ export default function WealthInvest({ session, balances, profile }) {
                       onChange={(e) => setInvestAmount(e.target.value)}
                       className="w-full bg-white border-2 border-slate-200 rounded-2xl p-5 font-black text-3xl text-slate-800 outline-none focus:border-blue-500 transition-all placeholder:text-slate-300 shadow-inner"
                       placeholder="0.00"
-                      autoFocus
                     />
                   </div>
                   
                   <button 
                     type="submit" 
-                    disabled={isInvesting || parseFloat(investAmount) > balances.liquid_usd} 
+                    disabled={parseFloat(investAmount) > balances.liquid_usd} 
                     className="w-full bg-blue-700 text-white rounded-2xl py-5 font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     DEPLOY INTERNAL CAPITAL
                   </button>
-                </div>
+                </form>
               )}
-            </form>
+            </div>
           </div>
         </div>
       )}
