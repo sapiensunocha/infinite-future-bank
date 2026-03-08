@@ -2,18 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { 
   ArrowLeft, ShieldCheck, Zap, Send, Loader2, 
-  CheckCircle2, Circle, Square, User, Lock
+  CheckCircle2, Circle, Square, User 
 } from 'lucide-react';
 
-export default function PayInterface() {
-  // Core Data States
-  const [session, setSession] = useState(null);
-  const [balances, setBalances] = useState(null);
+export default function PaymentPortal({ session, balances }) {
   const [receiver, setReceiver] = useState(null);
-  
-  // UI States
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  
   const [amount, setAmount] = useState('');
   const [asset, setAsset] = useState('AFR'); // 'AFR' or 'USD'
   const [isProcessing, setIsProcessing] = useState(false);
@@ -22,44 +18,35 @@ export default function PayInterface() {
   // Execution Tracker
   const [executionPlan, setExecutionPlan] = useState({ isActive: false, steps: [], currentDetail: '', progressPct: 0 });
 
-  // INITIALIZATION: Fetch Auth, Balances, and Receiver
+  // Extract the receiver ID from the URL: e.g., ?to=1234-5678-abcd
   useEffect(() => {
-    const initializePaymentPortal = async () => {
+    const fetchReceiver = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const targetId = params.get('to');
+
+      if (!targetId) {
+        setError('Invalid Routing Link. No destination ID provided.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (targetId === session?.user?.id) {
+        setError('You cannot initiate a payment to your own account.');
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        // 1. Check Authentication
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!currentSession) {
-          setIsLoading(false);
-          return; // Will show login prompt
-        }
-        setSession(currentSession);
-
-        // 2. Fetch Sender's Balances
-        const { data: balData, error: balError } = await supabase
-          .from('balances')
-          .select('*')
-          .eq('user_id', currentSession.user.id)
-          .single();
-        
-        if (!balError && balData) setBalances(balData);
-
-        // 3. Extract target ID from URL (e.g. ?to=123-abc)
-        const params = new URLSearchParams(window.location.search);
-        const targetId = params.get('to');
-
-        if (!targetId) throw new Error('Invalid Routing Link. No destination ID provided.');
-        if (targetId === currentSession.user.id) throw new Error('You cannot initiate a payment to your own vault.');
-
-        // 4. Fetch Receiver's Public Info
-        const { data: receiverData, error: receiverError } = await supabase
+        // Fetch the receiver's public profile data
+        const { data, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url, active_tier')
           .eq('id', targetId)
           .single();
 
-        if (receiverError || !receiverData) throw new Error('Beneficiary not found on the IFB Network.');
+        if (dbError || !data) throw new Error('Beneficiary not found on the IFB Network.');
 
-        setReceiver(receiverData);
+        setReceiver(data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -67,23 +54,29 @@ export default function PayInterface() {
       }
     };
 
-    initializePaymentPortal();
-  }, []);
+    fetchReceiver();
+  }, [session]);
 
   const handleExecutePayment = async () => {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) return;
 
-    // Balance validation
-    if (asset === 'AFR' && numAmount > (balances?.afr_balance || 0)) return alert("Insufficient AFR Balance.");
-    if (asset === 'USD' && numAmount > (balances?.liquid_usd || 0)) return alert("Insufficient USD Balance.");
+    // Basic local balance check
+    if (asset === 'AFR' && numAmount > (balances?.afr_balance || 0)) {
+      alert("Insufficient AFR Balance.");
+      return;
+    }
+    if (asset === 'USD' && numAmount > (balances?.liquid_usd || 0)) {
+      alert("Insufficient USD Balance.");
+      return;
+    }
 
     setIsProcessing(true);
 
     let mockSteps = [
       { id: 1, text: `Verifying ${asset} Liquidity & Cryptographic Signatures.`, status: "active" },
       { id: 2, text: `Establishing secure P2P tunnel to ${receiver.full_name}.`, status: "pending" },
-      { id: 3, text: "Awaiting AI Validator Consensus (Anti-Fraud).", status: "pending" },
+      { id: 3, text: "Awaiting AI Validator Consensus (Anti-Fraud Check).", status: "pending" },
       { id: 4, text: "Settling on IFB Core Ledger.", status: "pending" }
     ];
 
@@ -107,7 +100,8 @@ export default function PayInterface() {
       mockSteps[2].status = "completed"; mockSteps[3].status = "active";
       setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Committing transaction block...", progressPct: 85 }));
 
-      // Step 4: Real Database Execution
+      // Step 4: Real Database Execution (Logging the transfer)
+      // Note: In production, use a secure Supabase RPC to handle double-entry accounting (Debit sender, Credit receiver)
       const { error: txError } = await supabase.from('market_transactions').insert({
         user_id: session.user.id,
         asset: asset,
@@ -136,39 +130,28 @@ export default function PayInterface() {
     }
   };
 
-  // --- VIEW: LOADING ---
-  if (isLoading) return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
-
-  // --- VIEW: UNAUTHENTICATED (Must log in first) ---
-  if (!session) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in">
-        <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm"><Lock size={32}/></div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2">Authentication Required</h2>
-        <p className="text-sm text-slate-500 max-w-sm">You must unlock your IFB Vault to authorize this transaction.</p>
-        <button onClick={() => window.location.href = '/'} className="mt-8 px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-blue-700 transition-all">Authenticate Now</button>
-      </div>
-    );
+  if (isLoading) {
+    return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
   }
 
-  // --- VIEW: ERROR (Invalid link) ---
+  // Handle Invalid Link State
   if (error) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in">
         <div className="w-20 h-20 bg-red-100 text-red-500 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm"><ShieldCheck size={32}/></div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2">Secure Routing Failed</h2>
+        <h2 className="text-2xl font-black text-slate-800 mb-2">Invalid or Expired Link</h2>
         <p className="text-sm text-slate-500 max-w-sm">{error}</p>
-        <button onClick={() => window.location.href = '/'} className="mt-8 px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-slate-800 transition-all">Return to Hub</button>
+        <button onClick={() => window.location.href = '/'} className="mt-8 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Return Home</button>
       </div>
     );
   }
 
-  // --- VIEW: SUCCESS ---
+  // SUCCESS STATE
   if (isSuccess) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-emerald-50 p-6 text-center animate-in fade-in">
         <div className="absolute top-0 w-full h-1/2 bg-emerald-400/20 blur-[100px] rounded-full pointer-events-none"></div>
-        <div className="w-28 h-28 bg-white text-emerald-500 rounded-[3rem] flex items-center justify-center mb-8 shadow-xl relative z-10 border-4 border-emerald-100 animate-in zoom-in">
+        <div className="w-28 h-28 bg-white text-emerald-500 rounded-full flex items-center justify-center mb-8 shadow-xl relative z-10 border-4 border-emerald-100 animate-in zoom-in">
           <CheckCircle2 size={50}/>
         </div>
         <h2 className="text-4xl font-black text-emerald-950 tracking-tighter mb-2 relative z-10">Payment Sent</h2>
@@ -176,59 +159,56 @@ export default function PayInterface() {
           Successfully routed {amount} {asset} to {receiver.full_name}.
         </p>
         <button onClick={() => window.location.href = '/'} className="px-10 py-5 bg-emerald-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-emerald-500 transition-all relative z-10">
-          Close Portal
+          Done
         </button>
       </div>
     );
   }
 
-  // --- VIEW: MAIN PAYMENT PORTAL ---
   return (
-    <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full blur-[100px] pointer-events-none"></div>
-      
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-[3rem] shadow-2xl p-8 relative overflow-hidden animate-in slide-in-from-bottom-8 z-10">
+    <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-[3rem] shadow-2xl p-8 relative overflow-hidden animate-in slide-in-from-bottom-8">
         
         {/* Header */}
         <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
-          <button onClick={() => window.location.href = '/'} className="p-2 bg-slate-50 text-slate-400 rounded-2xl hover:text-slate-800 hover:bg-slate-100 transition-colors"><ArrowLeft size={20}/></button>
+          <button onClick={() => window.location.href = '/'} className="p-2 bg-slate-50 text-slate-400 rounded-full hover:text-slate-800 transition-colors"><ArrowLeft size={20}/></button>
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Secure Transfer</span>
-          <div className="w-10"></div> 
+          <div className="w-8"></div> {/* Spacer for centering */}
         </div>
 
         {/* Receiver Info */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-24 h-24 rounded-[2.5rem] bg-slate-100 shadow-inner border-4 border-white mb-4 flex items-center justify-center overflow-hidden">
-            {receiver?.avatar_url ? <img src={receiver.avatar_url} className="w-full h-full object-cover" alt="Receiver"/> : <User size={40} className="text-slate-300"/>}
+          <div className="w-24 h-24 rounded-full bg-slate-100 shadow-inner border-4 border-white mb-4 flex items-center justify-center overflow-hidden">
+            {receiver.avatar_url ? <img src={receiver.avatar_url} className="w-full h-full object-cover" alt="Receiver"/> : <User size={40} className="text-slate-300"/>}
           </div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{receiver?.full_name}</h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">{receiver?.active_tier || 'Verified'} Tier</p>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{receiver.full_name}</h2>
+          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">{receiver.active_tier || 'Verified'} Tier</p>
         </div>
 
         {/* Asset Selector */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full mb-6 border border-slate-200 shadow-inner">
-          <button onClick={() => setAsset('AFR')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${asset === 'AFR' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+        <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full mb-6">
+          <button onClick={() => setAsset('AFR')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${asset === 'AFR' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
             <Zap size={14}/> AFR 
           </button>
-          <button onClick={() => setAsset('USD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${asset === 'USD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+          <button onClick={() => setAsset('USD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${asset === 'USD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
             USD Fiat
           </button>
         </div>
 
         {/* Amount Input */}
         <div className="mb-10 relative">
-          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-slate-300">{asset === 'USD' ? '$' : '⚡'}</span>
+          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-400">{asset === 'USD' ? '$' : '⚡'}</span>
           <input 
             type="number" 
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             disabled={isProcessing}
-            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-16 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-500 transition-colors disabled:opacity-50 shadow-inner"
+            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-14 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
           />
-          <div className="text-center mt-4">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-              Available: {asset === 'AFR' ? (balances?.afr_balance || 0).toFixed(2) : (balances?.liquid_usd || 0).toFixed(2)} {asset}
+          <div className="text-center mt-3">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Available: {asset === 'AFR' ? balances?.afr_balance : balances?.liquid_usd} {asset}
             </span>
           </div>
         </div>
@@ -238,7 +218,7 @@ export default function PayInterface() {
           <button 
             onClick={handleExecutePayment}
             disabled={!amount || isProcessing}
-            className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-blue-500/30 flex items-center justify-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:shadow-none hover:-translate-y-1"
+            className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:shadow-none"
           >
             {isProcessing ? <Loader2 size={18} className="animate-spin"/> : <><Send size={16}/> Authorize Payment</>}
           </button>
@@ -246,7 +226,7 @@ export default function PayInterface() {
 
         {/* 🔥 TRANSPARENT EXECUTION TRACKER UI */}
         {executionPlan.isActive && (
-          <div className="w-full bg-[#111111] text-slate-200 rounded-[2.5rem] p-8 shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4">
+          <div className="w-full bg-[#111111] text-slate-200 rounded-[2rem] p-6 shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4">
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">Protocol Active</h4>
               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_#3b82f6]"></div>
@@ -263,13 +243,12 @@ export default function PayInterface() {
               ))}
             </div>
 
-            <div className="mt-6 pt-5 border-t border-slate-800/50">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">{executionPlan.currentDetail}</p>
+            <div className="mt-6 pt-4 border-t border-slate-800/50">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3">{executionPlan.currentDetail}</p>
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-white transition-all duration-500" style={{ width: `${executionPlan.progressPct}%` }}></div>
                 </div>
-                <Square size={10} className="text-slate-600 fill-current"/>
               </div>
             </div>
           </div>
