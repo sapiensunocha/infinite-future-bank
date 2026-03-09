@@ -50,7 +50,7 @@ export default function HeroBanner({ profile, balances, transactions, formatCurr
     const fetchInsight = async () => {
         setIsLoadingInsight(true);
         try {
-            const res = await fetch('https://ifb-intelligence-core-382117221028.us-central1.run.app/api/ai/daily-hero', {
+            const res = await fetch('https://ifb-intelligence-core-382117221028.us-central1.run.app/api/network/daily-hero', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ profile, balances, celebration, weather })
