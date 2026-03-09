@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, KeyRound, User, Eye, EyeOff, Smartphone, DownloadCloud } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
 
 // ==========================================
-// REUSABLE COMPONENTS (MUST BE OUTSIDE MAIN APP TO PREVENT FOCUS LOSS)
+// REUSABLE COMPONENTS
 // ==========================================
 const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLength, showPassword, togglePassword }) => (
   <div className="relative">
@@ -33,10 +33,13 @@ const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLen
 );
 
 // ==========================================
-// MAIN DEUS APP & LOGIN UI (PROGRESSIVE FLOW)
+// MAIN DEUS APP
 // ==========================================
 function MainApp() {
+  // CRITICAL FIX: Add a global app loading state
+  const [isAppReady, setIsAppReady] = useState(false);
   const [session, setSession] = useState(null);
+  
   const [currentView, setCurrentView] = useState('enter_email'); 
   const [emailValue, setEmailValue] = useState('');
   const [passwordValue, setPasswordValue] = useState('');
@@ -44,36 +47,36 @@ function MainApp() {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
-  // NEW: State for the Android APK Download Prompt
   const [showApkPrompt, setShowApkPrompt] = useState(false);
 
   // Smart Device Detection
   useEffect(() => {
-    const checkDevice = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      const isAndroid = /android/i.test(userAgent);
-      
-      // Safely check if they are ALREADY inside the Capacitor Native App
-      const isNativeApp = window?.Capacitor?.isNativePlatform?.() || window?.Capacitor?.isNative;
-      
-      // If on Android but NOT in the app, show the beautiful download prompt
-      if (isAndroid && !isNativeApp) {
-        setShowApkPrompt(true);
-      }
-    };
-    checkDevice();
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isAndroid = /android/i.test(userAgent);
+    const isNativeApp = window?.Capacitor?.isNativePlatform?.() || window?.Capacitor?.isNative;
+    if (isAndroid && !isNativeApp) setShowApkPrompt(true);
   }, []);
 
-  // Reset password visibility when changing views
   useEffect(() => {
     setShowPassword(false);
   }, [currentView]);
 
+  // CRITICAL FIX: Optimized Auth initialization
   useEffect(() => {
+    let mounted = true;
+
     const initializeUser = async (currentSession) => {
+      if (!currentSession?.user) {
+        if (mounted) {
+          setSession(null);
+          setIsAppReady(true);
+        }
+        return;
+      }
+
       setSession(currentSession);
-      if (currentSession?.user) {
+
+      try {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -87,15 +90,30 @@ function MainApp() {
           await supabase.from('profiles').insert([{ id: currentSession.user.id, full_name: generatedName }]);
           await supabase.from('balances').insert([{ user_id: currentSession.user.id, liquid_usd: 0, alpha_equity_usd: 0, mysafe_digital_usd: 0, external_linked_usd: 0 }]);
         }
+      } catch (err) {
+        console.error("Profile initialization error:", err);
+      } finally {
+        if (mounted) setIsAppReady(true);
       }
     };
     
-    supabase.auth.getSession().then(({ data: { session } }) => initializeUser(session));
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') setCurrentView('update_password');
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
       initializeUser(session);
     });
-    return () => authListener.subscription.unsubscribe();
+
+    // Listen for changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setCurrentView('update_password');
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        initializeUser(session);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const showMessage = (text, type) => {
@@ -107,11 +125,11 @@ function MainApp() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { data: userExists, error } = await supabase.rpc('check_user_exists', { check_email: emailValue.trim().toLowerCase() });
+      const { data: userExists } = await supabase.rpc('check_user_exists', { check_email: emailValue.trim().toLowerCase() });
       if (userExists) setCurrentView('welcome_back');
       else setCurrentView('identify_yourself');
     } catch (err) {
-      setCurrentView('welcome_back');
+      setCurrentView('welcome_back'); // Fallback
     } finally {
       setIsLoading(false);
     }
@@ -121,16 +139,9 @@ function MainApp() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: emailValue.trim().toLowerCase(),
-        password: passwordValue,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email: emailValue.trim().toLowerCase(), password: passwordValue });
       if (error) throw error;
-    } catch (error) {
-      showMessage(error.message, 'error');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
   const handleRegister = async (e) => {
@@ -138,37 +149,12 @@ function MainApp() {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: emailValue.trim().toLowerCase(),
-        password: passwordValue,
-        options: {
-          data: { full_name: nameValue },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        }
+        email: emailValue.trim().toLowerCase(), password: passwordValue,
+        options: { data: { full_name: nameValue }, emailRedirectTo: `${window.location.origin}/auth/callback` }
       });
       if (error) throw error;
       if (data?.user && !data?.session) setCurrentView('check_email');
-    } catch (error) {
-      showMessage(error.message, 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResetRequest = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailValue.trim().toLowerCase(), {
-        redirectTo: `${window.location.origin}/auth/callback`, 
-      });
-      if (error) throw error;
-      setCurrentView('check_email');
-      showMessage('Recovery link dispatched.', 'success');
-    } catch (error) {
-      showMessage(error.message, 'error');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
   const handleUpdatePassword = async (e) => {
@@ -179,20 +165,30 @@ function MainApp() {
       if (error) throw error;
       setCurrentView('welcome_back');
       showMessage('Security updated.', 'success');
-    } catch (error) {
-      showMessage(error.message, 'error');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
+  // APP BOOTING STATE
+  if (!isAppReady) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <RefreshCw size={32} className="animate-spin text-blue-500 mb-4" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Connecting to Network...</p>
+      </div>
+    );
+  }
+
+  // DASHBOARD ROUTING
   if (session && currentView !== 'update_password') {
     return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
   }
 
+  // LOGIN UI
   return (
     <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden flex flex-col items-center justify-center p-6">
-      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-blue-300/20 blur-[120px] pointer-events-none"></div>
+      
+      {/* CRITICAL FIX: Changed blur-[120px] to blur-3xl to prevent browser freezing */}
+      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none"></div>
       
       <div className="relative z-10 w-full max-w-[480px]">
         {/* Logo */}
@@ -206,7 +202,7 @@ function MainApp() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-2xl rounded-[3rem] border border-white shadow-2xl p-10 relative overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-2xl p-10 relative overflow-hidden">
           
           {message.text && (
             <div className={`p-4 mb-6 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center border ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}>
@@ -216,18 +212,18 @@ function MainApp() {
 
           {/* VIEW 1: ENTER EMAIL */}
           {currentView === 'enter_email' && (
-            <div className="animate-in fade-in zoom-in-95 duration-300 text-center">
+            <div className="animate-in fade-in duration-300 text-center">
               <h2 className="text-2xl font-black tracking-tight mb-8">Access Portal</h2>
               <form onSubmit={handleCheckEmail} className="space-y-6">
                 <div className="relative">
                   <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                   <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner" />
                 </div>
-                {/* BLUE GRADIENT BUTTON */}
                 <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
                   <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
-                    {isLoading ? 'Scanning...' : 'Continue'} <ChevronRight className="group-hover:translate-x-1 transition-transform" />
+                    {isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Continue'} 
+                    {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
                   </div>
                 </button>
               </form>
@@ -236,25 +232,17 @@ function MainApp() {
 
           {/* VIEW 2: WELCOME BACK */}
           {currentView === 'welcome_back' && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-300 text-center">
+            <div className="animate-in slide-in-from-right-4 duration-300 text-center">
               <h2 className="text-2xl font-black tracking-tight mb-2">Welcome Back</h2>
               <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
               <form onSubmit={handleLogin} className="space-y-6">
-                <PasswordInput 
-                  value={passwordValue} 
-                  onChange={(e) => setPasswordValue(e.target.value)} 
-                  placeholder="Password" 
-                  autoFocus={true} 
-                  showPassword={showPassword}
-                  togglePassword={() => setShowPassword(!showPassword)}
-                />
-                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
+                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Password" autoFocus={true} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
+                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl disabled:opacity-50">
                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
-                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Confirm Access</span>
+                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? 'Authenticating...' : 'Confirm Access'}</span>
                 </button>
               </form>
               <div className="mt-8 flex flex-col gap-3">
-                <button onClick={() => setCurrentView('forgot_password')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600">Forgot Password?</button>
                 <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600">Switch Account</button>
               </div>
             </div>
@@ -262,24 +250,17 @@ function MainApp() {
 
           {/* VIEW 3: IDENTIFY YOURSELF */}
           {currentView === 'identify_yourself' && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-300 text-center">
+            <div className="animate-in slide-in-from-right-4 duration-300 text-center">
               <h2 className="text-2xl font-black tracking-tight mb-8">Identify Yourself</h2>
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="relative">
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                   <input type="text" required autoFocus value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder="Given Name" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 shadow-inner" />
                 </div>
-                <PasswordInput 
-                  value={passwordValue} 
-                  onChange={(e) => setPasswordValue(e.target.value)} 
-                  placeholder="Set Password" 
-                  minLength={6} 
-                  showPassword={showPassword}
-                  togglePassword={() => setShowPassword(!showPassword)}
-                />
-                <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl">
+                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Set Password" minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
+                <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl disabled:opacity-50">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600"></div>
-                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Create Vault</span>
+                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? 'Creating...' : 'Create Vault'}</span>
                 </button>
               </form>
             </div>
@@ -287,10 +268,8 @@ function MainApp() {
 
           {/* VIEW 4: CHECK EMAIL */}
           {currentView === 'check_email' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-blue-100 flex items-center justify-center text-blue-600 animate-pulse mb-6">
-                <Mail size={40}/>
-              </div>
+            <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
+              <div className="w-20 h-20 mx-auto rounded-full bg-blue-100 flex items-center justify-center text-blue-600 animate-pulse mb-6"><Mail size={40}/></div>
               <h2 className="text-2xl font-black mb-2">Check Inbox</h2>
               <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
               <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-800 hover:text-blue-600">Back to Login</button>
@@ -299,19 +278,11 @@ function MainApp() {
 
           {/* VIEW 5: UPDATE PASSWORD */}
           {currentView === 'update_password' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 text-center">
+            <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
               <h2 className="text-2xl font-black mb-8">New Vault Key</h2>
               <form onSubmit={handleUpdatePassword} className="space-y-6">
-                <PasswordInput 
-                  value={passwordValue} 
-                  onChange={(e) => setPasswordValue(e.target.value)} 
-                  placeholder="New Password" 
-                  autoFocus={true} 
-                  minLength={6} 
-                  showPassword={showPassword}
-                  togglePassword={() => setShowPassword(!showPassword)}
-                />
-                <button type="submit" className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl">
+                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="New Password" autoFocus={true} minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
+                <button type="submit" disabled={isLoading} className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl disabled:opacity-50">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Save Password</span>
                 </button>
@@ -321,29 +292,18 @@ function MainApp() {
 
         </div>
 
-        {/* ========================================================= */}
-        {/* EXCLUSIVE ANDROID APK DOWNLOAD PROMPT                     */}
-        {/* ========================================================= */}
+        {/* ANDROID APK PROMPT */}
         {showApkPrompt && (
-          <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-20">
-            <a 
-              href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 p-4 rounded-[2rem] shadow-2xl hover:scale-[1.02] transition-transform group"
-            >
+          <div className="mt-6 animate-in slide-in-from-bottom-4 duration-500 relative z-20">
+            <a href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 p-4 rounded-[2rem] shadow-2xl hover:scale-[1.02] transition-transform group">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner">
-                  <Smartphone size={24} />
-                </div>
+                <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner"><Smartphone size={24} /></div>
                 <div className="text-left">
                   <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Native Android App</p>
                   <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Optimized & Secure</p>
                 </div>
               </div>
-              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                <DownloadCloud size={18} />
-              </div>
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all"><DownloadCloud size={18} /></div>
             </a>
           </div>
         )}

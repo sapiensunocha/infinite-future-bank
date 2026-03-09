@@ -4,17 +4,11 @@ import {
   Globe2, Building2, ShieldAlert, Plus, ArrowRight,
   CreditCard, Trash2, Wallet, RefreshCw, Zap, ArrowLeftRight,
   Settings, Lock, ScanLine, Store, CheckCircle2, PlusCircle,
-  ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff
+  ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock
 } from 'lucide-react';
 
-// ==========================================
-// 🌐 LIVE GCP CORE BACKEND URL
-// ==========================================
 const CORE_URL = 'https://ifb-intelligence-core-382117221028.us-central1.run.app';
 
-// ==========================================
-// 🎨 CARD THEMES CONFIGURATION
-// ==========================================
 const CARD_THEMES = {
   obsidian: { name: 'Obsidian Dark', bg: 'bg-gradient-to-br from-slate-900 via-blue-900 to-black', border: 'border-blue-500/30', textPrimary: 'text-white', textSecondary: 'text-blue-200/70', accent: 'text-blue-200' },
   silver: { name: 'Titanium Silver', bg: 'bg-gradient-to-br from-slate-300 via-gray-100 to-slate-400', border: 'border-white', textPrimary: 'text-slate-800', textSecondary: 'text-slate-500', accent: 'text-slate-600' },
@@ -37,6 +31,7 @@ export default function AccountHub({ balances, profile }) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showCardDetails, setShowCardDetails] = useState(false);
+  const [vanishingCardId, setVanishingCardId] = useState(null); // MAGIC EFFECT STATE
   
   // Provisioning States
   const [isProvisioning, setIsProvisioning] = useState(false);
@@ -50,7 +45,6 @@ export default function AccountHub({ balances, profile }) {
   const [scanIntentId, setScanIntentId] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  // --- AFR EXCHANGE STATES ---
   const [swapAmount, setSwapAmount] = useState('');
   const [swapDirection, setSwapDirection] = useState('USD_TO_AFR');
   const [isSwapping, setIsSwapping] = useState(false);
@@ -63,28 +57,24 @@ export default function AccountHub({ balances, profile }) {
   };
 
   // ==========================================
-  // 🔗 DATABASE SYNC (PULL FROM POSTGRES/GCP)
+  // 🔗 DATABASE SYNC
   // ==========================================
   const fetchNetworkData = async () => {
     const userId = profile?.id || 'TEST_USER_ID';
     setIsLoadingDB(true);
     try {
-      // 1. Fetch Secure Cards
       const cardRes = await fetch(`${CORE_URL}/api/network/cards/${userId}`);
       if (cardRes.ok) {
         const cardData = await cardRes.json();
-        // Map database columns to frontend UI state
         const formattedCards = cardData.cards.map(c => ({
           ...c,
           networkId: c.network_id,
           isFrozen: c.status !== 'ACTIVE'
         }));
         setCards(formattedCards);
-        // Ensure index doesn't go out of bounds if cards were deleted
         if (currentCardIndex >= formattedCards.length) setCurrentCardIndex(Math.max(0, formattedCards.length - 1));
       }
       
-      // 2. Fetch Immutable Ledger
       const txRes = await fetch(`${CORE_URL}/api/network/transactions/${userId}`);
       if (txRes.ok) {
         const txData = await txRes.json();
@@ -97,24 +87,19 @@ export default function AccountHub({ balances, profile }) {
     }
   };
 
-  // Run the sync when the component mounts or user changes
-  useEffect(() => {
-    fetchNetworkData();
-  }, [profile?.id]);
+  useEffect(() => { fetchNetworkData(); }, [profile?.id]);
 
   // ==========================================
-  // 💳 VIRTUAL CARD ENGINE (PUSH TO DB)
+  // 💳 VIRTUAL CARD ENGINE
   // ==========================================
   const handleProvisionCard = async () => {
     if (!newCardName) return triggerGlobalActionNotification('error', 'Please provide a name for this card.');
     
-    // Generate secure Visa-formatted details
     const p1 = '4092';
     const p2 = Math.floor(1000 + Math.random() * 9000).toString();
     const p3 = Math.floor(1000 + Math.random() * 9000).toString();
     const p4 = Math.floor(1000 + Math.random() * 9000).toString();
     const pan = `${p1} ${p2} ${p3} ${p4}`;
-    
     const year = new Date().getFullYear() + Math.floor(3 + Math.random() * 3);
     const month = Math.floor(1 + Math.random() * 12).toString().padStart(2, '0');
     const expiry = `${month}/${year.toString().slice(-2)}`;
@@ -128,54 +113,71 @@ export default function AccountHub({ balances, profile }) {
         body: JSON.stringify({
           userId: profile?.id || 'TEST_USER_ID',
           networkId, pan, expiry, cvv,
-          name: newCardName,
-          theme: newCardTheme,
+          name: newCardName, theme: newCardTheme,
           routingLogic: { primary: 'USD', fallback: 'AFR' }
         })
       });
-
       if (!res.ok) throw new Error("Backend failed to register card.");
-
-      // Refresh data from DB to ensure absolute truth
-      await fetchNetworkData();
       
-      setCurrentCardIndex(cards.length); // Jump to the new card
+      await fetchNetworkData();
+      setCurrentCardIndex(cards.length); 
       setIsProvisioning(false);
       setNewCardName('');
       setNewCardTheme('obsidian');
-      triggerGlobalActionNotification('success', `${newCardName} provisioned successfully in Database.`);
-    } catch (err) {
-      triggerGlobalActionNotification('error', err.message);
-    }
+      triggerGlobalActionNotification('success', `${newCardName} provisioned successfully.`);
+    } catch (err) { triggerGlobalActionNotification('error', err.message); }
   };
 
   const terminateCurrentCard = async () => {
     const cardToTerminate = cards[currentCardIndex];
     if(!confirm(`Permanently delete ${cardToTerminate.name}? This will wipe it from the secure database.`)) return;
     
-    try {
-      const res = await fetch(`${CORE_URL}/api/network/terminate-card`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: profile?.id || 'TEST_USER_ID', networkId: cardToTerminate.networkId })
-      });
+    // TRIGGER MAGIC VANISH EFFECT
+    setVanishingCardId(cardToTerminate.networkId);
+    setIsFlipped(false);
 
-      if (!res.ok) throw new Error("Backend failed to terminate card.");
-      
-      // Refresh data directly from DB
-      await fetchNetworkData();
-      setIsFlipped(false);
-      triggerGlobalActionNotification('success', `${cardToTerminate.name} terminated from ledger.`);
-    } catch (err) {
-      triggerGlobalActionNotification('error', err.message);
-    }
+    // Wait 800ms for the CSS animation to finish before deleting from DB
+    setTimeout(async () => {
+      try {
+        const res = await fetch(`${CORE_URL}/api/network/terminate-card`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: profile?.id || 'TEST_USER_ID', networkId: cardToTerminate.networkId })
+        });
+
+        if (!res.ok) throw new Error("Backend failed to terminate card.");
+        
+        await fetchNetworkData();
+        setVanishingCardId(null);
+        triggerGlobalActionNotification('success', `${cardToTerminate.name} terminated from ledger.`);
+      } catch (err) {
+        setVanishingCardId(null);
+        triggerGlobalActionNotification('error', err.message);
+      }
+    }, 800);
   };
 
-  // UI Only freeze toggle for now (To sync with backend requires a new API route later)
-  const toggleFreezeCurrentCard = () => {
+  // REAL FREEZE SYNCED TO DB
+  const toggleFreezeCurrentCard = async () => {
+    const activeCard = cards[currentCardIndex];
+    const newStatus = activeCard.isFrozen ? 'ACTIVE' : 'FROZEN';
+
+    // Optimistic UI Update
     const updatedCards = [...cards];
-    updatedCards[currentCardIndex].isFrozen = !updatedCards[currentCardIndex].isFrozen;
+    updatedCards[currentCardIndex].isFrozen = !activeCard.isFrozen;
     setCards(updatedCards);
+
+    try {
+      await fetch(`${CORE_URL}/api/network/update-card-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ networkId: activeCard.networkId, status: newStatus })
+      });
+      triggerGlobalActionNotification(newStatus === 'FROZEN' ? 'error' : 'success', `Card is now ${newStatus}`);
+    } catch (err) {
+      triggerGlobalActionNotification('error', 'Failed to update freeze status.');
+      fetchNetworkData(); // Revert on fail
+    }
   };
 
   // ==========================================
@@ -185,9 +187,7 @@ export default function AccountHub({ balances, profile }) {
     if (!merchantAmount || merchantAmount <= 0) return;
     setIsGenerating(true);
     try {
-      const res = await fetch(`${CORE_URL}/api/network/create-intent`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: merchantAmount, merchantId: 'IFB-MERCH-001' })
-      });
+      const res = await fetch(`${CORE_URL}/api/network/create-intent`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: merchantAmount, merchantId: 'IFB-MERCH-001' }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setGeneratedIntent(data);
@@ -202,40 +202,19 @@ export default function AccountHub({ balances, profile }) {
 
     setIsProcessingPayment(true);
     try {
-      const res = await fetch(`${CORE_URL}/api/network/process-payment`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intentId: scanIntentId, userNetworkId: activeCard.networkId })
-      });
+      const res = await fetch(`${CORE_URL}/api/network/process-payment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intentId: scanIntentId, userNetworkId: activeCard.networkId }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Transaction Declined');
       
-      // Refetch ledger from database to get the latest status
       await fetchNetworkData();
-
       triggerGlobalActionNotification('success', `APPROVED: Settled via ${data.details.settledAsset}.`);
       setScanIntentId('');
-      setCardTab('LEDGER'); // Jump to ledger to view receipt
+      setCardTab('LEDGER'); 
     } catch (err) { triggerGlobalActionNotification('error', `DECLINED: ${err.message}`); } finally { setIsProcessingPayment(false); }
   };
 
-  // Receipt Generator (Reads real DB response)
   const downloadReceipt = (tx) => {
-    const receiptContent = `
-========================================
-       INFINITE FUTURE BANK (IFB)       
-          OFFICIAL TRANSACTION          
-========================================
-Receipt ID:     ${tx.intent_id}
-Date/Time:      ${new Date(tx.created_at).toLocaleString()}
-
-Amount Settled: $${tx.amount}
-Asset Used:     ${tx.settled_via || 'Pending'}
-Network ID:     ${tx.user_network_id || 'N/A'}
-Ledger Hash:    ${tx.blockchain_hash || 'N/A'}
-
-Status:         ${tx.status}
-========================================
-Generated by IFB Proprietary Network
-    `;
+    const receiptContent = `========================================\n       INFINITE FUTURE BANK (IFB)       \n          OFFICIAL TRANSACTION          \n========================================\nReceipt ID:     ${tx.intent_id}\nDate/Time:      ${new Date(tx.created_at).toLocaleString()}\nAmount Settled: $${tx.amount}\nAsset Used:     ${tx.settled_via || 'Pending'}\nNetwork ID:     ${tx.user_network_id || 'N/A'}\nLedger Hash:    ${tx.blockchain_hash || 'N/A'}\nStatus:         ${tx.status}\n========================================`;
     const blob = new Blob([receiptContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -244,8 +223,6 @@ Generated by IFB Proprietary Network
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  const handleCurrencySwap = async () => { /* Existing Logic */ };
 
   const activeCard = cards[currentCardIndex];
   const theme = activeCard && CARD_THEMES[activeCard.theme] ? CARD_THEMES[activeCard.theme] : CARD_THEMES.obsidian;
@@ -259,7 +236,6 @@ Generated by IFB Proprietary Network
           <h2 className="text-2xl font-black text-slate-800 tracking-tight">Sovereign Accounts</h2>
           <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">Manage your institutional entities</p>
         </div>
-        
         <div className="flex bg-slate-100 p-2 rounded-2xl border border-slate-200 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
           {[{ id: 'PERSONAL', label: 'Retail & Private' }, { id: 'CARDS', label: 'Infinite Cards' }, { id: 'BUSINESS', label: 'Commercial' }].map((tier) => (
             <button key={tier.id} onClick={() => setActiveTier(tier.id)} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTier === tier.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>
@@ -280,7 +256,6 @@ Generated by IFB Proprietary Network
                 Proprietary Network
                 {isLoadingDB && <RefreshCw size={14} className="animate-spin text-slate-400 ml-2" />}
               </h3>
-              
               <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                 <button onClick={() => setCardTab('CARD')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${cardTab === 'CARD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}><CreditCard size={14} className="inline mr-1"/> Portfolio</button>
                 <button onClick={() => setCardTab('SCAN')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${cardTab === 'SCAN' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}><ScanLine size={14} className="inline mr-1"/> Pay</button>
@@ -292,7 +267,6 @@ Generated by IFB Proprietary Network
             {/* VIEW 1: PORTFOLIO & STUDIO */}
             {cardTab === 'CARD' && (
               <div className="flex flex-col lg:flex-row gap-12 animate-in fade-in">
-                
                 <div className="flex-1 flex flex-col items-center">
                   
                   {isProvisioning ? (
@@ -300,7 +274,6 @@ Generated by IFB Proprietary Network
                       <h4 className="font-black text-slate-800 mb-6">Create New Card</h4>
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Card Designation (Name)</label>
                       <input type="text" placeholder="e.g. Travel Expenses" className="w-full p-4 bg-white border border-slate-200 rounded-xl mb-6 font-bold outline-none focus:border-blue-500" value={newCardName} onChange={(e) => setNewCardName(e.target.value)} />
-                      
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Select Permanent Material</label>
                       <div className="flex flex-wrap gap-3 mb-8">
                         {Object.entries(CARD_THEMES).map(([key, config]) => (
@@ -309,7 +282,6 @@ Generated by IFB Proprietary Network
                           </button>
                         ))}
                       </div>
-
                       <div className="flex gap-4">
                         <button onClick={() => setIsProvisioning(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
                         <button onClick={handleProvisionCard} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
@@ -319,11 +291,7 @@ Generated by IFB Proprietary Network
                     </div>
                   ) : cards.length === 0 ? (
                     <div className="w-full max-w-md aspect-[1.586/1] rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-500 p-8 text-center transition-all hover:border-blue-400 hover:bg-blue-50 cursor-pointer shadow-sm" onClick={() => setIsProvisioning(true)}>
-                      {isLoadingDB ? (
-                         <RefreshCw size={48} className="mb-4 text-blue-500 opacity-50 animate-spin"/>
-                      ) : (
-                         <PlusCircle size={48} className="mb-4 text-blue-500 opacity-50"/>
-                      )}
+                      {isLoadingDB ? <RefreshCw size={48} className="mb-4 text-blue-500 opacity-50 animate-spin"/> : <PlusCircle size={48} className="mb-4 text-blue-500 opacity-50"/>}
                       <h3 className="font-black text-slate-800 text-lg mb-1">{isLoadingDB ? 'Syncing Ledger...' : 'Provision Virtual Card'}</h3>
                     </div>
                   ) : (
@@ -336,35 +304,41 @@ Generated by IFB Proprietary Network
                         </>
                       )}
 
+                      {/* THE MAGIC CARD RENDER */}
                       <div 
                         onClick={() => setIsFlipped(!isFlipped)}
-                        className="w-full aspect-[1.586/1] cursor-pointer transition-transform duration-700" 
-                        style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+                        className={`w-full aspect-[1.586/1] cursor-pointer transition-all duration-700 ease-in-out ${vanishingCardId === activeCard.networkId ? 'scale-50 blur-2xl opacity-0 rotate-12 -translate-y-10' : 'scale-100 blur-0 opacity-100'}`} 
+                        style={{ transformStyle: 'preserve-3d', transform: isFlipped && vanishingCardId !== activeCard.networkId ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
                       >
                         {/* FRONT FACE */}
-                        <div className={`absolute inset-0 rounded-2xl p-8 flex flex-col justify-between shadow-2xl overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border ${theme.border}`}`} style={{ backfaceVisibility: 'hidden' }}>
+                        <div className={`absolute inset-0 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border ${theme.border}`}`} style={{ backfaceVisibility: 'hidden' }}>
                           <div className="flex justify-between items-start z-10">
-                            <div className="flex items-center gap-1"><Zap size={28} className={theme.textPrimary} fill="currentColor" /><h2 className={`${theme.textPrimary} font-black text-3xl tracking-tighter`}>IFB</h2></div>
-                            <span className={`px-3 py-1 bg-white/10 rounded-full text-[10px] font-bold ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm`}>{activeCard.name}</span>
+                            <div className="flex items-center gap-1"><Zap size={28} className={theme.textPrimary} fill="currentColor" /><h2 className={`${theme.textPrimary} font-black text-2xl sm:text-3xl tracking-tighter`}>IFB</h2></div>
+                            <span className={`px-3 py-1 bg-white/10 rounded-full text-[9px] sm:text-[10px] font-bold ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm`}>{activeCard.name}</span>
                           </div>
+                          
+                          {/* SINGLE LINE PAN FIX */}
                           <div className="z-10 flex flex-col mt-4">
-                            <p className={`${theme.textPrimary} font-mono text-[22px] tracking-[0.2em] drop-shadow-sm transition-all`}>
+                            <p className={`${theme.textPrimary} font-mono text-lg sm:text-[22px] tracking-widest sm:tracking-[0.15em] whitespace-nowrap drop-shadow-sm transition-all`}>
                               {showCardDetails ? activeCard.pan : `**** **** **** ${activeCard.pan?.slice(-4) || '0000'}`}
                             </p>
                           </div>
+                          
                           <div className="flex justify-between items-end z-10">
-                            <div><p className={`${theme.textPrimary} font-bold uppercase tracking-widest text-sm drop-shadow-sm`}>{profile?.name || 'SOVEREIGN ENTITY'}</p></div>
-                            <div className="text-right"><p className={`font-black text-xs uppercase tracking-widest drop-shadow-sm ${activeCard.isFrozen ? 'text-red-500' : theme.textPrimary}`}>{activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}</p></div>
+                            <div><p className={`${theme.textPrimary} font-bold uppercase tracking-widest text-xs sm:text-sm drop-shadow-sm`}>{profile?.name || 'SOVEREIGN ENTITY'}</p></div>
+                            <div className="text-right"><p className={`font-black text-[10px] sm:text-xs uppercase tracking-widest drop-shadow-sm ${activeCard.isFrozen ? 'text-red-500' : theme.textPrimary}`}>{activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}</p></div>
                           </div>
                         </div>
 
-                        {/* BACK FACE */}
+                        {/* BACK FACE (CVV & REAL EXPIRY) */}
                         <div className={`absolute inset-0 rounded-2xl flex flex-col justify-between shadow-2xl overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg}`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                           <div className="w-full h-12 bg-black/80 mt-6"></div> {/* Magnetic Strip */}
-                          <div className="px-8 pb-8 z-10">
+                          <div className="px-6 sm:px-8 pb-6 sm:pb-8 z-10">
+                            {/* CVV Stripe */}
                             <div className="bg-white/80 h-10 w-full rounded flex items-center justify-end px-4 mb-4">
-                               <span className="font-mono text-slate-800 font-bold tracking-widest">{activeCard.cvv}</span>
+                               <span className="font-mono text-slate-800 font-bold tracking-widest italic">{activeCard.cvv}</span>
                             </div>
+                            {/* Detailed Back Info */}
                             <div className="flex gap-6">
                               <div><p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-bold`}>PAN</p><p className={`${theme.textPrimary} font-mono text-xs tracking-widest`}>{activeCard.pan}</p></div>
                               <div><p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-bold`}>Valid Thru</p><p className={`${theme.textPrimary} font-mono text-xs tracking-widest`}>{activeCard.expiry}</p></div>
@@ -380,8 +354,11 @@ Generated by IFB Proprietary Network
                       </div>
 
                       <div className="flex flex-wrap justify-center gap-2 mt-6 w-full">
-                        <button onClick={() => setShowCardDetails(!showCardDetails)} className="flex-1 min-w-[120px] flex justify-center items-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all shadow-md">
+                        <button onClick={(e) => { e.stopPropagation(); setShowCardDetails(!showCardDetails); }} className="flex-1 min-w-[120px] flex justify-center items-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 transition-all shadow-md">
                           {showCardDetails ? <><EyeOff size={14}/> Mask</> : <><Eye size={14}/> Reveal</>}
+                        </button>
+                        <button onClick={toggleFreezeCurrentCard} className={`flex-1 min-w-[120px] flex justify-center items-center gap-2 px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCard.isFrozen ? 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}`}>
+                          {activeCard.isFrozen ? <Unlock size={14}/> : <Lock size={14}/>} {activeCard.isFrozen ? 'Unfreeze' : 'Freeze'}
                         </button>
                         <button onClick={() => setIsProvisioning(true)} className="flex-1 min-w-[120px] flex justify-center items-center gap-2 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">
                           <Plus size={14}/> Add
@@ -395,6 +372,7 @@ Generated by IFB Proprietary Network
                   )}
                 </div>
 
+                {/* Right: AI Routing Logic Display */}
                 <div className="flex-1 bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-inner">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><Zap size={16}/></div>
@@ -465,7 +443,7 @@ Generated by IFB Proprietary Network
               </div>
             )}
 
-            {/* VIEW 4: TRANSACTIONS LEDGER (DB SYNCED) */}
+            {/* VIEW 4: TRANSACTIONS LEDGER */}
             {cardTab === 'LEDGER' && (
               <div className="animate-in fade-in">
                 <h4 className="font-black text-slate-800 text-xl tracking-tight mb-6 border-b border-slate-200 pb-4 flex justify-between">
