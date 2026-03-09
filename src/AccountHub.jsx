@@ -45,6 +45,7 @@ export default function AccountHub({ balances, profile }) {
   const [scanIntentId, setScanIntentId] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
+  // Swap States
   const [swapAmount, setSwapAmount] = useState('');
   const [swapDirection, setSwapDirection] = useState('USD_TO_AFR');
   const [isSwapping, setIsSwapping] = useState(false);
@@ -88,6 +89,39 @@ export default function AccountHub({ balances, profile }) {
   };
 
   useEffect(() => { fetchNetworkData(); }, [profile?.id]);
+
+  // ==========================================
+  // 💱 GLOBAL LIQUIDITY SWAP (AFR <-> USD)
+  // ==========================================
+  const handleCurrencySwap = async () => {
+    if (!swapAmount || swapAmount <= 0) return triggerGlobalActionNotification('error', 'Enter a valid amount to swap.');
+    setIsSwapping(true);
+    
+    try {
+      const res = await fetch(`${CORE_URL}/api/network/swap`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profile?.id || 'TEST_USER_ID',
+          amount: parseFloat(swapAmount),
+          direction: swapDirection
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Swap failed');
+
+      // Refresh data to show new balances instantly
+      await fetchNetworkData();
+      setSwapAmount('');
+      triggerGlobalActionNotification('success', `Swap Executed. IFB secured a $${data.feeCaptured.toFixed(2)} network spread.`);
+      
+    } catch (err) {
+      triggerGlobalActionNotification('error', err.message);
+    } finally {
+      setIsSwapping(false);
+    }
+  };
 
   // ==========================================
   // 💳 VIRTUAL CARD ENGINE
@@ -497,6 +531,8 @@ export default function AccountHub({ balances, profile }) {
                 Global Currency Balances
               </h3>
             </div>
+            
+            {/* The Balances Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-colors cursor-pointer">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/50 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-blue-200/50 transition-colors"></div>
@@ -509,6 +545,60 @@ export default function AccountHub({ balances, profile }) {
                 <p className="text-2xl font-black text-slate-800 tracking-tight relative z-10">{balances?.afr_balance ? parseFloat(balances.afr_balance).toFixed(2) : '0.00'} <span className="text-sm text-slate-400">AFR</span></p>
               </div>
             </div>
+
+            {/* THE EXCHANGE UI */}
+            <div className="mt-8 p-8 bg-slate-50 border border-slate-200 rounded-[2rem] shadow-inner">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h4 className="font-black text-slate-800 tracking-tight flex items-center gap-2">
+                    <RefreshCw size={18} className="text-blue-600"/> Liquidity Exchange
+                  </h4>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">0.25% Network Spread Applies</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                <div className="flex-1 w-full bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest w-16">
+                    {swapDirection === 'USD_TO_AFR' ? 'USD' : 'AFR'}
+                  </span>
+                  <input 
+                    type="number" 
+                    placeholder="0.00" 
+                    className="w-full text-right text-xl font-black text-slate-800 outline-none"
+                    value={swapAmount}
+                    onChange={(e) => setSwapAmount(e.target.value)}
+                  />
+                </div>
+
+                <button 
+                  onClick={() => setSwapDirection(prev => prev === 'USD_TO_AFR' ? 'AFR_TO_USD' : 'USD_TO_AFR')}
+                  className="p-3 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors hover:rotate-180 duration-300"
+                >
+                  <ArrowLeftRight size={20} />
+                </button>
+
+                <div className="flex-1 w-full bg-slate-100 p-4 rounded-xl border border-slate-200 shadow-inner flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest w-16">
+                    {swapDirection === 'USD_TO_AFR' ? 'AFR' : 'USD'}
+                  </span>
+                  <span className="text-xl font-black text-slate-600">
+                    {swapAmount ? (swapAmount * 0.9975).toFixed(4) : '0.00'}
+                  </span>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleCurrencySwap} 
+                disabled={isSwapping || !swapAmount} 
+                className="w-full mt-6 py-4 bg-slate-800 hover:bg-slate-700 text-white font-black text-[11px] uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isSwapping ? <RefreshCw className="animate-spin" size={16}/> : <Zap size={16}/>}
+                {isSwapping ? 'Executing Swap...' : 'Confirm Exchange'}
+              </button>
+            </div>
+            {/* END EXCHANGE UI */}
+
           </div>
         </div>
       )}

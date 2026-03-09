@@ -10,8 +10,8 @@ import PayInterface from './PayInterface';
 // REUSABLE COMPONENTS
 // ==========================================
 const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLength, showPassword, togglePassword }) => (
-  <div className="relative">
-    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+  <div className="relative group">
+    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
     <input 
       type={showPassword ? "text" : "password"} 
       required 
@@ -20,7 +20,7 @@ const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLen
       value={value} 
       onChange={onChange} 
       placeholder={placeholder} 
-      className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner" 
+      className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" 
     />
     <button 
       type="button"
@@ -36,7 +36,6 @@ const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLen
 // MAIN DEUS APP
 // ==========================================
 function MainApp() {
-  // CRITICAL FIX: Add a global app loading state
   const [isAppReady, setIsAppReady] = useState(false);
   const [session, setSession] = useState(null);
   
@@ -48,6 +47,15 @@ function MainApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showApkPrompt, setShowApkPrompt] = useState(false);
+
+  // 1. CAPTURE REFERRAL LINK IMMEDIATELY ON LOAD
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+      sessionStorage.setItem('ifb_ref_code', ref);
+    }
+  }, []);
 
   // Smart Device Detection
   useEffect(() => {
@@ -61,7 +69,7 @@ function MainApp() {
     setShowPassword(false);
   }, [currentView]);
 
-  // CRITICAL FIX: Optimized Auth initialization
+  // CRITICAL FIX: Optimized Auth initialization & ANCESTRY LOCK
   useEffect(() => {
     let mounted = true;
 
@@ -86,9 +94,48 @@ function MainApp() {
         if (profile) {
           document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
         } else {
+          // ==========================================
+          // 🧬 CAPITAL INTRODUCTION: ANCESTRY LOCK
+          // ==========================================
           const generatedName = currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || 'Client';
-          await supabase.from('profiles').insert([{ id: currentSession.user.id, full_name: generatedName }]);
-          await supabase.from('balances').insert([{ user_id: currentSession.user.id, liquid_usd: 0, alpha_equity_usd: 0, mysafe_digital_usd: 0, external_linked_usd: 0 }]);
+          
+          const refCode = sessionStorage.getItem('ifb_ref_code');
+          let lineage = {};
+          
+          // If they were referred, fetch the parent's lineage and slide it down!
+          if (refCode) {
+             const { data: referrer } = await supabase
+                .from('profiles')
+                .select('id, l1_parent, l2_parent, l3_parent')
+                .eq('referral_code', refCode)
+                .maybeSingle();
+
+             if (referrer) {
+                lineage = {
+                   l1_parent: referrer.id,             // The person who invited them
+                   l2_parent: referrer.l1_parent,      // The Grandparent
+                   l3_parent: referrer.l2_parent,      // The Great-Grandparent
+                   l4_parent: referrer.l3_parent       // The Great-Great-Grandparent
+                };
+                console.log("[NETWORK] Ancestry Lineage Locked Successfully.");
+             }
+          }
+
+          // Create the profile WITH the injected lineage
+          await supabase.from('profiles').insert([{ 
+            id: currentSession.user.id, 
+            full_name: generatedName,
+            ...lineage
+          }]);
+          
+          // Provision internal bank accounts
+          await supabase.from('balances').insert([{ 
+            user_id: currentSession.user.id, 
+            liquid_usd: 0, 
+            alpha_equity_usd: 0, 
+            mysafe_digital_usd: 0, 
+            external_linked_usd: 0 
+          }]);
         }
       } catch (err) {
         console.error("Profile initialization error:", err);
@@ -183,29 +230,34 @@ function MainApp() {
     return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
   }
 
-  // LOGIN UI
+  // LOGIN UI (Beautiful Glassmorphism)
   return (
     <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden flex flex-col items-center justify-center p-6">
       
-      {/* CRITICAL FIX: Changed blur-[120px] to blur-3xl to prevent browser freezing */}
+      {/* Ambient Background Glows (Optimized) */}
       <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none"></div>
+      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-200/30 to-teal-300/10 blur-3xl pointer-events-none"></div>
       
       <div className="relative z-10 w-full max-w-[480px]">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8 cursor-pointer" onClick={() => setCurrentView('enter_email')}>
+        <div className="flex flex-col items-center mb-8 cursor-pointer hover:scale-105 transition-transform" onClick={() => setCurrentView('enter_email')}>
           <div className="flex items-center gap-1">
             <span className="text-6xl font-black text-[#4285F4]">D</span>
             <span className="text-6xl font-black text-[#EA4335]">E</span>
             <span className="text-6xl font-black text-[#FBBC04]">U</span>
             <span className="text-6xl font-black text-[#34A853]">S</span>
-            <Sparkles className="text-blue-500 ml-3" size={32} />
+            <Sparkles className="text-blue-500 ml-3 drop-shadow-md" size={32} />
           </div>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-2xl p-10 relative overflow-hidden">
+        {/* Main Glass Card */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 relative overflow-hidden">
           
+          {/* Subtle inner reflection */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-50"></div>
+
           {message.text && (
-            <div className={`p-4 mb-6 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center border ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}>
+            <div className={`p-4 mb-6 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center border backdrop-blur-md ${message.type === 'error' ? 'bg-red-50/80 text-red-600 border-red-200/50' : 'bg-green-50/80 text-green-600 border-green-200/50'}`}>
               {message.text}
             </div>
           )}
@@ -213,14 +265,14 @@ function MainApp() {
           {/* VIEW 1: ENTER EMAIL */}
           {currentView === 'enter_email' && (
             <div className="animate-in fade-in duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-8">Access Portal</h2>
+              <h2 className="text-2xl font-black tracking-tight mb-8 text-slate-800">Access Portal</h2>
               <form onSubmit={handleCheckEmail} className="space-y-6">
-                <div className="relative">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner" />
+                <div className="relative group">
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                  <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
                 </div>
-                <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                   <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
                     {isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Continue'} 
                     {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
@@ -233,17 +285,17 @@ function MainApp() {
           {/* VIEW 2: WELCOME BACK */}
           {currentView === 'welcome_back' && (
             <div className="animate-in slide-in-from-right-4 duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-2">Welcome Back</h2>
+              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Welcome Back</h2>
               <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
               <form onSubmit={handleLogin} className="space-y-6">
                 <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Password" autoFocus={true} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl disabled:opacity-50">
-                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                    <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? 'Authenticating...' : 'Confirm Access'}</span>
                 </button>
               </form>
               <div className="mt-8 flex flex-col gap-3">
-                <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600">Switch Account</button>
+                <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Switch Account</button>
               </div>
             </div>
           )}
@@ -251,15 +303,15 @@ function MainApp() {
           {/* VIEW 3: IDENTIFY YOURSELF */}
           {currentView === 'identify_yourself' && (
             <div className="animate-in slide-in-from-right-4 duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-8">Identify Yourself</h2>
+              <h2 className="text-2xl font-black tracking-tight mb-8 text-slate-800">Identify Yourself</h2>
               <form onSubmit={handleRegister} className="space-y-4">
-                <div className="relative">
-                  <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  <input type="text" required autoFocus value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder="Given Name" className="w-full bg-white/50 border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 shadow-inner" />
+                <div className="relative group">
+                  <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                  <input type="text" required autoFocus value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder="Given Name" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
                 </div>
                 <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Set Password" minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl disabled:opacity-50">
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600"></div>
+                <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? 'Creating...' : 'Create Vault'}</span>
                 </button>
               </form>
@@ -269,21 +321,21 @@ function MainApp() {
           {/* VIEW 4: CHECK EMAIL */}
           {currentView === 'check_email' && (
             <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-blue-100 flex items-center justify-center text-blue-600 animate-pulse mb-6"><Mail size={40}/></div>
-              <h2 className="text-2xl font-black mb-2">Check Inbox</h2>
+              <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 animate-pulse mb-6 shadow-inner"><Mail size={40}/></div>
+              <h2 className="text-2xl font-black mb-2 text-slate-800">Check Inbox</h2>
               <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
-              <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-800 hover:text-blue-600">Back to Login</button>
+              <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-500 hover:text-blue-600 transition-colors">Back to Login</button>
             </div>
           )}
 
           {/* VIEW 5: UPDATE PASSWORD */}
           {currentView === 'update_password' && (
             <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
-              <h2 className="text-2xl font-black mb-8">New Vault Key</h2>
+              <h2 className="text-2xl font-black mb-8 text-slate-800">New Vault Key</h2>
               <form onSubmit={handleUpdatePassword} className="space-y-6">
                 <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="New Password" autoFocus={true} minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                <button type="submit" disabled={isLoading} className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl disabled:opacity-50">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+                <button type="submit" disabled={isLoading} className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Save Password</span>
                 </button>
               </form>
@@ -292,24 +344,24 @@ function MainApp() {
 
         </div>
 
-        {/* ANDROID APK PROMPT */}
+        {/* ANDROID APK PROMPT (Sleek Glass Version) */}
         {showApkPrompt && (
           <div className="mt-6 animate-in slide-in-from-bottom-4 duration-500 relative z-20">
-            <a href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 p-4 rounded-[2rem] shadow-2xl hover:scale-[1.02] transition-transform group">
+            <a href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner"><Smartphone size={24} /></div>
+                <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner border border-slate-700/50"><Smartphone size={24} /></div>
                 <div className="text-left">
                   <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Native Android App</p>
                   <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Optimized & Secure</p>
                 </div>
               </div>
-              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all"><DownloadCloud size={18} /></div>
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-500/30"><DownloadCloud size={18} /></div>
             </a>
           </div>
         )}
 
-        <div className="mt-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-           <ShieldCheck size={14} className="text-emerald-400" /> Powered by Infinite Future Bank
+        <div className="mt-8 text-center text-[10px] font-black text-slate-400/80 uppercase tracking-widest flex items-center justify-center gap-2">
+           <ShieldCheck size={14} className="text-emerald-400/80" /> Powered by Infinite Future Bank
         </div>
       </div>
     </div>

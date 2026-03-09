@@ -12,7 +12,9 @@ import Agents from './Agents';
 import DepositInterface from './DepositInterface';
 import WithdrawalPage from './WithdrawalPage';
 import PayMeCard from './PayMeCard'; 
-// NEW MODULES
+// NEW MODULAR COMPONENTS
+import TransactionLedger from './TransactionLedger';
+import CapitalNetwork from './CapitalNetwork'; // 🚀 The Referral Engine UI
 import Payroll from './Payroll';
 import PayBills from './PayBills';
 import SmartContracts from './SmartContracts';
@@ -31,7 +33,7 @@ import {
   Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
   Filter, Calendar, ArrowDownUp, FileDown,
   CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Building, QrCode, 
-  LayoutGrid, Receipt, FileCode, HandCoins, HeartHandshake
+  LayoutGrid, Receipt, FileCode, HandCoins, HeartHandshake, Share2
 } from 'lucide-react';
 
 export default function Dashboard({ session, onSignOut }) {
@@ -49,8 +51,6 @@ export default function Dashboard({ session, onSignOut }) {
   const [isAppDrawerOpen, setIsAppDrawerOpen] = useState(false);
   const [activeAppPopup, setActiveAppPopup] = useState(null); 
 
-  const [activeTxTab, setActiveTxTab] = useState('ALL');
-  
   // Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -119,7 +119,7 @@ export default function Dashboard({ session, onSignOut }) {
     NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
     PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
     SETTINGS: 'Settings', AGENTS: 'Your Team', TRANSACTIONS: 'Transactions',
-    COMMERCIAL_HUB: 'Commercial Underwriting'
+    COMMERCIAL_HUB: 'Commercial Underwriting', NETWORK: 'Capital Network'
   };
 
   useEffect(() => {
@@ -191,7 +191,6 @@ export default function Dashboard({ session, onSignOut }) {
       setAccessSettings(loadedAccess);
       setPreviewAccess(loadedAccess);
       
-      // Load Notification Preferences (Fallback to true if undefined)
       setNotificationPrefs({
         payment_requests: pData.pref_notif_payments ?? true,
         system_alerts: pData.pref_notif_system ?? true,
@@ -271,7 +270,6 @@ export default function Dashboard({ session, onSignOut }) {
   const totalNetWorth = (balances.liquid_usd || 0) + (balances.alpha_equity_usd || 0) + (balances.mysafe_digital_usd || 0);
   const userName = profile?.full_name?.split('@')[0] || 'Client';
   
-  // Filter notifications based on user preferences before counting/rendering
   const visibleNotifications = notifications.filter(n => {
     if (n.type === 'payment_request' && !notificationPrefs.payment_requests) return false;
     if (n.type === 'system' && !notificationPrefs.system_alerts) return false;
@@ -754,119 +752,6 @@ export default function Dashboard({ session, onSignOut }) {
     );
   };
 
-  const renderTransactionsView = () => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const monthTxs = transactions.filter(tx => {
-      const d = new Date(tx.created_at);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    });
-    const moneyIn = monthTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
-    const moneyOut = monthTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-    const netChange = moneyIn - moneyOut;
-    return (
-      <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-        <div className="flex flex-col xl:flex-row gap-6">
-          <div className="flex-1 bg-white border border-slate-200 p-8 rounded-[2rem] shadow-sm flex flex-col justify-center">
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Transactions</h2>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">Immutable Master Ledger</p>
-          </div>
-          <div className="flex-1 grid grid-cols-3 gap-4">
-            <div className="bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Net Change (This Month)</p>
-              <p className={`text-xl font-black tracking-tight ${netChange >= 0 ? 'text-slate-800' : 'text-slate-800'}`}>
-                {netChange >= 0 ? '+' : '-'}{formatCurrency(Math.abs(netChange))}
-              </p>
-            </div>
-            <div className="bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1"><ArrowDownRight size={14} className="text-emerald-500"/> Money In</p>
-              <p className="text-xl font-black tracking-tight text-emerald-600">{formatCurrency(moneyIn)}</p>
-            </div>
-            <div className="bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1"><ArrowUpRight size={14} className="text-slate-400"/> Money Out</p>
-              <p className="text-xl font-black tracking-tight text-slate-800">{formatCurrency(moneyOut)}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-[2rem] shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
-            <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar scroll-container">
-              {['ALL', 'SUCCEEDED', 'PENDING', 'FAILED'].map(tab => (
-                <button
-                  key={tab} onClick={() => setActiveTxTab(tab)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTxTab === tab ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <button className="flex-1 md:flex-none px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 flex items-center justify-center gap-2 shadow-sm">
-                <Filter size={14}/> Filter
-              </button>
-              <button onClick={() => setShowStatementModal(true)} className="flex-1 md:flex-none px-4 py-2 bg-slate-800 text-white border border-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 flex items-center justify-center gap-2 shadow-sm">
-                <FileDown size={14}/> Export
-              </button>
-            </div>
-          </div>
-          <div className="overflow-x-auto scroll-container">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-white">
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">Date & Time</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Description</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Method</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                  <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map(tx => {
-                  const isPositive = tx.amount > 0;
-                  const uiStatus = tx.status === 'completed' ? 'Succeeded' : tx.status === 'pending' ? 'Pending' : 'Failed';
-                  
-                  if (activeTxTab !== 'ALL' && activeTxTab !== uiStatus.toUpperCase()) return null;
-                  return (
-                    <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
-                      <td className="p-4 whitespace-nowrap">
-                        <p className="text-sm font-bold text-slate-800">{new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                        <p className="text-[10px] font-bold text-slate-400">{new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
-                      </td>
-                      <td className="p-4">
-                        <p className="text-sm font-bold text-slate-800 capitalize">{tx.description || tx.transaction_type}</p>
-                        <p className="text-[10px] font-bold text-slate-400">ID: {tx.id.split('-')[0]}...</p>
-                      </td>
-                      <td className="p-4">
-                        <span className="bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest inline-block">
-                          {tx.transaction_type}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        {uiStatus === 'Succeeded' && <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg w-fit border border-emerald-100"><CheckCircle2 size={12}/> Succeeded</span>}
-                        {uiStatus === 'Pending' && <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-lg w-fit border border-amber-100"><Clock size={12}/> Pending</span>}
-                        {uiStatus === 'Failed' && <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 px-3 py-1 rounded-lg w-fit border border-red-100"><XCircle size={12}/> Failed</span>}
-                      </td>
-                      <td className={`p-4 text-sm font-black text-right whitespace-nowrap ${isPositive ? 'text-emerald-600' : 'text-slate-800'}`}>
-                        {isPositive ? '+' : ''}{formatCurrency(tx.amount)} <span className="text-[10px] text-slate-400 ml-1">USD</span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-            {transactions.length === 0 && (
-              <div className="text-center py-16">
-                <ArrowDownUp size={40} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-sm font-bold text-slate-600">No transactions found</p>
-                <p className="text-xs text-slate-400 mt-1">Adjust your filters or initiate a transfer.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderSettingsView = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
       <div className="md:col-span-1 space-y-2 bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm h-fit">
@@ -967,7 +852,6 @@ export default function Dashboard({ session, onSignOut }) {
                     onClick={async () => {
                       setIsLoading(true);
                       try {
-                        // 1. Save the profile data entered above first
                         const { error: dbError } = await supabase.from('profiles').update({
                           full_legal_name: kycForm.legalName,
                           dob: kycForm.dob,
@@ -978,7 +862,6 @@ export default function Dashboard({ session, onSignOut }) {
                         }).eq('id', session.user.id);
                         if (dbError) throw dbError;
 
-                        // 2. Open Stripe Identity Camera
                         const { data, error } = await supabase.functions.invoke('create-kyc-session', {
                           body: { userId: session.user.id }
                         });
@@ -1058,7 +941,6 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         )}
-        {/* NOTIFICATIONS PREFERENCES TAB */}
         {subTab === 'NOTIFICATIONS' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div>
@@ -1278,6 +1160,7 @@ export default function Dashboard({ session, onSignOut }) {
               { id: 'LIFESTYLE', icon: <Globe size={18} />, label: 'Lifestyle' },
               { id: 'TRAINING', icon: <BookOpen size={18} />, label: 'Training' },
               { id: 'AGENTS', icon: <Users size={18} />, label: 'Your Team' },
+              { id: 'NETWORK', icon: <Share2 size={18} />, label: 'Capital Network' },
               { id: 'SETTINGS', icon: <Settings size={18} />, label: 'Settings' },
             ].map((item) => (
               <button
@@ -1503,7 +1386,11 @@ export default function Dashboard({ session, onSignOut }) {
           </header>
           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar scroll-container pb-[env(safe-area-inset-bottom)]" id="main-scroll">
             {activeTab === 'NET_POSITION' && renderNetPositionView()}
-            {activeTab === 'TRANSACTIONS' && renderTransactionsView()}
+            
+            {/* COMPONENT REPLACEMENTS */}
+            {activeTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
+            {activeTab === 'NETWORK' && <CapitalNetwork session={session} profile={profile} balances={balances} formatCurrency={formatCurrency} />}
+            
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
