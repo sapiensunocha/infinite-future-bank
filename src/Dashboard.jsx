@@ -15,6 +15,7 @@ import PayMeCard from './PayMeCard';
 // NEW MODULAR COMPONENTS
 import TransactionLedger from './TransactionLedger';
 import CapitalNetwork from './CapitalNetwork'; // 🚀 The Referral Engine UI
+import HeroBanner from './HeroBanner'; // 🌟 Added
 import Payroll from './Payroll';
 import PayBills from './PayBills';
 import SmartContracts from './SmartContracts';
@@ -279,19 +280,6 @@ export default function Dashboard({ session, onSignOut }) {
   const unreadCount = visibleNotifications.filter(n => !n.read).length;
   
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-
-  const getHomeInsight = () => {
-    const month = new Date().getMonth();
-    if (totalNetWorth === 0) return { text: "Welcome to your new financial home. We are genuinely thrilled to have you with us. Let's take the first step in building your secure foundation by exploring a quick guide in our Training academy.", action: "Explore Training", target: "TRAINING" };
-    if (balances.liquid_usd < 1000 && totalNetWorth > 0) return { text: "We noticed your liquidity has been a bit tight lately. Please know that we always have your back—you can rely on your zero-interest SOS Shield anytime you need a hand getting back on your feet.", action: "Lean on SOS", target: "SOS" };
-    if ((balances.alpha_equity_usd > 0 && balances.alpha_equity_usd < 5000) || investments.length === 1) return { text: "Congratulations on your recent investments! You are building a very solid foundation. To keep this momentum going, let's use the Planner to strategically map out your upcoming financial goals.", action: "Map Your Goals", target: "PLANNER" };
-    if (pockets.length === 0 && balances.liquid_usd > 2000) return { text: "Your safety net is looking very secure. For even greater peace of mind, we recommend setting up custom Pockets so you can perfectly organize your funds exactly how you want them.", action: "Organize Funds", target: "ORGANIZE" };
-    if (balances.liquid_usd > 5000 && balances.liquid_usd > balances.alpha_equity_usd) return { text: "You are doing exceptionally well. To make your financial foundation even stronger, we suggest exploring the Wealth hub to put some of your idle cash to work for you.", action: "Grow Your Wealth", target: "INVEST" };
-    if (((month >= 5 && month <= 7) || month === 11) && balances.liquid_usd > 3000) return { text: "As the season changes, we want to ensure you are taking care of yourself. Remember that your Lifestyle perks grant you VIP lounge access and global connectivity for your upcoming travels.", action: "Access Lifestyle", target: "LIFESTYLE" };
-    return { text: "Your safety net is perfectly secure and your accounts are thriving. We are proud to support your journey. Whenever you are ready, reach out to your AI advisor to discuss your next strategic move.", action: "Chat with Advisor", target: "ADVISOR" };
-  };
-  const insight = getHomeInsight();
 
   // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
@@ -592,34 +580,19 @@ export default function Dashboard({ session, onSignOut }) {
             </button>
           </div>
         )}
-        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-            {hour < 12 ? <Sunrise size={32} /> : hour < 18 ? <Sun size={32} /> : <Moon size={32} />}
-          </div>
-          <div className="flex-1 text-center md:text-left space-y-2">
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">{greeting}, {userName}.</h1>
-            <p className="text-slate-600 leading-relaxed text-sm md:text-base">{insight.text}</p>
-          </div>
-          <button onClick={() => insight.target === 'ADVISOR' ? setActiveModal('ADVISOR') : setActiveTab(insight.target)} className="mx-auto md:mx-0 px-6 py-4 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 hover:-translate-y-1 transition-all flex items-center gap-2">
-            {insight.action} <ArrowRight size={14} />
-          </button>
-        </div>
-        <div className="w-full">
-          <div className="bg-gradient-to-br from-blue-700 to-blue-500 rounded-3xl p-8 md:p-12 text-white shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-blue-100 font-medium tracking-wider uppercase">Total Safety Net</span>
-              <button onClick={() => setShowBalances(!showBalances)} className="text-blue-200 hover:text-white transition-colors" title="Toggle Balance Privacy">
-                {showBalances ? <Eye size={22} /> : <EyeOff size={22} />}
-              </button>
-            </div>
-            <h2 className="text-5xl md:text-6xl font-black tracking-tight mb-8">{formatCurrency(totalNetWorth)}</h2>
-            <button onClick={() => setActiveTab('ACCOUNTS')} className="w-14 h-14 bg-white/10 text-white rounded-2xl flex items-center justify-center hover:bg-white hover:text-blue-900 hover:-translate-y-1 transition-all">
-              <ArrowRight size={24} />
-            </button>
-          </div>
-        </div>
-        
+
+        {/* 🌟 INJECT THE NEW HERO BANNER HERE 🌟 */}
+        <HeroBanner 
+          profile={profile}
+          balances={balances}
+          transactions={transactions}
+          formatCurrency={formatCurrency}
+          showBalances={showBalances}
+          setShowBalances={setShowBalances}
+          setActiveTab={setActiveTab}
+          setActiveModal={setActiveModal}
+        />
+
         <div className="flex flex-wrap items-center gap-3 bg-white/60 backdrop-blur-xl border border-white/40 p-2 rounded-3xl shadow-sm">
           <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
             <Send size={16} /> Send
@@ -1386,11 +1359,11 @@ export default function Dashboard({ session, onSignOut }) {
           </header>
           <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar scroll-container pb-[env(safe-area-inset-bottom)]" id="main-scroll">
             {activeTab === 'NET_POSITION' && renderNetPositionView()}
-            
+
             {/* COMPONENT REPLACEMENTS */}
             {activeTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
             {activeTab === 'NETWORK' && <CapitalNetwork session={session} profile={profile} balances={balances} formatCurrency={formatCurrency} />}
-            
+
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
