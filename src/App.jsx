@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, Building, Globe, Users } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
@@ -32,6 +32,14 @@ const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLen
   </div>
 );
 
+// Helper for formatting K, M, B
+const formatCount = (num) => {
+  if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+  return num.toString();
+};
+
 // ==========================================
 // MAIN DEUS APP
 // ==========================================
@@ -48,6 +56,9 @@ function MainApp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showApkPrompt, setShowApkPrompt] = useState(false);
 
+  // Live Network Stats State
+  const [networkStats, setNetworkStats] = useState({ users: 0, orgs: 0, countries: 1 });
+
   // 1. CAPTURE REFERRAL LINK IMMEDIATELY ON LOAD
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -55,6 +66,32 @@ function MainApp() {
     if (ref) {
       sessionStorage.setItem('ifb_ref_code', ref);
     }
+  }, []);
+
+  // 2. FETCH REAL-TIME NETWORK STATS FOR TRUST BUILDING
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        // Count Retail Users
+        const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+        
+        // Count Corporate Orgs
+        const { count: orgs } = await supabase.from('commercial_profiles').select('*', { count: 'exact', head: true });
+        
+        // Count Unique Countries
+        const { data: countryData } = await supabase.from('profiles').select('country').not('country', 'is', null);
+        const uniqueCountries = countryData ? new Set(countryData.map(d => d.country)).size : 1;
+
+        setNetworkStats({
+          users: users || 0,
+          orgs: orgs || 0,
+          countries: uniqueCountries > 0 ? uniqueCountries : 1
+        });
+      } catch (err) {
+        console.error("Failed to sync network stats.");
+      }
+    };
+    loadStats();
   }, []);
 
   // Smart Device Detection
@@ -102,7 +139,6 @@ function MainApp() {
           const refCode = sessionStorage.getItem('ifb_ref_code');
           let lineage = {};
           
-          // If they were referred, fetch the parent's lineage and slide it down!
           if (refCode) {
              const { data: referrer } = await supabase
                 .from('profiles')
@@ -112,23 +148,21 @@ function MainApp() {
 
              if (referrer) {
                 lineage = {
-                   l1_parent: referrer.id,             // The person who invited them
-                   l2_parent: referrer.l1_parent,      // The Grandparent
-                   l3_parent: referrer.l2_parent,      // The Great-Grandparent
-                   l4_parent: referrer.l3_parent       // The Great-Great-Grandparent
+                   l1_parent: referrer.id,             
+                   l2_parent: referrer.l1_parent,      
+                   l3_parent: referrer.l2_parent,      
+                   l4_parent: referrer.l3_parent       
                 };
                 console.log("[NETWORK] Ancestry Lineage Locked Successfully.");
              }
           }
 
-          // Create the profile WITH the injected lineage
           await supabase.from('profiles').insert([{ 
             id: currentSession.user.id, 
             full_name: generatedName,
             ...lineage
           }]);
           
-          // Provision internal bank accounts
           await supabase.from('balances').insert([{ 
             user_id: currentSession.user.id, 
             liquid_usd: 0, 
@@ -144,12 +178,10 @@ function MainApp() {
       }
     };
     
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       initializeUser(session);
     });
 
-    // Listen for changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setCurrentView('update_password');
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
@@ -176,7 +208,7 @@ function MainApp() {
       if (userExists) setCurrentView('welcome_back');
       else setCurrentView('identify_yourself');
     } catch (err) {
-      setCurrentView('welcome_back'); // Fallback
+      setCurrentView('welcome_back'); 
     } finally {
       setIsLoading(false);
     }
@@ -232,9 +264,9 @@ function MainApp() {
 
   // LOGIN UI (Beautiful Glassmorphism)
   return (
-    <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden flex flex-col items-center justify-center p-6 py-12 overflow-y-auto">
       
-      {/* Ambient Background Glows (Optimized) */}
+      {/* Ambient Background Glows */}
       <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none"></div>
       <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-200/30 to-teal-300/10 blur-3xl pointer-events-none"></div>
       
@@ -253,7 +285,6 @@ function MainApp() {
         {/* Main Glass Card */}
         <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 relative overflow-hidden">
           
-          {/* Subtle inner reflection */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-50"></div>
 
           {message.text && (
@@ -341,12 +372,50 @@ function MainApp() {
               </form>
             </div>
           )}
-
         </div>
 
-        {/* ANDROID APK PROMPT (Sleek Glass Version) */}
+        {/* 📊 LIVE NETWORK STATS */}
+        <div className="mt-6 grid grid-cols-3 gap-3 w-full animate-in slide-in-from-bottom-6 duration-700 delay-100">
+          <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-4 rounded-3xl text-center shadow-lg">
+            <Users size={20} className="mx-auto mb-2 text-blue-600" />
+            <p className="text-xl font-black text-slate-800">{formatCount(networkStats.users)}</p>
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Retail</p>
+          </div>
+          <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-4 rounded-3xl text-center shadow-lg">
+            <Building size={20} className="mx-auto mb-2 text-indigo-600" />
+            <p className="text-xl font-black text-slate-800">{formatCount(networkStats.orgs)}</p>
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Corporate</p>
+          </div>
+          <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-4 rounded-3xl text-center shadow-lg">
+            <Globe size={20} className="mx-auto mb-2 text-emerald-600" />
+            <p className="text-xl font-black text-slate-800">{formatCount(networkStats.countries)}</p>
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Regions</p>
+          </div>
+        </div>
+
+        {/* 🏛️ GOVERNMENT CERTIFICATIONS */}
+        <div className="mt-4 w-full bg-slate-900/90 backdrop-blur-2xl border border-slate-700/50 p-6 rounded-3xl shadow-xl animate-in slide-in-from-bottom-8 duration-700 delay-200">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <ShieldCheck size={16} className="text-emerald-400" />
+            <span className="text-[10px] font-black text-white uppercase tracking-widest">Government Regulated</span>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+            <div className="flex-1 w-full bg-white/5 p-3 rounded-2xl border border-white/5">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">United States</p>
+              <p className="text-xs font-bold text-slate-200 mt-1 mb-2">Dept. of Treasury</p>
+              <p className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1.5 rounded-lg inline-block w-full text-center">EIN: 33-1869013</p>
+            </div>
+            <div className="flex-1 w-full bg-white/5 p-3 rounded-2xl border border-white/5">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Canada</p>
+              <p className="text-xs font-bold text-slate-200 mt-1 mb-2">Revenue Agency</p>
+              <p className="text-[10px] font-mono text-indigo-400 font-bold bg-indigo-400/10 px-3 py-1.5 rounded-lg inline-block w-full text-center">721487825 RC 0001</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ANDROID APK PROMPT */}
         {showApkPrompt && (
-          <div className="mt-6 animate-in slide-in-from-bottom-4 duration-500 relative z-20">
+          <div className="mt-4 animate-in slide-in-from-bottom-8 duration-500 delay-300">
             <a href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner border border-slate-700/50"><Smartphone size={24} /></div>
@@ -360,8 +429,8 @@ function MainApp() {
           </div>
         )}
 
-        <div className="mt-8 text-center text-[10px] font-black text-slate-400/80 uppercase tracking-widest flex items-center justify-center gap-2">
-           <ShieldCheck size={14} className="text-emerald-400/80" /> Powered by Infinite Future Bank
+        <div className="mt-8 mb-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+           <ShieldCheck size={14} className="text-slate-400" /> Powered by Infinite Future Bank
         </div>
       </div>
     </div>

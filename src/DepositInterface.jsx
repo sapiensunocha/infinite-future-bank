@@ -4,8 +4,12 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { supabase } from './services/supabaseClient';
 import { ShieldCheck, Loader2, X, ArrowLeft } from 'lucide-react';
 
+// Initialize Stripe outside of component renders to avoid recreating the object
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
+// -------------------------------------------------------------------------
+// THE SECURE FORM (Only renders AFTER we have the secret key)
+// -------------------------------------------------------------------------
 const CheckoutForm = ({ amount, onBack }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -15,9 +19,11 @@ const CheckoutForm = ({ amount, onBack }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+
     setIsProcessing(true);
     setErrorMessage(null);
 
+    // This securely sends the card data directly to Stripe, then redirects back to DEUS
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -32,31 +38,34 @@ const CheckoutForm = ({ amount, onBack }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-      <button type="button" onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 mb-2">
+    <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+      <button type="button" onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 mb-2 transition-colors">
         <ArrowLeft size={14}/> Back to amount
       </button>
-      
-      <div className="p-4 bg-black/40 border border-white/10 rounded-2xl">
+
+      <div className="p-5 bg-black/40 border border-white/10 rounded-2xl shadow-inner">
         <PaymentElement />
       </div>
       
       {errorMessage && (
-        <div className="p-4 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
+        <div className="p-4 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl text-center shadow-inner">
           {errorMessage}
         </div>
       )}
 
       <button 
         disabled={isProcessing || !stripe || !elements}
-        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-blue-400/30"
       >
-        {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `CONFIRM $${amount} DEPOSIT`}
+        {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `AUTHORIZE $${amount} DEPOSIT`}
       </button>
     </form>
   );
 };
 
+// -------------------------------------------------------------------------
+// MAIN WRAPPER 
+// -------------------------------------------------------------------------
 export default function DepositInterface({ session, onClose }) {
   const [amount, setAmount] = useState('');
   const [clientSecret, setClientSecret] = useState(null);
@@ -65,14 +74,16 @@ export default function DepositInterface({ session, onClose }) {
   const handleInitialize = async () => {
     if (!amount || amount <= 0) return;
     setIsInitializing(true);
+
     try {
       const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: { userId: session.user.id, amount: parseFloat(amount) }
       });
+
       if (error) throw error;
       setClientSecret(data.clientSecret);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to initialize payment:", err);
       alert("System could not securely connect to clearing house.");
     } finally {
       setIsInitializing(false);
@@ -80,67 +91,79 @@ export default function DepositInterface({ session, onClose }) {
   };
 
   return (
-    <div className="w-full max-w-md bg-[#0B0F19] rounded-[3rem] shadow-2xl overflow-hidden relative border border-white/10 p-10 animate-in zoom-in-95 duration-300">
-      
-      {/* 🔴 THE FIX: Explicit Close Button inside the card */}
-      <button 
-        onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-        }} 
-        className="absolute top-8 right-8 text-slate-500 hover:text-white transition-colors bg-white/5 p-2 rounded-xl border border-white/10 z-[210] cursor-pointer active:scale-90"
+    // The fixed background that covers the whole screen. Clicking it triggers onClose.
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+      onClick={onClose} 
+    >
+      {/* The main card. e.stopPropagation prevents clicks inside the card from closing it */}
+      <div 
+        onClick={(e) => e.stopPropagation()} 
+        className="w-full max-w-md bg-[#0B0F19] rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-white/10 p-8"
       >
-        <X size={20} />
-      </button>
+        
+        {/* Subtle Ambient Glow */}
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/20 blur-[60px] pointer-events-none"></div>
 
-      <div className="relative z-10">
-        <h2 className="text-3xl font-black text-white mb-1 tracking-tight">Deposit Funds</h2>
-        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-10 flex items-center gap-2">
-          <ShieldCheck size={14} />
-          Military-Grade Encryption
-        </p>
+        {/* The X Close Button */}
+        <button 
+          onClick={(e) => { e.preventDefault(); onClose(); }} 
+          className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors bg-white/5 p-2 rounded-xl border border-white/10 z-50 cursor-pointer"
+        >
+          <X size={20} />
+        </button>
 
-        {!clientSecret ? (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="relative">
-              <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 font-black text-2xl">$</span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-black/50 border border-white/10 rounded-2xl pl-12 pr-6 py-8 text-4xl font-black outline-none focus:border-blue-500 transition-all text-white placeholder:text-slate-800"
-                autoFocus
-              />
+        <div className="relative z-10">
+          <h2 className="text-2xl font-black text-white mb-1">Inject Capital</h2>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
+            <ShieldCheck size={14} className="text-emerald-500" />
+            256-bit AES Encrypted
+          </p>
+
+          {!clientSecret ? (
+            <div className="space-y-6">
+              <div className="relative">
+                <span className="absolute left-6 top-6 text-slate-500 font-black text-xl">$</span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full bg-black/30 border border-white/10 rounded-2xl pl-12 pr-6 py-6 text-3xl font-black outline-none focus:border-blue-500 focus:bg-black/50 transition-all text-white placeholder:text-slate-600 shadow-inner"
+                  autoFocus
+                />
+              </div>
+              <button 
+                onClick={handleInitialize}
+                disabled={!amount || isInitializing}
+                className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center"
+              >
+                {isInitializing ? <Loader2 className="animate-spin" size={18} /> : 'ESTABLISH SECURE CONNECTION'}
+              </button>
             </div>
-            <button 
-              onClick={handleInitialize}
-              disabled={!amount || isInitializing}
-              className="w-full bg-white text-slate-900 font-black text-xs uppercase tracking-widest p-6 rounded-2xl hover:bg-blue-50 transition-all disabled:opacity-50 flex items-center justify-center shadow-xl"
-            >
-              {isInitializing ? <Loader2 className="animate-spin" size={20} /> : 'INITIALIZE CLEARING'}
-            </button>
-            <p className="text-[9px] text-center text-slate-500 font-bold uppercase tracking-widest">Funds are settled via Stripe Secure Network</p>
-          </div>
-        ) : (
-          <Elements 
-            stripe={stripePromise} 
-            options={{ 
-              clientSecret, 
-              appearance: { 
-                theme: 'night', 
-                variables: { 
-                  colorPrimary: '#2563EB', 
-                  colorBackground: '#0B0F19',
-                  colorText: '#F8FAFC'
+          ) : (
+            <Elements 
+              stripe={stripePromise} 
+              options={{ 
+                clientSecret, 
+                appearance: { 
+                  theme: 'night', 
+                  variables: { 
+                    colorPrimary: '#2563EB', 
+                    colorBackground: '#0B0F19',
+                    colorText: '#F8FAFC',
+                    colorDanger: '#ef4444',
+                    fontFamily: 'system-ui, sans-serif',
+                    borderRadius: '16px',
+                    spacingUnit: '4px'
+                  } 
                 } 
-              } 
-            }}
-          >
-            <CheckoutForm amount={amount} onBack={() => setClientSecret(null)} />
-          </Elements>
-        )}
+              }}
+            >
+              <CheckoutForm amount={amount} onBack={() => setClientSecret(null)} />
+            </Elements>
+          )}
+        </div>
       </div>
     </div>
   );
