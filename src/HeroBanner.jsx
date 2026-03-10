@@ -2,13 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity, MapPin } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// 🏙️ LIGHT-THEME PREMIUM FALLBACK IMAGES (Bright, airy, architectural)
+// 🏙️ PURE, BEAUTIFUL LIGHT-THEME IMAGES (No artificial darkening/lightening)
 const FALLBACK_BACKGROUNDS = [
-  "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2000&auto=format&fit=crop", // Bright Snow Mountains
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop", // Modern White Corporate Architecture
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop", // Bright Coastline/Morning
-  "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop", // Bright Minimalist Office
-  "https://images.unsplash.com/photo-1503387762-592dea58ef23?q=80&w=2000&auto=format&fit=crop"  // Light Modern Interior
+  "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2000&auto=format&fit=crop", // Beautiful bright glass architecture
+  "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop", // Bright airy corporate interior
+  "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2000&auto=format&fit=crop", // Luxury bright lounge
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop", // Beautiful bright morning coast
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2000&auto=format&fit=crop"  // Luxury minimal estate daylight
 ];
 
 export default function HeroBanner({ profile, balances, transactions = [], formatCurrency, showBalances, setShowBalances, setActiveModal }) {
@@ -33,7 +33,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
   const hour = time.getHours();
   let greeting = "Good Evening";
   let TimeIcon = Moon;
-  let iconColor = "text-indigo-600"; // Darker for light background
+  let iconColor = "text-indigo-600"; 
 
   if (hour >= 5 && hour < 12) {
     greeting = "Good Morning";
@@ -76,7 +76,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
       else { setImageError(true); }
     };
     fetchCelebration();
-  }, [time.getDate()]); // Only refresh on new day
+  }, [time.getDate()]); 
 
   // 🌤️ 2. WEATHER FETCH
   useEffect(() => {
@@ -116,16 +116,13 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
             });
             
             const data = await res.json();
-            // Clean up any weird AI conversational prefixes just in case
             let cleanText = data.text.replace(/Here is your greeting:/i, '').replace(/Good Morning,/i, '').trim();
             setInsight(cleanText);
         } catch (err) {
-            // Friendly, real fallback if the API times out
             setInsight(`Happy ${celebration}, ${firstName}. The weather in ${weather.city} is looking good, and your AFR assets are securely compounding in the background.`);
         } finally { setIsLoadingInsight(false); }
     };
     
-    // Only run when we have enough real data to make the prompt interesting
     if (profile && weather.temp !== '--') {
       fetchInsight();
     }
@@ -135,83 +132,82 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
   const finalImage = (imageError || !bgImage) ? fallbackImage : bgImage;
 
   return (
-    <div className="relative w-full rounded-[3rem] overflow-hidden shadow-sm mb-8 bg-white border border-slate-200 animate-in fade-in zoom-in-95 duration-700">
+    <div className="relative w-full rounded-[3rem] overflow-hidden shadow-sm mb-8 bg-slate-100 border border-slate-200 animate-in fade-in zoom-in-95 duration-700">
       
-      {/* LIGHT/BRIGHT BACKGROUND LAYER */}
-      <div className="absolute inset-0 z-0 bg-slate-100">
+      {/* BEAUTIFUL RAW BACKGROUND LAYER (No white wash overlay) */}
+      <div className="absolute inset-0 z-0">
         <img 
           src={finalImage} 
           alt={celebration} 
-          className="w-full h-full object-cover opacity-50 scale-105 transition-opacity duration-1000 mix-blend-multiply" 
+          className="w-full h-full object-cover scale-105" 
           crossOrigin="anonymous" 
           onError={() => setImageError(true)}
         />
-        {/* White to transparent gradient for perfect text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/80 to-transparent"></div>
+        {/* A barely-there gradient only at the very top/bottom just to ensure the edges don't clash with the main app body */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-white/20 pointer-events-none"></div>
       </div>
 
-      <div className="relative z-10 p-8 md:p-12 flex flex-col min-h-[420px]">
+      <div className="relative z-10 p-6 md:p-10 flex flex-col min-h-[460px]">
         
         {/* TOP ROW: CELEBRATION & REAL-TIME FLIP CLOCK */}
         <div className="flex justify-between items-start mb-auto gap-4">
+          
           <div className="flex flex-col gap-2">
-            <div className="bg-white/60 backdrop-blur-xl px-4 py-2 rounded-full border border-slate-200 flex items-center gap-2 w-max shadow-sm">
+            <div className="bg-white/60 backdrop-blur-2xl px-5 py-2.5 rounded-full border border-white/50 flex items-center gap-2 w-max shadow-lg">
                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#3b82f6]"></div>
-               <span className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em]">{celebration}</span>
+               <span className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">{celebration}</span>
             </div>
             
-            {/* DAY/DATE FLIP ANIMATION */}
-            <div className="overflow-hidden h-5 pl-2">
-              <p key={time.getDate()} className="text-xs font-black text-slate-500 uppercase tracking-widest animate-in slide-in-from-top-full duration-500">
+            <div className="overflow-hidden h-6 pl-3">
+              <p key={time.getDate()} className="text-xs font-black text-slate-800 drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)] uppercase tracking-widest animate-in slide-in-from-top-full duration-500">
                 {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
             </div>
           </div>
           
-          {/* APPLE STYLE FLIP CLOCK & WEATHER (Mobile optimized touch target) */}
-          <div className="text-right flex items-center gap-4 bg-white/70 backdrop-blur-2xl p-3 px-5 rounded-2xl border border-slate-200 shadow-md active:scale-95 transition-transform cursor-pointer touch-manipulation">
+          {/* APPLE STYLE FLIP CLOCK (Glassmorphic) */}
+          <div className="text-right flex items-center gap-4 bg-white/60 backdrop-blur-2xl p-4 px-6 rounded-[1.5rem] border border-white/60 shadow-xl active:scale-95 transition-transform cursor-pointer touch-manipulation">
             <div className="flex flex-col items-end">
-              {/* This specific div handles the mechanical "flip down" effect when the minute changes */}
               <div className="overflow-hidden h-7">
                 <p key={time.getMinutes()} className="text-2xl font-black text-slate-900 leading-none animate-in slide-in-from-top-full duration-500 ease-out">
                   {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 flex items-center justify-end gap-1">
-                <MapPin size={10} className="text-blue-500"/> {weather.city}
+              <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-1 flex items-center justify-end gap-1">
+                <MapPin size={10} className="text-blue-600"/> {weather.city}
               </p>
             </div>
             <div className="w-px h-8 bg-slate-300"></div>
-            <div className="text-slate-900 font-black text-2xl tracking-tighter">{weather.temp}°</div>
+            <div className="text-slate-900 font-black text-3xl tracking-tighter">{weather.temp}°</div>
           </div>
         </div>
 
-        {/* MIDDLE: GREETING & SPARKLINE */}
-        <div className="max-w-3xl my-8">
+        {/* MIDDLE: GREETING & INSIGHTS (Wrapped in frosted glass for perfect readability over the raw photo) */}
+        <div className="max-w-3xl my-8 bg-white/40 backdrop-blur-2xl border border-white/60 p-8 rounded-[2.5rem] shadow-2xl">
           <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200">
+            <div className="p-3 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white">
               <TimeIcon className={iconColor} size={32} />
             </div>
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter drop-shadow-sm">
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
               {greeting}, {firstName}.
             </h1>
           </div>
           
-          <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-6 bg-white/60 backdrop-blur-xl p-5 rounded-[2rem] border border-slate-200 w-fit shadow-lg hover:shadow-xl transition-all duration-500 group touch-manipulation">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-6 bg-white/60 backdrop-blur-xl p-5 rounded-[2rem] border border-white/80 w-fit shadow-md hover:shadow-lg transition-all duration-500 group touch-manipulation">
             <div>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
-                <Activity size={12} className="text-blue-500"/>
+                <Activity size={12} className="text-blue-600"/>
                 Network Velocity
               </p>
               <p className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                {parseFloat(balances?.afr_balance || 0).toFixed(2)} AFR <span className="text-slate-300 mx-2 font-light">|</span> {formatCurrency(balances?.liquid_usd)}
+                {parseFloat(balances?.afr_balance || 0).toFixed(2)} AFR <span className="text-slate-400 mx-2 font-light">|</span> {formatCurrency(balances?.liquid_usd)}
               </p>
             </div>
 
-            <div className="w-px h-10 bg-slate-200 hidden sm:block"></div>
+            <div className="w-px h-10 bg-slate-300 hidden sm:block"></div>
 
             <div className="flex flex-col justify-end w-32 h-10 relative">
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest absolute -top-1 right-0">{recentTxCount} Tx Trajectory</p>
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest absolute -top-1 right-0">{recentTxCount} Tx Trajectory</p>
               <div className="absolute bottom-0 w-full h-8 opacity-70 group-hover:opacity-100 transition-opacity">
                 <svg viewBox="0 0 100 30" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                   <defs>
@@ -232,35 +228,37 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
                <RefreshCw size={18} className="animate-spin" /> <span className="text-xs uppercase tracking-widest">Consulting DEUS Engine...</span>
             </div>
           ) : (
-            <p className="text-lg md:text-2xl text-slate-700 font-medium leading-snug border-l-4 border-blue-500 pl-6 max-w-2xl animate-in fade-in slide-in-from-left-4 duration-1000 drop-shadow-sm">
+            <p className="text-lg md:text-xl text-slate-800 font-medium leading-snug border-l-4 border-blue-500 pl-6 max-w-2xl animate-in fade-in slide-in-from-left-4 duration-1000">
               {insight}
             </p>
           )}
         </div>
 
-        {/* BOTTOM: INTERACTIVE ACCOUNT OVERVIEW (Mobile Optimized) */}
-        <div className="mt-auto grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-slate-200">
+        {/* BOTTOM: ACCOUNT OVERVIEW & ACTION BUTTON (Glassmorphic Pills) */}
+        <div className="mt-auto flex flex-col md:flex-row justify-between items-end gap-6 pt-4">
           
-          <div className="flex items-center gap-4 group cursor-pointer active:opacity-50 active:scale-95 transition-all touch-manipulation">
-            <div className="w-14 h-14 bg-blue-50/80 backdrop-blur-md rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm group-hover:scale-105 transition-transform"><Wallet size={24}/></div>
-            <div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Liquid USD</p>
-              <p className="text-2xl font-black text-slate-900 tracking-tight">{formatCurrency(balances?.liquid_usd)}</p>
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-4 bg-white/60 backdrop-blur-2xl border border-white/60 p-4 pr-8 rounded-[2rem] shadow-xl group cursor-pointer active:scale-95 transition-all touch-manipulation">
+              <div className="w-12 h-12 bg-blue-50/80 rounded-2xl flex items-center justify-center text-blue-600 border border-blue-100 group-hover:scale-105 transition-transform"><Wallet size={20}/></div>
+              <div>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Liquid USD</p>
+                <p className="text-xl font-black text-slate-900 tracking-tight">{formatCurrency(balances?.liquid_usd)}</p>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-4 group cursor-pointer active:opacity-50 active:scale-95 transition-all touch-manipulation">
-            <div className="w-14 h-14 bg-emerald-50/80 backdrop-blur-md rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm group-hover:scale-105 transition-transform"><Zap size={24}/></div>
-            <div>
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">AFR Asset</p>
-              <p className="text-2xl font-black text-slate-900 tracking-tight">{parseFloat(balances?.afr_balance || 0).toFixed(2)} <span className="text-sm text-slate-400">AFR</span></p>
+            
+            <div className="flex items-center gap-4 bg-white/60 backdrop-blur-2xl border border-white/60 p-4 pr-8 rounded-[2rem] shadow-xl group cursor-pointer active:scale-95 transition-all touch-manipulation">
+              <div className="w-12 h-12 bg-emerald-50/80 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100 group-hover:scale-105 transition-transform"><Zap size={20}/></div>
+              <div>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">AFR Asset</p>
+                <p className="text-xl font-black text-slate-900 tracking-tight">{parseFloat(balances?.afr_balance || 0).toFixed(2)} <span className="text-sm text-slate-500">AFR</span></p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center md:justify-end mt-4 md:mt-0">
+          <div className="w-full md:w-auto">
             <button 
               onClick={() => setActiveModal('ADVISOR')} 
-              className="w-full md:w-auto px-8 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-blue-600 active:scale-95 active:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-3 group touch-manipulation"
+              className="w-full md:w-auto px-10 py-6 bg-slate-900/90 backdrop-blur-xl border border-slate-700 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-[0.2em] hover:bg-blue-600 active:scale-95 transition-all shadow-2xl flex items-center justify-center gap-3 group touch-manipulation"
             >
               Strategy Hub <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
             </button>

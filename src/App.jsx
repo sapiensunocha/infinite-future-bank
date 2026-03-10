@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, Building, Globe, Users } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
@@ -153,7 +153,6 @@ function MainApp() {
                    l3_parent: referrer.l2_parent,      
                    l4_parent: referrer.l3_parent       
                 };
-                console.log("[NETWORK] Ancestry Lineage Locked Successfully.");
              }
           }
 
@@ -374,48 +373,18 @@ function MainApp() {
           )}
         </div>
 
-        {/* 📊 LIVE NETWORK STATS */}
-        <div className="mt-6 grid grid-cols-3 gap-3 w-full animate-in slide-in-from-bottom-6 duration-700 delay-100">
-          <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-4 rounded-3xl text-center shadow-lg">
-            <Users size={20} className="mx-auto mb-2 text-blue-600" />
-            <p className="text-xl font-black text-slate-800">{formatCount(networkStats.users)}</p>
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Retail</p>
-          </div>
-          <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-4 rounded-3xl text-center shadow-lg">
-            <Building size={20} className="mx-auto mb-2 text-indigo-600" />
-            <p className="text-xl font-black text-slate-800">{formatCount(networkStats.orgs)}</p>
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Corporate</p>
-          </div>
-          <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-4 rounded-3xl text-center shadow-lg">
-            <Globe size={20} className="mx-auto mb-2 text-emerald-600" />
-            <p className="text-xl font-black text-slate-800">{formatCount(networkStats.countries)}</p>
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">Regions</p>
-          </div>
-        </div>
-
-        {/* 🏛️ GOVERNMENT CERTIFICATIONS */}
-        <div className="mt-4 w-full bg-slate-900/90 backdrop-blur-2xl border border-slate-700/50 p-6 rounded-3xl shadow-xl animate-in slide-in-from-bottom-8 duration-700 delay-200">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <ShieldCheck size={16} className="text-emerald-400" />
-            <span className="text-[10px] font-black text-white uppercase tracking-widest">Government Regulated</span>
-          </div>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
-            <div className="flex-1 w-full bg-white/5 p-3 rounded-2xl border border-white/5">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">United States</p>
-              <p className="text-xs font-bold text-slate-200 mt-1 mb-2">Dept. of Treasury</p>
-              <p className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-400/10 px-3 py-1.5 rounded-lg inline-block w-full text-center">EIN: 33-1869013</p>
-            </div>
-            <div className="flex-1 w-full bg-white/5 p-3 rounded-2xl border border-white/5">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Canada</p>
-              <p className="text-xs font-bold text-slate-200 mt-1 mb-2">Revenue Agency</p>
-              <p className="text-[10px] font-mono text-indigo-400 font-bold bg-indigo-400/10 px-3 py-1.5 rounded-lg inline-block w-full text-center">721487825 RC 0001</p>
-            </div>
-          </div>
+        {/* 🌐 MINIMAL TRUST SENTENCE */}
+        <div className="mt-8 text-center text-xs font-medium text-slate-500/80 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
+          Trusted by <span className="font-black text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-black text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-black text-slate-700">{formatCount(networkStats.countries)}</span> countries.<br/>
+          <span className="flex items-center justify-center gap-1.5 mt-2">
+            <ShieldCheck size={14} className="text-emerald-500" /> 
+            Regulated by US and Canadian governments.
+          </span>
         </div>
 
         {/* ANDROID APK PROMPT */}
         {showApkPrompt && (
-          <div className="mt-4 animate-in slide-in-from-bottom-8 duration-500 delay-300">
+          <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
             <a href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner border border-slate-700/50"><Smartphone size={24} /></div>
@@ -429,9 +398,6 @@ function MainApp() {
           </div>
         )}
 
-        <div className="mt-8 mb-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-           <ShieldCheck size={14} className="text-slate-400" /> Powered by Infinite Future Bank
-        </div>
       </div>
     </div>
   );
