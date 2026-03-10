@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Lock } from 'lucide-react';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -15,11 +15,16 @@ const AuthCallback = () => {
   const [countdown, setCountdown] = useState(5);
   const [showBoom, setShowBoom] = useState(false);
 
+  // 🔐 Password Recovery States
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+
   // =========================================================================
   // 🎇 CINEMATIC COUNTDOWN LOGIC
   // =========================================================================
   useEffect(() => {
-    if (isFirstTime && countdown > 0) {
+    if (isFirstTime && countdown > 0 && !isRecoveryMode) {
       const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
       
       if (countdown === 4) setStatus('INITIALIZING PRIVATE VAULT...');
@@ -30,15 +35,15 @@ const AuthCallback = () => {
       return () => clearTimeout(timer);
     } 
     
-    if (isFirstTime && countdown === 0 && !showBoom) {
+    if (isFirstTime && countdown === 0 && !showBoom && !isRecoveryMode) {
       setShowBoom(true);
       setStatus('WELCOME TO DEUS');
       setTimeout(() => navigate('/'), 1500);
     }
-  }, [isFirstTime, countdown, showBoom, navigate]);
+  }, [isFirstTime, countdown, showBoom, isRecoveryMode, navigate]);
 
   // =========================================================================
-  // 🔐 DEUS NATIVE: Fingerprint / FaceID Check (For Returning Users)
+  // 🔐 DEUS NATIVE: Fingerprint / FaceID Check
   // =========================================================================
   const triggerBiometrics = async () => {
     try {
@@ -81,17 +86,24 @@ const AuthCallback = () => {
   // 🔗 INITIAL SESSION CHECK & FAIL-SAFES
   // =========================================================================
   useEffect(() => {
-    // 1. FAIL-SAFE: Check if the URL contains an error from an expired/used link
-    if (window.location.hash.includes('error') || window.location.search.includes('error')) {
+    const currentURL = window.location.href;
+
+    if (currentURL.includes('error')) {
       setIsError(true);
       setStatus('LINK EXPIRED OR USED.');
       setTimeout(() => navigate('/'), 2500);
       return;
     }
 
+    // 🚀 NEW: RECOVERY INTERCEPTOR
+    if (currentURL.includes('type=recovery')) {
+      setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
+      setIsRecoveryMode(true);
+      return; 
+    }
+
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
-      const currentURL = window.location.href;
       
       if (session) {
         if (currentURL.includes('type=signup')) {
@@ -107,11 +119,18 @@ const AuthCallback = () => {
       }
     };
 
-    checkSession();
+    if (!currentURL.includes('type=recovery')) {
+      checkSession();
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-         const currentURL = window.location.href;
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && currentURL.includes('type=recovery'))) {
+         setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
+         setIsRecoveryMode(true);
+         return;
+      }
+
+      if (event === 'SIGNED_IN' && session && !isRecoveryMode) {
          if (currentURL.includes('type=signup')) {
             setIsFirstTime(true);
             setStatus('ACTIVATING TERMINAL...');
@@ -121,10 +140,9 @@ const AuthCallback = () => {
       }
     });
 
-    // 2. FAIL-SAFE: If it gets stuck on DECRYPTING for 4 seconds, abort and go to login
     const stuckTimeout = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      if (!data.session && !currentURL.includes('type=recovery')) {
         setIsError(true);
         setStatus('LINK EXPIRED OR USED.');
         setTimeout(() => navigate('/'), 2000);
@@ -135,7 +153,35 @@ const AuthCallback = () => {
       subscription.unsubscribe();
       clearTimeout(stuckTimeout);
     };
-  }, [navigate]);
+  }, [navigate, status, isRecoveryMode]);
+
+  // =========================================================================
+  // 💾 SAVE NEW PASSWORD HANDLER
+  // =========================================================================
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setIsError(true);
+      setStatus('CIPHER TOO WEAK. MIN 6 CHARACTERS.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setStatus('ENCRYPTING NEW CREDENTIALS...');
+    setIsError(false);
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+    if (error) {
+      setIsError(true);
+      setStatus('ENCRYPTION FAILED. TRY AGAIN.');
+      setIsUpdating(false);
+    } else {
+      setStatus('VAULT SECURED. ROUTING...');
+      setIsError(false);
+      setTimeout(() => navigate('/'), 1500);
+    }
+  };
 
   return (
     <div className="relative flex h-screen w-full items-center justify-center bg-slate-50 text-emerald-500 font-sans overflow-hidden">
@@ -163,10 +209,31 @@ const AuthCallback = () => {
         </div>
       )}
 
-      {/* STANDARD / COUNTDOWN UI */}
+      {/* STANDARD / COUNTDOWN / RECOVERY UI */}
       <div className={`relative z-10 flex flex-col items-center space-y-4 transition-opacity duration-300 ${showBoom ? 'opacity-0' : 'opacity-100'}`}>
         
-        {isFirstTime && countdown > 0 ? (
+        {isRecoveryMode && !status.includes('ROUTING') ? (
+          <form onSubmit={handlePasswordUpdate} className="flex flex-col items-center space-y-4 w-full max-w-xs animate-in fade-in slide-in-from-bottom-4">
+            <div className="h-12 w-12 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center shadow-inner">
+               <Lock className="text-emerald-600" size={24} />
+            </div>
+            <input 
+              type="password" 
+              placeholder="ENTER NEW PASSWORD" 
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={isUpdating}
+              className="w-full text-center px-4 py-3 bg-white border-2 border-emerald-200 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-300"
+            />
+            <button 
+              type="submit" 
+              disabled={isUpdating || !newPassword}
+              className="w-full bg-emerald-500 text-white font-black py-3 rounded-lg uppercase tracking-widest hover:bg-emerald-600 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+            >
+              {isUpdating ? 'SECURING...' : 'CONFIRM CIPHER'}
+            </button>
+          </form>
+        ) : isFirstTime && countdown > 0 ? (
           <div className="h-16 w-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center shadow-inner animate-in zoom-in">
              <span className="text-3xl font-black text-emerald-600 animate-pulse">{countdown}</span>
           </div>
