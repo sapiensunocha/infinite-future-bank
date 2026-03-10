@@ -1,33 +1,33 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Cloud, CloudRain, Sun, Moon, MapPin, Eye, EyeOff, ArrowRight, Zap, Wallet, RefreshCw, Activity } from 'lucide-react';
+import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity } from 'lucide-react';
+import { supabase } from './services/supabaseClient';
 
-// 🗓️ EXPANDED GLOBAL CELEBRATION REGISTRY (UN & Global Days)
-const CELEBRATIONS = {
-  "01-01": "New Year's Day", "01-24": "International Day of Education", "02-14": "Valentine's Day", 
-  "02-20": "World Day of Social Justice", "03-08": "International Women's Day", "03-20": "International Day of Happiness", 
-  "03-22": "World Water Day", "04-22": "Earth Day", "05-01": "International Labour Day", 
-  "05-03": "World Press Freedom Day", "06-05": "World Environment Day", "06-08": "World Oceans Day", 
-  "07-18": "Nelson Mandela International Day", "08-12": "International Youth Day", "09-21": "International Day of Peace", 
-  "10-24": "United Nations Day", "11-20": "World Children's Day", "12-10": "Human Rights Day", 
-  "12-25": "Christmas Day", "12-31": "New Year's Eve"
-};
+// 🏙️ PREMIUM MACBOOK-STYLE FALLBACK IMAGES
+const FALLBACK_BACKGROUNDS = [
+  "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2000&auto=format&fit=crop", // Dark City Lights
+  "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2000&auto=format&fit=crop", // macOS Mountains Dark
+  "https://images.unsplash.com/photo-1506744626753-140294b4e3e3?q=80&w=2000&auto=format&fit=crop", // Deep Nature / Yosemite
+  "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2000&auto=format&fit=crop", // Urban Architecture
+  "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop"  // Abstract Tech Dark
+];
 
 export default function HeroBanner({ profile, balances, transactions = [], formatCurrency, showBalances, setShowBalances, setActiveModal }) {
   const [time, setTime] = useState(new Date());
   const [weather, setWeather] = useState({ city: 'Global Network', temp: '--', condition: 0 });
-  const [insight, setInsight] = useState("Securing your financial perimeter...");
+  const [insight, setInsight] = useState("Synchronizing institutional telemetry...");
   const [isLoadingInsight, setIsLoadingInsight] = useState(true);
+  
+  const [celebration, setCelebration] = useState("Global Institutional Growth Day");
   const [bgImage, setBgImage] = useState("");
+  const [imageError, setImageError] = useState(false);
 
-  const totalNetWorth = (balances?.liquid_usd || 0) + (balances?.alpha_equity_usd || 0) + (balances?.mysafe_digital_usd || 0);
-  const todayKey = `${String(time.getMonth() + 1).padStart(2, '0')}-${String(time.getDate()).padStart(2, '0')}`;
-  const celebration = CELEBRATIONS[todayKey] || "Global Institutional Growth Day";
+  const firstName = profile?.full_name?.split(' ')[0] || 'Client';
 
   // Time-based Greetings & Icons
   const hour = time.getHours();
   let greeting = "Good Evening";
   let TimeIcon = Moon;
-  let iconColor = "text-yellow-200";
+  let iconColor = "text-indigo-300";
 
   if (hour >= 5 && hour < 12) {
     greeting = "Good Morning";
@@ -36,11 +36,11 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
   } else if (hour >= 12 && hour < 18) {
     greeting = "Good Afternoon";
     TimeIcon = Sun;
-    iconColor = "text-yellow-500";
+    iconColor = "text-amber-400";
   }
 
-  // 7-Day Histogram Logic
-  const histogramData = useMemo(() => {
+  // 📈 7-DAY LINE CHART (SPARKLINE) GENERATOR
+  const { sparklinePoints, sparklineFill, recentTxCount } = useMemo(() => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (6 - i));
@@ -51,18 +51,44 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
       transactions.filter(t => t.created_at?.startsWith(dateStr)).length
     );
     
-    const maxCount = Math.max(...counts, 1); // Avoid division by zero
-    return counts.map(count => (count / maxCount) * 100);
+    const maxCount = Math.max(...counts, 2); // Prevent flatline if zero
+    
+    // Map data to SVG coordinates (X: 0-100, Y: 0-30 inverted)
+    const points = counts.map((count, index) => {
+      const x = (index / 6) * 100;
+      const y = 30 - ((count / maxCount) * 30);
+      return `${x},${y}`;
+    });
+
+    const pointsStr = points.join(' ');
+    
+    return {
+      sparklinePoints: pointsStr,
+      sparklineFill: `0,30 ${pointsStr} 100,30`, // Closes the path for the gradient fill
+      recentTxCount: transactions.slice(0, 5).length
+    };
   }, [transactions]);
 
-  const recentTxCount = transactions.slice(0, 5).length;
-
-  // 1. DYNAMIC THEMATIC IMAGE ENGINE
+  // 1. SUPABASE DATABASE FETCH (Links & Name)
   useEffect(() => {
-    // Unsplash Source was shut down, so we use a generative AI endpoint for perfectly themed images
-    const prompt = encodeURIComponent(`Cinematic dark minimal abstract background representing ${celebration}`);
-    setBgImage(`https://image.pollinations.ai/prompt/${prompt}?width=1600&height=900&nologo=true&dark=true`);
-  }, [celebration]);
+    const fetchCelebration = async () => {
+      const todayKey = `${String(time.getMonth() + 1).padStart(2, '0')}-${String(time.getDate()).padStart(2, '0')}`;
+      
+      const { data, error } = await supabase
+        .from('global_celebrations')
+        .select('name, image_url')
+        .eq('month_day', todayKey)
+        .maybeSingle();
+
+      if (data && data.name) {
+        setCelebration(data.name);
+        setBgImage(data.image_url); 
+      } else {
+        setImageError(true); 
+      }
+    };
+    fetchCelebration();
+  }, [time]);
 
   // 🌤️ 2. SILENT WEATHER & LOCATION
   useEffect(() => {
@@ -89,9 +115,12 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
                 body: JSON.stringify({ profile, balances, celebration, weather })
             });
             const data = await res.json();
-            setInsight(data.text);
+            // Optional cleanup just in case the AI accidentally returns a greeting with a name
+            let cleanText = data.text.replace(/Good Morning, .*?\./g, '').replace(/Welcome back, .*?\./g, '').trim();
+            setInsight(cleanText);
         } catch (err) {
-            setInsight(`Your safety net is perfectly secure and your accounts are thriving today.`);
+            // PROFESSIONAL NO-NAME FALLBACK
+            setInsight(`Institutional telemetry indicates all network operations are nominal. Your perimeter remains completely secure.`);
         } finally { setIsLoadingInsight(false); }
     };
     if (profile && weather.temp !== '--') fetchInsight();
@@ -103,12 +132,20 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
     return () => clearInterval(timer);
   }, []);
 
+  const fallbackImage = FALLBACK_BACKGROUNDS[time.getDay() % 5];
+  const finalImage = (imageError || !bgImage) ? fallbackImage : bgImage;
+
   return (
     <div className="relative w-full rounded-[3rem] overflow-hidden shadow-2xl mb-8 bg-slate-900 border border-white/10 animate-in fade-in zoom-in-95 duration-700">
       
-      {/* 🖼️ REAL DYNAMIC BACKGROUND */}
-      <div className="absolute inset-0 z-0">
-        <img src={bgImage} alt={celebration} className="w-full h-full object-cover opacity-40 scale-105 transition-opacity duration-1000" crossOrigin="anonymous" />
+      <div className="absolute inset-0 z-0 bg-slate-900">
+        <img 
+          src={finalImage} 
+          alt={celebration} 
+          className="w-full h-full object-cover opacity-40 scale-105 transition-opacity duration-1000" 
+          crossOrigin="anonymous" 
+          onError={() => setImageError(true)}
+        />
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900/60 to-transparent"></div>
       </div>
 
@@ -126,7 +163,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
             </p>
           </div>
           
-          <div className="text-right flex items-center gap-4 bg-black/30 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-lg">
+          <div className="text-right flex items-center gap-4 bg-black/30 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-lg hidden sm:flex">
             <div>
               <p className="text-xl font-black text-white leading-none">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{weather.city}</p>
@@ -136,36 +173,57 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
           </div>
         </div>
 
-        {/* MIDDLE: GREETING, HEALTH LINE & HISTOGRAM */}
+        {/* MIDDLE: GREETING & LINE CHART */}
         <div className="max-w-3xl my-8">
-          <div className="flex items-center gap-3 mb-2">
+          
+          {/* SINGLE GREETING WITH NAME */}
+          <div className="flex items-center gap-3 mb-6">
             <TimeIcon className={iconColor} size={32} />
             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-lg">
-              {greeting}, {profile?.full_name?.split(' ')[0]}.
+              {greeting}, {firstName}.
             </h1>
           </div>
           
-          {/* Account Health Line & Histogram */}
-          <div className="flex items-end gap-6 mb-6">
-            <p className="text-sm font-black text-slate-300 uppercase tracking-widest bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10 inline-block">
-              <Activity size={14} className="inline mr-2 text-emerald-400" />
-              Health: {parseFloat(balances?.afr_balance || 0).toFixed(2)} AFR ⇌ {formatCurrency(balances?.liquid_usd)} • {recentTxCount} Recent Activities
-            </p>
-            
-            {/* 7-Day Transparent Histogram */}
-            <div className="flex items-end gap-1.5 h-8 opacity-70" title="Last 7 Days Activity">
-              {histogramData.map((heightPercent, idx) => (
-                <div key={idx} className="w-2 bg-white/40 rounded-t-sm transition-all hover:bg-white/80" style={{ height: `${Math.max(heightPercent, 15)}%` }}></div>
-              ))}
+          {/* GLASSMORPHIC HEALTH BAR & SVG LINE CHART */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5 mb-6 bg-white/5 backdrop-blur-md p-4 pr-6 rounded-3xl border border-white/10 w-fit shadow-2xl">
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
+                <Activity size={12} className="text-emerald-400"/>
+                Network Velocity
+              </p>
+              <p className="text-base sm:text-lg font-black text-white tracking-wide">
+                {parseFloat(balances?.afr_balance || 0).toFixed(2)} AFR <span className="text-slate-400 mx-2 font-medium">⇌</span> {formatCurrency(balances?.liquid_usd)}
+              </p>
+            </div>
+
+            <div className="w-px h-10 bg-white/10 hidden sm:block"></div>
+
+            <div className="flex flex-col justify-end w-32 h-10 relative group">
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest absolute -top-1 right-0 transition-colors group-hover:text-emerald-400">{recentTxCount} Tx Trajectory</p>
+              
+              {/* THE BEAUTIFUL SVG SPARKLINE */}
+              <div className="absolute bottom-0 w-full h-6 opacity-80 group-hover:opacity-100 transition-opacity">
+                <svg viewBox="0 0 100 30" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#34d399" stopOpacity="0.4"/>
+                      <stop offset="100%" stopColor="#34d399" stopOpacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <polygon points={sparklineFill} fill="url(#lineGrad)" />
+                  <polyline points={sparklinePoints} fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
             </div>
           </div>
 
+          {/* AI INSIGHT MESSAGE */}
           {isLoadingInsight ? (
             <div className="flex items-center gap-3 text-blue-400 font-bold animate-pulse mt-4">
                <RefreshCw size={18} className="animate-spin" /> <span>Consulting Network Intelligence...</span>
             </div>
           ) : (
-            <p className="text-lg md:text-xl text-slate-200 font-medium leading-relaxed drop-shadow-xl border-l-2 border-blue-500 pl-4">
+            <p className="text-lg md:text-xl text-slate-200 font-medium leading-relaxed drop-shadow-xl border-l-2 border-blue-500 pl-4 max-w-2xl">
               {insight}
             </p>
           )}

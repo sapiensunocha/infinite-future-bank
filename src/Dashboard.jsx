@@ -263,7 +263,7 @@ export default function Dashboard({ session, onSignOut }) {
         const { data: pocks } = await supabase.from('pockets').select('*').eq('user_id', session.user.id).ilike('pocket_name', `%${searchQuery}%`);
         const { data: recs } = await supabase.from('recipients').select('*').eq('user_id', session.user.id).ilike('recipient_name', `%${searchQuery}%`);
         const { data: invs } = await supabase.from('investments').select('*').eq('user_id', session.user.id).ilike('investment_type', `%${searchQuery}%`);
-        searchSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
+        setSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
       }, 300);
     } else {
       setSearchResults({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
@@ -282,8 +282,6 @@ export default function Dashboard({ session, onSignOut }) {
     return true;
   });
   const unreadCount = visibleNotifications.filter(n => !n.read).length;
-  
-  const hour = new Date().getHours();
 
   // --- ACTIONS ---
   const handleAvatarClick = () => { fileInputRef.current.click(); };
@@ -443,12 +441,6 @@ export default function Dashboard({ session, onSignOut }) {
     }
   };
 
-  const handleDeposit = async (amount) => {
-    const { data, error } = await supabase.functions.invoke('create-checkout', { body: { userId: session.user.id, email: session.user.email, amount: amount } });
-    if (data?.url) window.location.href = data.url;
-    else console.error("Stripe routing failed", error);
-  };
-
   const handleSendEmailInvoice = async () => {
     if (!requestEmail) { setNotification({ type: 'error', text: 'Please enter a target email first.' }); setTimeout(() => setNotification(null), 3000); return; }
     setIsSendingEmail(true);
@@ -597,32 +589,32 @@ export default function Dashboard({ session, onSignOut }) {
           setActiveModal={setActiveModal}
         />
 
-        <div className="flex flex-wrap items-center gap-3 bg-white/60 backdrop-blur-xl border border-white/40 p-2 rounded-3xl shadow-sm">
-          <button onClick={() => setActiveModal('SEND')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-            <Send size={16} /> Send
-          </button>
-          <button onClick={() => setActiveModal('REQUEST')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-            <Download size={16} /> Request
-          </button>
-          <button onClick={() => setShowPayMe(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border border-blue-200 shadow-sm transition-all hover:bg-blue-100 hover:scale-105">
-            <QrCode size={16} /> Pay Me
-          </button>
-          <button onClick={() => setActiveModal('TRANSFER')} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest hover:bg-white text-slate-700 transition-all shadow-sm">
-            <ArrowRightLeft size={16} /> Transfer
-          </button>
-          <button onClick={() => setShowDepositUI(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-blue-700 text-white shadow-lg transition-all hover:bg-blue-600">
-            <Plus size={16} /> Deposit
-          </button>
-          <button onClick={() => setIsWithdrawOpen(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest bg-slate-800 text-white shadow-lg transition-all hover:bg-slate-700">
-            <Landmark size={16} /> Withdraw
-          </button>
-          <div className="w-px h-10 bg-slate-200/60 mx-1 hidden md:block"></div>
-          <button
-            onClick={() => setShowAnalytics(!showAnalytics)}
-            className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all ${showAnalytics ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-white text-slate-700 border border-transparent hover:border-indigo-100 shadow-sm'}`}
-          >
-            <BarChart2 size={16} /> Analytics
-          </button>
+        {/* ✨ UNIFORM ACTION BAR ✨ */}
+        <div className="bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+            {[
+              { id: 'SEND', icon: <Send size={20} />, label: 'SEND', action: () => setActiveModal('SEND') },
+              { id: 'REQUEST', icon: <Download size={20} />, label: 'REQUEST', action: () => setActiveModal('REQUEST') },
+              { id: 'PAY_ME', icon: <QrCode size={20} />, label: 'PAY ME', action: () => setShowPayMe(true) },
+              { id: 'TRANSFER', icon: <ArrowRightLeft size={20} />, label: 'TRANSFER', action: () => setActiveModal('TRANSFER') },
+              { id: 'DEPOSIT', icon: <Plus size={20} />, label: 'DEPOSIT', action: () => setShowDepositUI(true) },
+              { id: 'WITHDRAW', icon: <Landmark size={20} />, label: 'WITHDRAW', action: () => setIsWithdrawOpen(true) },
+              { id: 'ANALYTICS', icon: <BarChart2 size={20} />, label: 'ANALYTICS', action: () => setShowAnalytics(!showAnalytics), isToggle: true, active: showAnalytics }
+            ].map((btn) => (
+              <button 
+                key={btn.id}
+                onClick={btn.action} 
+                className={`flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-2xl transition-all group ${btn.isToggle && btn.active ? 'bg-indigo-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100'}`}
+              >
+                <div className={`transition-transform group-hover:-translate-y-1 ${btn.isToggle && btn.active ? 'text-white' : 'text-slate-500'}`}>
+                  {btn.icon}
+                </div>
+                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-center whitespace-nowrap">
+                  {btn.label}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
         
         <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
@@ -1692,7 +1684,17 @@ export default function Dashboard({ session, onSignOut }) {
       )}
 
       {/* 6. Deposit Stripe UI */}
-      {showDepositUI && <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />}
+      {showDepositUI && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+           {/* Added a close wrapper around the existing DepositInterface */}
+           <div className="relative w-full max-w-4xl mx-4">
+             <button onClick={() => setShowDepositUI(false)} className="absolute -top-12 right-0 text-white hover:text-slate-200 transition-colors z-50 flex items-center gap-2 font-black text-sm tracking-widest uppercase">
+                <X size={24}/> Close
+             </button>
+             <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />
+           </div>
+        </div>
+      )}
       
       {/* 7. Pay Me Digital Card */}
       {showPayMe && (
