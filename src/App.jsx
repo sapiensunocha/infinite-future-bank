@@ -57,7 +57,7 @@ function MainApp() {
   const [showApkPrompt, setShowApkPrompt] = useState(false);
 
   // Live Network Stats State
-  const [networkStats, setNetworkStats] = useState({ users: 0, orgs: 0, countries: 1 });
+  const [networkStats, setNetworkStats] = useState({ users: 0, orgs: 0, countries: 0 });
 
   // 1. CAPTURE REFERRAL LINK IMMEDIATELY ON LOAD
   useEffect(() => {
@@ -68,25 +68,19 @@ function MainApp() {
     }
   }, []);
 
-  // 2. FETCH REAL-TIME NETWORK STATS FOR TRUST BUILDING
+  // 2. FETCH REAL-TIME NETWORK STATS VIA SECURE RPC
   useEffect(() => {
     const loadStats = async () => {
       try {
-        // Count Retail Users
-        const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+        const { data, error } = await supabase.rpc('get_network_stats');
         
-        // Count Corporate Orgs
-        const { count: orgs } = await supabase.from('commercial_profiles').select('*', { count: 'exact', head: true });
-        
-        // Count Unique Countries
-        const { data: countryData } = await supabase.from('profiles').select('country').not('country', 'is', null);
-        const uniqueCountries = countryData ? new Set(countryData.map(d => d.country)).size : 1;
-
-        setNetworkStats({
-          users: users || 0,
-          orgs: orgs || 0,
-          countries: uniqueCountries > 0 ? uniqueCountries : 1
-        });
+        if (data && !error) {
+          setNetworkStats({
+            users: data.users || 0,
+            orgs: data.orgs || 0,
+            countries: data.countries || 0
+          });
+        }
       } catch (err) {
         console.error("Failed to sync network stats.");
       }
