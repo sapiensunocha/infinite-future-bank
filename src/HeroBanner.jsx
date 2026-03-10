@@ -2,13 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// 🏙️ PREMIUM MACBOOK-STYLE FALLBACK IMAGES
+// 🏙️ BULLETPROOF PREMIUM FALLBACK IMAGES (macOS architectural & cinematic style)
 const FALLBACK_BACKGROUNDS = [
-  "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2000&auto=format&fit=crop", // Dark City Lights
-  "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2000&auto=format&fit=crop", // macOS Mountains Dark
-  "https://images.unsplash.com/photo-1506744626753-140294b4e3e3?q=80&w=2000&auto=format&fit=crop", // Deep Nature / Yosemite
-  "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=2000&auto=format&fit=crop", // Urban Architecture
-  "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop"  // Abstract Tech Dark
+  "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=2000", // New York Skyline Night
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000", // Cinematic Mountains
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=2000", // High-end Nature Landscape
+  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000", // Modern Corporate Architecture
+  "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=2000"  // Premium Dark Tech Minimal
 ];
 
 export default function HeroBanner({ profile, balances, transactions = [], formatCurrency, showBalances, setShowBalances, setActiveModal }) {
@@ -53,7 +53,6 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
     
     const maxCount = Math.max(...counts, 2); // Prevent flatline if zero
     
-    // Map data to SVG coordinates (X: 0-100, Y: 0-30 inverted)
     const points = counts.map((count, index) => {
       const x = (index / 6) * 100;
       const y = 30 - ((count / maxCount) * 30);
@@ -64,7 +63,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
     
     return {
       sparklinePoints: pointsStr,
-      sparklineFill: `0,30 ${pointsStr} 100,30`, // Closes the path for the gradient fill
+      sparklineFill: `0,30 ${pointsStr} 100,30`, 
       recentTxCount: transactions.slice(0, 5).length
     };
   }, [transactions]);
@@ -83,6 +82,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
       if (data && data.name) {
         setCelebration(data.name);
         setBgImage(data.image_url); 
+        setImageError(false); // Reset error state on new fetch
       } else {
         setImageError(true); 
       }
@@ -115,16 +115,15 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
                 body: JSON.stringify({ profile, balances, celebration, weather })
             });
             const data = await res.json();
-            // Optional cleanup just in case the AI accidentally returns a greeting with a name
+            // Clean up name repetitions from AI response
             let cleanText = data.text.replace(/Good Morning, .*?\./g, '').replace(/Welcome back, .*?\./g, '').trim();
             setInsight(cleanText);
         } catch (err) {
-            // PROFESSIONAL NO-NAME FALLBACK
             setInsight(`Institutional telemetry indicates all network operations are nominal. Your perimeter remains completely secure.`);
         } finally { setIsLoadingInsight(false); }
     };
     if (profile && weather.temp !== '--') fetchInsight();
-  }, [profile, weather.city]);
+  }, [profile, weather.city, celebration]);
 
   // Real-time clock update
   useEffect(() => {
@@ -132,6 +131,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
     return () => clearInterval(timer);
   }, []);
 
+  // Determine final background image
   const fallbackImage = FALLBACK_BACKGROUNDS[time.getDay() % 5];
   const finalImage = (imageError || !bgImage) ? fallbackImage : bgImage;
 
@@ -176,7 +176,6 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
         {/* MIDDLE: GREETING & LINE CHART */}
         <div className="max-w-3xl my-8">
           
-          {/* SINGLE GREETING WITH NAME */}
           <div className="flex items-center gap-3 mb-6">
             <TimeIcon className={iconColor} size={32} />
             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-lg">
@@ -201,7 +200,6 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
             <div className="flex flex-col justify-end w-32 h-10 relative group">
               <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest absolute -top-1 right-0 transition-colors group-hover:text-emerald-400">{recentTxCount} Tx Trajectory</p>
               
-              {/* THE BEAUTIFUL SVG SPARKLINE */}
               <div className="absolute bottom-0 w-full h-6 opacity-80 group-hover:opacity-100 transition-opacity">
                 <svg viewBox="0 0 100 30" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                   <defs>
@@ -217,7 +215,6 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
             </div>
           </div>
 
-          {/* AI INSIGHT MESSAGE */}
           {isLoadingInsight ? (
             <div className="flex items-center gap-3 text-blue-400 font-bold animate-pulse mt-4">
                <RefreshCw size={18} className="animate-spin" /> <span>Consulting Network Intelligence...</span>
