@@ -68,7 +68,7 @@ function MainApp() {
     }
   }, []);
 
-  // 2. FETCH REAL-TIME NETWORK STATS VIA SECURE RPC
+  // 2. FETCH REAL-TIME NETWORK STATS VIA SECURE RPC (Bypasses RLS)
   useEffect(() => {
     const loadStats = async () => {
       try {
@@ -100,7 +100,7 @@ function MainApp() {
     setShowPassword(false);
   }, [currentView]);
 
-  // CRITICAL FIX: Optimized Auth initialization & ANCESTRY LOCK
+  // CRITICAL FIX: SECURE PROVISIONING (Bypasses Intruder Alert)
   useEffect(() => {
     let mounted = true;
 
@@ -126,43 +126,19 @@ function MainApp() {
           document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
         } else {
           // ==========================================
-          // 🧬 CAPITAL INTRODUCTION: ANCESTRY LOCK
+          // 🧬 CAPITAL INTRODUCTION: SECURE ANCESTRY LOCK
           // ==========================================
           const generatedName = currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || 'Client';
-          
-          const refCode = sessionStorage.getItem('ifb_ref_code');
-          let lineage = {};
-          
-          if (refCode) {
-             const { data: referrer } = await supabase
-                .from('profiles')
-                .select('id, l1_parent, l2_parent, l3_parent')
-                .eq('referral_code', refCode)
-                .maybeSingle();
+          const refCode = sessionStorage.getItem('ifb_ref_code') || null;
 
-             if (referrer) {
-                lineage = {
-                   l1_parent: referrer.id,             
-                   l2_parent: referrer.l1_parent,      
-                   l3_parent: referrer.l2_parent,      
-                   l4_parent: referrer.l3_parent       
-                };
-             }
-          }
+          // Use backend RPC to securely provision without triggering frontend RLS blocks
+          const { error: provisionError } = await supabase.rpc('provision_new_user', {
+            p_user_id: currentSession.user.id,
+            p_full_name: generatedName,
+            p_ref_code: refCode
+          });
 
-          await supabase.from('profiles').insert([{ 
-            id: currentSession.user.id, 
-            full_name: generatedName,
-            ...lineage
-          }]);
-          
-          await supabase.from('balances').insert([{ 
-            user_id: currentSession.user.id, 
-            liquid_usd: 0, 
-            alpha_equity_usd: 0, 
-            mysafe_digital_usd: 0, 
-            external_linked_usd: 0 
-          }]);
+          if (provisionError) throw provisionError;
         }
       } catch (err) {
         console.error("Profile initialization error:", err);
@@ -229,6 +205,25 @@ function MainApp() {
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
+  // 🔑 NEW: Send Password Reset Email
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailValue.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      });
+      if (error) throw error;
+      showMessage('Recovery link dispatched to your inbox.', 'success');
+      setCurrentView('check_email');
+    } catch (error) { 
+      showMessage(error.message, 'error'); 
+    } finally { 
+      setIsLoading(false); 
+    }
+  };
+
+  // 🔑 Save New Password
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -236,7 +231,7 @@ function MainApp() {
       const { error } = await supabase.auth.updateUser({ password: passwordValue });
       if (error) throw error;
       setCurrentView('welcome_back');
-      showMessage('Security updated.', 'success');
+      showMessage('Security updated successfully.', 'success');
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
@@ -306,20 +301,48 @@ function MainApp() {
             </div>
           )}
 
-          {/* VIEW 2: WELCOME BACK */}
+          {/* VIEW 2: WELCOME BACK (Now with Forgot Password button) */}
           {currentView === 'welcome_back' && (
             <div className="animate-in slide-in-from-right-4 duration-300 text-center">
               <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Welcome Back</h2>
               <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
-              <form onSubmit={handleLogin} className="space-y-6">
-                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Password" autoFocus={true} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
+              <form onSubmit={handleLogin}>
+                <div className="space-y-2">
+                  <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Password" autoFocus={true} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
+                  <div className="flex justify-end px-2">
+                    <button type="button" onClick={() => setCurrentView('forgot_password')} className="text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest py-2">
+                      Forgot Vault Key?
+                    </button>
+                  </div>
+                </div>
+                
+                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full mt-4 bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                    <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? 'Authenticating...' : 'Confirm Access'}</span>
                 </button>
               </form>
               <div className="mt-8 flex flex-col gap-3">
                 <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Switch Account</button>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW 2.5: RECOVER PASSWORD (NEW) */}
+          {currentView === 'forgot_password' && (
+            <div className="animate-in slide-in-from-left-4 duration-300 text-center">
+              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Vault Recovery</h2>
+              <p className="text-xs font-bold text-slate-500 mb-8">Confirm your email to receive a secure reset link.</p>
+              <form onSubmit={handleResetPassword} className="space-y-6">
+                <div className="relative group">
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                  <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
+                </div>
+                <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-slate-900 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-slate-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group">
+                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Dispatch Recovery Key'}</span>
+                </button>
+              </form>
+              <div className="mt-8 flex flex-col gap-3">
+                <button onClick={() => setCurrentView('welcome_back')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Return to Login</button>
               </div>
             </div>
           )}
