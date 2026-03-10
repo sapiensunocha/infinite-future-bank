@@ -14,13 +14,17 @@ import WithdrawalPage from './WithdrawalPage';
 import PayMeCard from './PayMeCard'; 
 // NEW MODULAR COMPONENTS
 import TransactionLedger from './TransactionLedger';
-import CapitalNetwork from './CapitalNetwork'; // 🚀 The Referral Engine UI
-import HeroBanner from './HeroBanner'; // 🌟 Added
+import CapitalNetwork from './CapitalNetwork';
+import HeroBanner from './HeroBanner'; 
 import Payroll from './Payroll';
 import PayBills from './PayBills';
 import SmartContracts from './SmartContracts';
 import Loans from './Loans';
 import NpoHub from './NpoHub'; 
+// BRAND NEW FEATURES FOR COMMERCE & EVENTS
+import BillingTerminal from './features/commerce/BillingTerminal';
+import TicketGate from './features/commerce/TicketGate';
+
 import QRCode from "react-qr-code";
 import {
   Briefcase, ArrowRightLeft, ShieldCheck,
@@ -34,7 +38,7 @@ import {
   Shield, Fingerprint, MapPin, Heart, UploadCloud, RefreshCw,
   Filter, Calendar, ArrowDownUp, FileDown,
   CheckCircle2, XCircle, ArrowUpRight, ArrowDownRight, Building, QrCode, 
-  LayoutGrid, Receipt, FileCode, HandCoins, HeartHandshake, Share2
+  LayoutGrid, Receipt, FileCode, HandCoins, HeartHandshake, Share2, Ticket, Calculator
 } from 'lucide-react';
 
 export default function Dashboard({ session, onSignOut }) {
@@ -259,7 +263,7 @@ export default function Dashboard({ session, onSignOut }) {
         const { data: pocks } = await supabase.from('pockets').select('*').eq('user_id', session.user.id).ilike('pocket_name', `%${searchQuery}%`);
         const { data: recs } = await supabase.from('recipients').select('*').eq('user_id', session.user.id).ilike('recipient_name', `%${searchQuery}%`);
         const { data: invs } = await supabase.from('investments').select('*').eq('user_id', session.user.id).ilike('investment_type', `%${searchQuery}%`);
-        searchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
+        searchSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
       }, 300);
     } else {
       setSearchResults({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
@@ -581,7 +585,7 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         )}
 
-        {/* 🌟 INJECT THE NEW HERO BANNER HERE 🌟 */}
+        {/* 🌟 PERFECTED HERO BANNER INJECTED HERE 🌟 */}
         <HeroBanner 
           profile={profile}
           balances={balances}
@@ -1185,7 +1189,7 @@ export default function Dashboard({ session, onSignOut }) {
                     <div className="absolute top-full mt-4 right-0 w-80 md:w-96 bg-white/95 backdrop-blur-3xl border border-slate-200 shadow-2xl rounded-[2rem] p-6 z-50 animate-in slide-in-from-top-4 fade-in">
                       <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 px-2">Corporate & Tools</h3>
                       
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-4 mb-4">
                         <button onClick={() => { setActiveAppPopup('PAYROLL'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-blue-50 transition-colors group">
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors shadow-sm"><Users size={20} /></div>
                           <span className="text-[9px] font-black text-slate-700">Payroll</span>
@@ -1202,11 +1206,24 @@ export default function Dashboard({ session, onSignOut }) {
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors shadow-sm"><HandCoins size={20} /></div>
                           <span className="text-[9px] font-black text-slate-700">Lending</span>
                         </button>
-                        {/* NPO HUB BUTTON */}
                         <button onClick={() => { setActiveAppPopup('NPO'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-rose-50 transition-colors group">
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-rose-100 group-hover:text-rose-500 transition-colors shadow-sm"><HeartHandshake size={20} /></div>
                           <span className="text-[9px] font-black text-slate-700">NPO Hub</span>
                         </button>
+                      </div>
+
+                      <div className="border-t border-slate-100 pt-4">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 px-2">Merchant Services</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                           <button onClick={() => { setActiveAppPopup('MERCHANT_BILLING'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-4 rounded-3xl bg-slate-900 text-white hover:bg-blue-600 transition-colors group shadow-md">
+                             <Calculator size={24} className="mb-1 text-blue-400 group-hover:text-white" />
+                             <span className="text-[10px] font-black tracking-widest uppercase">Invoicing</span>
+                           </button>
+                           <button onClick={() => { setActiveAppPopup('MERCHANT_TICKETS'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-4 rounded-3xl bg-slate-900 text-white hover:bg-purple-600 transition-colors group shadow-md">
+                             <Ticket size={24} className="mb-1 text-purple-400 group-hover:text-white" />
+                             <span className="text-[10px] font-black tracking-widest uppercase">Box Office</span>
+                           </button>
+                        </div>
                       </div>
                     </div>
                   </>
@@ -1390,7 +1407,7 @@ export default function Dashboard({ session, onSignOut }) {
           <div className="bg-white rounded-3xl w-full max-w-5xl h-[90vh] shadow-2xl overflow-hidden flex flex-col relative border border-slate-100 animate-in zoom-in-95">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-20">
                <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">
-                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills & Vendors' : activeAppPopup === 'CONTRACTS' ? 'Smart Contracts' : activeAppPopup === 'NPO' ? 'Philanthropy Hub' : 'P2P Credit Market'}
+                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills' : activeAppPopup === 'CONTRACTS' ? 'Smart Contracts' : activeAppPopup === 'NPO' ? 'Philanthropy Hub' : activeAppPopup === 'MERCHANT_BILLING' ? 'Merchant Invoicing' : activeAppPopup === 'MERCHANT_TICKETS' ? 'Box Office Scanner' : 'P2P Credit Market'}
                </h3>
                <button onClick={() => setActiveAppPopup(null)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
                  <X size={20} />
@@ -1402,6 +1419,10 @@ export default function Dashboard({ session, onSignOut }) {
                {activeAppPopup === 'CONTRACTS' && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
                {activeAppPopup === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
                {activeAppPopup === 'NPO' && <NpoHub session={session} />}
+               
+               {/* THE NEW PRO FEATURES INJECTED HERE */}
+               {activeAppPopup === 'MERCHANT_BILLING' && <BillingTerminal session={session} balances={balances} fetchAllData={fetchAllData} />}
+               {activeAppPopup === 'MERCHANT_TICKETS' && <TicketGate session={session} balances={balances} fetchAllData={fetchAllData} />}
             </div>
           </div>
         </div>
