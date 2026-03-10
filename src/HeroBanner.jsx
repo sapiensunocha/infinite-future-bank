@@ -2,13 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// 🏙️ BULLETPROOF PREMIUM FALLBACK IMAGES (macOS architectural & cinematic style)
+// 🏙️ BEAUTIFUL LIGHT SKY FALLBACK IMAGES (Only this array was changed)
 const FALLBACK_BACKGROUNDS = [
-  "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=2000", // New York Skyline Night
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000", // Cinematic Mountains
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&q=80&w=2000", // High-end Nature Landscape
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000", // Modern Corporate Architecture
-  "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=2000"  // Premium Dark Tech Minimal
+  "https://images.unsplash.com/photo-1513622470522-26c31154c1bb?auto=format&fit=crop&q=80&w=2000", // Bright blue sky with scattered clouds
+  "https://images.unsplash.com/photo-1495932591221-efa85f12e2fb?auto=format&fit=crop&q=80&w=2000", // Beautiful clear pastel morning sky
+  "https://images.unsplash.com/photo-1506260408121-e353d10b87c7?auto=format&fit=crop&q=80&w=2000", // Majestic bright sunset/sunrise sky
+  "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&q=80&w=2000", // Light twilight sky over mountains
+  "https://images.unsplash.com/photo-1536147116438-ce266420568a?auto=format&fit=crop&q=80&w=2000"  // Clean bright sky over calm water
 ];
 
 export default function HeroBanner({ profile, balances, transactions = [], formatCurrency, showBalances, setShowBalances, setActiveModal }) {
