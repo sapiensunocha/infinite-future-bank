@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// 🏙️ BEAUTIFUL LIGHT SKY FALLBACK IMAGES (Verified working links)
+// 🏙️ BEAUTIFUL LIGHT SKY FALLBACK IMAGES (Including your exact Vecteezy Thailand choices)
 const FALLBACK_BACKGROUNDS = [
+  "https://static.vecteezy.com/system/resources/previews/037/248/582/large_2x/ai-generated-travelling-to-thailand-advertisment-background-with-copy-space-photo.jpg", // Vecteezy Thailand Sky 1
+  "https://static.vecteezy.com/system/resources/previews/037/248/575/large_2x/ai-generated-travelling-to-thailand-advertisment-background-with-copy-space-photo.jpg", // Vecteezy Thailand Sky 2
   "https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=2000", // Bright blue sky with fluffy clouds
-  "https://images.unsplash.com/photo-1534088568595-a066f410cbda?auto=format&fit=crop&q=80&w=2000", // Beautiful bright pastel/sunset sky
   "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&q=80&w=2000", // Clear sunny day sky
-  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000", // Cinematic bright sky over mountains
   "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&q=80&w=2000"  // Bright morning sky over water
 ];
 
@@ -104,30 +104,37 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
     fetchWeather();
   }, []);
 
-  // 🧠 3. REAL GROK AI INSIGHT FETCH
+  // 🧠 3. REAL GROK AI INSIGHT FETCH (With specific prompt to prevent repeating)
   useEffect(() => {
     const fetchInsight = async () => {
         setIsLoadingInsight(true);
         try {
+            const contextualPrompt = `You are a sophisticated, friendly digital private banker for ${firstName}. Right now it is ${time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} in ${weather.city}, and the temperature is ${weather.temp} degrees. Today is ${celebration}. The client's AFR token balance is ${parseFloat(balances?.afr_balance || 0).toFixed(2)}. Write a friendly, realistic 1 to 2 sentence greeting weaving these elements together to show their wealth is growing. Do NOT use placeholders. Do NOT say "your safety net is perfectly secure".`;
+
             const res = await fetch('https://ifb-intelligence-core-382117221028.us-central1.run.app/api/network/daily-hero', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profile, balances, celebration, weather })
+                body: JSON.stringify({ 
+                  profile, 
+                  balances, 
+                  celebration, 
+                  weather,
+                  system_prompt: contextualPrompt 
+                })
             });
             const data = await res.json();
-            // Clean up name repetitions from AI response
-            let cleanText = data.text.replace(/Good Morning, .*?\./g, '').replace(/Welcome back, .*?\./g, '').trim();
+            let cleanText = data.text.replace(/Good Morning, .*?\./ig, '').replace(/Welcome back, .*?\./ig, '').replace(/Here is your greeting:/i, '').trim();
             setInsight(cleanText);
         } catch (err) {
-            setInsight(`Institutional telemetry indicates all network operations are nominal. Your perimeter remains completely secure.`);
+            setInsight(`Happy ${celebration}, ${firstName}. The weather in ${weather.city} is looking good, and your AFR assets are securely compounding in the background.`);
         } finally { setIsLoadingInsight(false); }
     };
     if (profile && weather.temp !== '--') fetchInsight();
-  }, [profile, weather.city, celebration]);
+  }, [profile, weather.city, celebration, balances?.afr_balance]);
 
-  // Real-time clock update
+  // Real-time clock update (Set to 1000ms for accurate flip animation)
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 60000);
+    const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -158,14 +165,23 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
                <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{celebration}</span>
             </div>
-            <p className="text-xs font-black text-slate-300 uppercase tracking-widest pl-2 drop-shadow-md">
-              {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </p>
+            
+            {/* Apple Flip Animation for Date */}
+            <div className="overflow-hidden h-4 pl-2">
+              <p key={time.getDate()} className="text-xs font-black text-slate-300 uppercase tracking-widest drop-shadow-md animate-in slide-in-from-top-full duration-500">
+                {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
           </div>
           
           <div className="text-right flex items-center gap-4 bg-black/30 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-lg hidden sm:flex">
             <div>
-              <p className="text-xl font-black text-white leading-none">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              {/* Apple Flip Animation for Time */}
+              <div className="overflow-hidden h-6">
+                <p key={time.getMinutes()} className="text-xl font-black text-white leading-none animate-in slide-in-from-top-full duration-500">
+                  {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{weather.city}</p>
             </div>
             <div className="w-px h-8 bg-white/20"></div>
@@ -228,7 +244,9 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
 
         {/* BOTTOM: REAL ACCOUNT OVERVIEW */}
         <div className="mt-auto grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-white/10">
-          <div className="flex items-center gap-4">
+          
+          {/* Added Active Touch states for mobile */}
+          <div className="flex items-center gap-4 group cursor-pointer active:scale-95 touch-manipulation transition-transform">
             <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-500/30 backdrop-blur-md"><Wallet size={20}/></div>
             <div>
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Liquid USD</p>
@@ -236,7 +254,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 group cursor-pointer active:scale-95 touch-manipulation transition-transform">
             <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/30 backdrop-blur-md"><Zap size={20}/></div>
             <div>
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">AFR Asset</p>
@@ -245,7 +263,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
           </div>
 
           <div className="flex items-center justify-end">
-            <button onClick={() => setActiveModal('ADVISOR')} className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg hover:shadow-white/20 flex items-center gap-2 group">
+            <button onClick={() => setActiveModal('ADVISOR')} className="px-6 py-3 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 active:scale-95 touch-manipulation transition-all shadow-lg hover:shadow-white/20 flex items-center gap-2 group">
               Financial Strategy <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
