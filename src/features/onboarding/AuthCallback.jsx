@@ -10,7 +10,7 @@ const AuthCallback = () => {
   const [status, setStatus] = useState('DECRYPTING CLEARANCE...');
   const [isError, setIsError] = useState(false);
 
-  // 🚀 NEW: Cinematic First-Time Setup States
+  // 🚀 Cinematic First-Time Setup States
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [showBoom, setShowBoom] = useState(false);
@@ -22,7 +22,6 @@ const AuthCallback = () => {
     if (isFirstTime && countdown > 0) {
       const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
       
-      // Cycle the text as the countdown drops
       if (countdown === 4) setStatus('INITIALIZING PRIVATE VAULT...');
       if (countdown === 3) setStatus('GENERATING SECURE LEDGER...');
       if (countdown === 2) setStatus('GIFTING 1 AFR WELCOME BONUS...');
@@ -31,11 +30,9 @@ const AuthCallback = () => {
       return () => clearTimeout(timer);
     } 
     
-    // When countdown hits 0, trigger the Firework Boom
     if (isFirstTime && countdown === 0 && !showBoom) {
       setShowBoom(true);
       setStatus('WELCOME TO DEUS');
-      // Wait 1.5 seconds for the firework animation to play, then route to app
       setTimeout(() => navigate('/'), 1500);
     }
   }, [isFirstTime, countdown, showBoom, navigate]);
@@ -73,7 +70,7 @@ const AuthCallback = () => {
         setTimeout(() => navigate('/'), 500);
       }
     } catch (error) {
-      console.error("Biometric authentication failed or cancelled:", error);
+      console.error("Biometric auth failed:", error);
       setIsError(true);
       setStatus('AUTH CANCELLED. ACCESS DENIED.');
       setTimeout(() => navigate('/'), 2500);
@@ -81,23 +78,29 @@ const AuthCallback = () => {
   };
 
   // =========================================================================
-  // 🔗 INITIAL SESSION CHECK
+  // 🔗 INITIAL SESSION CHECK & FAIL-SAFES
   // =========================================================================
   useEffect(() => {
+    // 1. FAIL-SAFE: Check if the URL contains an error from an expired/used link
+    if (window.location.hash.includes('error') || window.location.search.includes('error')) {
+      setIsError(true);
+      setStatus('LINK EXPIRED OR USED.');
+      setTimeout(() => navigate('/'), 2500);
+      return;
+    }
+
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       const currentURL = window.location.href;
       
       if (session) {
-        // Detect if this is a brand new user verifying for the first time
         if (currentURL.includes('type=signup')) {
           setIsFirstTime(true);
           setStatus('ACTIVATING TERMINAL...');
         } else {
-          // Normal returning user
           triggerBiometrics();
         }
-      } else if (error || !window.location.hash) {
+      } else if (error) {
         setIsError(true);
         setStatus('LINK EXPIRED OR INVALID.');
         setTimeout(() => navigate('/'), 2000);
@@ -107,14 +110,32 @@ const AuthCallback = () => {
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || session) && !status.includes('ROUTING') && !isFirstTime) {
-        // Only trigger biometrics on state change if it's NOT a first-time signup
-        triggerBiometrics();
+      if (event === 'SIGNED_IN' && session) {
+         const currentURL = window.location.href;
+         if (currentURL.includes('type=signup')) {
+            setIsFirstTime(true);
+            setStatus('ACTIVATING TERMINAL...');
+         } else if (!status.includes('ROUTING')) {
+            triggerBiometrics();
+         }
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate, isFirstTime]); // added isFirstTime to dependencies
+    // 2. FAIL-SAFE: If it gets stuck on DECRYPTING for 4 seconds, abort and go to login
+    const stuckTimeout = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        setIsError(true);
+        setStatus('LINK EXPIRED OR USED.');
+        setTimeout(() => navigate('/'), 2000);
+      }
+    }, 4000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(stuckTimeout);
+    };
+  }, [navigate]);
 
   return (
     <div className="relative flex h-screen w-full items-center justify-center bg-slate-50 text-emerald-500 font-sans overflow-hidden">
@@ -142,15 +163,14 @@ const AuthCallback = () => {
         </div>
       )}
 
-      {/* STANDARD / COUNTDOWN UI (Hidden when firework goes off) */}
+      {/* STANDARD / COUNTDOWN UI */}
       <div className={`relative z-10 flex flex-col items-center space-y-4 transition-opacity duration-300 ${showBoom ? 'opacity-0' : 'opacity-100'}`}>
         
-        {/* Visual Indicator (Spinner, Check, X, or Countdown Number) */}
         {isFirstTime && countdown > 0 ? (
           <div className="h-16 w-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center shadow-inner animate-in zoom-in">
              <span className="text-3xl font-black text-emerald-600 animate-pulse">{countdown}</span>
           </div>
-        ) : status.includes('DENIED') || status.includes('EXPIRED') || status.includes('CANCELLED') ? (
+        ) : status.includes('DENIED') || status.includes('EXPIRED') || status.includes('CANCELLED') || status.includes('USED') ? (
           <div className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white font-black text-lg shadow-md">X</div>
         ) : status.includes('ROUTING') ? (
           <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black text-lg shadow-md">✓</div>
@@ -158,8 +178,7 @@ const AuthCallback = () => {
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-500"></div>
         )}
 
-        {/* Status Text */}
-        <p className={`tracking-widest text-xs font-black uppercase text-center max-w-[280px] leading-relaxed transition-all ${status.includes('DENIED') || status.includes('CANCELLED') || status.includes('EXPIRED') ? 'text-red-500' : ''}`}>
+        <p className={`tracking-widest text-xs font-black uppercase text-center max-w-[280px] leading-relaxed transition-all ${isError ? 'text-red-500' : ''}`}>
           {status}
         </p>
 
