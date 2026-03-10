@@ -83,9 +83,11 @@ const AuthCallback = () => {
   };
 
   // =========================================================================
-  // 🔗 INITIAL SESSION CHECK & FAIL-SAFES
+  // 🔗 INITIAL SESSION CHECK & FAIL-SAFES (RACE-CONDITION SECURED)
   // =========================================================================
   useEffect(() => {
+    let isMounted = true;
+    let recoveryDetected = false;
     const currentURL = window.location.href;
 
     if (currentURL.includes('error')) {
@@ -95,54 +97,61 @@ const AuthCallback = () => {
       return;
     }
 
-    // 🚀 NEW: RECOVERY INTERCEPTOR
-    if (currentURL.includes('type=recovery')) {
-      setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
-      setIsRecoveryMode(true);
-      return; 
-    }
-
-    const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (session) {
-        if (currentURL.includes('type=signup')) {
-          setIsFirstTime(true);
-          setStatus('ACTIVATING TERMINAL...');
-        } else {
-          triggerBiometrics();
-        }
-      } else if (error) {
-        setIsError(true);
-        setStatus('LINK EXPIRED OR INVALID.');
-        setTimeout(() => navigate('/'), 2000);
-      }
-    };
-
-    if (!currentURL.includes('type=recovery')) {
-      checkSession();
-    }
-
+    // 1. Immediately listen for the Supabase Auth Event
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && currentURL.includes('type=recovery'))) {
-         setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
-         setIsRecoveryMode(true);
+      if (event === 'PASSWORD_RECOVERY' || currentURL.includes('type=recovery') || currentURL.includes('recovery')) {
+         recoveryDetected = true;
+         if (isMounted) {
+           setIsRecoveryMode(true);
+           setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
+         }
          return;
       }
 
-      if (event === 'SIGNED_IN' && session && !isRecoveryMode) {
-         if (currentURL.includes('type=signup')) {
+      if (event === 'SIGNED_IN' && session && !recoveryDetected) {
+         if (currentURL.includes('type=signup') && isMounted) {
             setIsFirstTime(true);
             setStatus('ACTIVATING TERMINAL...');
-         } else if (!status.includes('ROUTING')) {
-            triggerBiometrics();
          }
       }
     });
 
+    // 2. Check the session, but give the event listener a tiny delay to catch the recovery flag first
+    const initAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      setTimeout(() => {
+        if (!isMounted) return;
+
+        // If a recovery was detected, STOP here and show the password form.
+        if (recoveryDetected || currentURL.includes('recovery')) {
+          setIsRecoveryMode(true);
+          setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
+          return;
+        }
+
+        // Otherwise, proceed with normal login/signup routing
+        if (session) {
+          if (currentURL.includes('type=signup')) {
+            setIsFirstTime(true);
+            setStatus('ACTIVATING TERMINAL...');
+          } else {
+            triggerBiometrics();
+          }
+        } else if (error) {
+          setIsError(true);
+          setStatus('LINK EXPIRED OR INVALID.');
+          setTimeout(() => navigate('/'), 2000);
+        }
+      }, 300); // 300ms delay stops the race condition dead in its tracks
+    };
+
+    initAuth();
+
+    // 3. FAIL-SAFE: Stuck timeout
     const stuckTimeout = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
-      if (!data.session && !currentURL.includes('type=recovery')) {
+      if (!data.session && !recoveryDetected && isMounted) {
         setIsError(true);
         setStatus('LINK EXPIRED OR USED.');
         setTimeout(() => navigate('/'), 2000);
@@ -150,10 +159,11 @@ const AuthCallback = () => {
     }, 4000);
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
       clearTimeout(stuckTimeout);
     };
-  }, [navigate, status, isRecoveryMode]);
+  }, [navigate]);
 
   // =========================================================================
   // 💾 SAVE NEW PASSWORD HANDLER
