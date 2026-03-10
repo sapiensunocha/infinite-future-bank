@@ -2,13 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// 🏙️ SUPER BRIGHT SKY FALLBACK IMAGES (Verified 100% working links)
+// 🏙️ BEAUTIFUL LIGHT SKY FALLBACK IMAGES (Verified working links)
 const FALLBACK_BACKGROUNDS = [
   "https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=2000", // Bright blue sky with fluffy clouds
-  "https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?auto=format&fit=crop&q=80&w=2000", // Vibrant daylight sky
-  "https://images.unsplash.com/photo-1601297183314-c09d3958bc66?auto=format&fit=crop&q=80&w=2000", // Clear blue sky and clouds
-  "https://images.unsplash.com/photo-1445264618000-f1e069c5920f?auto=format&fit=crop&q=80&w=2000", // Sun rays in bright sky
-  "https://images.unsplash.com/photo-1508614999368-9260051292e5?auto=format&fit=crop&q=80&w=2000"  // Crisp pure light blue sky
+  "https://images.unsplash.com/photo-1534088568595-a066f410cbda?auto=format&fit=crop&q=80&w=2000", // Beautiful bright pastel/sunset sky
+  "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&q=80&w=2000", // Clear sunny day sky
+  "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=2000", // Cinematic bright sky over mountains
+  "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&q=80&w=2000"  // Bright morning sky over water
 ];
 
 export default function HeroBanner({ profile, balances, transactions = [], formatCurrency, showBalances, setShowBalances, setActiveModal }) {
