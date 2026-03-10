@@ -589,35 +589,40 @@ export default function Dashboard({ session, onSignOut }) {
           setActiveModal={setActiveModal}
         />
 
-        {/* ✨ UNIFORM ACTION BAR ✨ */}
-        <div className="bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm">
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+        {/* ✨ FANCY GLASSMORPHIC ACTION BAR ✨ */}
+        <div className="bg-white/40 backdrop-blur-2xl border border-white/60 p-5 rounded-[2.5rem] shadow-2xl">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 sm:gap-4">
             {[
-              { id: 'SEND', icon: <Send size={20} />, label: 'SEND', action: () => setActiveModal('SEND') },
-              { id: 'REQUEST', icon: <Download size={20} />, label: 'REQUEST', action: () => setActiveModal('REQUEST') },
-              { id: 'PAY_ME', icon: <QrCode size={20} />, label: 'PAY ME', action: () => setShowPayMe(true) },
-              { id: 'TRANSFER', icon: <ArrowRightLeft size={20} />, label: 'TRANSFER', action: () => setActiveModal('TRANSFER') },
-              { id: 'DEPOSIT', icon: <Plus size={20} />, label: 'DEPOSIT', action: () => setShowDepositUI(true) },
-              { id: 'WITHDRAW', icon: <Landmark size={20} />, label: 'WITHDRAW', action: () => setIsWithdrawOpen(true) },
-              { id: 'ANALYTICS', icon: <BarChart2 size={20} />, label: 'ANALYTICS', action: () => setShowAnalytics(!showAnalytics), isToggle: true, active: showAnalytics }
+              { id: 'SEND', icon: <Send size={22} />, color: 'text-blue-500', label: 'SEND', action: () => setActiveModal('SEND') },
+              { id: 'REQUEST', icon: <Download size={22} />, color: 'text-blue-500', label: 'REQUEST', action: () => setActiveModal('REQUEST') },
+              { id: 'PAY_ME', icon: <QrCode size={22} />, color: 'text-blue-600', label: 'PAY ME', action: () => setShowPayMe(true) },
+              { id: 'TRANSFER', icon: <ArrowRightLeft size={22} />, color: 'text-blue-500', label: 'TRANSFER', action: () => setActiveModal('TRANSFER') },
+              { id: 'DEPOSIT', icon: <Plus size={22} />, color: 'text-emerald-500', label: 'DEPOSIT', action: () => setShowDepositUI(true) },
+              { id: 'WITHDRAW', icon: <Landmark size={22} />, color: 'text-slate-600', label: 'WITHDRAW', action: () => setIsWithdrawOpen(true) },
+              { id: 'ANALYTICS', icon: <BarChart2 size={22} />, color: 'text-indigo-500', label: 'ANALYTICS', action: () => setShowAnalytics(!showAnalytics), isToggle: true, active: showAnalytics }
             ].map((btn) => (
               <button 
                 key={btn.id}
                 onClick={btn.action} 
-                className={`flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-2xl transition-all group ${btn.isToggle && btn.active ? 'bg-indigo-600 text-white shadow-md' : 'bg-transparent text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-100'}`}
+                className={`flex flex-col items-center justify-center gap-3 py-6 rounded-[2.2rem] transition-all duration-300 group border relative overflow-hidden ${
+                  btn.isToggle && btn.active 
+                    ? 'bg-indigo-600 text-white border-indigo-400 shadow-2xl scale-95' 
+                    : 'bg-white/60 text-slate-700 border-white/80 hover:bg-white hover:shadow-xl hover:scale-105 active:scale-95'
+                }`}
               >
-                <div className={`transition-transform group-hover:-translate-y-1 ${btn.isToggle && btn.active ? 'text-white' : 'text-slate-500'}`}>
+                <div className={`transition-transform duration-300 group-hover:-translate-y-1 ${btn.isToggle && btn.active ? 'text-white' : btn.color}`}>
                   {btn.icon}
                 </div>
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-center whitespace-nowrap">
+                <span className={`text-[10px] font-black uppercase tracking-widest text-center ${btn.isToggle && btn.active ? 'text-indigo-50' : 'text-slate-500'}`}>
                   {btn.label}
                 </span>
+                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
               </button>
             ))}
           </div>
         </div>
         
-        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px]">
+        <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-6 md:p-8 shadow-sm transition-all duration-500 min-h-[300px] mt-6">
           {showAnalytics ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
@@ -1683,15 +1688,21 @@ export default function Dashboard({ session, onSignOut }) {
         </div>
       )}
 
-      {/* 6. Deposit Stripe UI */}
+      {/* 💳 DEPOSIT OVERLAY (FIXED CLOSING) */}
       {showDepositUI && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-           {/* Added a close wrapper around the existing DepositInterface */}
-           <div className="relative w-full max-w-4xl mx-4">
-             <button onClick={() => setShowDepositUI(false)} className="absolute -top-12 right-0 text-white hover:text-slate-200 transition-colors z-50 flex items-center gap-2 font-black text-sm tracking-widest uppercase">
-                <X size={24}/> Close
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-4 sm:p-8">
+           <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
+             {/* High-Visibility Floating Close Button */}
+             <button 
+                onClick={() => setShowDepositUI(false)} 
+                className="mb-8 bg-white text-slate-900 px-10 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:bg-red-50 hover:text-red-600"
+             >
+                <X size={20} /> Close Terminal
              </button>
-             <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />
+             
+             <div className="w-full bg-white rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/20">
+               <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />
+             </div>
            </div>
         </div>
       )}
