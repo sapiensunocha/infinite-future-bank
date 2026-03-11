@@ -59,12 +59,18 @@ function MainApp() {
   // Live Network Stats State
   const [networkStats, setNetworkStats] = useState({ users: 0, orgs: 0, countries: 0 });
 
-  // 1. CAPTURE REFERRAL LINK IMMEDIATELY ON LOAD
+  // 1. CAPTURE REFERRAL & INVITE LINKS IMMEDIATELY ON LOAD
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
     if (ref) {
       sessionStorage.setItem('ifb_ref_code', ref);
+    }
+
+    // 🔒 SECURITY TOLLBOOTH 1: Catch Invite & Recovery links directly from the URL
+    const hash = window.location.hash;
+    if (hash && (hash.includes('type=invite') || hash.includes('type=recovery'))) {
+      setCurrentView('update_password');
     }
   }, []);
 
@@ -139,6 +145,12 @@ function MainApp() {
           });
 
           if (provisionError) throw provisionError;
+
+          // 🔒 SECURITY TOLLBOOTH 2: Force brand-new users (like invitees) to set a password
+          // If they didn't just use your registration form, trap them here.
+          if (!sessionStorage.getItem('deus_just_registered')) {
+            setCurrentView('update_password');
+          }
         }
       } catch (err) {
         console.error("Profile initialization error:", err);
@@ -196,6 +208,9 @@ function MainApp() {
     e.preventDefault();
     setIsLoading(true);
     try {
+      // Flag to let the system know they already typed a password during signup
+      sessionStorage.setItem('deus_just_registered', 'true'); 
+      
       const { data, error } = await supabase.auth.signUp({
         email: emailValue.trim().toLowerCase(), password: passwordValue,
         options: { data: { full_name: nameValue }, emailRedirectTo: `${window.location.origin}/auth/callback` }
@@ -205,7 +220,7 @@ function MainApp() {
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
-  // 🔑 NEW: Send Password Reset Email
+  // 🔑 Send Password Reset Email
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -223,15 +238,17 @@ function MainApp() {
     }
   };
 
-  // 🔑 Save New Password
+  // 🔑 Save New Password & Securely Enter Vault
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: passwordValue });
       if (error) throw error;
-      setCurrentView('welcome_back');
-      showMessage('Security updated successfully.', 'success');
+      
+      // 🔒 SECURITY TOLLBOOTH 3: Once saved, securely drop them into the Dashboard
+      setCurrentView('dashboard'); 
+      showMessage('Vault Key secured. Access granted.', 'success');
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
@@ -245,7 +262,7 @@ function MainApp() {
     );
   }
 
-  // DASHBOARD ROUTING
+  // 🔒 CRITICAL DASHBOARD ROUTING: Blocks access if they are trapped in the 'update_password' screen
   if (session && currentView !== 'update_password') {
     return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
   }
@@ -301,7 +318,7 @@ function MainApp() {
             </div>
           )}
 
-          {/* VIEW 2: WELCOME BACK (Now with Forgot Password button) */}
+          {/* VIEW 2: WELCOME BACK */}
           {currentView === 'welcome_back' && (
             <div className="animate-in slide-in-from-right-4 duration-300 text-center">
               <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Welcome Back</h2>
@@ -327,7 +344,7 @@ function MainApp() {
             </div>
           )}
 
-          {/* VIEW 2.5: RECOVER PASSWORD (NEW) */}
+          {/* VIEW 2.5: RECOVER PASSWORD */}
           {currentView === 'forgot_password' && (
             <div className="animate-in slide-in-from-left-4 duration-300 text-center">
               <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Vault Recovery</h2>
@@ -375,13 +392,13 @@ function MainApp() {
             </div>
           )}
 
-          {/* VIEW 5: UPDATE PASSWORD */}
+          {/* VIEW 5: UPDATE PASSWORD (TRAP FOR NEW INVITES) */}
           {currentView === 'update_password' && (
             <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
               <h2 className="text-2xl font-black mb-8 text-slate-800">New Vault Key</h2>
               <form onSubmit={handleUpdatePassword} className="space-y-6">
                 <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="New Password" autoFocus={true} minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                <button type="submit" disabled={isLoading} className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
+                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Save Password</span>
                 </button>
