@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
-import { Sparkles, Lock } from 'lucide-react';
+import { Sparkles, Lock, Eye, EyeOff, RefreshCw, ChevronRight } from 'lucide-react';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ const AuthCallback = () => {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // =========================================================================
   // 🎇 CINEMATIC COUNTDOWN LOGIC
@@ -97,7 +98,6 @@ const AuthCallback = () => {
       return;
     }
 
-    // 1. Immediately listen for the Supabase Auth Event
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' || currentURL.includes('type=recovery') || currentURL.includes('recovery')) {
          recoveryDetected = true;
@@ -116,21 +116,17 @@ const AuthCallback = () => {
       }
     });
 
-    // 2. Check the session, but give the event listener a tiny delay to catch the recovery flag first
     const initAuth = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       
       setTimeout(() => {
         if (!isMounted) return;
-
-        // If a recovery was detected, STOP here and show the password form.
         if (recoveryDetected || currentURL.includes('recovery')) {
           setIsRecoveryMode(true);
           setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
           return;
         }
 
-        // Otherwise, proceed with normal login/signup routing
         if (session) {
           if (currentURL.includes('type=signup')) {
             setIsFirstTime(true);
@@ -143,12 +139,11 @@ const AuthCallback = () => {
           setStatus('LINK EXPIRED OR INVALID.');
           setTimeout(() => navigate('/'), 2000);
         }
-      }, 300); // 300ms delay stops the race condition dead in its tracks
+      }, 300);
     };
 
     initAuth();
 
-    // 3. FAIL-SAFE: Stuck timeout
     const stuckTimeout = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
       if (!data.session && !recoveryDetected && isMounted) {
@@ -194,8 +189,12 @@ const AuthCallback = () => {
   };
 
   return (
-    <div className="relative flex h-screen w-full items-center justify-center bg-slate-50 text-emerald-500 font-sans overflow-hidden">
+    <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden flex flex-col items-center justify-center p-6">
       
+      {/* Ambient Background Glows (Matching App.jsx) */}
+      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none"></div>
+      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-200/30 to-teal-300/10 blur-3xl pointer-events-none"></div>
+
       {/* 🎇 FIREWORK EXPLOSION OVERLAY 🎇 */}
       <div 
         className="absolute z-40 bg-emerald-500 rounded-full"
@@ -219,43 +218,70 @@ const AuthCallback = () => {
         </div>
       )}
 
-      {/* STANDARD / COUNTDOWN / RECOVERY UI */}
-      <div className={`relative z-10 flex flex-col items-center space-y-4 transition-opacity duration-300 ${showBoom ? 'opacity-0' : 'opacity-100'}`}>
+      {/* STANDARD / RECOVERY UI */}
+      <div className={`relative z-10 w-full max-w-[440px] flex flex-col items-center transition-opacity duration-300 ${showBoom ? 'opacity-0' : 'opacity-100'}`}>
         
         {isRecoveryMode && !status.includes('ROUTING') ? (
-          <form onSubmit={handlePasswordUpdate} className="flex flex-col items-center space-y-4 w-full max-w-xs animate-in fade-in slide-in-from-bottom-4">
-            <div className="h-12 w-12 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center shadow-inner">
-               <Lock className="text-emerald-600" size={24} />
+          <div className="w-full bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col items-center mb-8">
+              <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-4 shadow-inner">
+                <Lock size={32} />
+              </div>
+              <h2 className="text-2xl font-black tracking-tight text-slate-800">New Vault Key</h2>
+              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-2 text-center">Identity Verified via Secure Link</p>
             </div>
-            <input 
-              type="password" 
-              placeholder="ENTER NEW PASSWORD" 
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              disabled={isUpdating}
-              className="w-full text-center px-4 py-3 bg-white border-2 border-emerald-200 rounded-lg text-slate-800 font-bold focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-300"
-            />
-            <button 
-              type="submit" 
-              disabled={isUpdating || !newPassword}
-              className="w-full bg-emerald-500 text-white font-black py-3 rounded-lg uppercase tracking-widest hover:bg-emerald-600 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
-            >
-              {isUpdating ? 'SECURING...' : 'CONFIRM CIPHER'}
-            </button>
-          </form>
-        ) : isFirstTime && countdown > 0 ? (
-          <div className="h-16 w-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center shadow-inner animate-in zoom-in">
-             <span className="text-3xl font-black text-emerald-600 animate-pulse">{countdown}</span>
+
+            <form onSubmit={handlePasswordUpdate} className="space-y-6">
+              <div className="relative group">
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  required 
+                  autoFocus
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)} 
+                  placeholder="NEW PASSWORD" 
+                  className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" 
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isUpdating || newPassword.length < 6} 
+                className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
+                  {isUpdating ? <RefreshCw size={18} className="animate-spin" /> : 'Confirm Cipher'} 
+                  {!isUpdating && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
+                </div>
+              </button>
+            </form>
           </div>
-        ) : status.includes('DENIED') || status.includes('EXPIRED') || status.includes('CANCELLED') || status.includes('USED') ? (
-          <div className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white font-black text-lg shadow-md">X</div>
-        ) : status.includes('ROUTING') ? (
-          <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black text-lg shadow-md">✓</div>
         ) : (
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-emerald-500"></div>
+          <div className="flex flex-col items-center space-y-6">
+            {isFirstTime && countdown > 0 ? (
+              <div className="h-20 w-20 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-inner animate-in zoom-in">
+                 <span className="text-4xl font-black text-emerald-600 animate-pulse">{countdown}</span>
+              </div>
+            ) : status.includes('DENIED') || status.includes('EXPIRED') || status.includes('INVALID') || status.includes('USED') ? (
+              <div className="h-12 w-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-500 font-black text-xl shadow-md">X</div>
+            ) : status.includes('ROUTING') ? (
+              <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 font-black text-xl shadow-md">✓</div>
+            ) : (
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500 shadow-sm"></div>
+            )}
+          </div>
         )}
 
-        <p className={`tracking-widest text-xs font-black uppercase text-center max-w-[280px] leading-relaxed transition-all ${isError ? 'text-red-500' : ''}`}>
+        <p className={`mt-6 tracking-widest text-[10px] font-black uppercase text-center max-w-[280px] leading-relaxed transition-all ${isError ? 'text-red-500' : 'text-slate-400'}`}>
           {status}
         </p>
 
