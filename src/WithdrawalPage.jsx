@@ -140,11 +140,10 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
         setStep(4);
       } 
       else if (method === 'BANK') {
-        // Build payload based on user selection
         const payload = {
           userId: userId,
           amount: parseFloat(amount),
-          type: bankType, // 'ach', 'swift', 'card'
+          type: bankType, 
           accountName: formData.accountName
         };
 
@@ -156,9 +155,37 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
           payload.swiftBic = formData.swiftBic;
           payload.country = formData.country;
         } else if (bankType === 'card') {
-          payload.cardNumber = formData.cardNumber.replace(/\s/g, '');
-          payload.expiry = formData.expiry; // Format: MM/YY
-          payload.cvc = formData.cvc;
+          // =========================================================
+          // STRIPE FRONTEND TOKENIZATION (Bypasses PCI blocks)
+          // =========================================================
+          const [exp_month, exp_year] = formData.expiry.split('/');
+          
+          // Using the provided live key, with a fallback to the env variable just in case
+          const stripeKey = import.meta.env?.VITE_STRIPE_PUBLIC_KEY || 'pk_live_51QlhX1DV4GGUfngRRIJi02QYB2pTZg2bbX9T4xwM0i6FflEPt2FtV7ydZfNks9I9vOAcmwsLGM1U7tzbpmaP454C00qsme0XJ8';
+          
+          const cardResp = await fetch('https://api.stripe.com/v1/tokens', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': `Bearer ${stripeKey}` 
+            },
+            body: new URLSearchParams({
+              'card[number]': formData.cardNumber.replace(/\s/g, ''),
+              'card[exp_month]': exp_month,
+              'card[exp_year]': '20' + exp_year,
+              'card[cvc]': formData.cvc,
+              'card[name]': formData.accountName,
+            })
+          });
+          
+          const cardData = await cardResp.json();
+          
+          if (cardData.error) {
+             throw new Error(`Card Error: ${cardData.error.message}`);
+          }
+          
+          // Send the safe token to the edge function instead of raw numbers
+          payload.stripeToken = cardData.id;
         }
 
         // Trigger the Edge Function
