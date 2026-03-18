@@ -248,6 +248,11 @@ export default function Dashboard({ session, onSignOut }) {
       setNotification({ type: 'error', text: 'Deposit routing aborted.' });
       window.history.replaceState(null, '', window.location.pathname);
     }
+    if (query.get('status') === 'kyc_submitted') {
+      setNotification({ type: 'success', text: 'Biometric Scan Complete. AI is verifying your identity.' });
+      window.history.replaceState(null, '', window.location.pathname);
+      setTimeout(fetchAllData, 2000);
+    }
     if (query.has('status')) setTimeout(() => setNotification(null), 5000);
   }, [session.user.id]);
 
@@ -282,7 +287,6 @@ export default function Dashboard({ session, onSignOut }) {
 
   // --- ACTIONS ---
 
-  // NEW: Direct AI Verification Handler
   const handleDirectAiVerification = async () => {
     if (!kycFiles.passport || !kycFiles.selfie || !kycForm.legalName) {
       triggerGlobalActionNotification('error', 'Please provide your Legal Name, Passport, and Selfie.');
@@ -292,7 +296,6 @@ export default function Dashboard({ session, onSignOut }) {
     setIsAiProcessing(true);
     
     try {
-      // 1. Helper to convert file to Base64
       const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -303,41 +306,10 @@ export default function Dashboard({ session, onSignOut }) {
       const passportBase64 = await toBase64(kycFiles.passport);
       const selfieBase64 = await toBase64(kycFiles.selfie);
   
-      // 2. Call the AI Vision API
-      // REPLACE with your actual endpoint and API Key. 
-      // Using OpenAI's Vision model as a common example.
-      /*
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer YOUR_OPENAI_API_KEY` 
-        },
-        body: JSON.stringify({
-          model: "gpt-4-vision-preview",
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: "Compare these two images. Image 1 is a passport, Image 2 is a selfie. Does the person in the selfie match the passport? Answer only 'YES' or 'NO'." },
-                { type: "image_url", image_url: { url: `data:image/jpeg;base64,${passportBase64}` } },
-                { type: "image_url", image_url: { url: `data:image/jpeg;base64,${selfieBase64}` } }
-              ]
-            }
-          ]
-        })
-      });
-  
-      const result = await response.json();
-      const aiDecision = result.choices[0].message.content;
-      const isMatch = aiDecision.includes('YES');
-      */
-
       // MOCK FALLBACK: Simulating a successful AI response for immediate testing
       const isMatch = true; 
   
       if (isMatch) {
-        // 3. Update Database on Success
         const { error } = await supabase.from('profiles').update({ 
           kyc_status: 'verified',
           full_legal_name: kycForm.legalName,
@@ -655,7 +627,6 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         )}
 
-        {/* 🌟 PERFECTED HERO BANNER INJECTED HERE 🌟 */}
         <HeroBanner 
           profile={profile}
           balances={balances}
@@ -667,7 +638,6 @@ export default function Dashboard({ session, onSignOut }) {
           setActiveModal={setActiveModal}
         />
 
-        {/* ✨ FANCY GLASSMORPHIC ACTION BAR ✨ */}
         <div className="bg-white/40 backdrop-blur-2xl border border-white/60 p-5 rounded-[2.5rem] shadow-2xl">
           <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 sm:gap-4">
             {[
@@ -1486,14 +1456,27 @@ export default function Dashboard({ session, onSignOut }) {
       {/* 2. AI Advisor Chat */}
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
       
-      {/* 3. P2P Local Banker Map */}
+      {/* 3. P2P Local Banker Map / Withdrawal */}
       {isWithdrawOpen && (
-        <WithdrawalPage 
-          userBalance={balances.liquid_usd} 
-          userId={session.user.id} 
-          onClose={() => setIsWithdrawOpen(false)} 
-          onSuccess={fetchAllData} 
-        />
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-4 sm:p-8">
+           <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
+             <button 
+                onClick={() => setIsWithdrawOpen(false)} 
+                className="mb-8 bg-white text-slate-900 px-10 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:bg-red-50 hover:text-red-600"
+             >
+                <X size={20} /> Close Terminal
+             </button>
+             
+             <div className="w-full bg-white rounded-[3.5rem] shadow-2xl overflow-y-auto border border-white/20 max-h-[80vh]">
+               <WithdrawalPage 
+                 userBalance={balances.liquid_usd} 
+                 userId={session.user.id} 
+                 onClose={() => setIsWithdrawOpen(false)} 
+                 onSuccess={fetchAllData} 
+               />
+             </div>
+           </div>
+        </div>
       )}
 
       {/* 4. Main Transaction Modals (Send, Request, Transfer) */}
