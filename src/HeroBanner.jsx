@@ -1,5 +1,5 @@
 // HeroBanner.jsx
-// RESTORED HEIGHT + FLOATING RISK WIDGET + GCP READY + LOCAL EID IMAGE
+// RESTORED HEIGHT + FLOATING RISK WIDGET + 35 MILE RADIUS + LOCAL EID IMAGE
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity, AlertTriangle, Waves, Flame, ShieldAlert, ChevronDown } from 'lucide-react';
@@ -95,7 +95,8 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
           const alertsRes = await fetch(gcpUrl);
           if (alertsRes.ok) {
             const alerts = await alertsRes.json();
-            nearbyRisks = alerts.filter(a => a.latitude && a.longitude && Math.abs(a.latitude - geoData.latitude) < 8 && Math.abs(a.longitude - geoData.longitude) < 8);
+            // FILTER: 0.5 degrees is roughly 35 miles (City and immediate surroundings)
+            nearbyRisks = alerts.filter(a => a.latitude && a.longitude && Math.abs(a.latitude - geoData.latitude) < 0.5 && Math.abs(a.longitude - geoData.longitude) < 0.5);
           }
         } catch (e) { console.warn("GCP Alerts file not yet available."); }
 
@@ -231,7 +232,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
                 {/* Expanded Details Section */}
                 <div className={`mt-3 pt-3 border-t border-white/10 transition-opacity duration-300 ${showRiskDetails ? 'opacity-100' : 'opacity-0'}`}>
                     <p className="text-[10px] text-slate-400 font-bold mb-2 tracking-wide text-center">
-                        {localRisk.totalEvents} Hazards within 500mi
+                        {localRisk.totalEvents} Hazards within 35mi
                     </p>
                     <div className="flex justify-between items-end gap-2">
                        {localRisk.topRisks.map((RiskObj, i) => (
