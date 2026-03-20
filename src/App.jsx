@@ -5,6 +5,7 @@ import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphon
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
+import FeedbackForm from './FeedbackForm'; // 🔥 ADDED: Import the feedback form
 
 // ==========================================
 // REUSABLE COMPONENTS
@@ -437,13 +438,38 @@ function MainApp() {
   );
 }
 
+// 🔥 ADDED: The App component now manages session state and registers the /FeedbackForm route.
 export default function App() {
+  const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
   return (
     <Router>
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/pay" element={<PayInterface />} />
+        
+        {/* 🔥 ADDED: This makes the URL /FeedbackForm work */}
+        <Route 
+          path="/FeedbackForm" 
+          element={
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+              <FeedbackForm session={session} onClose={() => window.location.href = '/'} />
+            </div>
+          } 
+        />
       </Routes>
     </Router>
   );
