@@ -1,12 +1,12 @@
 // HeroBanner.jsx
-// RESTORED HEIGHT + FLOATING RISK WIDGET + GCP READY
+// RESTORED HEIGHT + FLOATING RISK WIDGET + GCP READY + LOCAL EID IMAGE
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity, AlertTriangle, Waves, Flame, ShieldAlert, ChevronDown } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// 🌙 EID MUBARAK - Vibrant African Community Celebration (Good lighting)
-const EID_IMAGE = "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&q=80&w=2000";
+// 🌙 EID MUBARAK - Local image from public folder
+const EID_IMAGE = "/eid-mubarak.png";
 
 const FALLBACK_BACKGROUNDS = [
   "https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=2000", 
