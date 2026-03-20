@@ -30,6 +30,7 @@ export default function Training({ session }) {
   const [quizStatus, setQuizStatus] = useState(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false); // TTS Toggle
   const currentAudio = useRef(null); // Tracks active audio object
+  const [countdown, setCountdown] = useState(null); // Tracks auto-advance timer
 
   // AI Mentor States
   const [chatHistory, setChatHistory] = useState([
@@ -52,11 +53,12 @@ export default function Training({ session }) {
   // 🗣️ GOOGLE CLOUD TTS (VIA SECURE BACKEND)
   // ==========================================
   useEffect(() => {
-    // Stop any currently playing audio when step changes
+    // Stop any currently playing audio and cancel timers when step changes
     if (currentAudio.current) {
       currentAudio.current.pause();
       currentAudio.current = null;
     }
+    setCountdown(null);
 
     const fetchPremiumVoice = async () => {
       if (isAudioEnabled && activeModule) {
@@ -86,6 +88,15 @@ export default function Training({ session }) {
           const audioStr = `data:audio/mp3;base64,${data.audioContent}`;
           const audio = new Audio(audioStr);
           currentAudio.current = audio;
+          
+          // 🔥 TRIGGER AUTO-ADVANCE WHEN AUDIO FINISHES
+          audio.onended = () => {
+            // Only auto-advance if it's not a quiz (quizzes require user action)
+            if (screen.type !== 'quiz') {
+              setCountdown(3);
+            }
+          };
+
           audio.play();
 
         } catch (err) {
@@ -98,11 +109,23 @@ export default function Training({ session }) {
 
   }, [currentStep, activeModule, isAudioEnabled]);
 
+  // Handle the actual countdown logic
+  useEffect(() => {
+    let timer;
+    if (countdown !== null && countdown > 0) {
+      timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
+    } else if (countdown === 0) {
+      handleNextStep();
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
   // Clean up audio when module closes
   useEffect(() => {
     if (!activeModule && currentAudio.current) {
       currentAudio.current.pause();
       currentAudio.current = null;
+      setCountdown(null);
     }
   }, [activeModule]);
 
@@ -140,6 +163,7 @@ export default function Training({ session }) {
   useEffect(() => { fetchUserTrainingData(); }, [session?.user?.id]);
 
   const handleNextStep = () => {
+    setCountdown(null); // Clear timer automatically
     const currentScreen = activeModule.screens[currentStep];
 
     if (currentScreen.type === 'quiz') {
@@ -218,6 +242,7 @@ export default function Training({ session }) {
     setCurrentStep(0);
     setSelectedAnswer(null);
     setQuizStatus(null);
+    setCountdown(null);
   };
 
   const handleSendMessage = async (e) => {
@@ -325,7 +350,7 @@ export default function Training({ session }) {
                       <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-blue-600 shadow-sm group-hover:bg-blue-50 transition-colors">
                         {mod.icon}
                       </div>
-                      {isCompleted ? <CheckCircle2 size={18} className="textemerald-500"/> : <Play size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors"/>}
+                      {isCompleted ? <CheckCircle2 size={18} className="text-emerald-500"/> : <Play size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors"/>}
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">{mod.track}</span>
                     <h3 className="text-lg font-black text-slate-800 leading-tight">{mod.title}</h3>
@@ -343,7 +368,13 @@ export default function Training({ session }) {
 
       {activeTab === 'ACADEMY' && activeModule && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden relative border border-slate-100 h-[600px] flex flex-col">
+          <div 
+            className="bg-white rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden relative border border-slate-100 h-[600px] flex flex-col"
+            // 🔥 Instantly cancel auto-advance if the user moves their mouse inside the reading panel
+            onMouseMove={() => {
+              if (countdown !== null) setCountdown(null);
+            }}
+          >
             
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <button onClick={() => setActiveModule(null)} className="p-2 text-slate-400 hover:text-slate-800 bg-white rounded-xl shadow-sm"><ArrowLeft size={16}/></button>
@@ -443,7 +474,10 @@ export default function Training({ session }) {
                 disabled={activeModule.screens[currentStep].type === 'quiz' && selectedAnswer === null}
                 className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
               >
-                {activeModule.screens[currentStep].type === 'quiz' ? (quizStatus === 'correct' ? 'Verifying...' : 'Submit Action') : 'Acknowledge & Proceed'}
+                {/* 🔥 Button transforms into a visual countdown indicator */}
+                {countdown !== null 
+                  ? `Auto-Proceeding in ${countdown}s... (Hover to Cancel)` 
+                  : (activeModule.screens[currentStep].type === 'quiz' ? (quizStatus === 'correct' ? 'Verifying...' : 'Submit Action') : 'Acknowledge & Proceed')}
               </button>
             </div>
           </div>
