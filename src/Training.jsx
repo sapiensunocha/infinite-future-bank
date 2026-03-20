@@ -29,6 +29,7 @@ export default function Training({ session }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [quizStatus, setQuizStatus] = useState(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false); // TTS Toggle
+  const currentAudio = useRef(null); // Tracks active audio object
 
   // AI Mentor States
   const [chatHistory, setChatHistory] = useState([
@@ -48,78 +49,60 @@ export default function Training({ session }) {
   }, [chatHistory, isAiTyping]);
 
   // ==========================================
-  // 🗣️ PREMIUM TEXT-TO-SPEECH (CHARISMA HACKED)
+  // 🗣️ GOOGLE CLOUD TTS (VIA SECURE BACKEND)
   // ==========================================
   useEffect(() => {
-    if (!('speechSynthesis' in window)) return;
-    
     // Stop any currently playing audio when step changes
-    window.speechSynthesis.cancel();
+    if (currentAudio.current) {
+      currentAudio.current.pause();
+      currentAudio.current = null;
+    }
 
-    if (isAudioEnabled && activeModule) {
-      const screen = activeModule.screens[currentStep];
-      let rawText = "";
-      
-      // 1. Construct the raw text
-      if (screen.type === 'statement') rawText = screen.text;
-      if (screen.type === 'explanation') rawText = `${screen.title}. ${screen.text}`;
-      if (screen.type === 'example') rawText = `Case Study. ${screen.title}. ${screen.text}`;
-      if (screen.type === 'quiz') rawText = `Verification Required... ${screen.question} Option A: ${screen.options[0]}... Option B: ${screen.options[1]}... Option C: ${screen.options[2]}`;
-
-      // 2. The "Human Charisma Hack": Inject thoughtful pauses and throat clears
-      let charismaticText = rawText
-        .replace(/\. /g, '... ') // Thoughtful, natural pause after sentences
-        .replace(/\: /g, '... ') 
-        .replace(/\; /g, '... ');
-
-      // Add a slight "throat clear" or warm greeting on the very first screen
-      if (currentStep === 0) {
-        charismaticText = "Ahem... " + charismaticText;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(charismaticText);
-      
-      // 3. Tuning the Voice for Charisma (Calm, confident, slightly deeper)
-      utterance.rate = 0.88;  // Slower pacing sounds much more human and less robotic
-      utterance.pitch = 0.95; // Slightly deeper pitch for a grounded, professional tone
-      utterance.volume = 1;
-      
-      // 4. Force select the absolute best female voice available on the OS
-      const setPremiumVoice = () => {
-        const voices = window.speechSynthesis.getVoices();
+    const fetchPremiumVoice = async () => {
+      if (isAudioEnabled && activeModule) {
+        const screen = activeModule.screens[currentStep];
+        let rawText = "";
         
-        // Target specific high-quality OS female voices first
-        let premiumVoice = voices.find(v => 
-          v.name.includes('Samantha') || // iOS/Mac Premium
-          v.name.includes('Victoria') || // iOS Alternate
-          v.name.includes('Tessa') ||    // Mac Premium
-          (v.name.includes('Google') && v.name.includes('UK English Female')) || // Android Premium
-          (v.lang.includes('en-GB') && v.name.includes('Female')) || // British Female (high charisma)
-          (v.lang.includes('en-US') && v.name.includes('Zira')) // Windows Female
-        );
+        // 1. Construct the raw text
+        if (screen.type === 'statement') rawText = screen.text;
+        if (screen.type === 'explanation') rawText = `${screen.title}... ${screen.text}`;
+        if (screen.type === 'example') rawText = `Case Study... ${screen.title}... ${screen.text}`;
+        if (screen.type === 'quiz') rawText = `Verification Required... ${screen.question} Option A: ${screen.options[0]}... Option B: ${screen.options[1]}... Option C: ${screen.options[2]}`;
 
-        // Fallback to any English female voice
-        if (!premiumVoice) {
-          premiumVoice = voices.find(v => v.lang.includes('en-') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('girl')));
+        // Add a slight "throat clear" or warm greeting on the very first screen
+        if (currentStep === 0) {
+          rawText = "Ahem... " + rawText;
         }
 
-        if (premiumVoice) utterance.voice = premiumVoice;
-        window.speechSynthesis.speak(utterance);
-      };
+        try {
+          // 2. Call the secure Supabase Edge Function
+          const { data, error } = await supabase.functions.invoke('generate-speech', {
+            body: { text: rawText }
+          });
 
-      // Handle async voice loading in some browsers
-      if (window.speechSynthesis.getVoices().length > 0) {
-        setPremiumVoice();
-      } else {
-        window.speechSynthesis.onvoiceschanged = setPremiumVoice;
+          if (error) throw error;
+
+          // 3. Play the returning Audio buffer
+          const audioStr = `data:audio/mp3;base64,${data.audioContent}`;
+          const audio = new Audio(audioStr);
+          currentAudio.current = audio;
+          audio.play();
+
+        } catch (err) {
+          console.error("Voice Engine Error:", err);
+        }
       }
-    }
+    };
+
+    fetchPremiumVoice();
+
   }, [currentStep, activeModule, isAudioEnabled]);
 
   // Clean up audio when module closes
   useEffect(() => {
-    if (!activeModule && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+    if (!activeModule && currentAudio.current) {
+      currentAudio.current.pause();
+      currentAudio.current = null;
     }
   }, [activeModule]);
 
@@ -165,7 +148,7 @@ export default function Training({ session }) {
         setQuizStatus('correct');
         
         // Stop audio immediately upon correct answer
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (currentAudio.current) currentAudio.current.pause();
         
         if (currentStep < activeModule.screens.length - 1) {
              setTimeout(() => {
@@ -179,9 +162,15 @@ export default function Training({ session }) {
       } else {
         setQuizStatus('incorrect');
         if (isAudioEnabled) {
-            const errorUtterance = new SpeechSynthesisUtterance("Protocol Violation... Try Again.");
-            errorUtterance.rate = 0.85;
-            window.speechSynthesis.speak(errorUtterance);
+            // Trigger quick error sound via Supabase
+            supabase.functions.invoke('generate-speech', {
+              body: { text: "Protocol Violation... Try Again." }
+            }).then(({ data }) => {
+              if (data?.audioContent) {
+                const errorAudio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+                errorAudio.play();
+              }
+            });
         }
         setTimeout(() => setQuizStatus(null), 2000);
       }
@@ -336,7 +325,7 @@ export default function Training({ session }) {
                       <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-blue-600 shadow-sm group-hover:bg-blue-50 transition-colors">
                         {mod.icon}
                       </div>
-                      {isCompleted ? <CheckCircle2 size={18} className="text-emerald-500"/> : <Play size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors"/>}
+                      {isCompleted ? <CheckCircle2 size={18} className="textemerald-500"/> : <Play size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors"/>}
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">{mod.track}</span>
                     <h3 className="text-lg font-black text-slate-800 leading-tight">{mod.title}</h3>
