@@ -1,12 +1,12 @@
 // HeroBanner.jsx
-// RESTORED DESIGN + CLICKABLE RISK DETAILS + CORS/GCP READY
+// RESTORED HEIGHT + FLOATING RISK WIDGET + GCP READY
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity, AlertTriangle, Waves, Flame, ShieldAlert, ChevronDown } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-// 🌟 REPLACED WITH A BEAUTIFUL, NEUTRAL, ELEGANT GOLDEN/ABSTRACT LIGHT BACKGROUND
-const EID_IMAGE = "https://images.unsplash.com/photo-1548625361-ecacbd0ebf19?auto=format&fit=crop&q=80&w=2000";
+// 🌙 EID MUBARAK - Vibrant African Community Celebration (Good lighting)
+const EID_IMAGE = "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&q=80&w=2000";
 
 const FALLBACK_BACKGROUNDS = [
   "https://images.unsplash.com/photo-1509803874385-db7c23652552?auto=format&fit=crop&q=80&w=2000", 
@@ -101,7 +101,6 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
 
         const totalEvents = nearbyRisks.length;
         const riskCounts = {};
-        const riskMaxLevels = {};
 
         nearbyRisks.forEach(risk => {
             const genericType = (risk.event_type || '').toLowerCase();
@@ -199,24 +198,24 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
             </p>
           </div>
           
-          {/* RIGHT SIDE WIDGETS (STACKED STRATEGICALLY) */}
-          <div className="flex flex-col items-end gap-3 hidden sm:flex z-20">
+          {/* RIGHT SIDE WIDGETS (FLOATING ABSOLUTE POSITION TO PREVENT STRETCHING) */}
+          <div className="relative hidden sm:block z-20">
             
             {/* Weather & Time Box */}
-            <div className="flex items-center gap-4 bg-black/40 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-lg">
-              <div>
+            <div className="flex items-center gap-4 bg-black/40 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-lg relative z-30">
+              <div className="text-right">
                 <p className="text-xl font-black text-white leading-none">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 text-right">{weather.city}</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{weather.city}</p>
               </div>
               <div className="w-px h-8 bg-white/20"></div>
               <div className="text-white font-black text-lg">{weather.temp}°</div>
             </div>
 
-            {/* Expandable Risk Widget (Directly underneath) */}
+            {/* Expandable Risk Widget (Floats under Time without breaking layout) */}
             {localRisk.isLoaded && (
               <div 
                 onClick={() => setShowRiskDetails(!showRiskDetails)}
-                className={`flex flex-col p-3 rounded-2xl border ${localRisk.colorBorder} bg-black/40 backdrop-blur-xl shadow-lg w-full min-w-[210px] cursor-pointer hover:bg-black/50 transition-all duration-300 overflow-hidden ${showRiskDetails ? 'max-h-64' : 'max-h-16'}`}
+                className={`absolute top-[calc(100%+12px)] right-0 flex flex-col p-3 rounded-2xl border ${localRisk.colorBorder} bg-black/40 backdrop-blur-xl shadow-lg w-[220px] cursor-pointer hover:bg-black/50 transition-all duration-300 overflow-hidden z-20 ${showRiskDetails ? 'max-h-64 opacity-100' : 'max-h-[50px] opacity-90'}`}
               >
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-2">
@@ -234,12 +233,12 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
                     <p className="text-[10px] text-slate-400 font-bold mb-2 tracking-wide text-center">
                         {localRisk.totalEvents} Hazards within 500mi
                     </p>
-                    <div className="flex justify-around items-end gap-2">
+                    <div className="flex justify-between items-end gap-2">
                        {localRisk.topRisks.map((RiskObj, i) => (
-                          <div key={i} className={`flex flex-col items-center gap-1 p-2 rounded-lg ${localRisk.bgGlow} border ${localRisk.colorBorder} flex-1`} title={RiskObj.name}>
+                          <div key={i} className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg ${localRisk.bgGlow} border ${localRisk.colorBorder} flex-1`} title={RiskObj.name}>
                              <RiskObj.Icon size={14} className={localRisk.colorText} />
-                             <span className={`text-[10px] font-black ${localRisk.colorText}`}>{RiskObj.count > 0 ? `${RiskObj.count} ${RiskObj.name}s` : 'Clear'}</span>
-                             <span className={`text-[8px] font-bold text-slate-300`}>Lvl {RiskObj.maxLevel}</span>
+                             <span className={`text-[9px] font-black ${localRisk.colorText}`}>{RiskObj.count > 0 ? `${RiskObj.count}` : '0'}</span>
+                             <span className={`text-[7px] font-bold text-slate-300 uppercase`}>{RiskObj.name.substring(0, 5)}</span>
                           </div>
                        ))}
                     </div>
@@ -251,7 +250,7 @@ export default function HeroBanner({ profile, balances, transactions = [], forma
         </div>
 
         {/* MIDDLE: GREETING & CHART */}
-        <div className="max-w-3xl my-8 mt-12">
+        <div className="max-w-3xl my-8">
           <div className="flex items-center gap-3 mb-6">
             <TimeIcon className={iconColor} size={32} />
             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-lg">
