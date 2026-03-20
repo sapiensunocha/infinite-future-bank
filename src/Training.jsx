@@ -1,8 +1,10 @@
+// src/Training.jsx
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { 
   BrainCircuit, Play, CheckCircle2, 
-  Send, Loader2, Bot, Sparkles, User, Target, ArrowLeft, X
+  Send, Loader2, Bot, Sparkles, User, Target, ArrowLeft, X,
+  Volume2, VolumeX
 } from 'lucide-react';
 
 // 🔥 IMPORT THE SEPARATED DATA
@@ -21,11 +23,12 @@ export default function Training({ session }) {
     completed_modules: []
   });
 
-  // Engine States
+  // Engine & Audio States
   const [activeModule, setActiveModule] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [quizStatus, setQuizStatus] = useState(null);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false); // TTS Toggle
 
   // AI Mentor States
   const [chatHistory, setChatHistory] = useState([
@@ -44,6 +47,52 @@ export default function Training({ session }) {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isAiTyping]);
 
+  // ==========================================
+  // TEXT-TO-SPEECH (TTS) ENGINE
+  // ==========================================
+  useEffect(() => {
+    // Safety check for browser support
+    if (!('speechSynthesis' in window)) return;
+    
+    // Stop any currently playing audio when step changes
+    window.speechSynthesis.cancel();
+
+    if (isAudioEnabled && activeModule) {
+      const screen = activeModule.screens[currentStep];
+      let textToRead = "";
+      
+      // Format text smoothly for the AI voice reader
+      if (screen.type === 'statement') textToRead = screen.text;
+      if (screen.type === 'explanation') textToRead = `${screen.title}... ${screen.text}`;
+      if (screen.type === 'example') textToRead = `Case Study... ${screen.title}... ${screen.text}`;
+      if (screen.type === 'quiz') textToRead = `Verification Required... ${screen.question}... Option 1: ${screen.options[0]}... Option 2: ${screen.options[1]}... Option 3: ${screen.options[2]}`;
+
+      const utterance = new SpeechSynthesisUtterance(textToRead);
+      utterance.rate = 0.95; // Slightly slower for professional tone
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      
+      // Try to use a high-quality English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => v.lang.includes('en-') && (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Daniel')));
+      if (preferredVoice) utterance.voice = preferredVoice;
+
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [currentStep, activeModule, isAudioEnabled]);
+
+  // Clean up audio when module closes
+  useEffect(() => {
+    if (!activeModule && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      // Optional: Auto-disable audio when they close the module
+      // setIsAudioEnabled(false); 
+    }
+  }, [activeModule]);
+
+  // ==========================================
+  // SUPABASE DATA FETCHING
+  // ==========================================
   const fetchUserTrainingData = async () => {
     if (!session?.user?.id) return;
     try {
@@ -82,6 +131,9 @@ export default function Training({ session }) {
       if (selectedAnswer === currentScreen.answer) {
         setQuizStatus('correct');
         
+        // Stop audio immediately upon correct answer
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        
         if (currentStep < activeModule.screens.length - 1) {
              setTimeout(() => {
                  setQuizStatus(null);
@@ -91,9 +143,12 @@ export default function Training({ session }) {
         } else {
              setTimeout(() => completeModule(), 1500);
         }
-
       } else {
         setQuizStatus('incorrect');
+        if (isAudioEnabled) {
+            const errorUtterance = new SpeechSynthesisUtterance("Protocol Violation. Try Again.");
+            window.speechSynthesis.speak(errorUtterance);
+        }
         setTimeout(() => setQuizStatus(null), 2000);
       }
     } else {
@@ -269,11 +324,22 @@ export default function Training({ session }) {
             
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <button onClick={() => setActiveModule(null)} className="p-2 text-slate-400 hover:text-slate-800 bg-white rounded-xl shadow-sm"><ArrowLeft size={16}/></button>
+              
               <div className="flex-1 px-6 flex items-center gap-1">
                 {activeModule.screens.map((_, i) => (
                   <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${i <= currentStep ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
                 ))}
               </div>
+
+              {/* 🔥 AUDIO TOGGLE BUTTON */}
+              <button 
+                onClick={() => setIsAudioEnabled(!isAudioEnabled)} 
+                className={`p-2 rounded-xl shadow-sm transition-colors mr-2 ${isAudioEnabled ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-white text-slate-400 hover:text-slate-800'}`}
+                title="Toggle AI Mentor Audio"
+              >
+                {isAudioEnabled ? <Volume2 size={16}/> : <VolumeX size={16}/>}
+              </button>
+              
               <button onClick={() => setActiveModule(null)} className="p-2 text-slate-400 hover:text-slate-800 bg-white rounded-xl shadow-sm"><X size={16}/></button>
             </div>
             
