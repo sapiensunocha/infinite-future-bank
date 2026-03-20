@@ -6,7 +6,7 @@ import {
 
 export const TRAINING_MODULES = [
   // ==========================================
-  // MODULE 1: INFINITE BANKING FOUNDATION (NEW & FIRST)
+  // MODULE 1: INFINITE BANKING FOUNDATION
   // ==========================================
   {
     id: 'TRK1_MOD1',
@@ -114,9 +114,56 @@ export const TRAINING_MODULES = [
       }
     ]
   },
+
+  // ==========================================
+  // MODULE 3: BLOCKCHAIN FUNDAMENTALS
+  // ==========================================
+  {
+    id: 'TRK2_MOD1',
+    track: 'Blockchain Foundations',
+    title: 'The Architecture of Trust: Blockchain',
+    icon: <Network size={24}/>,
+    points: 100,
+    metricTarget: 'financial_intelligence',
+    screens: [
+      { 
+        type: 'statement', 
+        text: 'Welcome to the foundation of the new internet. Let us demystify Blockchain technology.' 
+      },
+      { 
+        type: 'explanation', 
+        title: 'The Distributed Ledger', 
+        text: 'Traditional banks use a centralized database. If their main server goes down, or gets hacked, your money is at risk. A blockchain, however, is a distributed ledger. This means thousands of independent computers globally, known as nodes, all hold an exact, synchronized copy of the same database. There is no single point of failure.' 
+      },
+      { 
+        type: 'explanation', 
+        title: 'Cryptography and Blocks', 
+        text: 'When a transaction happens, it is mathematically sealed using advanced cryptography. It is then bundled with other transactions into a digital container called a block. This new block is permanently chained to the previous block. If a hacker tries to alter a past transaction, the mathematical link breaks, and the entire network immediately rejects the fraud.' 
+      },
+      { 
+        type: 'example', 
+        title: 'The Immutable Truth', 
+        text: 'Imagine a financial record carved into stone, but duplicated ten thousand times around the world in real-time. Once a transaction is confirmed on a blockchain, it cannot be erased, edited, or hidden by any government, corporation, or CEO. This concept is called immutability. It provides the first truly trustless system of truth in human history.' 
+      },
+      { 
+        type: 'quiz', 
+        question: 'What makes a blockchain network nearly impossible to hack, alter, or shut down?', 
+        options: [
+          'It is protected by traditional bank security guards and locked vaults.', 
+          'Transactions are cryptographically sealed and distributed across thousands of independent nodes.', 
+          'The entire database is kept completely offline so hackers cannot reach it.'
+        ], 
+        answer: 1 
+      },
+      { 
+        type: 'statement', 
+        text: 'Protocol Mastered. You now understand the indestructible engine that powers the Infinite Future Bank.' 
+      }
+    ]
+  },
   
   // ==========================================
-  // MODULE 3: THE AFR BLOCKCHAIN 
+  // MODULE 4: THE AFR BLOCKCHAIN 
   // ==========================================
   {
     id: 'TRK7_MOD1',
@@ -159,7 +206,7 @@ export const TRAINING_MODULES = [
   },
 
   // ==========================================
-  // MODULE 4: INSTITUTIONAL FINANCE & YIELD
+  // MODULE 5: INSTITUTIONAL FINANCE & YIELD
   // ==========================================
   {
     id: 'TRK8_MOD1',
@@ -197,7 +244,7 @@ export const TRAINING_MODULES = [
   },
 
   // ==========================================
-  // MODULE 5: GLOBAL RISK & CRISIS MANAGEMENT
+  // MODULE 6: GLOBAL RISK & CRISIS MANAGEMENT
   // ==========================================
   {
     id: 'TRK9_MOD1',
@@ -240,7 +287,7 @@ export const TRAINING_MODULES = [
   },
 
   // ==========================================
-  // MODULE 6: AUTONOMOUS COMPLIANCE
+  // MODULE 7: AUTONOMOUS COMPLIANCE
   // ==========================================
   {
     id: 'TRK10_MOD1',
@@ -278,7 +325,7 @@ export const TRAINING_MODULES = [
   },
 
   // ==========================================
-  // MODULE 7: THE WEALTH FLYWHEEL
+  // MODULE 8: THE WEALTH FLYWHEEL
   // ==========================================
   {
     id: 'TRK11_MOD1',

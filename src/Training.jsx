@@ -48,10 +48,9 @@ export default function Training({ session }) {
   }, [chatHistory, isAiTyping]);
 
   // ==========================================
-  // TEXT-TO-SPEECH (TTS) ENGINE
+  // 🗣️ PREMIUM TEXT-TO-SPEECH (CHARISMA HACKED)
   // ==========================================
   useEffect(() => {
-    // Safety check for browser support
     if (!('speechSynthesis' in window)) return;
     
     // Stop any currently playing audio when step changes
@@ -59,25 +58,61 @@ export default function Training({ session }) {
 
     if (isAudioEnabled && activeModule) {
       const screen = activeModule.screens[currentStep];
-      let textToRead = "";
+      let rawText = "";
       
-      // Format text smoothly for the AI voice reader
-      if (screen.type === 'statement') textToRead = screen.text;
-      if (screen.type === 'explanation') textToRead = `${screen.title}... ${screen.text}`;
-      if (screen.type === 'example') textToRead = `Case Study... ${screen.title}... ${screen.text}`;
-      if (screen.type === 'quiz') textToRead = `Verification Required... ${screen.question}... Option 1: ${screen.options[0]}... Option 2: ${screen.options[1]}... Option 3: ${screen.options[2]}`;
+      // 1. Construct the raw text
+      if (screen.type === 'statement') rawText = screen.text;
+      if (screen.type === 'explanation') rawText = `${screen.title}. ${screen.text}`;
+      if (screen.type === 'example') rawText = `Case Study. ${screen.title}. ${screen.text}`;
+      if (screen.type === 'quiz') rawText = `Verification Required... ${screen.question} Option A: ${screen.options[0]}... Option B: ${screen.options[1]}... Option C: ${screen.options[2]}`;
 
-      const utterance = new SpeechSynthesisUtterance(textToRead);
-      utterance.rate = 0.95; // Slightly slower for professional tone
-      utterance.pitch = 1;
+      // 2. The "Human Charisma Hack": Inject thoughtful pauses and throat clears
+      let charismaticText = rawText
+        .replace(/\. /g, '... ') // Thoughtful, natural pause after sentences
+        .replace(/\: /g, '... ') 
+        .replace(/\; /g, '... ');
+
+      // Add a slight "throat clear" or warm greeting on the very first screen
+      if (currentStep === 0) {
+        charismaticText = "Ahem... " + charismaticText;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(charismaticText);
+      
+      // 3. Tuning the Voice for Charisma (Calm, confident, slightly deeper)
+      utterance.rate = 0.88;  // Slower pacing sounds much more human and less robotic
+      utterance.pitch = 0.95; // Slightly deeper pitch for a grounded, professional tone
       utterance.volume = 1;
       
-      // Try to use a high-quality English voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => v.lang.includes('en-') && (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Daniel')));
-      if (preferredVoice) utterance.voice = preferredVoice;
+      // 4. Force select the absolute best female voice available on the OS
+      const setPremiumVoice = () => {
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Target specific high-quality OS female voices first
+        let premiumVoice = voices.find(v => 
+          v.name.includes('Samantha') || // iOS/Mac Premium
+          v.name.includes('Victoria') || // iOS Alternate
+          v.name.includes('Tessa') ||    // Mac Premium
+          (v.name.includes('Google') && v.name.includes('UK English Female')) || // Android Premium
+          (v.lang.includes('en-GB') && v.name.includes('Female')) || // British Female (high charisma)
+          (v.lang.includes('en-US') && v.name.includes('Zira')) // Windows Female
+        );
 
-      window.speechSynthesis.speak(utterance);
+        // Fallback to any English female voice
+        if (!premiumVoice) {
+          premiumVoice = voices.find(v => v.lang.includes('en-') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('girl')));
+        }
+
+        if (premiumVoice) utterance.voice = premiumVoice;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      // Handle async voice loading in some browsers
+      if (window.speechSynthesis.getVoices().length > 0) {
+        setPremiumVoice();
+      } else {
+        window.speechSynthesis.onvoiceschanged = setPremiumVoice;
+      }
     }
   }, [currentStep, activeModule, isAudioEnabled]);
 
@@ -85,8 +120,6 @@ export default function Training({ session }) {
   useEffect(() => {
     if (!activeModule && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      // Optional: Auto-disable audio when they close the module
-      // setIsAudioEnabled(false); 
     }
   }, [activeModule]);
 
@@ -146,7 +179,8 @@ export default function Training({ session }) {
       } else {
         setQuizStatus('incorrect');
         if (isAudioEnabled) {
-            const errorUtterance = new SpeechSynthesisUtterance("Protocol Violation. Try Again.");
+            const errorUtterance = new SpeechSynthesisUtterance("Protocol Violation... Try Again.");
+            errorUtterance.rate = 0.85;
             window.speechSynthesis.speak(errorUtterance);
         }
         setTimeout(() => setQuizStatus(null), 2000);
