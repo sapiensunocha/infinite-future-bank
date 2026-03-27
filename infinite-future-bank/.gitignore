@@ -1,0 +1,62 @@
+# ==============================================================================
+# 🛡️ IFB DEUS ARCHITECTURE: GIT IGNORE RULES
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. DEPENDENCIES & PACKAGES
+# ------------------------------------------------------------------------------
+# Never upload the massive node_modules folder; developers will install 
+# their own local copy using 'npm install'.
+node_modules/
+.pnp
+.pnp.js
+
+# ------------------------------------------------------------------------------
+# 2. SECURE ENVIRONMENT VARIABLES (CRITICAL)
+# ------------------------------------------------------------------------------
+# These files hold your Gemini, Stripe, and Blockchain keys. 
+# THEY MUST NEVER BE PUSHED TO SOURCE CONTROL.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ------------------------------------------------------------------------------
+# 3. BUILD OUTPUTS (Vite Production Files)
+# ------------------------------------------------------------------------------
+# These are generated automatically when building the app for launch.
+dist/
+dist-ssr/
+build/
+
+# ------------------------------------------------------------------------------
+# 4. LOGS & DEBUGGING
+# ------------------------------------------------------------------------------
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# 5. OS & EDITOR FILES
+# ------------------------------------------------------------------------------
+# Prevents Mac/Windows hidden files or VS Code personal settings from uploading.
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ------------------------------------------------------------------------------
+# 6. LOCAL CACHES
+# ------------------------------------------------------------------------------
+.eslintcache
+.npm/
