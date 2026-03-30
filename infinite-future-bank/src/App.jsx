@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, X, HelpCircle, FileText, Globe2, Network, ShieldAlert, Cpu, Gem } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, ShieldCheck, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, X, HelpCircle, FileText, Globe2, Network, ShieldAlert, Cpu, Gem, Search } from 'lucide-react';
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
@@ -46,6 +46,7 @@ const formatCount = (num) => {
 const InfoModal = ({ activeModal, onClose }) => {
   const [faqs, setFaqs] = useState([]);
   const [loadingFaqs, setLoadingFaqs] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Dynamically fetch FAQs from Supabase when Help modal opens
   useEffect(() => {
@@ -60,32 +61,59 @@ const InfoModal = ({ activeModal, onClose }) => {
     }
   }, [activeModal]);
 
+  // Reset search when modal closes
+  useEffect(() => {
+    if (!activeModal) setSearchQuery("");
+  }, [activeModal]);
+
   if (!activeModal) return null;
+
+  const filteredFaqs = faqs.filter(faq => 
+    faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const content = {
     help: {
-      title: "Help & Advisory",
+      title: "Help & Support Center",
       icon: <HelpCircle className="text-blue-500" size={24}/>,
       body: (
         <div className="space-y-6 text-slate-600">
+          {/* Live Search Bar */}
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <input 
+              type="text" 
+              placeholder="Search for answers..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-sm font-bold outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner"
+            />
+          </div>
+
           {loadingFaqs ? (
             <div className="flex justify-center items-center py-10">
               <RefreshCw className="animate-spin text-blue-500" size={32} />
             </div>
-          ) : faqs.length > 0 ? (
-            faqs.map((faq) => (
-              <div key={faq.id} className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 text-lg mb-2">{faq.question}</p>
-                <p className="leading-relaxed">{faq.answer}</p>
-              </div>
-            ))
+          ) : filteredFaqs.length > 0 ? (
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
+              {filteredFaqs.map((faq) => (
+                <div key={faq.id} className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-blue-100 transition-colors">
+                  <p className="font-black text-slate-800 text-lg mb-2">{faq.question}</p>
+                  <p className="leading-relaxed text-sm">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
           ) : (
-            <p className="text-center text-slate-500 py-10">No FAQs available yet.</p>
+            <div className="text-center py-10">
+              <p className="text-slate-500 font-bold mb-2">No matching answers found.</p>
+              <p className="text-sm">Try different keywords or submit a direct request below.</p>
+            </div>
           )}
 
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border border-blue-100 text-center mt-8 shadow-inner">
-            <h4 className="font-black text-blue-900 text-xl mb-2">Have a unique inquiry?</h4>
-            <p className="text-sm mb-6 text-blue-700/80 font-medium">Submit a secure request to our advisory and technical team.</p>
+            <h4 className="font-black text-blue-900 text-lg mb-2">Can't find what you're looking for?</h4>
+            <p className="text-xs mb-6 text-blue-700/80 font-medium">Submit a secure request to our advisory and technical team.</p>
             <Link to="/FeedbackForm" className="inline-block px-8 py-4 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors shadow-lg hover:shadow-blue-500/30">
               Submit Direct Request
             </Link>
@@ -106,8 +134,6 @@ const InfoModal = ({ activeModal, onClose }) => {
               IFB is a synthetic financial ecosystem built on AFR (Advanced Future Reserve) with a USD-equivalent simulation. It mimics a traditional bank without holding physical fiat deposits in the traditional sense.
             </p>
           </div>
-
-          
 
           {/* PART 1 */}
           <section>
@@ -145,8 +171,6 @@ const InfoModal = ({ activeModal, onClose }) => {
               <li className="flex gap-4 items-start"><span className="w-2 h-2 rounded-full bg-amber-500 mt-2 shrink-0"></span><p><strong>Technical Safety:</strong> The immutable blockchain ledger and backend ensure no balance updates occur without a verified transaction record.</p></li>
             </ul>
           </section>
-
-          
 
           {/* PART 3: SCALING */}
           <section>
@@ -197,8 +221,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </ul>
           </section>
 
-          
-
           {/* PART 8 & 9: Fraud & Social */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
@@ -206,8 +228,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </h4>
             <p className="mb-4">IFB shifts from reactive human compliance to proactive algorithmic security. AI monitoring analyzes patterns to flag unusual behavior (e.g., rapid loan requests), while network nodes validate liquidity contributions to prevent unilateral theft.</p>
             
-            
-
             <div className="bg-purple-50 p-6 rounded-2xl border border-purple-100">
               <p className="font-bold text-purple-900 mb-2">The Social Impact Multiplier</p>
               <p className="text-purple-800/80">IFB allocates 10% of total revenue to fund social projects (roads, schools). IFB earns 3% management fees, 2% structuring fees, and 5-10% ongoing revenue share from completed infrastructure—making social good highly profitable and self-sustaining.</p>
@@ -602,18 +622,9 @@ function MainApp() {
           )}
         </div>
 
-        <div className="mt-8 text-center text-xs font-medium text-slate-500/80 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
-          Trusted by <span className="font-black text-slate-700">{formatCount(networkStats.users)}</span> customers and <span onClick={() => setActiveModal('about')} className="font-black text-slate-700 underline cursor-pointer hover:text-blue-600 transition-colors">{formatCount(networkStats.orgs)} organizations</span> in <span onClick={() => setActiveModal('about')} className="font-black text-slate-700 underline cursor-pointer hover:text-blue-600 transition-colors">{formatCount(networkStats.countries)} countries</span>.<br/>
-          <span className="flex items-center justify-center gap-1.5 mt-2">
-            <ShieldCheck size={14} className="text-emerald-500" /> 
-            Regulated by US and Canadian governments.
-          </span>
-          
-          <div className="mt-6 text-[10px] uppercase tracking-widest leading-relaxed bg-white/40 p-4 rounded-2xl backdrop-blur-sm border border-white/50 shadow-sm">
-            Discover how <button onClick={() => setActiveModal('about')} className="font-black text-blue-600 underline hover:text-blue-800 transition-colors">IFB works</button> and the <button onClick={() => setActiveModal('about')} className="font-black text-emerald-600 underline hover:text-emerald-800 transition-colors">AFR protocol</button>.<br/><br/>
-            Read our <button onClick={() => setActiveModal('policies')} className="font-bold hover:text-slate-800 underline transition-colors">Policies</button> & <button onClick={() => setActiveModal('terms')} className="font-bold hover:text-slate-800 underline transition-colors">Terms of Service</button>. <br/>
-            Need assistance? <button onClick={() => setActiveModal('help')} className="font-black text-blue-500 hover:text-blue-700 underline mt-1 transition-colors">Get Help & FAQ</button>
-          </div>
+        {/* CLEAN, SINGLE-SENTENCE FOOTER */}
+        <div className="mt-8 text-center text-[11px] font-medium text-slate-500 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
+          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. Regulated by US and Canadian governments. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span> and the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>.
         </div>
 
         {showApkPrompt && (
