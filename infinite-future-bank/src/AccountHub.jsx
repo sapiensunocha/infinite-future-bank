@@ -6,12 +6,8 @@ import {
   Settings, Lock, ScanLine, Store, CheckCircle2, PlusCircle,
   ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './services/supabaseClient';
 
-// Initialize Supabase to connect to your Edge Functions and DB
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CORE_URL = 'https://ifb-intelligence-core-382117221028.us-central1.run.app';
 
