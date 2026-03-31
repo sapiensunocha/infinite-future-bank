@@ -6,7 +6,6 @@ import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
 import FeedbackForm from './FeedbackForm'; 
-// 🔥 IMPORT THE ADMIN DESK
 import AdminSupportDesk from './AdminSupportDesk';
 
 // ==========================================
@@ -43,7 +42,7 @@ const formatCount = (num) => {
 };
 
 // ==========================================
-// INFO MODAL SYSTEM (Whitepaper, Help, Legal)
+// INFO MODAL SYSTEM
 // ==========================================
 const InfoModal = ({ activeModal, onClose }) => {
   const [faqs, setFaqs] = useState([]);
@@ -283,8 +282,6 @@ const InfoModal = ({ activeModal, onClose }) => {
   return (
     <div className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
-        
-        {/* Header */}
         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-3">
             {current.icon}
@@ -294,8 +291,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             <X size={20} />
           </button>
         </div>
-        
-        {/* Body */}
         <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
           {current.body}
         </div>
@@ -306,15 +301,11 @@ const InfoModal = ({ activeModal, onClose }) => {
 
 
 // ==========================================
-// MAIN DEUS APP
+// MAIN DEUS APP (USER FACING)
 // ==========================================
 function MainApp() {
   const [isAppReady, setIsAppReady] = useState(false);
   const [session, setSession] = useState(null);
-  
-  // 🔥 ADMIN STATE
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
   
   const [currentView, setCurrentView] = useState('enter_email'); 
   const [emailValue, setEmailValue] = useState('');
@@ -367,8 +358,6 @@ function MainApp() {
       if (!currentSession?.user) {
         if (mounted) { 
           setSession(null); 
-          setUserProfile(null);
-          setIsAdmin(false);
           setIsAppReady(true); 
         }
         return;
@@ -380,26 +369,16 @@ function MainApp() {
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentSession.user.id).maybeSingle(); 
           
         if (profile) {
-          setUserProfile(profile);
-          // 🔥 CHECK IF USER IS AN ADMIN OR SPECIALIST
-          if (['support_l1', 'advisor_l2', 'admin_l3'].includes(profile.role)) {
-            setIsAdmin(true);
-          } else {
-            document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
-          }
+          document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
         } else {
           const generatedName = currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || 'Client';
           const refCode = sessionStorage.getItem('ifb_ref_code') || null;
 
-          const { error: provisionError } = await supabase.rpc('provision_new_user', {
+          await supabase.rpc('provision_new_user', {
             p_user_id: currentSession.user.id,
             p_full_name: generatedName,
             p_ref_code: refCode
           });
-
-          if (provisionError) throw provisionError;
-
-          if (!sessionStorage.getItem('deus_just_registered')) setCurrentView('update_password');
         }
       } catch (err) {
         console.error("Profile initialization error:", err);
@@ -492,13 +471,8 @@ function MainApp() {
     );
   }
 
-  // 🔥 CORE ROUTING LOGIC: Admin vs User
   if (session && currentView !== 'update_password') {
-    if (isAdmin) {
-      return <AdminSupportDesk session={session} adminProfile={userProfile} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
-    } else {
-      return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
-    }
+    return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
   }
 
   return (
@@ -658,6 +632,54 @@ function MainApp() {
   );
 }
 
+// ==========================================
+// ADMIN GATEWAY COMPONENT
+// ==========================================
+function AdminGateway() {
+  const [session, setSession] = useState(null);
+  const [adminProfile, setAdminProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) {
+        window.location.href = '/';
+        return;
+      }
+      setSession(currentSession);
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentSession.user.id).single();
+      
+      if (profile && ['support_l1', 'advisor_l2', 'admin_l3'].includes(profile.role)) {
+        setAdminProfile(profile);
+      }
+      setLoading(false);
+    };
+    checkAdminStatus();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
+        <RefreshCw className="animate-spin text-blue-500" size={32} />
+      </div>
+    );
+  }
+
+  if (!adminProfile) {
+    return (
+      <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center text-white">
+        <ShieldAlert size={64} className="text-red-500 mb-4" />
+        <h2 className="text-2xl font-black uppercase tracking-widest">Access Denied</h2>
+        <p className="text-slate-400 mt-2">You lack the necessary clearance for the Command Center.</p>
+        <Link to="/" className="mt-8 px-6 py-3 bg-blue-600 rounded-xl font-bold text-sm hover:bg-blue-500 transition-colors">Return to Dashboard</Link>
+      </div>
+    );
+  }
+
+  return <AdminSupportDesk session={session} adminProfile={adminProfile} />;
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
 
@@ -679,6 +701,7 @@ export default function App() {
         <Route path="/" element={<MainApp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/pay" element={<PayInterface />} />
+        <Route path="/admin" element={<AdminGateway />} />
         <Route 
           path="/FeedbackForm" 
           element={
