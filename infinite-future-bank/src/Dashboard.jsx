@@ -28,6 +28,8 @@ import BillingTerminal from './features/commerce/BillingTerminal';
 import TicketGate from './features/commerce/TicketGate';
 // 🔥 VENTURE EXCHANGE INTEGRATION
 import VentureExchange from './VentureExchange';
+// 🔥 INSURANCE HUB
+import InsuranceHub from './InsuranceHub';
 
 import QRCode from "react-qr-code";
 import {
@@ -167,7 +169,7 @@ export default function Dashboard({ session, onSignOut }) {
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
     PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
-    SETTINGS: 'Settings', AGENTS: 'Your Team', TRANSACTIONS: 'Transactions',
+    SETTINGS: 'Settings', AGENTS: 'Your Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
     COMMERCIAL_HUB: 'Commercial Underwriting', NETWORK: 'Capital Network'
   };
 
@@ -1303,7 +1305,6 @@ export default function Dashboard({ session, onSignOut }) {
               <span className="text-4xl font-black text-[#EA4335]">E</span>
               <span className="text-4xl font-black text-[#FBBC04]">U</span>
               <span className="text-4xl font-black text-[#34A853]">S</span>
-              <span className="text-4xl font-black text-[#34A853]">S</span>
               <Sparkles size={18} className="text-blue-500 ml-1" />
             </div>
             <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-800 p-2">
@@ -1322,6 +1323,7 @@ export default function Dashboard({ session, onSignOut }) {
               { id: 'LIFESTYLE', icon: <Globe size={18} />, label: 'Lifestyle' },
               { id: 'TRAINING', icon: <BookOpen size={18} />, label: 'Training' },
               { id: 'AGENTS', icon: <Users size={18} />, label: 'Your Team' },
+              { id: 'INSURANCE', icon: <ShieldCheck size={18} />, label: 'Insurance' },
               { id: 'NETWORK', icon: <Share2 size={18} />, label: 'Capital Network' },
               { id: 'SETTINGS', icon: <Settings size={18} />, label: 'Settings' },
             ].map((item) => (
@@ -1582,6 +1584,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} />}
             {activeTab === 'TRAINING' && <Training session={session} />}
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
+            {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
             {activeTab === 'SETTINGS' && renderSettingsView()}
           </div>
           <button id="tour-ai-advisor" onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 group border-2 border-white/20 mb-[env(safe-area-inset-bottom)]">

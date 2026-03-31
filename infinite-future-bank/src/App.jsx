@@ -6,6 +6,8 @@ import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
 import FeedbackForm from './FeedbackForm'; 
+// 🔥 IMPORT THE ADMIN DESK
+import AdminSupportDesk from './AdminSupportDesk';
 
 // ==========================================
 // REUSABLE COMPONENTS
@@ -48,7 +50,6 @@ const InfoModal = ({ activeModal, onClose }) => {
   const [loadingFaqs, setLoadingFaqs] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Dynamically fetch FAQs from Supabase when Help modal opens
   useEffect(() => {
     if (activeModal === 'help') {
       const fetchFaqs = async () => {
@@ -61,7 +62,6 @@ const InfoModal = ({ activeModal, onClose }) => {
     }
   }, [activeModal]);
 
-  // Reset search when modal closes
   useEffect(() => {
     if (!activeModal) setSearchQuery("");
   }, [activeModal]);
@@ -79,7 +79,6 @@ const InfoModal = ({ activeModal, onClose }) => {
       icon: <HelpCircle className="text-blue-500" size={24}/>,
       body: (
         <div className="space-y-6 text-slate-600">
-          {/* Live Search Bar */}
           <div className="relative mb-6">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
             <input 
@@ -126,7 +125,6 @@ const InfoModal = ({ activeModal, onClose }) => {
       icon: <Globe2 className="text-emerald-500" size={24}/>,
       body: (
         <div className="space-y-12 text-slate-600 text-sm leading-relaxed">
-          {/* Executive Summary */}
           <div className="bg-slate-900 text-white p-10 rounded-3xl shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
             <h3 className="text-2xl font-black mb-4 text-emerald-400 tracking-tight">PHASE 1: THE DIGITAL CORE</h3>
@@ -135,7 +133,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </p>
           </div>
 
-          {/* PART 1 */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Network className="text-blue-500" size={24}/> PART 1: The Core IFB Concept
@@ -160,7 +157,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </div>
           </section>
 
-          {/* PART 2 */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <ShieldAlert className="text-amber-500" size={24}/> PART 2: Risk Mitigation & Liquidity
@@ -172,7 +168,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </ul>
           </section>
 
-          {/* PART 3: SCALING */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Globe2 className="text-indigo-500" size={24}/> PART 3: Global Scaling (Partner Model)
@@ -197,7 +192,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </div>
           </section>
 
-          {/* PART 4 & 5 */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">PART 4 & 5: Help Blocks & The Bukavu Model</h4>
             <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-blue-500 mb-6">
@@ -207,7 +201,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             <p>In unbanked regions (The Bukavu Model), users bring cash to trusted local IFB agents. The agent verifies the physical cash safely, and IFB instantly credits the user's digital app with AFR. Money never just sits with IFB; it flows through a secure, trusted partner.</p>
           </section>
 
-          {/* PART 6 & 7: Wealth & Insurance */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Gem className="text-emerald-500" size={24}/> PART 6 & 7: Wealth Management & Insurance
@@ -221,7 +214,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </ul>
           </section>
 
-          {/* PART 8 & 9: Fraud & Social */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Cpu className="text-purple-500" size={24}/> PART 8 & 9: 10X Safer Fraud Detection & Social Impact
@@ -234,7 +226,6 @@ const InfoModal = ({ activeModal, onClose }) => {
             </div>
           </section>
 
-          {/* PART 11: REVENUE ALLOCATION TABLE */}
           <section>
             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">PART 11: Institutional Economics</h4>
             <p className="mb-6 font-medium text-slate-700">Official Monthly Revenue Allocation (Based on 1,000 Users / $41,750 Rev)</p>
@@ -321,6 +312,10 @@ function MainApp() {
   const [isAppReady, setIsAppReady] = useState(false);
   const [session, setSession] = useState(null);
   
+  // 🔥 ADMIN STATE
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  
   const [currentView, setCurrentView] = useState('enter_email'); 
   const [emailValue, setEmailValue] = useState('');
   const [passwordValue, setPasswordValue] = useState('');
@@ -370,7 +365,12 @@ function MainApp() {
 
     const initializeUser = async (currentSession) => {
       if (!currentSession?.user) {
-        if (mounted) { setSession(null); setIsAppReady(true); }
+        if (mounted) { 
+          setSession(null); 
+          setUserProfile(null);
+          setIsAdmin(false);
+          setIsAppReady(true); 
+        }
         return;
       }
 
@@ -380,7 +380,13 @@ function MainApp() {
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentSession.user.id).maybeSingle(); 
           
         if (profile) {
-          document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
+          setUserProfile(profile);
+          // 🔥 CHECK IF USER IS AN ADMIN OR SPECIALIST
+          if (['support_l1', 'advisor_l2', 'admin_l3'].includes(profile.role)) {
+            setIsAdmin(true);
+          } else {
+            document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
+          }
         } else {
           const generatedName = currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || 'Client';
           const refCode = sessionStorage.getItem('ifb_ref_code') || null;
@@ -486,8 +492,13 @@ function MainApp() {
     );
   }
 
+  // 🔥 CORE ROUTING LOGIC: Admin vs User
   if (session && currentView !== 'update_password') {
-    return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
+    if (isAdmin) {
+      return <AdminSupportDesk session={session} adminProfile={userProfile} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
+    } else {
+      return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
+    }
   }
 
   return (
