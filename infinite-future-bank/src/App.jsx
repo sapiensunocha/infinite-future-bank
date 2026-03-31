@@ -253,6 +253,102 @@ const InfoModal = ({ activeModal, onClose }) => {
         </div>
       )
     },
+    insurance: {
+      title: "IFB Insurance Ecosystem",
+      icon: <ShieldCheck className="text-emerald-500" size={24}/>,
+      body: (
+        <div className="space-y-12 text-slate-600 text-sm leading-relaxed">
+          {/* Executive Summary */}
+          <div className="bg-slate-900 text-white p-10 rounded-3xl shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+            <h3 className="text-2xl font-black mb-4 text-emerald-400 tracking-tight">Institutional-Grade Sovereign Protection</h3>
+            <p className="opacity-90 text-lg font-medium leading-relaxed">
+              Traditional consumer insurance models extract significant capital from individuals—often costing the average adult $500 to $1,000+ per month across health, auto, property, and life policies. The Infinite Future Bank (IFB) disrupts this legacy extraction model by transforming insurance from a monthly financial burden into a reward-based algorithmic safety net.
+            </p>
+          </div>
+
+          <section>
+            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">1. The Economic Funding Engine</h4>
+            <p className="mb-4">The IFB Insurance system does not rely on third-party legacy insurance underwriters. It is a self-sustaining, mathematically backed pool integrated directly into the IFB economic model.</p>
+            <div className="space-y-4">
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <p className="font-black text-slate-800 mb-2">The 5% Macro-Allocation</p>
+                <p>Exactly 5% of total global ecosystem revenue is permanently diverted to fully fund the base-level insurance coverage for all active users.</p>
+              </div>
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <p className="font-black text-slate-800 mb-2">Hedge Fund Backing</p>
+                <p>The IFB Hedge Fund Growth Pool continuously invests aggregated network reserves into low-risk global assets to act as the ultimate liquidity backstop.</p>
+              </div>
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <p className="font-black text-slate-800 mb-2">The Liquidity Network</p>
+                <p>In the event of a catastrophic regional claim, IFB deploys Help Blocks, allowing the broader network to temporarily inject liquidity in exchange for high-yield AFR rewards.</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">2. The Coverage Matrix</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Comprehensive Health</p>
+                 <p className="text-xl font-black text-slate-800 mb-2">$500,000</p>
+                 <p className="text-xs text-slate-500">Major medical emergencies, critical care, and catastrophic health events.</p>
+               </div>
+               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Auto & Transit</p>
+                 <p className="text-xl font-black text-slate-800 mb-2">$100,000</p>
+                 <p className="text-xs text-slate-500">Liability and collision equivalent for personal transit.</p>
+               </div>
+               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Property & Contents</p>
+                 <p className="text-xl font-black text-slate-800 mb-2">$250,000</p>
+                 <p className="text-xs text-slate-500">Structural damage, loss of primary residence, or critical physical assets.</p>
+               </div>
+               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Term Life Coverage</p>
+                 <p className="text-xl font-black text-slate-800 mb-2">$250,000</p>
+                 <p className="text-xs text-slate-500">Immediate liquidity injected into the designated beneficiaries' Vaults.</p>
+               </div>
+               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Global Travel</p>
+                 <p className="text-xl font-black text-slate-800 mb-2">$50,000</p>
+                 <p className="text-xs text-slate-500">Trip interruption, emergency repatriation, and cross-border medical.</p>
+               </div>
+               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Income Protection</p>
+                 <p className="text-xl font-black text-slate-800 mb-2">$5,000 / mo</p>
+                 <p className="text-xs text-slate-500">Temporary fractional income replacement if incapacitated.</p>
+               </div>
+            </div>
+          </section>
+
+          <section>
+            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">3. Operational Mechanics</h4>
+            <div className="space-y-6">
+              <div>
+                <p className="font-bold text-slate-800 mb-2">Phase A: Application & Activation</p>
+                <p>The user clicks "Request Network Activation." The backend instantly inserts an application. The database mathematically approves the policy, flipping the status to ACTIVE and stamping the user's profile.</p>
+              </div>
+              <div>
+                <p className="font-bold text-slate-800 mb-2">Phase B: Maintaining Eligibility (Reward Model)</p>
+                <p>Coverage is maintained by holding a minimum AFR balance, participating in local revenue blocks, and executing regular payment routing via the IFB network.</p>
+              </div>
+              <div>
+                <p className="font-bold text-slate-800 mb-2">Phase C: Claims & Instant Execution</p>
+                <p>When an event occurs, it is verified via local designated oracles. The smart contract executes automatically. Approved funds are minted or routed directly into the user's Liquid Cash (USD) or AFR balance instantly.</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">4. Conclusion</h4>
+             <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+               <p className="text-emerald-800/80 font-medium">By transforming a $10,000/year real-world expense into a free, algorithmically guaranteed network benefit, IFB mathematically eliminates user churn. Users secure their capital within IFB not just for yields or payment routing, but because leaving the ecosystem means losing their total sovereign life protection.</p>
+             </div>
+          </section>
+        </div>
+      )
+    },
     terms: {
       title: "Terms of Service",
       icon: <FileText className="text-slate-500" size={24}/>,
@@ -609,7 +705,7 @@ function MainApp() {
 
         {/* CLEAN, SINGLE-SENTENCE FOOTER */}
         <div className="mt-8 text-center text-[11px] font-medium text-slate-500 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
-          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. Regulated by US and Canadian governments. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span> and the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>.
+          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. Regulated by US and Canadian governments. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, and our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>.
         </div>
 
         {showApkPrompt && (
