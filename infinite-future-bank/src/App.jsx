@@ -124,6 +124,7 @@ const InfoModal = ({ activeModal, onClose }) => {
       icon: <Globe2 className="text-emerald-500" size={24}/>,
       body: (
         <div className="space-y-12 text-slate-600 text-sm leading-relaxed">
+          {/* Executive Summary */}
           <div className="bg-slate-900 text-white p-10 rounded-3xl shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
             <h3 className="text-2xl font-black mb-4 text-emerald-400 tracking-tight">PHASE 1: THE DIGITAL CORE</h3>
@@ -265,6 +266,9 @@ const InfoModal = ({ activeModal, onClose }) => {
             <p className="opacity-90 text-lg font-medium leading-relaxed">
               Traditional consumer insurance models extract significant capital from individuals—often costing the average adult $500 to $1,000+ per month across health, auto, property, and life policies. The Infinite Future Bank (IFB) disrupts this legacy extraction model by transforming insurance from a monthly financial burden into a reward-based algorithmic safety net.
             </p>
+            <p className="opacity-90 text-lg font-medium leading-relaxed mt-4">
+              By leveraging the IFB Sovereign Blockchain Ledger, Smart Contracts, and the collective liquidity of the IFB Hedge Fund, the platform offers comprehensive, premium-grade insurance coverage to active network citizens at a baseline cost of $0.00. This creates an absolute financial wealth floor, guaranteeing user protection while driving unprecedented platform loyalty and ecosystem retention.
+            </p>
           </div>
 
           <section>
@@ -273,77 +277,105 @@ const InfoModal = ({ activeModal, onClose }) => {
             <div className="space-y-4">
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <p className="font-black text-slate-800 mb-2">The 5% Macro-Allocation</p>
-                <p>Exactly 5% of total global ecosystem revenue is permanently diverted to fully fund the base-level insurance coverage for all active users.</p>
+                <p>Exactly 5% of total global ecosystem revenue (generated from transaction fees, social project management fees, and AFR loan interest) is permanently diverted to fully fund the base-level insurance coverage for all active users.</p>
               </div>
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <p className="font-black text-slate-800 mb-2">Hedge Fund Backing</p>
-                <p>The IFB Hedge Fund Growth Pool continuously invests aggregated network reserves into low-risk global assets to act as the ultimate liquidity backstop.</p>
+                <p>The IFB Hedge Fund Growth Pool continuously invests aggregated network reserves into low-risk global assets. The yields from these investments act as the ultimate liquidity backstop for any massive insurance payout events.</p>
               </div>
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <p className="font-black text-slate-800 mb-2">The Liquidity Network</p>
-                <p>In the event of a catastrophic regional claim, IFB deploys Help Blocks, allowing the broader network to temporarily inject liquidity in exchange for high-yield AFR rewards.</p>
+                <p>In the event of a catastrophic regional claim that exceeds local hedge fund liquidity, IFB deploys Help Blocks, allowing the broader network (UHNW individuals, miners, and investors) to temporarily inject liquidity in exchange for high-yield AFR rewards.</p>
               </div>
             </div>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">2. The Coverage Matrix</h4>
+            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">2. The Coverage Matrix (Underwritten Assets)</h4>
+            <p className="mb-6">Once a user is activated on the network, their profile is cryptographically underwritten for the following baseline protections (values reflect standard entry-tier limits):</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                  <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Comprehensive Health</p>
                  <p className="text-xl font-black text-slate-800 mb-2">$500,000</p>
-                 <p className="text-xs text-slate-500">Major medical emergencies, critical care, and catastrophic health events.</p>
+                 <p className="text-xs text-slate-500"><strong>Coverage:</strong> Major medical emergencies, critical care, and catastrophic health events.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                  <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Auto & Transit</p>
                  <p className="text-xl font-black text-slate-800 mb-2">$100,000</p>
-                 <p className="text-xs text-slate-500">Liability and collision equivalent for personal transit.</p>
+                 <p className="text-xs text-slate-500"><strong>Coverage:</strong> Liability and collision equivalent for personal transit.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                  <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Property & Contents</p>
                  <p className="text-xl font-black text-slate-800 mb-2">$250,000</p>
-                 <p className="text-xs text-slate-500">Structural damage, loss of primary residence, or critical physical assets.</p>
+                 <p className="text-xs text-slate-500"><strong>Coverage:</strong> Structural damage, loss of primary residence, or critical physical assets.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                  <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Term Life Coverage</p>
                  <p className="text-xl font-black text-slate-800 mb-2">$250,000</p>
-                 <p className="text-xs text-slate-500">Immediate liquidity injected into the designated beneficiaries' Vaults.</p>
+                 <p className="text-xs text-slate-500"><strong>Coverage:</strong> Immediate liquidity injected into the designated beneficiaries' Vaults upon verified loss of life.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                  <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Global Travel</p>
                  <p className="text-xl font-black text-slate-800 mb-2">$50,000</p>
-                 <p className="text-xs text-slate-500">Trip interruption, emergency repatriation, and cross-border medical.</p>
+                 <p className="text-xs text-slate-500"><strong>Coverage:</strong> Trip interruption, emergency repatriation, and cross-border medical.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                  <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Income Protection</p>
-                 <p className="text-xl font-black text-slate-800 mb-2">$5,000 / mo</p>
-                 <p className="text-xs text-slate-500">Temporary fractional income replacement if incapacitated.</p>
+                 <p className="text-xl font-black text-slate-800 mb-2">$5,000 / month</p>
+                 <p className="text-xs text-slate-500"><strong>Coverage:</strong> Temporary fractional income replacement if the user is incapacitated and unable to generate active cash flow.</p>
                </div>
             </div>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">3. Operational Mechanics</h4>
-            <div className="space-y-6">
+            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">3. Operational Mechanics: How It Works</h4>
+            <div className="space-y-8">
               <div>
-                <p className="font-bold text-slate-800 mb-2">Phase A: Application & Activation</p>
-                <p>The user clicks "Request Network Activation." The backend instantly inserts an application. The database mathematically approves the policy, flipping the status to ACTIVE and stamping the user's profile.</p>
+                <p className="font-bold text-slate-800 mb-2 text-lg">Phase A: Application & Smart Contract Activation</p>
+                <p className="mb-4">The user experience is designed to be entirely frictionless. Users do not fill out lengthy actuarial tables or undergo medical exams for baseline coverage.</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><strong>The Trigger:</strong> The user navigates to the Insurance Hub within the DEUS interface.</li>
+                  <li><strong>The Application:</strong> The user clicks "Request Network Activation."</li>
+                  <li><strong>Ledger Insertion:</strong> The Supabase backend instantly inserts an application into the ifb_insurance ledger with a PENDING_LEDGER status.</li>
+                  <li><strong>Mathematical Consensus:</strong> The system simulates a brief "Network Liquidity Verification." The smart contract checks the user's active status and network health.</li>
+                  <li><strong>Activation:</strong> The database mathematically approves the policy, flipping the status to ACTIVE and stamping the user's profile with a verified cryptographic signature. The user's dashboard immediately reflects 100% subsidized, active coverage across all six asset classes.</li>
+                </ul>
               </div>
               <div>
-                <p className="font-bold text-slate-800 mb-2">Phase B: Maintaining Eligibility (Reward Model)</p>
-                <p>Coverage is maintained by holding a minimum AFR balance, participating in local revenue blocks, and executing regular payment routing via the IFB network.</p>
+                <p className="font-bold text-slate-800 mb-2 text-lg">Phase B: Maintaining Eligibility (The Reward Model)</p>
+                <p className="mb-4">To keep the insurance active, the user must remain an active participant in the IFB ecosystem. Coverage is maintained by:</p>
+                <ul className="list-disc pl-5 space-y-2 mb-4">
+                  <li>Holding a minimum AFR balance in their Digital Safe.</li>
+                  <li>Participating in local revenue blocks.</li>
+                  <li>Executing regular payment routing via the IFB network.</li>
+                </ul>
+                <p className="italic text-xs text-slate-500">(This mechanism ensures that the 5% revenue allocation funding the insurance is continuously fed by the user's own organic financial activity).</p>
               </div>
               <div>
-                <p className="font-bold text-slate-800 mb-2">Phase C: Claims & Instant Execution</p>
-                <p>When an event occurs, it is verified via local designated oracles. The smart contract executes automatically. Approved funds are minted or routed directly into the user's Liquid Cash (USD) or AFR balance instantly.</p>
+                <p className="font-bold text-slate-800 mb-2 text-lg">Phase C: Claims & Instant Execution</p>
+                <p className="mb-4">IFB replaces reactive, human-delayed claims adjusters with proactive algorithmic smart contracts.</p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li><strong>Claim Verification:</strong> When an event occurs, it is verified via local designated oracles (e.g., Local IFB Directors, partnered medical institutions, or digital documentation upload).</li>
+                  <li><strong>Smart Contract Execution:</strong> Once the oracle verifies the data matches the claim parameters, the smart contract executes automatically.</li>
+                  <li><strong>Instant Payout:</strong> The approved funds are minted or routed directly into the user's IFB Liquid Cash (USD) or AFR balance instantly. There are no paper checks or 30-day waiting periods. The user can immediately spend the funds via QR code, physical card, or external bank withdrawal.</li>
+                </ul>
               </div>
             </div>
           </section>
 
           <section>
-             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">4. Conclusion</h4>
+             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">4. Scalability & Optional Upgrades</h4>
+             <p className="mb-4">While the baseline coverage is mathematically subsidized for all active users, the IFB Insurance System offers highly lucrative expansion capabilities:</p>
+             <ul className="list-disc pl-5 space-y-2">
+               <li><strong>Paid Premium Upgrades:</strong> Users who require $5M in life insurance or $2M in property coverage can voluntarily pay monthly premiums in AFR.</li>
+               <li><strong>Ecosystem Benefit:</strong> 100% of these optional paid premiums are routed directly back into the IFB Hedge Fund. This directly increases the total wealth pool of the entire network, raising the baseline "Wealth Floor" for all users.</li>
+             </ul>
+          </section>
+
+          <section>
+             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">5. Conclusion</h4>
              <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
-               <p className="text-emerald-800/80 font-medium">By transforming a $10,000/year real-world expense into a free, algorithmically guaranteed network benefit, IFB mathematically eliminates user churn. Users secure their capital within IFB not just for yields or payment routing, but because leaving the ecosystem means losing their total sovereign life protection.</p>
+               <p className="text-emerald-800/80 font-medium">The IFB Insurance Ecosystem is not a standalone product; it is the ultimate expression of the Infinite Banking Concept digitized on the blockchain. By transforming a $10,000/year real-world expense into a free, algorithmically guaranteed network benefit, IFB mathematically eliminates user churn. Users will secure their capital within IFB not just for the yields or the payment routing, but because leaving the ecosystem means losing their total sovereign life protection.</p>
              </div>
           </section>
         </div>
