@@ -7,6 +7,7 @@ import AuthCallback from './features/onboarding/AuthCallback';
 import PayInterface from './PayInterface';
 import FeedbackForm from './FeedbackForm'; 
 import AdminSupportDesk from './AdminSupportDesk';
+import ExecutiveCrm from './ExecutiveCrm';
 
 // ==========================================
 // REUSABLE COMPONENTS
@@ -873,7 +874,7 @@ function MainApp() {
 }
 
 // ==========================================
-// ADMIN GATEWAY COMPONENT
+// ADMIN GATEWAY COMPONENT (Support Desk)
 // ==========================================
 function AdminGateway() {
   const [session, setSession] = useState(null);
@@ -883,13 +884,9 @@ function AdminGateway() {
   useEffect(() => {
     const checkAdminStatus = async () => {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (!currentSession) {
-        window.location.href = '/';
-        return;
-      }
+      if (!currentSession) { window.location.href = '/'; return; }
       setSession(currentSession);
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentSession.user.id).single();
-      
       if (profile && ['support_l1', 'advisor_l2', 'admin_l3'].includes(profile.role)) {
         setAdminProfile(profile);
       }
@@ -898,40 +895,69 @@ function AdminGateway() {
     checkAdminStatus();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center">
-        <RefreshCw className="animate-spin text-blue-500" size={32} />
-      </div>
-    );
-  }
-
+  if (loading) return <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center"><RefreshCw className="animate-spin text-blue-500" size={32} /></div>;
+  
   if (!adminProfile) {
     return (
       <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center text-white">
         <ShieldAlert size={64} className="text-red-500 mb-4" />
         <h2 className="text-2xl font-black uppercase tracking-widest">Access Denied</h2>
         <p className="text-slate-400 mt-2">You lack the necessary clearance for the Command Center.</p>
-        <Link to="/" className="mt-8 px-6 py-3 bg-blue-600 rounded-xl font-bold text-sm hover:bg-blue-500 transition-colors">Return to Dashboard</Link>
+        <Link to="/" className="mt-8 px-6 py-3 bg-blue-600 rounded-xl font-bold text-sm">Return to Dashboard</Link>
       </div>
     );
   }
-
   return <AdminSupportDesk session={session} adminProfile={adminProfile} />;
 }
 
+// ==========================================
+// 🔥 NEW: HQ EXECUTIVE GATEWAY (The CRM)
+// ==========================================
+function HqGateway() {
+  const [session, setSession] = useState(null);
+  const [isHqAdmin, setIsHqAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkHqStatus = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) { window.location.href = '/'; return; }
+      setSession(currentSession);
+      
+      // Strict check: Only Level 3 Admins (Founders/Execs) can access the HQ CRM
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentSession.user.id).single();
+      if (profile && profile.role === 'admin_l3') {
+        setIsHqAdmin(true);
+      }
+      setLoading(false);
+    };
+    checkHqStatus();
+  }, []);
+
+  if (loading) return <div className="min-h-screen bg-[#0B0F19] flex items-center justify-center"><RefreshCw className="animate-spin text-blue-500" size={32} /></div>;
+  
+  if (!isHqAdmin) {
+    return (
+      <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center text-white">
+        <ShieldAlert size={64} className="text-red-500 mb-4" />
+        <h2 className="text-2xl font-black uppercase tracking-widest">Clearance Level Insufficient</h2>
+        <p className="text-slate-400 mt-2">This sector is restricted to Level 3 Command Executives.</p>
+        <Link to="/" className="mt-8 px-6 py-3 bg-blue-600 rounded-xl font-bold text-sm hover:bg-blue-500 transition-colors">Eject</Link>
+      </div>
+    );
+  }
+  return <ExecutiveCrm session={session} />;
+}
+
+// ==========================================
+// MAIN ROUTER
+// ==========================================
 export default function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => { setSession(session); });
     return () => authListener.subscription.unsubscribe();
   }, []);
 
@@ -941,7 +967,11 @@ export default function App() {
         <Route path="/" element={<MainApp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/pay" element={<PayInterface />} />
+        
+        {/* SECURE ROUTES */}
         <Route path="/admin" element={<AdminGateway />} />
+        <Route path="/hq" element={<HqGateway />} />
+        
         <Route 
           path="/FeedbackForm" 
           element={
