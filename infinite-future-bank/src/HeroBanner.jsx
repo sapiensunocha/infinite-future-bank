@@ -1,5 +1,5 @@
 // HeroBanner.jsx
-// RESTORED HEIGHT + FLOATING RISK WIDGET + 35 MILE RADIUS + LOCAL EID IMAGE + MULTI-CURRENCY
+// RESTORED HEIGHT + FLOATING RISK WIDGET + 35 MILE RADIUS + LOCAL EID IMAGE + MULTI-CURRENCY + DEEP SCAN SYNC
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, ArrowRight, Zap, Wallet, RefreshCw, Activity, AlertTriangle, Waves, Flame, ShieldAlert, ChevronDown, Globe } from 'lucide-react';
@@ -91,32 +91,45 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
         const weatherData = await weatherRes.json();
         setWeather({ city: geoData.city, temp: Math.round(weatherData.current_weather.temperature), condition: weatherData.current_weather.weathercode });
 
-        const gcpUrl = 'https://storage.googleapis.com/wdc-dc-flood-vault/latest_alerts.json';
         let nearbyRisks = [];
         
         try {
-          const alertsRes = await fetch(gcpUrl);
-          if (alertsRes.ok) {
-            const alerts = await alertsRes.json();
+          // WIRE DIRECTLY TO SUPABASE TO CATCH PYTHON PREDICTIONS & 30-DAY SWEEPS
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: alerts, error } = await supabase
+            .from('sentinel_events')
+            .select('*')
+            .gte('event_timestamp', thirtyDaysAgo);
+
+          if (alerts && !error) {
+            // Filter to ~35 Mile Radius
             nearbyRisks = alerts.filter(a => a.latitude && a.longitude && Math.abs(a.latitude - geoData.latitude) < 0.5 && Math.abs(a.longitude - geoData.longitude) < 0.5);
           }
-        } catch (e) { console.warn("GCP Alerts file not yet available."); }
+        } catch (e) { console.warn("Supabase intelligence fetch failed."); }
 
         const totalEvents = nearbyRisks.length;
         const riskCounts = {};
 
         nearbyRisks.forEach(risk => {
             const genericType = (risk.event_type || '').toLowerCase();
+            const cat = (risk.event_category || '').toLowerCase();
             let typeCat = 'Alert';
             let Icon = AlertTriangle;
 
-            if (genericType.includes('flood')) { typeCat = 'Flood'; Icon = Waves; }
-            else if (genericType.includes('fire') || genericType.includes('wildfire')) { typeCat = 'Fire'; Icon = Flame; }
-            else if (genericType.includes('earthquake')) { typeCat = 'Earthquake'; Icon = Activity; }
-            else if (genericType.includes('conflict')) { typeCat = 'Conflict'; Icon = ShieldAlert; }
-            else if (genericType.includes('storm')) { typeCat = 'Storm'; Icon = Zap; }
+            // EXPANDED TO CATCH ALL NEW DEEP-SCAN CATEGORIES
+            if (genericType.includes('flood') || genericType.includes('tsunami') || genericType.includes('water')) { typeCat = 'Water / Flood'; Icon = Waves; }
+            else if (genericType.includes('fire') || genericType.includes('wildfire') || genericType.includes('thermal')) { typeCat = 'Fire / Thermal'; Icon = Flame; }
+            else if (genericType.includes('earthquake') || genericType.includes('seismic')) { typeCat = 'Seismic'; Icon = Activity; }
+            else if (genericType.includes('storm') || genericType.includes('hurricane') || genericType.includes('cyclone')) { typeCat = 'Severe Weather'; Icon = Zap; }
+            else if (cat === 'security' || genericType.includes('conflict') || genericType.includes('war') || genericType.includes('cyber') || genericType.includes('human rights') || genericType.includes('gbv') || genericType.includes('ngo')) { typeCat = 'Security Threat'; Icon = ShieldAlert; }
+            else if (genericType.includes('deforestation') || genericType.includes('waste')) { typeCat = 'Ecological'; Icon = AlertTriangle; }
+            
+            // Mark if this is a Python Prophet Forecast
+            if (risk.is_forecast || cat === 'forecast') {
+                typeCat = `Predicted ${typeCat}`;
+            }
 
-            const level10 = Math.min(10, risk.severity_level * 2);
+            const level10 = Math.min(10, (risk.event_severity || risk.severity_level || 1) * 2);
             
             if (!riskCounts[typeCat]) {
                 riskCounts[typeCat] = { count: 0, Icon, name: typeCat, maxLevel: level10 };
@@ -240,7 +253,7 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
                           <div key={i} className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg ${localRisk.bgGlow} border ${localRisk.colorBorder} flex-1`} title={RiskObj.name}>
                              <RiskObj.Icon size={14} className={localRisk.colorText} />
                              <span className={`text-[9px] font-black ${localRisk.colorText}`}>{RiskObj.count > 0 ? `${RiskObj.count}` : '0'}</span>
-                             <span className={`text-[7px] font-bold text-slate-300 uppercase`}>{RiskObj.name.substring(0, 5)}</span>
+                             <span className={`text-[7px] font-bold text-slate-300 uppercase text-center leading-tight`}>{RiskObj.name}</span>
                           </div>
                        ))}
                     </div>
