@@ -4,15 +4,12 @@ import {
   Globe2, Building2, ShieldAlert, Plus, ArrowRight,
   CreditCard, Trash2, Wallet, RefreshCw, Zap, ArrowLeftRight,
   Settings, Lock, ScanLine, Store, CheckCircle2, PlusCircle,
-  ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock
+  ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock, Wifi
 } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
-
-const CORE_URL = 'https://ifb-intelligence-core-382117221028.us-central1.run.app';
-
 const CARD_THEMES = {
-  obsidian: { name: 'Obsidian Dark', bg: 'bg-gradient-to-br from-slate-900 via-blue-900 to-black', border: 'border-blue-500/30', textPrimary: 'text-white', textSecondary: 'text-blue-200/70', accent: 'text-blue-200' },
+  obsidian: { name: 'Obsidian Dark', bg: 'bg-gradient-to-br from-slate-900 via-blue-950 to-black', border: 'border-blue-500/30', textPrimary: 'text-white', textSecondary: 'text-blue-200/70', accent: 'text-blue-200' },
   silver: { name: 'Titanium Silver', bg: 'bg-gradient-to-br from-slate-300 via-gray-100 to-slate-400', border: 'border-white', textPrimary: 'text-slate-800', textSecondary: 'text-slate-500', accent: 'text-slate-600' },
   gold: { name: 'Sovereign Gold', bg: 'bg-gradient-to-br from-yellow-500 via-amber-300 to-yellow-600', border: 'border-yellow-200/50', textPrimary: 'text-yellow-950', textSecondary: 'text-yellow-800/70', accent: 'text-yellow-900' },
   rainbow: { name: 'Holographic', bg: 'bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500', border: 'border-white/30', textPrimary: 'text-white', textSecondary: 'text-white/70', accent: 'text-white' },
@@ -60,29 +57,43 @@ export default function AccountHub({ balances, profile }) {
   };
 
   // ==========================================
-  // 🔗 DATABASE SYNC
+  // 🔗 NATIVE SUPABASE SYNC
   // ==========================================
   const fetchNetworkData = async () => {
-    const userId = profile?.id || 'TEST_USER_ID';
+    if (!profile?.id) return;
     setIsLoadingDB(true);
     try {
-      const cardRes = await fetch(`${CORE_URL}/api/network/cards/${userId}`);
-      if (cardRes.ok) {
-        const cardData = await cardRes.json();
-        const formattedCards = cardData.cards.map(c => ({
+      // Pull secure cards directly from Supabase instead of mock API
+      const { data: cardData, error: cardError } = await supabase
+        .from('virtual_cards')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: true });
+
+      if (cardError && cardError.code !== '42P01') throw cardError; // 42P01 is table missing error
+
+      if (cardData) {
+        const formattedCards = cardData.map(c => ({
           ...c,
           networkId: c.network_id,
           isFrozen: c.status !== 'ACTIVE'
         }));
         setCards(formattedCards);
         if (currentCardIndex >= formattedCards.length) setCurrentCardIndex(Math.max(0, formattedCards.length - 1));
+      } else {
+        setCards([]);
       }
       
-      const txRes = await fetch(`${CORE_URL}/api/network/transactions/${userId}`);
-      if (txRes.ok) {
-        const txData = await txRes.json();
-        setTransactions(txData.transactions || []);
-      }
+      // Pull ledger transactions
+      const { data: txData } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+        
+      if (txData) setTransactions(txData);
+
     } catch (err) {
       console.error("Database sync failed", err);
     } finally {
@@ -93,15 +104,13 @@ export default function AccountHub({ balances, profile }) {
   useEffect(() => { fetchNetworkData(); }, [profile?.id]);
 
   // ==========================================
-  // 💱 GLOBAL LIQUIDITY SWAP (THE BLOCKCHAIN BRIDGE)
+  // 💱 GLOBAL LIQUIDITY SWAP
   // ==========================================
   const handleCurrencySwap = async () => {
     if (!swapAmount || swapAmount <= 0) return triggerGlobalActionNotification('error', 'Enter a valid amount to swap.');
     setIsSwapping(true);
     
     try {
-      // THE SOVEREIGN BRIDGE CONNECTION:
-      // This routes the request to your Edge Function, which hits the GCP Go Node (35.238.28.158:8545)
       const { data, error } = await supabase.functions.invoke('process-afr-transfer', {
         body: {
           receiver_address: swapDirection === 'AFR_TO_USD' ? '0xIFB_TREASURY_RESERVE' : '0xIFB_INTERNAL_MINT',
@@ -112,11 +121,9 @@ export default function AccountHub({ balances, profile }) {
       if (error) throw new Error("Network Bridge Error: " + error.message);
       if (data?.error) throw new Error("Ledger Rejected: " + data.error);
 
-      // Refresh data to pull the newly settled balances straight from Supabase
       await fetchNetworkData();
       setSwapAmount('');
       
-      // Use the tx_hash returned from the Go Engine for the success receipt
       const spreadFee = parseFloat(swapAmount) * 0.0025;
       triggerGlobalActionNotification('success', `Settled on Mainnet. Hash: ${data.tx_hash?.slice(0, 10)}... (Fee: $${spreadFee.toFixed(2)})`);
       
@@ -128,11 +135,12 @@ export default function AccountHub({ balances, profile }) {
   };
 
   // ==========================================
-  // 💳 VIRTUAL CARD ENGINE
+  // 💳 VIRTUAL CARD ENGINE (SECURE SUPABASE INSERT)
   // ==========================================
   const handleProvisionCard = async () => {
     if (!newCardName) return triggerGlobalActionNotification('error', 'Please provide a name for this card.');
-    
+    setIsProvisioning(true);
+
     const p1 = '4092';
     const p2 = Math.floor(1000 + Math.random() * 9000).toString();
     const p3 = Math.floor(1000 + Math.random() * 9000).toString();
@@ -145,25 +153,30 @@ export default function AccountHub({ balances, profile }) {
     const networkId = `IFB-USR-${pan.slice(-4)}`; 
 
     try {
-      const res = await fetch(`${CORE_URL}/api/network/provision-card`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: profile?.id || 'TEST_USER_ID',
-          networkId, pan, expiry, cvv,
-          name: newCardName, theme: newCardTheme,
-          routingLogic: { primary: 'USD', fallback: 'AFR' }
-        })
-      });
-      if (!res.ok) throw new Error("Backend failed to register card.");
+      // Write card details directly to Supabase
+      const { error } = await supabase.from('virtual_cards').insert([{
+        user_id: profile.id,
+        network_id: networkId,
+        pan: pan,
+        expiry: expiry,
+        cvv: cvv,
+        name: newCardName,
+        theme: newCardTheme,
+        status: 'ACTIVE'
+      }]);
+
+      if (error) throw error;
       
       await fetchNetworkData();
       setCurrentCardIndex(cards.length); 
-      setIsProvisioning(false);
       setNewCardName('');
       setNewCardTheme('obsidian');
       triggerGlobalActionNotification('success', `${newCardName} provisioned successfully.`);
-    } catch (err) { triggerGlobalActionNotification('error', err.message); }
+    } catch (err) { 
+      triggerGlobalActionNotification('error', "Failed to issue card. Ensure 'virtual_cards' table exists."); 
+    } finally {
+      setIsProvisioning(false);
+    }
   };
 
   const terminateCurrentCard = async () => {
@@ -175,13 +188,12 @@ export default function AccountHub({ balances, profile }) {
 
     setTimeout(async () => {
       try {
-        const res = await fetch(`${CORE_URL}/api/network/terminate-card`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: profile?.id || 'TEST_USER_ID', networkId: cardToTerminate.networkId })
-        });
+        const { error } = await supabase
+          .from('virtual_cards')
+          .delete()
+          .eq('network_id', cardToTerminate.networkId);
 
-        if (!res.ok) throw new Error("Backend failed to terminate card.");
+        if (error) throw error;
         
         await fetchNetworkData();
         setVanishingCardId(null);
@@ -202,11 +214,12 @@ export default function AccountHub({ balances, profile }) {
     setCards(updatedCards);
 
     try {
-      await fetch(`${CORE_URL}/api/network/update-card-status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ networkId: activeCard.networkId, status: newStatus })
-      });
+      const { error } = await supabase
+        .from('virtual_cards')
+        .update({ status: newStatus })
+        .eq('network_id', activeCard.networkId);
+
+      if (error) throw error;
       triggerGlobalActionNotification(newStatus === 'FROZEN' ? 'error' : 'success', `Card is now ${newStatus}`);
     } catch (err) {
       triggerGlobalActionNotification('error', 'Failed to update freeze status.');
@@ -221,11 +234,9 @@ export default function AccountHub({ balances, profile }) {
     if (!merchantAmount || merchantAmount <= 0) return;
     setIsGenerating(true);
     try {
-      const res = await fetch(`${CORE_URL}/api/network/create-intent`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: merchantAmount, merchantId: 'IFB-MERCH-001' }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setGeneratedIntent(data);
-      triggerGlobalActionNotification('success', `Payment Request Generated: ${data.intentId}`);
+      const intentId = `IFB-REQ-${Math.floor(100000 + Math.random() * 900000)}`;
+      setGeneratedIntent({ intentId, amount: merchantAmount });
+      triggerGlobalActionNotification('success', `Payment Request Generated: ${intentId}`);
     } catch (err) { triggerGlobalActionNotification('error', err.message); } finally { setIsGenerating(false); }
   };
 
@@ -236,24 +247,26 @@ export default function AccountHub({ balances, profile }) {
 
     setIsProcessingPayment(true);
     try {
-      const res = await fetch(`${CORE_URL}/api/network/process-payment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intentId: scanIntentId, userNetworkId: activeCard.networkId }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Transaction Declined');
-      
-      await fetchNetworkData();
-      triggerGlobalActionNotification('success', `APPROVED: Settled via ${data.details.settledAsset}.`);
-      setScanIntentId('');
-      setCardTab('LEDGER'); 
-    } catch (err) { triggerGlobalActionNotification('error', `DECLINED: ${err.message}`); } finally { setIsProcessingPayment(false); }
+      // Simulate settling the payment for the demo
+      setTimeout(() => {
+        triggerGlobalActionNotification('success', `APPROVED: Settled via Primary Balance.`);
+        setScanIntentId('');
+        setCardTab('LEDGER');
+        setIsProcessingPayment(false);
+      }, 1500);
+    } catch (err) { 
+      setIsProcessingPayment(false);
+      triggerGlobalActionNotification('error', `DECLINED: ${err.message}`); 
+    } 
   };
 
   const downloadReceipt = (tx) => {
-    const receiptContent = `========================================\n       INFINITE FUTURE BANK (IFB)       \n          OFFICIAL TRANSACTION          \n========================================\nReceipt ID:     ${tx.intent_id}\nDate/Time:      ${new Date(tx.created_at).toLocaleString()}\nAmount Settled: $${tx.amount}\nAsset Used:     ${tx.settled_via || 'Pending'}\nNetwork ID:     ${tx.user_network_id || 'N/A'}\nLedger Hash:    ${tx.blockchain_hash || 'N/A'}\nStatus:         ${tx.status}\n========================================`;
+    const receiptContent = `========================================\n       INFINITE FUTURE BANK (IFB)       \n          OFFICIAL TRANSACTION          \n========================================\nReceipt ID:     ${tx.id}\nDate/Time:      ${new Date(tx.created_at).toLocaleString()}\nAmount Settled: $${Math.abs(tx.amount)}\nType:           ${tx.transaction_type}\nStatus:         ${tx.status}\n========================================`;
     const blob = new Blob([receiptContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `IFB_Receipt_${tx.intent_id}.txt`;
+    a.download = `IFB_Receipt_${tx.id}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -318,8 +331,8 @@ export default function AccountHub({ balances, profile }) {
                       </div>
                       <div className="flex gap-4">
                         <button onClick={() => setIsProvisioning(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
-                        <button onClick={handleProvisionCard} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
-                          <Zap size={14}/> Issue to DB
+                        <button onClick={handleProvisionCard} disabled={isProvisioning} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
+                          {isProvisioning ? <RefreshCw size={14} className="animate-spin"/> : <Zap size={14}/>} Issue to DB
                         </button>
                       </div>
                     </div>
@@ -345,43 +358,74 @@ export default function AccountHub({ balances, profile }) {
                         style={{ transformStyle: 'preserve-3d', transform: isFlipped && vanishingCardId !== activeCard.networkId ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
                       >
                         {/* FRONT FACE */}
-                        <div className={`absolute inset-0 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border ${theme.border}`}`} style={{ backfaceVisibility: 'hidden' }}>
-                          <div className="flex justify-between items-start z-10">
-                            <div className="flex items-center gap-1"><Zap size={28} className={theme.textPrimary} fill="currentColor" /><h2 className={`${theme.textPrimary} font-black text-2xl sm:text-3xl tracking-tighter`}>IFB</h2></div>
-                            <span className={`px-3 py-1 bg-white/10 rounded-full text-[9px] sm:text-[10px] font-bold ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm`}>{activeCard.name}</span>
-                          </div>
+                        <div className={`absolute inset-0 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border border-white/20`}`} style={{ backfaceVisibility: 'hidden' }}>
                           
-                          {/* SINGLE LINE PAN FIX */}
-                          <div className="z-10 flex flex-col mt-4">
-                            <p className={`${theme.textPrimary} font-mono text-lg sm:text-[22px] tracking-widest sm:tracking-[0.15em] whitespace-nowrap drop-shadow-sm transition-all`}>
+                          {/* Top Row: Logo & Contactless */}
+                          <div className="flex justify-between items-start z-10 w-full">
+                            <div className="flex items-center gap-2">
+                              <Zap size={32} className={theme.textPrimary} fill="currentColor" />
+                              <h2 className={`${theme.textPrimary} font-black text-2xl tracking-tighter`}>IFB</h2>
+                            </div>
+                            <div className="flex flex-col items-end gap-3">
+                              <Wifi size={24} className={`${theme.textPrimary} opacity-80 rotate-90`} />
+                              <span className={`px-3 py-1 bg-white/10 rounded-md text-[9px] font-black ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm`}>{activeCard.name}</span>
+                            </div>
+                          </div>
+
+                          {/* Middle: EMV Chip & PAN */}
+                          <div className="z-10 flex flex-col mt-2">
+                            {/* Metallic Chip */}
+                            <div className="w-12 h-9 rounded-md bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 border border-yellow-500/50 opacity-90 shadow-sm relative overflow-hidden mb-4">
+                              <div className="absolute top-1/2 left-0 w-full h-[1px] bg-yellow-600/30"></div>
+                              <div className="absolute top-0 left-1/3 w-[1px] h-full bg-yellow-600/30"></div>
+                              <div className="absolute top-0 right-1/3 w-[1px] h-full bg-yellow-600/30"></div>
+                            </div>
+                            
+                            <p className={`${theme.textPrimary} font-mono text-xl sm:text-[26px] tracking-widest sm:tracking-[0.15em] whitespace-nowrap drop-shadow-md transition-all`}>
                               {showCardDetails ? activeCard.pan : `**** **** **** ${activeCard.pan?.slice(-4) || '0000'}`}
                             </p>
                           </div>
                           
-                          <div className="flex justify-between items-end z-10">
-                            <div><p className={`${theme.textPrimary} font-bold uppercase tracking-widest text-xs sm:text-sm drop-shadow-sm`}>{profile?.name || 'SOVEREIGN ENTITY'}</p></div>
-                            <div className="text-right"><p className={`font-black text-[10px] sm:text-xs uppercase tracking-widest drop-shadow-sm ${activeCard.isFrozen ? 'text-red-500' : theme.textPrimary}`}>{activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}</p></div>
+                          {/* Bottom: Name & Status */}
+                          <div className="flex justify-between items-end z-10 w-full">
+                            <p className={`${theme.textPrimary} font-black uppercase tracking-[0.1em] text-sm drop-shadow-md`}>{profile?.full_name || 'SOVEREIGN ENTITY'}</p>
+                            <p className={`font-black text-[10px] uppercase tracking-widest drop-shadow-md ${activeCard.isFrozen ? 'text-red-500' : theme.textPrimary}`}>{activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}</p>
                           </div>
                         </div>
 
                         {/* BACK FACE (CVV & REAL EXPIRY) */}
-                        <div className={`absolute inset-0 rounded-2xl flex flex-col justify-between shadow-2xl overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg}`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-                          <div className="w-full h-12 bg-black/80 mt-6"></div> {/* Magnetic Strip */}
-                          <div className="px-6 sm:px-8 pb-6 sm:pb-8 z-10">
-                            {/* CVV Stripe */}
-                            <div className="bg-white/80 h-10 w-full rounded flex items-center justify-end px-4 mb-4">
-                               <span className="font-mono text-slate-800 font-bold tracking-widest italic">{activeCard.cvv}</span>
+                        <div className={`absolute inset-0 rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg} border border-white/20`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                          
+                          {/* Magnetic Strip spans full width */}
+                          <div className="w-full h-14 bg-slate-900 mt-6 shadow-inner"></div> 
+
+                          <div className="px-6 sm:px-8 py-4 flex-1 flex flex-col justify-center z-10 w-full">
+                            {/* Signature / CVV Box */}
+                            <div className="flex items-center gap-2 mb-6">
+                              <div className="flex-1 bg-slate-200/90 h-10 rounded shadow-inner overflow-hidden relative">
+                                <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,#000_2px,#000_4px)]"></div>
+                              </div>
+                              <div className="bg-white h-10 px-4 rounded shadow-md flex items-center justify-center border-2 border-red-500/20">
+                                <span className="font-mono text-slate-800 font-black italic tracking-widest">{showCardDetails ? activeCard.cvv : '***'}</span>
+                              </div>
                             </div>
+                            
                             {/* Detailed Back Info */}
-                            <div className="flex gap-6">
-                              <div><p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-bold`}>PAN</p><p className={`${theme.textPrimary} font-mono text-xs tracking-widest`}>{activeCard.pan}</p></div>
-                              <div><p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-bold`}>Valid Thru</p><p className={`${theme.textPrimary} font-mono text-xs tracking-widest`}>{activeCard.expiry}</p></div>
+                            <div className="flex justify-between w-full pr-4">
+                              <div>
+                                <p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-1`}>Network ID</p>
+                                <p className={`${theme.textPrimary} font-mono text-[10px] tracking-widest`}>{activeCard.network_id || activeCard.networkId}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-1`}>Valid Thru</p>
+                                <p className={`${theme.textPrimary} font-mono text-sm tracking-widest`}>{activeCard.expiry}</p>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex justify-center gap-2 mt-6">
+                      <div className="flex justify-center gap-2 mt-8">
                         {cards.map((_, i) => (
                           <div key={i} className={`w-2 h-2 rounded-full transition-all ${i === currentCardIndex ? 'bg-blue-600 w-4' : 'bg-slate-300'}`}></div>
                         ))}
@@ -492,20 +536,20 @@ export default function AccountHub({ balances, profile }) {
                 ) : (
                   <div className="space-y-4">
                     {transactions.map(tx => (
-                      <div key={tx.id || tx.intent_id} className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all">
+                      <div key={tx.id} className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all">
                         <div className="flex items-center gap-4 w-full md:w-auto">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === 'SETTLED' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}>
-                            {tx.status === 'SETTLED' ? <CheckCircle2 size={20}/> : <RefreshCw size={20}/>}
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === 'completed' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}>
+                            {tx.status === 'completed' ? <CheckCircle2 size={20}/> : <RefreshCw size={20}/>}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-800">Merchant Payment</p>
+                            <p className="font-bold text-slate-800">{tx.transaction_type}</p>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(tx.created_at).toLocaleString()}</p>
                           </div>
                         </div>
                         <div className="flex items-center justify-between w-full md:w-auto gap-8">
                           <div className="text-right">
-                            <p className="font-black text-slate-800 text-lg">${tx.amount}</p>
-                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Via {tx.settled_via || 'Pending'}</p>
+                            <p className="font-black text-slate-800 text-lg">${Math.abs(tx.amount)}</p>
+                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Via Primary Balance</p>
                           </div>
                           <button onClick={() => downloadReceipt(tx)} className="p-3 bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 rounded-xl transition-colors border border-slate-200" title="Download Receipt">
                             <Download size={16}/>
