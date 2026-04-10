@@ -126,9 +126,6 @@ export default function AccountHub({ balances, profile }) {
     }
   };
 
-  // ==========================================
-  // 💳 VIRTUAL CARD ENGINE (SPINNER COMPLETELY REMOVED)
-  // ==========================================
   const handleProvisionCard = async () => {
     if (!newCardName) return triggerGlobalActionNotification('error', 'Please provide a name for this card.');
     if (!profile?.id) return triggerGlobalActionNotification('error', 'User profile ID not found.');
@@ -138,9 +135,12 @@ export default function AccountHub({ balances, profile }) {
     const p3 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
     const p4 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
     const pan = `${p1} ${p2} ${p3} ${p4}`;
+    
+    // Dynamically generate expiry date 3-5 years in the future
     const year = new Date().getFullYear() + Math.floor(3 + Math.random() * 3);
     const month = Math.floor(1 + Math.random() * 12).toString().padStart(2, '0');
     const expiry = `${month}/${year.toString().slice(-2)}`;
+    
     const cvv = Math.floor(100 + Math.random() * 900).toString().padStart(3, '0');
     const networkId = `IFB-USR-${pan.slice(-4)}`; 
 
@@ -167,7 +167,6 @@ export default function AccountHub({ balances, profile }) {
       setNewCardTheme('obsidian');
       triggerGlobalActionNotification('success', `${newCardName} provisioned successfully.`);
       
-      // Close the form
       setIsProvisioning(false);
     } catch (err) { 
       console.error("Provisioning Caught Error:", err);
@@ -324,7 +323,6 @@ export default function AccountHub({ balances, profile }) {
                       <div className="flex gap-4">
                         <button onClick={() => setIsProvisioning(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
                         
-                        {/* CLEAN, UN-DISABLED BUTTON WITH NO SPINNER */}
                         <button onClick={handleProvisionCard} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
                           <Zap size={14}/> Issue to DB
                         </button>
@@ -351,22 +349,24 @@ export default function AccountHub({ balances, profile }) {
                         className={`w-full aspect-[1.586/1] cursor-pointer transition-all duration-700 ease-in-out ${vanishingCardId === activeCard.networkId ? 'scale-50 blur-2xl opacity-0 rotate-12 -translate-y-10' : 'scale-100 blur-0 opacity-100'}`} 
                         style={{ transformStyle: 'preserve-3d', transform: isFlipped && vanishingCardId !== activeCard.networkId ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
                       >
-                        {/* FRONT FACE */}
-                        <div className={`absolute inset-0 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border border-white/20`}`} style={{ backfaceVisibility: 'hidden' }}>
+                        {/* FRONT FACE (FULLY CONTAINED, EXPIRY & CVV ADDED) */}
+                        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border border-white/20`}`} style={{ backfaceVisibility: 'hidden' }}>
                           
+                          {/* Top Row: Logo & Designation */}
                           <div className="flex justify-between items-start z-10 w-full">
                             <div className="flex items-center gap-2">
-                              <Zap size={32} className={theme.textPrimary} fill="currentColor" />
-                              <h2 className={`${theme.textPrimary} font-black text-2xl tracking-tighter`}>IFB</h2>
+                              <Zap size={28} className={theme.textPrimary} fill="currentColor" />
+                              <h2 className={`${theme.textPrimary} font-black text-xl tracking-tighter`}>IFB</h2>
                             </div>
-                            <div className="flex flex-col items-end gap-3">
-                              <Wifi size={24} className={`${theme.textPrimary} opacity-80 rotate-90`} />
-                              <span className={`px-3 py-1 bg-white/10 rounded-md text-[9px] font-black ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm`}>{activeCard.name}</span>
+                            <div className="flex flex-col items-end gap-2">
+                              <Wifi size={20} className={`${theme.textPrimary} opacity-80 rotate-90`} />
+                              <span className={`px-3 py-1 bg-white/10 rounded-lg text-[8px] font-black ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm truncate max-w-[120px]`}>{activeCard.name}</span>
                             </div>
                           </div>
 
-                          <div className="z-10 flex flex-col mt-2">
-                            <div className="w-12 h-9 rounded-md bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 border border-yellow-500/50 opacity-90 shadow-sm relative overflow-hidden mb-4">
+                          {/* Middle: EMV Chip & PAN */}
+                          <div className="z-10 flex flex-col mt-auto mb-4 sm:mb-6">
+                            <div className="w-10 h-7 sm:w-12 sm:h-9 rounded-md bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 border border-yellow-500/50 opacity-90 shadow-sm relative overflow-hidden mb-3 sm:mb-4">
                               <div className="absolute top-1/2 left-0 w-full h-[1px] bg-yellow-600/30"></div>
                               <div className="absolute top-0 left-1/3 w-[1px] h-full bg-yellow-600/30"></div>
                               <div className="absolute top-0 right-1/3 w-[1px] h-full bg-yellow-600/30"></div>
@@ -377,37 +377,38 @@ export default function AccountHub({ balances, profile }) {
                             </p>
                           </div>
                           
+                          {/* Bottom: Expiry, CVV, Name & Status */}
                           <div className="flex justify-between items-end z-10 w-full">
-                            <p className={`${theme.textPrimary} font-black uppercase tracking-[0.1em] text-sm drop-shadow-md`}>{profile?.full_name || 'SOVEREIGN ENTITY'}</p>
-                            <p className={`font-black text-[10px] uppercase tracking-widest drop-shadow-md ${activeCard.isFrozen ? 'text-red-500' : theme.textPrimary}`}>{activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}</p>
+                            <div className="flex flex-col gap-2">
+                              <div className="flex gap-6">
+                                <div>
+                                  <p className={`${theme.textSecondary} text-[7px] sm:text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-0.5`}>Valid Thru</p>
+                                  <p className={`${theme.textPrimary} font-mono text-[10px] sm:text-xs tracking-widest`}>{showCardDetails ? activeCard.expiry : '**/**'}</p>
+                                </div>
+                                <div>
+                                  <p className={`${theme.textSecondary} text-[7px] sm:text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-0.5`}>CVV</p>
+                                  <p className={`${theme.textPrimary} font-mono text-[10px] sm:text-xs tracking-widest`}>{showCardDetails ? activeCard.cvv : '***'}</p>
+                                </div>
+                              </div>
+                              <p className={`${theme.textPrimary} font-black uppercase tracking-[0.1em] text-xs sm:text-sm drop-shadow-md truncate max-w-[200px]`}>{profile?.full_name || 'SOVEREIGN ENTITY'}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className={`font-black text-[9px] uppercase tracking-widest drop-shadow-md px-2 py-1 rounded border ${activeCard.isFrozen ? 'bg-red-500/20 text-red-100 border-red-500/30' : 'bg-white/10 text-white border-white/20'}`}>
+                                {activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
-                        {/* BACK FACE (CVV & REAL EXPIRY) */}
-                        <div className={`absolute inset-0 rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg} border border-white/20`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                        {/* BACK FACE (Network ID & Magstripe) */}
+                        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg} border border-white/20`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                           
-                          <div className="w-full h-14 bg-slate-900 mt-6 shadow-inner"></div> 
+                          <div className="w-full h-10 sm:h-14 bg-slate-900 mt-6 shadow-inner"></div> 
 
-                          <div className="px-6 sm:px-8 py-4 flex-1 flex flex-col justify-center z-10 w-full">
-                            <div className="flex items-center gap-2 mb-6">
-                              <div className="flex-1 bg-slate-200/90 h-10 rounded shadow-inner overflow-hidden relative">
-                                <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,#000_2px,#000_4px)]"></div>
-                              </div>
-                              <div className="bg-white h-10 px-4 rounded shadow-md flex items-center justify-center border-2 border-red-500/20">
-                                <span className="font-mono text-slate-800 font-black italic tracking-widest">{showCardDetails ? activeCard.cvv : '***'}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex justify-between w-full pr-4">
-                              <div>
-                                <p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-1`}>Network ID</p>
-                                <p className={`${theme.textPrimary} font-mono text-[10px] tracking-widest`}>{activeCard.network_id || activeCard.networkId}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-1`}>Valid Thru</p>
-                                <p className={`${theme.textPrimary} font-mono text-sm tracking-widest`}>{activeCard.expiry}</p>
-                              </div>
-                            </div>
+                          <div className="px-6 sm:px-8 py-4 flex-1 flex flex-col justify-center z-10 w-full text-center">
+                            <p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-2`}>Internal Network ID</p>
+                            <p className={`${theme.textPrimary} font-mono text-xs tracking-widest bg-white/5 p-3 rounded-lg border border-white/10`}>{activeCard.network_id || activeCard.networkId}</p>
+                            <p className={`${theme.textSecondary} text-[8px] uppercase tracking-widest mt-6 opacity-50`}>Authorized signature required. Issued by IFB.</p>
                           </div>
                         </div>
                       </div>
