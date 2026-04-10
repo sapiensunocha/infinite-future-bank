@@ -56,21 +56,17 @@ export default function AccountHub({ balances, profile }) {
     setTimeout(() => setNotification(null), 6000);
   };
 
-  // ==========================================
-  // 🔗 NATIVE SUPABASE SYNC
-  // ==========================================
   const fetchNetworkData = async () => {
     if (!profile?.id) return;
     setIsLoadingDB(true);
     try {
-      // Pull secure cards directly from Supabase instead of mock API
       const { data: cardData, error: cardError } = await supabase
         .from('virtual_cards')
         .select('*')
         .eq('user_id', profile.id)
         .order('created_at', { ascending: true });
 
-      if (cardError && cardError.code !== '42P01') throw cardError; // 42P01 is table missing error
+      if (cardError && cardError.code !== '42P01') throw cardError; 
 
       if (cardData) {
         const formattedCards = cardData.map(c => ({
@@ -84,7 +80,6 @@ export default function AccountHub({ balances, profile }) {
         setCards([]);
       }
       
-      // Pull ledger transactions
       const { data: txData } = await supabase
         .from('transactions')
         .select('*')
@@ -103,9 +98,6 @@ export default function AccountHub({ balances, profile }) {
 
   useEffect(() => { fetchNetworkData(); }, [profile?.id]);
 
-  // ==========================================
-  // 💱 GLOBAL LIQUIDITY SWAP
-  // ==========================================
   const handleCurrencySwap = async () => {
     if (!swapAmount || swapAmount <= 0) return triggerGlobalActionNotification('error', 'Enter a valid amount to swap.');
     setIsSwapping(true);
@@ -135,18 +127,11 @@ export default function AccountHub({ balances, profile }) {
   };
 
   // ==========================================
-  // 💳 VIRTUAL CARD ENGINE (ULTRA-SAFE SUPABASE INSERT)
+  // 💳 VIRTUAL CARD ENGINE (SPINNER COMPLETELY REMOVED)
   // ==========================================
   const handleProvisionCard = async () => {
     if (!newCardName) return triggerGlobalActionNotification('error', 'Please provide a name for this card.');
-    
-    setIsProvisioning(true);
-
-    // Safety Kill-switch: Force stop spinning after 8 seconds
-    const safetyBtn = setTimeout(() => {
-      setIsProvisioning(false);
-      triggerGlobalActionNotification('error', 'Database connection timed out. Please check permissions.');
-    }, 8000);
+    if (!profile?.id) return triggerGlobalActionNotification('error', 'User profile ID not found.');
 
     const p1 = '4092';
     const p2 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
@@ -160,7 +145,7 @@ export default function AccountHub({ balances, profile }) {
     const networkId = `IFB-USR-${pan.slice(-4)}`; 
 
     try {
-      const { data, error } = await supabase.from('virtual_cards').insert([{
+      const { error } = await supabase.from('virtual_cards').insert([{
         user_id: profile.id,
         network_id: networkId,
         pan: pan,
@@ -169,26 +154,23 @@ export default function AccountHub({ balances, profile }) {
         name: newCardName,
         theme: newCardTheme,
         status: 'ACTIVE'
-      }]).select();
+      }]);
 
       if (error) {
         console.error("Supabase Insert Error:", error);
         throw new Error(error.message);
       }
       
-      // Success! Clear the safety timeout
-      clearTimeout(safetyBtn);
-      
       await fetchNetworkData();
       setCurrentCardIndex(cards.length); 
       setNewCardName('');
       setNewCardTheme('obsidian');
       triggerGlobalActionNotification('success', `${newCardName} provisioned successfully.`);
+      
+      // Close the form
       setIsProvisioning(false);
     } catch (err) { 
       console.error("Provisioning Caught Error:", err);
-      clearTimeout(safetyBtn);
-      setIsProvisioning(false);
       triggerGlobalActionNotification('error', `Database Error: ${err.message}`); 
     }
   };
@@ -241,9 +223,6 @@ export default function AccountHub({ balances, profile }) {
     }
   };
 
-  // ==========================================
-  // 💸 PROPRIETARY NETWORK ACTIONS & LEDGER
-  // ==========================================
   const handleGenerateIntent = async () => {
     if (!merchantAmount || merchantAmount <= 0) return;
     setIsGenerating(true);
@@ -261,7 +240,6 @@ export default function AccountHub({ balances, profile }) {
 
     setIsProcessingPayment(true);
     try {
-      // Simulate settling the payment for the demo
       setTimeout(() => {
         triggerGlobalActionNotification('success', `APPROVED: Settled via Primary Balance.`);
         setScanIntentId('');
@@ -345,8 +323,10 @@ export default function AccountHub({ balances, profile }) {
                       </div>
                       <div className="flex gap-4">
                         <button onClick={() => setIsProvisioning(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
-                        <button onClick={handleProvisionCard} disabled={isProvisioning} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70">
-                          {isProvisioning ? <RefreshCw size={14} className="animate-spin"/> : <Zap size={14}/>} Issue to DB
+                        
+                        {/* CLEAN, UN-DISABLED BUTTON WITH NO SPINNER */}
+                        <button onClick={handleProvisionCard} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
+                          <Zap size={14}/> Issue to DB
                         </button>
                       </div>
                     </div>
@@ -374,7 +354,6 @@ export default function AccountHub({ balances, profile }) {
                         {/* FRONT FACE */}
                         <div className={`absolute inset-0 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border border-white/20`}`} style={{ backfaceVisibility: 'hidden' }}>
                           
-                          {/* Top Row: Logo & Contactless */}
                           <div className="flex justify-between items-start z-10 w-full">
                             <div className="flex items-center gap-2">
                               <Zap size={32} className={theme.textPrimary} fill="currentColor" />
@@ -386,9 +365,7 @@ export default function AccountHub({ balances, profile }) {
                             </div>
                           </div>
 
-                          {/* Middle: EMV Chip & PAN */}
                           <div className="z-10 flex flex-col mt-2">
-                            {/* Metallic Chip */}
                             <div className="w-12 h-9 rounded-md bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 border border-yellow-500/50 opacity-90 shadow-sm relative overflow-hidden mb-4">
                               <div className="absolute top-1/2 left-0 w-full h-[1px] bg-yellow-600/30"></div>
                               <div className="absolute top-0 left-1/3 w-[1px] h-full bg-yellow-600/30"></div>
@@ -400,7 +377,6 @@ export default function AccountHub({ balances, profile }) {
                             </p>
                           </div>
                           
-                          {/* Bottom: Name & Status */}
                           <div className="flex justify-between items-end z-10 w-full">
                             <p className={`${theme.textPrimary} font-black uppercase tracking-[0.1em] text-sm drop-shadow-md`}>{profile?.full_name || 'SOVEREIGN ENTITY'}</p>
                             <p className={`font-black text-[10px] uppercase tracking-widest drop-shadow-md ${activeCard.isFrozen ? 'text-red-500' : theme.textPrimary}`}>{activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}</p>
@@ -410,11 +386,9 @@ export default function AccountHub({ balances, profile }) {
                         {/* BACK FACE (CVV & REAL EXPIRY) */}
                         <div className={`absolute inset-0 rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg} border border-white/20`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                           
-                          {/* Magnetic Strip spans full width */}
                           <div className="w-full h-14 bg-slate-900 mt-6 shadow-inner"></div> 
 
                           <div className="px-6 sm:px-8 py-4 flex-1 flex flex-col justify-center z-10 w-full">
-                            {/* Signature / CVV Box */}
                             <div className="flex items-center gap-2 mb-6">
                               <div className="flex-1 bg-slate-200/90 h-10 rounded shadow-inner overflow-hidden relative">
                                 <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,#000_2px,#000_4px)]"></div>
@@ -424,7 +398,6 @@ export default function AccountHub({ balances, profile }) {
                               </div>
                             </div>
                             
-                            {/* Detailed Back Info */}
                             <div className="flex justify-between w-full pr-4">
                               <div>
                                 <p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-1`}>Network ID</p>
