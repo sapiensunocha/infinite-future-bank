@@ -23,6 +23,7 @@ import PayBills from './PayBills';
 import SmartContracts from './SmartContracts';
 import Loans from './Loans';
 import NpoHub from './NpoHub'; 
+import P2PExchange from './P2PExchange'; // 🔥 IMPORT P2P EXCHANGE HERE
 // BRAND NEW FEATURES FOR COMMERCE & EVENTS
 import BillingTerminal from './features/commerce/BillingTerminal';
 import TicketGate from './features/commerce/TicketGate';
@@ -106,6 +107,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [sosData, setSosData] = useState(null);
   const [investments, setInvestments] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [activeEscrows, setActiveEscrows] = useState([]); // 🔥 NEW P2P ESCROW STATE
   const [isLoading, setIsLoading] = useState(false);
   const [editedName, setEditedName] = useState('');
 
@@ -364,6 +366,15 @@ export default function Dashboard({ session, onSignOut }) {
     if (invData) setInvestments(invData);
     const { data: notifData } = await supabase.from('notifications').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
     if (notifData) setNotifications(notifData);
+    
+    // 🔥 NEW: FETCH ACTIVE ESCROWS
+    const { data: escrowData } = await supabase
+      .from('p2p_orders')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .in('status', ['open', 'locked_in_escrow', 'proof_uploaded', 'disputed'])
+      .order('created_at', { ascending: false });
+    if (escrowData) setActiveEscrows(escrowData);
   };
 
   useEffect(() => { if (session?.user?.id) fetchAllData(); }, [session?.user?.id]);
@@ -378,6 +389,10 @@ export default function Dashboard({ session, onSignOut }) {
         fetchAllData();
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${session.user.id}` }, () => {
+        fetchAllData();
+      })
+      // 🔥 NEW: REALTIME ESCROW TRACKING
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_orders', filter: `user_id=eq.${session.user.id}` }, () => {
         fetchAllData();
       })
       .subscribe();
@@ -770,6 +785,33 @@ export default function Dashboard({ session, onSignOut }) {
             <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); }} className="px-6 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
               Verify Identity Now
             </button>
+          </div>
+        )}
+
+        {/* 🔥 NEW: ACTIVE P2P ESCROWS TRACKER */}
+        {activeEscrows.length > 0 && (
+          <div className="space-y-3 mb-4 animate-in fade-in slide-in-from-top-4">
+            {activeEscrows.map(escrow => (
+              <div key={escrow.id} className="bg-emerald-50 border border-emerald-200 p-4 sm:p-5 rounded-[2rem] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+                 <div className="flex items-center gap-4">
+                    <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl relative">
+                       <Lock size={20} className="relative z-10"/>
+                       <div className="absolute inset-0 bg-emerald-400 opacity-20 rounded-xl animate-ping"></div>
+                    </div>
+                    <div>
+                       <p className="font-black text-emerald-900 text-sm">
+                         {escrow.order_type === 'deposit' ? 'Inbound P2P Deposit' : 'Outbound P2P Withdrawal'} • {formatCurrency(escrow.amount_usd)}
+                       </p>
+                       <p className="text-[10px] font-bold text-emerald-700 mt-1 uppercase tracking-widest flex items-center gap-1">
+                         <Loader2 size={10} className="animate-spin"/> Status: {escrow.status.replace(/_/g, ' ')}
+                       </p>
+                    </div>
+                 </div>
+                 <button onClick={(e) => { e.preventDefault(); setIsNotificationMenuOpen(true); }} className="w-full sm:w-auto px-6 py-3 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-colors shadow-sm">
+                   Check Updates
+                 </button>
+              </div>
+            ))}
           </div>
         )}
 
@@ -1399,6 +1441,12 @@ export default function Dashboard({ session, onSignOut }) {
                           <span className="text-[9px] font-black text-slate-700">NPO Hub</span>
                         </button>
                         
+                        {/* 🔥 NEW P2P LIQUIDITY EXCHANGE BUTTON */}
+                        <button onClick={() => { setActiveAppPopup('P2P_EXCHANGE'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-emerald-50 transition-colors group">
+                          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors shadow-sm"><ArrowRightLeft size={20} /></div>
+                          <span className="text-[9px] font-black text-slate-700 leading-tight text-center">P2P Escrow</span>
+                        </button>
+                        
                         {/* 🔥 NEW VENTURE EXCHANGE BUTTON */}
                         <button onClick={() => { setActiveAppPopup('VENTURE_EXCHANGE'); setIsAppDrawerOpen(false); }} className="flex flex-col items-center gap-3 p-2 rounded-2xl hover:bg-fuchsia-50 transition-colors group">
                           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 group-hover:bg-fuchsia-100 group-hover:text-fuchsia-600 transition-colors shadow-sm"><Rocket size={20} /></div>
@@ -1602,7 +1650,15 @@ export default function Dashboard({ session, onSignOut }) {
           <div className="bg-white rounded-3xl w-full max-w-5xl h-[90vh] shadow-2xl overflow-hidden flex flex-col relative border border-slate-100 animate-in zoom-in-95">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 sticky top-0 z-20">
                <h3 className="font-black text-xl text-slate-800 tracking-tight uppercase">
-                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : activeAppPopup === 'BILLS' ? 'Pay Bills' : activeAppPopup === 'CONTRACTS' ? 'Smart Contracts' : activeAppPopup === 'NPO' ? 'Philanthropy Hub' : activeAppPopup === 'VENTURE_EXCHANGE' ? 'Venture Capital Exchange' : activeAppPopup === 'MERCHANT_BILLING' ? 'Merchant Invoicing' : activeAppPopup === 'MERCHANT_TICKETS' ? 'Box Office Scanner' : 'P2P Credit Market'}
+                 {activeAppPopup === 'PAYROLL' ? 'Corporate Payroll' : 
+                  activeAppPopup === 'BILLS' ? 'Pay Bills' : 
+                  activeAppPopup === 'CONTRACTS' ? 'Smart Contracts' : 
+                  activeAppPopup === 'NPO' ? 'Philanthropy Hub' : 
+                  activeAppPopup === 'VENTURE_EXCHANGE' ? 'Venture Capital Exchange' : 
+                  activeAppPopup === 'MERCHANT_BILLING' ? 'Merchant Invoicing' : 
+                  activeAppPopup === 'MERCHANT_TICKETS' ? 'Box Office Scanner' : 
+                  activeAppPopup === 'P2P_EXCHANGE' ? 'P2P Liquidity Exchange' : 
+                  'P2P Credit Market'}
                </h3>
                <button onClick={() => setActiveAppPopup(null)} className="text-slate-400 hover:text-slate-800 transition-colors bg-white p-2 rounded-xl shadow-sm border border-slate-200">
                  <X size={20} />
@@ -1621,6 +1677,9 @@ export default function Dashboard({ session, onSignOut }) {
                
                {/* 🔥 VENTURE EXCHANGE RENDERED HERE */}
                {activeAppPopup === 'VENTURE_EXCHANGE' && <VentureExchange session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
+               
+               {/* 🔥 P2P EXCHANGE RENDERED HERE */}
+               {activeAppPopup === 'P2P_EXCHANGE' && <P2PExchange session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
             </div>
           </div>
         </div>
