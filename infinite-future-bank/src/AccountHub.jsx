@@ -135,11 +135,18 @@ export default function AccountHub({ balances, profile }) {
   };
 
   // ==========================================
-  // 💳 VIRTUAL CARD ENGINE (SECURE SUPABASE INSERT)
+  // 💳 VIRTUAL CARD ENGINE (ULTRA-SAFE SUPABASE INSERT)
   // ==========================================
   const handleProvisionCard = async () => {
     if (!newCardName) return triggerGlobalActionNotification('error', 'Please provide a name for this card.');
+    
     setIsProvisioning(true);
+
+    // Safety Kill-switch: Force stop spinning after 8 seconds
+    const safetyBtn = setTimeout(() => {
+      setIsProvisioning(false);
+      triggerGlobalActionNotification('error', 'Database connection timed out. Please check permissions.');
+    }, 8000);
 
     const p1 = '4092';
     const p2 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
@@ -153,8 +160,7 @@ export default function AccountHub({ balances, profile }) {
     const networkId = `IFB-USR-${pan.slice(-4)}`; 
 
     try {
-      // Write card details directly to Supabase
-      const { error } = await supabase.from('virtual_cards').insert([{
+      const { data, error } = await supabase.from('virtual_cards').insert([{
         user_id: profile.id,
         network_id: networkId,
         pan: pan,
@@ -163,12 +169,15 @@ export default function AccountHub({ balances, profile }) {
         name: newCardName,
         theme: newCardTheme,
         status: 'ACTIVE'
-      }]);
+      }]).select();
 
       if (error) {
         console.error("Supabase Insert Error:", error);
-        throw new Error(error.message || "Database rejected the card creation.");
+        throw new Error(error.message);
       }
+      
+      // Success! Clear the safety timeout
+      clearTimeout(safetyBtn);
       
       await fetchNetworkData();
       setCurrentCardIndex(cards.length); 
@@ -178,9 +187,9 @@ export default function AccountHub({ balances, profile }) {
       setIsProvisioning(false);
     } catch (err) { 
       console.error("Provisioning Caught Error:", err);
-      triggerGlobalActionNotification('error', `Failed: ${err.message}`); 
-    } finally {
+      clearTimeout(safetyBtn);
       setIsProvisioning(false);
+      triggerGlobalActionNotification('error', `Database Error: ${err.message}`); 
     }
   };
 
@@ -336,7 +345,7 @@ export default function AccountHub({ balances, profile }) {
                       </div>
                       <div className="flex gap-4">
                         <button onClick={() => setIsProvisioning(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
-                        <button onClick={handleProvisionCard} disabled={isProvisioning} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
+                        <button onClick={handleProvisionCard} disabled={isProvisioning} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70">
                           {isProvisioning ? <RefreshCw size={14} className="animate-spin"/> : <Zap size={14}/>} Issue to DB
                         </button>
                       </div>
