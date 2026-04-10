@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins } from 'lucide-react';
+import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
 // --- Map Imports ---
