@@ -142,14 +142,14 @@ export default function AccountHub({ balances, profile }) {
     setIsProvisioning(true);
 
     const p1 = '4092';
-    const p2 = Math.floor(1000 + Math.random() * 9000).toString();
-    const p3 = Math.floor(1000 + Math.random() * 9000).toString();
-    const p4 = Math.floor(1000 + Math.random() * 9000).toString();
+    const p2 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
+    const p3 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
+    const p4 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
     const pan = `${p1} ${p2} ${p3} ${p4}`;
     const year = new Date().getFullYear() + Math.floor(3 + Math.random() * 3);
     const month = Math.floor(1 + Math.random() * 12).toString().padStart(2, '0');
     const expiry = `${month}/${year.toString().slice(-2)}`;
-    const cvv = Math.floor(100 + Math.random() * 900).toString();
+    const cvv = Math.floor(100 + Math.random() * 900).toString().padStart(3, '0');
     const networkId = `IFB-USR-${pan.slice(-4)}`; 
 
     try {
@@ -165,15 +165,20 @@ export default function AccountHub({ balances, profile }) {
         status: 'ACTIVE'
       }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase Insert Error:", error);
+        throw new Error(error.message || "Database rejected the card creation.");
+      }
       
       await fetchNetworkData();
       setCurrentCardIndex(cards.length); 
       setNewCardName('');
       setNewCardTheme('obsidian');
       triggerGlobalActionNotification('success', `${newCardName} provisioned successfully.`);
+      setIsProvisioning(false);
     } catch (err) { 
-      triggerGlobalActionNotification('error', "Failed to issue card. Ensure 'virtual_cards' table exists."); 
+      console.error("Provisioning Caught Error:", err);
+      triggerGlobalActionNotification('error', `Failed: ${err.message}`); 
     } finally {
       setIsProvisioning(false);
     }
