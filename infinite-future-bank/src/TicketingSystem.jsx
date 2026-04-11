@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import QRCode from "react-qr-code";
-import { Ticket, QrCode, Users, Trash2, ShieldCheck, Plus, CheckCircle, XCircle, AlertCircle, Camera, Loader2, Search } from 'lucide-react';
+import { Ticket, QrCode, Users, Trash2, Plus, CheckCircle, XCircle, Camera, Loader2, Search, Link as LinkIcon, Copy, Sparkles } from 'lucide-react';
 
 export default function TicketingSystem({ session }) {
-  const [activeTab, setActiveTab] = useState('events'); // 'events', 'create', 'manage'
+  const [activeTab, setActiveTab] = useState('events'); 
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   
-  // Create Event Form
   const [newEvent, setNewEvent] = useState({ name: '', price: 0, capacity: 100, message: '' });
   
-  // Manage Event State
   const [tickets, setTickets] = useState([]);
-  const [issueEmail, setIssueEmail] = useState('');
   const [scanHash, setScanHash] = useState('');
-  const [generatedTicket, setGeneratedTicket] = useState(null);
   
-  // UI States
+  // AI Smart Issuance State
+  const [smartPrompt, setSmartPrompt] = useState('');
+  const [generatedTickets, setGeneratedTickets] = useState([]);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  const APP_DOMAIN = "https://deus.infinitefuturebank.org";
+
   const showToast = (msg, type = 'success') => {
     setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 5000);
+    setTimeout(() => setNotification(null), 6000);
   };
 
-  // --- 1. REAL DATABASE FETCHING ---
   const fetchEvents = async () => {
     if (!session?.user?.id) return;
     setIsLoading(true);
@@ -52,26 +52,22 @@ export default function TicketingSystem({ session }) {
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    fetchEvents();
-  }, [session]);
+  useEffect(() => { fetchEvents(); }, [session]);
 
-  // --- 2. REAL EVENT CREATION ---
   const handleCreateEvent = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    const { data, error } = await supabase.from('ifb_events').insert([{
+    const { error } = await supabase.from('ifb_events').insert([{
       organizer_id: session.user.id,
       event_name: newEvent.name,
       ticket_price: newEvent.price,
       total_slots: newEvent.capacity,
       custom_message: newEvent.message
-    }]).select().single();
+    }]);
 
-    if (error) {
-      showToast(error.message, 'error');
-    } else {
+    if (error) showToast(error.message, 'error');
+    else {
       showToast('Event successfully forged in the network.');
       setNewEvent({ name: '', price: 0, capacity: 100, message: '' });
       setActiveTab('events');
@@ -80,94 +76,78 @@ export default function TicketingSystem({ session }) {
     setIsLoading(false);
   };
 
-  // --- 3. REAL TICKET ISSUANCE ---
-  const handleIssueTicket = async (e) => {
+  // --- EDGE-FUNCTION POWERED AI TICKET ISSUANCE ---
+  const handleSmartIssue = async (e) => {
     e.preventDefault();
-    if (!selectedEvent) return;
+    if (!selectedEvent || !smartPrompt) return;
     setIsLoading(true);
+    setGeneratedTickets([]);
 
-    // Generate a unique cryptographic hash for the QR code
-    const uniqueHash = `IFB-${crypto.randomUUID()}`;
+    try {
+      // Send the prompt to the Edge Brain
+      const { data, error } = await supabase.functions.invoke('issue-ticket', {
+        body: { 
+          eventId: selectedEvent.id, 
+          eventName: selectedEvent.event_name,
+          prompt: smartPrompt,
+          organizerEmail: session?.user?.email || 'DEUS Admin'
+        }
+      });
 
-    const { data, error } = await supabase.from('ifb_tickets').insert([{
-      event_id: selectedEvent.id,
-      buyer_email: issueEmail, // Assuming you added buyer_email to your DB, or repurpose buyer_id
-      qr_code_hash: uniqueHash,
-      status: 'active'
-    }]).select().single();
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
 
-    if (error) {
-      showToast('Failed to issue ticket. Capacity may be reached.', 'error');
-    } else {
-      showToast('Ticket generated successfully.');
-      setGeneratedTicket(data);
-      setIssueEmail('');
+      showToast(`Success: ${data.tickets.length} ticket(s) generated and emails dispatched.`);
+      setGeneratedTickets(data.tickets);
+      setSmartPrompt('');
       fetchTickets(selectedEvent.id);
+
+    } catch (err) {
+      showToast(`Issuance Failed: ${err.message}`, 'error');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  // --- 4. REAL TICKET REVOCATION ---
   const handleCancelTicket = async (ticketId) => {
     setIsLoading(true);
-    const { error } = await supabase
-      .from('ifb_tickets')
-      .update({ status: 'cancelled' })
-      .eq('id', ticketId);
-
-    if (error) {
-      showToast('Failed to revoke ticket.', 'error');
-    } else {
-      showToast('Ticket cryptographically revoked.');
-      fetchTickets(selectedEvent.id);
-    }
+    const { error } = await supabase.from('ifb_tickets').update({ status: 'cancelled' }).eq('id', ticketId);
+    if (error) showToast('Failed to revoke ticket.', 'error');
+    else { showToast('Ticket cryptographically revoked.'); fetchTickets(selectedEvent.id); }
     setIsLoading(false);
   };
 
-  // --- 5. REAL BOX OFFICE SCANNER ---
   const handleScanTicket = async (e) => {
     e.preventDefault();
     if (!scanHash) return;
     setIsLoading(true);
 
-    // 1. Find the ticket
+    let extractedHash = scanHash.trim();
+    const hashMatch = extractedHash.match(/(IFB-[a-zA-Z0-9-]+)/);
+    if (hashMatch) extractedHash = hashMatch[1]; 
+
     const { data: ticket, error: findError } = await supabase
       .from('ifb_tickets')
       .select('*')
-      .eq('qr_code_hash', scanHash.trim())
+      .eq('qr_code_hash', extractedHash)
       .eq('event_id', selectedEvent.id)
       .single();
 
     if (findError || !ticket) {
       showToast('INVALID TICKET: Hash not found in registry.', 'error');
-      setScanHash('');
-      setIsLoading(false);
-      return;
-    }
-
-    if (ticket.status === 'cancelled') {
+    } else if (ticket.status === 'cancelled') {
       showToast('DENIED: This ticket was revoked.', 'error');
     } else if (ticket.is_scanned) {
       showToast(`DENIED: Already scanned on ${new Date(ticket.scanned_at).toLocaleString()}`, 'error');
     } else {
-      // 2. Mark as scanned
-      const { error: updateError } = await supabase
-        .from('ifb_tickets')
-        .update({ is_scanned: true, scanned_at: new Date() })
-        .eq('id', ticket.id);
-
-      if (updateError) {
-        showToast('System error during validation.', 'error');
-      } else {
-        showToast('ACCESS GRANTED: Ticket Validated.', 'success');
-        fetchTickets(selectedEvent.id);
-      }
+      const { error: updateError } = await supabase.from('ifb_tickets').update({ is_scanned: true, scanned_at: new Date() }).eq('id', ticket.id);
+      if (updateError) showToast('System error during validation.', 'error');
+      else { showToast('ACCESS GRANTED: Ticket Validated.', 'success'); fetchTickets(selectedEvent.id); }
     }
     setScanHash('');
     setIsLoading(false);
   };
 
-  // UI RENDERERS
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       
@@ -247,7 +227,7 @@ export default function TicketingSystem({ session }) {
         </div>
       )}
 
-      {/* VIEW: EVENT MANAGEMENT (Scanner, Issuance, List) */}
+      {/* VIEW: EVENT MANAGEMENT */}
       {activeTab === 'events' && selectedEvent && (
         <div className="space-y-6 animate-in slide-in-from-right-8">
           
@@ -255,11 +235,12 @@ export default function TicketingSystem({ session }) {
             ← Back to Events
           </button>
 
-          {/* Event Stats Header */}
           <div className="bg-slate-900 text-white rounded-[2rem] p-8 shadow-xl flex flex-wrap justify-between items-center gap-6">
             <div>
-              <h2 className="text-3xl font-black mb-1">{selectedEvent.event_name}</h2>
-              <p className="text-xs text-indigo-300 font-bold uppercase tracking-widest">Live Operations Deck</p>
+              <h2 className="text-3xl font-black mb-2">{selectedEvent.event_name}</h2>
+              <button onClick={() => { navigator.clipboard.writeText(`${APP_DOMAIN}/events/${selectedEvent.id}`); showToast('Event Link copied!'); }} className="flex items-center gap-2 text-xs text-indigo-300 font-bold uppercase tracking-widest hover:text-white transition-colors bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
+                <LinkIcon size={14}/> Copy Event Link
+              </button>
             </div>
             <div className="flex gap-6 text-center">
                <div className="bg-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
@@ -275,46 +256,57 @@ export default function TicketingSystem({ session }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            {/* LEFT COLUMN: ISSUANCE & SCANNER */}
             <div className="space-y-6">
               
-              {/* TERMINAL: SCAN TICKET */}
-              <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <QrCode className="text-indigo-600"/> <h3 className="font-black text-slate-800">Gate Scanner</h3>
-                </div>
-                <form onSubmit={handleScanTicket} className="space-y-4">
-                  <input type="text" autoFocus value={scanHash} onChange={e => setScanHash(e.target.value)} placeholder="Click here & scan QR..." className="w-full bg-slate-50 border-2 border-indigo-100 p-4 rounded-xl text-center font-mono text-sm outline-none focus:border-indigo-500 focus:bg-indigo-50 transition-colors shadow-inner" />
-                  <button type="submit" disabled={!scanHash || isLoading} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md hover:bg-indigo-500 disabled:opacity-50 flex items-center justify-center gap-2">
-                    <Camera size={14}/> Validate Entry
-                  </button>
-                </form>
-                <p className="text-[9px] text-center text-slate-400 mt-4 font-bold uppercase tracking-widest">Connect USB Barcode Scanner or type hash directly.</p>
-              </div>
-
-              {/* TERMINAL: ISSUE TICKET */}
-              <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg">
-                <h3 className="font-black text-slate-800 mb-4">Issue New Ticket</h3>
-                <form onSubmit={handleIssueTicket} className="space-y-4">
-                  <input required type="email" value={issueEmail} onChange={e => setIssueEmail(e.target.value)} placeholder="Guest Email" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-indigo-500" />
-                  <button type="submit" disabled={isLoading} className="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2">
-                    <Plus size={14}/> Generate Crypto-Ticket
+              {/* SMART ISSUANCE TERMINAL */}
+              <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10"><Sparkles size={40} className="text-indigo-600"/></div>
+                <h3 className="font-black text-slate-800 mb-2">Smart Issuance</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Paste emails OR type a command (e.g. "Create 10 tickets")</p>
+                
+                <form onSubmit={handleSmartIssue} className="space-y-4 relative z-10">
+                  <textarea 
+                    required 
+                    value={smartPrompt} 
+                    onChange={e => setSmartPrompt(e.target.value)} 
+                    placeholder="john@email.com, jane@email.com&#10;OR&#10;Generate 5 generic tickets" 
+                    className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 h-32 resize-none" 
+                  />
+                  <button type="submit" disabled={isLoading} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-md hover:bg-indigo-500 disabled:opacity-50 flex items-center justify-center gap-2">
+                    {isLoading ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16}/>} 
+                    {isLoading ? 'Processing...' : 'Run Command'}
                   </button>
                 </form>
 
-                {generatedTicket && (
-                  <div className="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-center animate-in zoom-in">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-4">Success: Ticket Ready</p>
-                    <div className="bg-white p-2 rounded-xl inline-block shadow-sm">
-                      <QRCode value={generatedTicket.qr_code_hash} size={120} fgColor="#4f46e5" />
-                    </div>
-                    <p className="text-[8px] font-mono text-slate-500 mt-2 break-all">{generatedTicket.qr_code_hash}</p>
+                {generatedTickets.length > 0 && (
+                  <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center animate-in zoom-in">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Generated {generatedTickets.length} Ticket(s)</p>
+                    <p className="text-[10px] font-bold text-slate-500 mb-4">Emails have been dispatched automatically.</p>
+                    {generatedTickets.length === 1 && (
+                      <div className="bg-white p-2 rounded-xl inline-block shadow-sm">
+                        <QRCode value={`${APP_DOMAIN}/ticket/${generatedTickets[0].qr_code_hash}`} size={120} fgColor="#059669" />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+
+              {/* GATE SCANNER */}
+              <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <QrCode className="text-slate-800"/> <h3 className="font-black text-slate-800">Gate Scanner</h3>
+                </div>
+                <form onSubmit={handleScanTicket} className="space-y-4">
+                  <input type="text" value={scanHash} onChange={e => setScanHash(e.target.value)} placeholder="Scan QR..." className="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl text-center font-mono text-sm outline-none focus:border-slate-400 focus:bg-white transition-colors" />
+                  <button type="submit" disabled={!scanHash || isLoading} className="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2">
+                    <Camera size={14}/> Validate Entry
+                  </button>
+                </form>
+              </div>
+
             </div>
 
-            {/* RIGHT COLUMN: GUEST LIST */}
+            {/* GUEST LIST */}
             <div className="lg:col-span-2 bg-white rounded-[2rem] p-6 border border-slate-100 shadow-lg flex flex-col h-[600px]">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-black text-slate-800">Live Guest Masterlist</h3>
