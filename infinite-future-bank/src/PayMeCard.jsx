@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, QrCode, ScanLine, ShieldCheck, Sparkles, User, 
   ArrowDownToLine, AlertCircle, Palette, Hexagon, Star, 
-  Circle as CircleIcon, Square as SquareIcon, Check 
+  Circle as CircleIcon, Square as SquareIcon, Check, Share2
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { Scanner } from '@yudiel/react-qr-scanner';
@@ -54,7 +54,7 @@ export default function PayMeCard({ profile, onClose }) {
   // If profile isn't loaded yet, don't crash
   if (!profile) return null;
 
-  const payLink = `${window.location.origin}/pay?to=${profile.id}`;
+  const payLink = `${window.location.origin}/pay/${profile.id}`;
   const userName = profile.full_name || 'IFB Member';
   const tier = profile.active_tier || 'Personal';
 
@@ -63,7 +63,7 @@ export default function PayMeCard({ profile, onClose }) {
 
   const handleScan = (text) => {
     if (text) {
-      if (text.includes('/pay?to=')) {
+      if (text.includes('/pay/')) {
         window.location.href = text;
       } else {
         setScanError('Invalid IFB QR Code');
@@ -174,6 +174,20 @@ export default function PayMeCard({ profile, onClose }) {
                   <p className={`text-[9px] mt-0.5 leading-relaxed ${currentTheme.textMain} opacity-70`}>Anyone can scan this code to route funds directly to your IFB account.</p>
                 </div>
               </div>
+
+              {/* Share Link Button */}
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(payLink);
+                  alert("Public Payment Link Copied!"); 
+                }}
+                className="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl flex items-center justify-center gap-2 transition-all group"
+              >
+                <Share2 size={16} className={currentTheme.textMain} />
+                <span className={`text-[10px] font-black uppercase tracking-widest ${currentTheme.textMain}`}>
+                  Copy Public Pay Link
+                </span>
+              </button>
             </div>
           )}
 

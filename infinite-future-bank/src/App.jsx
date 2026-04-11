@@ -5,7 +5,7 @@ import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCl
 
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
-import PayInterface from './PayInterface';
+import PaymentPortal from './PaymentPortal';
 import FeedbackForm from './FeedbackForm'; 
 import AdminSupportDesk from './AdminSupportDesk';
 import ExecutiveCrm from './ExecutiveCrm';
@@ -472,7 +472,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        <Route path="/pay" element={<PayInterface />} />
+        
+        {/* 🔥 UPDATED: This route is now public and session-aware */}
+        <Route path="/pay" element={<PaymentPortal session={session} />} />
         
         {/* SECURE ROUTES */}
         <Route path="/admin" element={<AdminGateway />} />

@@ -8,7 +8,7 @@ import Chat from './Chat';
 import AccountHub from './AccountHub';
 import OrganizationSuite from './OrganizationSuite';
 import WealthInvest from './WealthInvest';
-import GlobalLifestyle from './FinancialPlanner';
+import GlobalLifestyle from './GlobalLifestyle';
 import FinancialPlanner from './FinancialPlanner';
 import EmergencySOS from './EmergencySOS';
 import Training from './Training';
@@ -69,6 +69,13 @@ export default function Dashboard({ session, onSignOut }) {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false); 
   const [showPayMe, setShowPayMe] = useState(false); 
   const [showStatementModal, setShowStatementModal] = useState(false);
+
+  // Commercial Underwriting States
+  const [commercialForm, setCommercialForm] = useState({ 
+    company_name: '', sector: '', registration_country: '', 
+    annual_revenue: '', monthly_burn_rate: '', debt_to_equity_ratio: '' 
+  });
+  const [isSubmittingCommercial, setIsSubmittingCommercial] = useState(false);
 
   // Transaction Specific States
   const [sendAsset, setSendAsset] = useState('USD');
@@ -143,6 +150,30 @@ export default function Dashboard({ session, onSignOut }) {
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [session?.user?.id]);
+
+  const handleCommercialSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingCommercial(true);
+    try {
+      const { error } = await supabase.from('commercial_profiles').upsert({
+        id: session.user.id,
+        company_name: commercialForm.company_name,
+        sector: commercialForm.sector,
+        registration_country: commercialForm.registration_country,
+        annual_revenue: parseFloat(commercialForm.annual_revenue),
+        monthly_burn_rate: parseFloat(commercialForm.monthly_burn_rate),
+        debt_to_equity_ratio: parseFloat(commercialForm.debt_to_equity_ratio),
+        pascaline_status: 'pending_review' 
+      });
+      if (error) throw error;
+      triggerGlobalActionNotification('success', 'Corporate telemetry submitted. Pascaline AI audit initiated.');
+      await fetchAllData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', err.message || 'Submission failed.');
+    } finally {
+      setIsSubmittingCommercial(false);
+    }
+  };
 
   // ==========================================
   // RENDER MASTER LAYOUT
@@ -225,6 +256,10 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'COMMERCIAL_HUB' && (
               <CommercialUnderwriting 
                 commercialProfile={commercialProfile} 
+                commercialForm={commercialForm}
+                setCommercialForm={setCommercialForm}
+                handleCommercialSubmit={handleCommercialSubmit}
+                isSubmittingCommercial={isSubmittingCommercial}
                 setActiveTab={setActiveTab} 
               />
             )}
