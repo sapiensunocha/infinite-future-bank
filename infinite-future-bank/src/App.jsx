@@ -8,6 +8,7 @@ import PayInterface from './PayInterface';
 import FeedbackForm from './FeedbackForm'; 
 import AdminSupportDesk from './AdminSupportDesk';
 import ExecutiveCrm from './ExecutiveCrm';
+import PublicEventPage from './PublicEventPage'; // 🔥 NEW PUBLIC EVENT PAGE IMPORT
 
 // ==========================================
 // REUSABLE COMPONENTS
