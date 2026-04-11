@@ -973,6 +973,9 @@ export default function App() {
         <Route path="/admin" element={<AdminGateway />} />
         <Route path="/hq" element={<HqGateway />} />
         
+        {/* 🔥 NEW ROUTE: PUBLIC EVENT PAGE */}
+        <Route path="/events/:id" element={<PublicEventPage />} />
+        
         <Route 
           path="/FeedbackForm" 
           element={
