@@ -427,7 +427,7 @@ export default function Dashboard({ session, onSignOut }) {
         const { data: pocks } = await supabase.from('pockets').select('*').eq('user_id', session.user.id).ilike('pocket_name', `%${searchQuery}%`);
         const { data: recs } = await supabase.from('recipients').select('*').eq('user_id', session.user.id).ilike('recipient_name', `%${searchQuery}%`);
         const { data: invs } = await supabase.from('investments').select('*').eq('user_id', session.user.id).ilike('investment_type', `%${searchQuery}%`);
-        setSearchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
+        searchResults({ transactions: trans || [], notifications: notifs || [], pockets: pocks || [], recipients: recs || [], investments: invs || [] });
       }, 300);
     } else {
       setSearchResults({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
@@ -736,6 +736,7 @@ export default function Dashboard({ session, onSignOut }) {
     e.preventDefault();
     setIsSubmittingCommercial(true);
     try {
+      // 1. Save data as pending
       const { error } = await supabase.from('commercial_profiles').upsert({
         id: session.user.id,
         company_name: commercialForm.company_name,
@@ -747,8 +748,20 @@ export default function Dashboard({ session, onSignOut }) {
         pascaline_status: 'pending_review' 
       });
       if (error) throw error;
+      
       triggerGlobalActionNotification('success', 'Corporate telemetry submitted. Pascaline AI audit initiated.');
+
+      // 2. Simulate AI processing time visually
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 3. TRIGGER THE PASCALINE EDGE FUNCTION
+      await supabase.functions.invoke('pascaline-commercial-audit', {
+        body: { userId: session.user.id }
+      });
+
+      // 4. Fetch the final verdict (Approved or Declined)
       await fetchAllData();
+      
     } catch (err) {
       triggerGlobalActionNotification('error', err.message || 'Submission failed.');
     } finally {
@@ -1872,43 +1885,6 @@ export default function Dashboard({ session, onSignOut }) {
                           <input type="text" name="receiverAddress" placeholder="0x..." className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-mono text-sm text-slate-800 outline-none focus:border-blue-500" required={sendAsset === 'AFR'} />
                           <p className="text-[10px] font-bold text-emerald-600 mt-2 flex items-center gap-1"><ShieldCheck size={12}/> Settles instantly on the Sovereign Go Node</p>
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {activeModal === 'REQUEST' && (
-                    <div className="space-y-6 text-left animate-in fade-in">
-                      <div className="flex bg-slate-100 p-1.5 rounded-2xl">
-                        <button type="button" onClick={() => setRequestTargetType('INTERNAL')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${requestTargetType === 'INTERNAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Internal User</button>
-                        <button type="button" onClick={() => setRequestTargetType('EXTERNAL')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${requestTargetType === 'EXTERNAL' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>External User</button>
-                      </div>
-                      {requestTargetType === 'INTERNAL' ? (
-                        <div className="space-y-4">
-                          <div className="relative">
-                            <Search className="absolute left-4 top-4 text-slate-400" size={18}/>
-                            <input
-                              className="w-full bg-slate-50 p-4 pl-12 rounded-2xl border border-slate-200 outline-none focus:border-blue-500 font-bold transition-all"
-                              placeholder="Search Username or Email..."
-                              value={userSearchQuery}
-                              onChange={e => setUserSearchQuery(e.target.value)}
-                            />
-                          </div>
-                          {isSearchingUser && <div className="text-center"><Loader2 className="animate-spin mx-auto text-blue-500"/></div>}
-                          {foundUser && (
-                            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-2xl border-2 border-blue-200 border-dashed animate-in zoom-in-95">
-                              <div className="w-12 h-12 rounded-full bg-blue-200 overflow-hidden border-2 border-white shadow-sm">
-                                {foundUser.avatar_url ? <img src={foundUser.avatar_url} className="w-full h-full object-cover"/> : <User className="m-3 text-blue-400"/>}
-                              </div>
-                              <div>
-                                <p className="font-black text-blue-900 leading-none mb-1">{foundUser.full_name}</p>
-                                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Verified IFB Member</p>
-                              </div>
-                              <ShieldCheck className="ml-auto text-blue-500" size={20}/>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <input className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-200 outline-none focus:border-blue-500 font-bold" placeholder="Recipient Email (Optional)"/>
                       )}
                     </div>
                   )}
