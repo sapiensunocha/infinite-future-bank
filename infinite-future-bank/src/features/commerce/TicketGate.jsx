@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   QrCode, Camera, Ticket, Check, XCircle, Loader2, Users, 
   AlertCircle, ShieldCheck, Plus, Calendar, DollarSign, X, 
-  Download, Image as ImageIcon, MapPin, Trash2, Share2, Edit2, Save
+  Download, Image as ImageIcon, MapPin, Trash2, Share2, Edit2, Save, Link as LinkIcon
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import QRCode from "react-qr-code";
@@ -11,6 +11,7 @@ export default function TicketGate({ session }) {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [tickets, setTickets] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [view, setView] = useState('LIST'); // LIST, SCANNER, DESIGNER
 
   // Creation/Design State
@@ -38,14 +39,16 @@ export default function TicketGate({ session }) {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const fetchEvents = async () => {
+  const fetchEventsAndProfile = async () => {
     setIsLoading(true);
-    const { data } = await supabase.from('ifb_events').select('*').eq('organizer_id', session.user.id).order('created_at', { ascending: false });
-    setEvents(data || []);
+    const { data: evData } = await supabase.from('ifb_events').select('*').eq('organizer_id', session.user.id).order('created_at', { ascending: false });
+    const { data: profData } = await supabase.from('profiles').select('avatar_url, full_name').eq('id', session.user.id).single();
+    setEvents(evData || []);
+    if (profData) setProfile(profData);
     setIsLoading(false);
   };
 
-  useEffect(() => { fetchEvents(); }, [session]);
+  useEffect(() => { fetchEventsAndProfile(); }, [session]);
 
   const loadTickets = async (eventId) => {
     setIsLoading(true);
@@ -107,7 +110,7 @@ export default function TicketGate({ session }) {
       showToast(editingEvent ? 'Event Updated Successfully.' : 'Event Live on Ledger.'); 
       setIsCreating(false); 
       setEditingEvent(null);
-      fetchEvents(); 
+      fetchEventsAndProfile(); 
     }
     setIsLoading(false);
   };
@@ -120,7 +123,7 @@ export default function TicketGate({ session }) {
     else { 
       showToast('Event Permanently Deleted.', 'success'); 
       if (selectedEvent && selectedEvent.id === eventId) setSelectedEvent(null);
-      fetchEvents(); 
+      fetchEventsAndProfile(); 
     }
     setIsLoading(false);
   };
@@ -185,9 +188,18 @@ export default function TicketGate({ session }) {
     }
   };
 
-  const copyPublicLink = () => {
-    navigator.clipboard.writeText(`${APP_DOMAIN}/events/${selectedEvent.id}`);
-    showToast('Live Booking URL Copied!');
+  const copyToClipboard = (text, successMsg) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+    } else {
+      let textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      textArea.remove();
+    }
+    showToast(successMsg);
   };
 
   const getPreviewData = () => {
@@ -244,27 +256,30 @@ export default function TicketGate({ session }) {
               <form onSubmit={handleSaveEvent} className="p-10 grid grid-cols-2 gap-6">
                 <div className="col-span-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Title</label>
-                  <input required value={newEvent.name} onChange={e=>setNewEvent({...newEvent, name: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="Global Tech Summit 2026"/>
+                  <input required value={newEvent.name} onChange={e=>setNewEvent({...newEvent, name: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="Global Tech Summit 2026"/>
                 </div>
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Venue/Location</label>
-                  <input required value={newEvent.location} onChange={e=>setNewEvent({...newEvent, location: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="IFB Global HQ"/>
+                  <input required value={newEvent.location} onChange={e=>setNewEvent({...newEvent, location: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="IFB Global HQ"/>
                 </div>
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Date & Time</label>
-                  <input required type="datetime-local" value={newEvent.date} onChange={e=>setNewEvent({...newEvent, date: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500"/>
+                  <input required type="datetime-local" value={newEvent.date} onChange={e=>setNewEvent({...newEvent, date: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900"/>
                 </div>
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Ticket Price ($)</label>
-                  <input required type="number" step="0.01" value={newEvent.price} onChange={e=>setNewEvent({...newEvent, price: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="0.00"/>
+                  <input required type="number" step="0.01" value={newEvent.price} onChange={e=>setNewEvent({...newEvent, price: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="0.00"/>
                 </div>
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Total Capacity</label>
-                  <input required type="number" value={newEvent.slots} onChange={e=>setNewEvent({...newEvent, slots: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="100"/>
+                  <input required type="number" value={newEvent.slots} onChange={e=>setNewEvent({...newEvent, slots: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="100"/>
                 </div>
                 <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Cover Image URL</label>
-                  <input value={newEvent.image} onChange={e=>setNewEvent({...newEvent, image: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="https://..."/>
+                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest flex items-center justify-between">
+                    <span>Cover Image URL</span>
+                    <span className="text-indigo-500">Logo is auto-pulled from your Profile</span>
+                  </label>
+                  <input value={newEvent.image} onChange={e=>setNewEvent({...newEvent, image: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="https://..."/>
                 </div>
                 <button type="submit" disabled={isLoading} className="col-span-2 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-50">
                   {isLoading ? <Loader2 className="animate-spin mx-auto"/> : editingEvent ? 'Update Event Data' : 'Deploy Secure Event'}
@@ -332,7 +347,7 @@ export default function TicketGate({ session }) {
                               type="email" 
                               value={editTicketEmail} 
                               onChange={(e) => setEditTicketEmail(e.target.value)}
-                              className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm font-bold text-slate-800 outline-none w-48"
+                              className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm font-bold text-slate-900 outline-none w-48"
                               autoFocus
                             />
                             <button onClick={() => updateTicketEmail(t.id)} className="p-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"><Save size={14}/></button>
@@ -353,8 +368,9 @@ export default function TicketGate({ session }) {
                       <td className="p-6 text-xs text-slate-400 font-bold">{new Date(t.purchased_at).toLocaleDateString()}</td>
                       <td className="p-6 text-right">
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => { setEditTicketId(t.id); setEditTicketEmail(t.buyer_email); }} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Edit Ticket Identity"><Edit2 size={16}/></button>
-                          <button onClick={() => deleteTicket(t.id)} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:text-red-600 hover:bg-red-50 transition-colors" title="Destroy Ticket"><Trash2 size={16}/></button>
+                          <button onClick={() => copyToClipboard(`${APP_DOMAIN}/ticket/${t.qr_code_hash}`, 'Ticket Link Copied!')} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Copy Ticket Link"><Share2 size={16}/></button>
+                          <button onClick={() => { setEditTicketId(t.id); setEditTicketEmail(t.buyer_email); }} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Edit Email"><Edit2 size={16}/></button>
+                          <button onClick={() => deleteTicket(t.id)} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:text-red-600 hover:bg-red-50 transition-colors" title="Destroy"><Trash2 size={16}/></button>
                         </div>
                       </td>
                     </tr>
@@ -395,14 +411,18 @@ export default function TicketGate({ session }) {
            <div className="space-y-6">
               <h3 className="text-xl font-black text-slate-800 tracking-tight">Institutional Credential Display</h3>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                This is a live preview of the digital credential your attendees receive. The data below reflects the {tickets.length > 0 ? "most recently issued ticket" : "event hash profile"} straight from your database.
+                Live preview. Your personal organization logo is automatically rendered on every ticket.
               </p>
               
               <div className="max-w-sm mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col">
                 <div className="h-48 bg-slate-900 relative">
                    <img src={selectedEvent.event_image_url} className="w-full h-full object-cover opacity-60" alt="Event Cover"/>
-                   <div className="absolute top-6 left-6 w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
-                      <span className="text-white font-black text-lg">IFB</span>
+                   <div className="absolute top-6 left-6 w-14 h-14 bg-white rounded-xl shadow-lg flex items-center justify-center border-2 border-white overflow-hidden p-1">
+                      {profile?.avatar_url ? (
+                         <img src={profile.avatar_url} alt="Org Logo" className="w-full h-full object-cover rounded-lg" />
+                      ) : (
+                         <span className="text-slate-800 font-black text-lg">IFB</span>
+                      )}
                    </div>
                 </div>
                 <div className="p-8 flex-1 space-y-6">
@@ -414,7 +434,7 @@ export default function TicketGate({ session }) {
                    <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
                       <div className="w-full overflow-hidden">
                         <p className="text-[9px] font-black text-slate-400 uppercase">Guest Identity</p>
-                        <p className="font-bold text-slate-800 truncate" title={preview.email}>{preview.email}</p>
+                        <p className="font-bold text-slate-900 truncate" title={preview.email}>{preview.email}</p>
                       </div>
                       <div className="p-2 bg-white rounded-lg shadow-sm ml-2 shrink-0">
                         <QRCode value={`${APP_DOMAIN}/ticket/${preview.hash}`} size={50} />
@@ -437,15 +457,15 @@ export default function TicketGate({ session }) {
            </div>
 
            <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col justify-center text-center">
-              <Share2 size={48} className="mx-auto text-indigo-600 mb-6"/>
+              <LinkIcon size={48} className="mx-auto text-indigo-600 mb-6"/>
               <h4 className="text-xl font-black text-slate-800">Live Portal URL</h4>
-              <p className="text-sm text-slate-500 mt-2 mb-8">Share this exact link to allow guests to view details and purchase tickets using their IFB USD balance.</p>
+              <p className="text-sm text-slate-500 mt-2 mb-8">Share this exact link to allow guests to view details and purchase tickets.</p>
               
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs text-indigo-600 break-all mb-6 select-all">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs text-slate-900 break-all mb-6 select-all">
                 {APP_DOMAIN}/events/{selectedEvent.id}
               </div>
               
-              <button onClick={copyPublicLink} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md">
+              <button onClick={() => copyToClipboard(`${APP_DOMAIN}/events/${selectedEvent.id}`, 'Public Link Copied!')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md">
                 Copy Secure Link
               </button>
            </div>
