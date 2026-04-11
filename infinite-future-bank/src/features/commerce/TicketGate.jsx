@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   QrCode, Camera, Ticket, Check, XCircle, Loader2, Users, 
   AlertCircle, ShieldCheck, Plus, Calendar, DollarSign, X, 
-  Download, Image as ImageIcon, MapPin, Trash2, Share2, Printer
+  Download, Image as ImageIcon, MapPin, Trash2, Share2, Edit2, Save
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import QRCode from "react-qr-code";
@@ -15,7 +15,12 @@ export default function TicketGate({ session }) {
 
   // Creation/Design State
   const [isCreating, setIsCreating] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({ name: '', price: '', slots: '', message: '', location: '', date: '', image: '' });
+
+  // Ticket Editing State
+  const [editTicketId, setEditTicketId] = useState(null);
+  const [editTicketEmail, setEditTicketEmail] = useState('');
 
   // Scanner/UI States
   const [scanning, setScanning] = useState(false);
@@ -26,6 +31,7 @@ export default function TicketGate({ session }) {
 
   // PRODUCTION APP SETTINGS
   const APP_DOMAIN = "https://deus.infinitefuturebank.org";
+  const userEmail = session?.user?.email || 'sovereign.user@deus.network';
 
   const showToast = (msg, type = 'success') => {
     setNotification({ msg, type });
@@ -48,12 +54,33 @@ export default function TicketGate({ session }) {
     setIsLoading(false);
   };
 
-  // --- REAL DATABASE ACTIONS ---
-  const handleCreateEvent = async (e) => {
+  // --- REAL DATABASE ACTIONS (CRUD) ---
+
+  const openCreateModal = () => {
+    setEditingEvent(null);
+    setNewEvent({ name: '', price: '', slots: '', message: '', location: '', date: '', image: '' });
+    setIsCreating(true);
+  };
+
+  const openEditModal = (ev) => {
+    setEditingEvent(ev);
+    setNewEvent({ 
+      name: ev.event_name, 
+      price: ev.ticket_price, 
+      slots: ev.total_slots, 
+      message: ev.custom_message || '', 
+      location: ev.location_name || '', 
+      date: ev.event_date ? new Date(ev.event_date).toISOString().slice(0, 16) : '', 
+      image: ev.event_image_url || '' 
+    });
+    setIsCreating(true);
+  };
+
+  const handleSaveEvent = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const { error } = await supabase.from('ifb_events').insert([{
-      organizer_id: session.user.id,
+    
+    const payload = {
       event_name: newEvent.name,
       ticket_price: parseFloat(newEvent.price),
       total_slots: parseInt(newEvent.slots),
@@ -61,16 +88,66 @@ export default function TicketGate({ session }) {
       event_date: newEvent.date,
       event_image_url: newEvent.image || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=2000&auto=format&fit=crop',
       custom_message: newEvent.message
-    }]);
+    };
+
+    let error;
+    if (editingEvent) {
+      const { error: updateError } = await supabase.from('ifb_events').update(payload).eq('id', editingEvent.id);
+      error = updateError;
+      if (!error && selectedEvent?.id === editingEvent.id) {
+        setSelectedEvent({ ...selectedEvent, ...payload });
+      }
+    } else {
+      const { error: insertError } = await supabase.from('ifb_events').insert([{ ...payload, organizer_id: session.user.id }]);
+      error = insertError;
+    }
+
     if (error) showToast(error.message, 'error');
-    else { showToast('Event Live on Ledger.'); setIsCreating(false); fetchEvents(); }
+    else { 
+      showToast(editingEvent ? 'Event Updated Successfully.' : 'Event Live on Ledger.'); 
+      setIsCreating(false); 
+      setEditingEvent(null);
+      fetchEvents(); 
+    }
     setIsLoading(false);
   };
 
-  const cancelTicket = async (ticketId) => {
-    if (!window.confirm("Are you sure? This will cryptographically revoke entry.")) return;
-    const { error } = await supabase.from('ifb_tickets').update({ status: 'cancelled' }).eq('id', ticketId);
-    if (!error) { showToast('Ticket Revoked.'); loadTickets(selectedEvent.id); }
+  const deleteEvent = async (eventId) => {
+    if (!window.confirm("WARNING: This will permanently delete the event and destroy all associated tickets. Proceed?")) return;
+    setIsLoading(true);
+    const { error } = await supabase.from('ifb_events').delete().eq('id', eventId);
+    if (error) showToast(error.message, 'error');
+    else { 
+      showToast('Event Permanently Deleted.', 'success'); 
+      if (selectedEvent && selectedEvent.id === eventId) setSelectedEvent(null);
+      fetchEvents(); 
+    }
+    setIsLoading(false);
+  };
+
+  const updateTicketEmail = async (ticketId) => {
+    if (!editTicketEmail.trim()) return;
+    setIsLoading(true);
+    const { error } = await supabase.from('ifb_tickets').update({ buyer_email: editTicketEmail }).eq('id', ticketId);
+    if (error) showToast(error.message, 'error');
+    else {
+      showToast('Ticket Reassigned.', 'success');
+      setEditTicketId(null);
+      loadTickets(selectedEvent.id);
+    }
+    setIsLoading(false);
+  };
+
+  const deleteTicket = async (ticketId) => {
+    if (!window.confirm("Destroy this ticket permanently? This will erase it from the ledger.")) return;
+    setIsLoading(true);
+    const { error } = await supabase.from('ifb_tickets').delete().eq('id', ticketId);
+    if (error) showToast(error.message, 'error');
+    else { 
+      showToast('Ticket Destroyed.', 'success'); 
+      loadTickets(selectedEvent.id); 
+    }
+    setIsLoading(false);
   };
 
   const exportGuestList = () => {
@@ -92,7 +169,6 @@ export default function TicketGate({ session }) {
     let hash = scanInput.trim();
     if (!hash) return;
 
-    // Parse URL if scanner picks up the full QR link instead of just the hash
     const hashMatch = hash.match(/(IFB-[a-zA-Z0-9-]+)/);
     if (hashMatch) hash = hashMatch[1]; 
 
@@ -114,13 +190,8 @@ export default function TicketGate({ session }) {
     showToast('Live Booking URL Copied!');
   };
 
-  // DYNAMIC PREVIEW RENDERER (No Mockups)
   const getPreviewData = () => {
-    if (tickets.length > 0) {
-      // Show the actual most recent ticket sold
-      return { email: tickets[0].buyer_email, hash: tickets[0].qr_code_hash };
-    }
-    // If no tickets sold, show a mathematically generated preview tied to the actual event ID
+    if (tickets.length > 0) return { email: tickets[0].buyer_email, hash: tickets[0].qr_code_hash };
     return { email: session?.user?.email, hash: `IFB-PREV-${selectedEvent.id.substring(0, 8)}` };
   };
 
@@ -132,7 +203,7 @@ export default function TicketGate({ session }) {
             <h2 className="text-3xl font-black text-slate-800 tracking-tighter">Event Management</h2>
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">Institutional Ticket Engine</p>
           </div>
-          <button onClick={() => setIsCreating(true)} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex items-center gap-2 shadow-xl hover:bg-indigo-500 transition-all"><Plus size={16}/> Forge Event</button>
+          <button onClick={openCreateModal} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex items-center gap-2 shadow-xl hover:bg-indigo-500 transition-all"><Plus size={16}/> Forge Event</button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -142,14 +213,21 @@ export default function TicketGate({ session }) {
             </div>
           )}
           {events.map(ev => (
-            <div key={ev.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+            <div key={ev.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group relative">
+               
+               {/* Edit & Delete Overlay */}
+               <div className="absolute top-4 right-4 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                 <button onClick={(e) => { e.stopPropagation(); openEditModal(ev); }} className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-blue-600 shadow-md transition-colors" title="Edit Event"><Edit2 size={16}/></button>
+                 <button onClick={(e) => { e.stopPropagation(); deleteEvent(ev.id); }} className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-red-600 shadow-md transition-colors" title="Delete Event"><Trash2 size={16}/></button>
+               </div>
+
                <div className="h-32 bg-slate-100 relative">
                   <img src={ev.event_image_url} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" alt=""/>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                   <span className="absolute bottom-4 left-4 text-white font-black text-xs uppercase tracking-widest flex items-center gap-2"><Calendar size={14}/> {new Date(ev.event_date).toLocaleDateString()}</span>
                </div>
                <div className="p-6">
-                 <h3 className="font-black text-lg text-slate-800 mb-4">{ev.event_name}</h3>
+                 <h3 className="font-black text-lg text-slate-800 mb-4 truncate">{ev.event_name}</h3>
                  <button onClick={() => { setSelectedEvent(ev); loadTickets(ev.id); }} className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-colors">Manage Operations</button>
                </div>
             </div>
@@ -160,10 +238,10 @@ export default function TicketGate({ session }) {
           <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
             <div className="bg-white rounded-[3rem] w-full max-w-2xl shadow-2xl overflow-hidden border border-white/20">
               <div className="p-8 border-b flex justify-between items-center bg-slate-50/50">
-                <h3 className="font-black text-xl text-slate-800">Event Creator</h3>
-                <button onClick={() => setIsCreating(false)} className="p-2 bg-white rounded-xl shadow-sm"><X size={20}/></button>
+                <h3 className="font-black text-xl text-slate-800">{editingEvent ? 'Edit Event Details' : 'Event Creator'}</h3>
+                <button onClick={() => setIsCreating(false)} className="p-2 bg-white rounded-xl shadow-sm hover:bg-slate-100 transition-colors"><X size={20}/></button>
               </div>
-              <form onSubmit={handleCreateEvent} className="p-10 grid grid-cols-2 gap-6">
+              <form onSubmit={handleSaveEvent} className="p-10 grid grid-cols-2 gap-6">
                 <div className="col-span-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Title</label>
                   <input required value={newEvent.name} onChange={e=>setNewEvent({...newEvent, name: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="Global Tech Summit 2026"/>
@@ -188,8 +266,8 @@ export default function TicketGate({ session }) {
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Cover Image URL</label>
                   <input value={newEvent.image} onChange={e=>setNewEvent({...newEvent, image: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="https://..."/>
                 </div>
-                <button type="submit" disabled={isLoading} className="col-span-2 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl disabled:opacity-50">
-                  {isLoading ? 'Deploying...' : 'Deploy Secure Event'}
+                <button type="submit" disabled={isLoading} className="col-span-2 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-50">
+                  {isLoading ? <Loader2 className="animate-spin mx-auto"/> : editingEvent ? 'Update Event Data' : 'Deploy Secure Event'}
                 </button>
               </form>
             </div>
@@ -203,7 +281,6 @@ export default function TicketGate({ session }) {
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-500 pb-20">
-      {/* Dynamic Scan Alerts */}
       {notification && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[700] animate-in slide-in-from-top-4">
            <div className={`px-10 py-5 rounded-full shadow-2xl border-4 backdrop-blur-2xl flex items-center gap-4 ${notification.type === 'success' ? 'bg-emerald-900 border-emerald-500 text-emerald-400' : 'bg-red-900 border-red-500 text-red-400'}`}>
@@ -237,10 +314,10 @@ export default function TicketGate({ session }) {
               <table className="w-full text-left">
                 <thead className="bg-slate-50">
                   <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <th className="p-6">Identity</th>
+                    <th className="p-6">Identity / Email</th>
                     <th className="p-6">Status</th>
                     <th className="p-6">Purchase Date</th>
-                    <th className="p-6 text-right">Action</th>
+                    <th className="p-6 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -248,7 +325,26 @@ export default function TicketGate({ session }) {
                     <tr><td colSpan="4" className="p-10 text-center text-sm font-bold text-slate-400">No tickets issued yet.</td></tr>
                   ) : tickets.map(t => (
                     <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-6"><p className="font-bold text-slate-800">{t.buyer_email}</p><p className="text-[9px] font-mono text-slate-400">HASH: {t.qr_code_hash.substring(0,18)}...</p></td>
+                      <td className="p-6">
+                        {editTicketId === t.id ? (
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="email" 
+                              value={editTicketEmail} 
+                              onChange={(e) => setEditTicketEmail(e.target.value)}
+                              className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm font-bold text-slate-800 outline-none w-48"
+                              autoFocus
+                            />
+                            <button onClick={() => updateTicketEmail(t.id)} className="p-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"><Save size={14}/></button>
+                            <button onClick={() => setEditTicketId(null)} className="p-1.5 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors"><X size={14}/></button>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-bold text-slate-800">{t.buyer_email}</p>
+                            <p className="text-[9px] font-mono text-slate-400">HASH: {t.qr_code_hash.substring(0,18)}...</p>
+                          </>
+                        )}
+                      </td>
                       <td className="p-6">
                         {t.status === 'cancelled' ? <span className="text-[8px] bg-red-50 text-red-500 px-2 py-1 rounded-md font-black uppercase">Revoked</span> :
                          t.is_scanned ? <span className="text-[8px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md font-black uppercase">At Door</span> :
@@ -256,7 +352,10 @@ export default function TicketGate({ session }) {
                       </td>
                       <td className="p-6 text-xs text-slate-400 font-bold">{new Date(t.purchased_at).toLocaleDateString()}</td>
                       <td className="p-6 text-right">
-                        {t.status !== 'cancelled' && <button onClick={() => cancelTicket(t.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={16}/></button>}
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => { setEditTicketId(t.id); setEditTicketEmail(t.buyer_email); }} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Edit Ticket Identity"><Edit2 size={16}/></button>
+                          <button onClick={() => deleteTicket(t.id)} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:text-red-600 hover:bg-red-50 transition-colors" title="Destroy Ticket"><Trash2 size={16}/></button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -299,7 +398,6 @@ export default function TicketGate({ session }) {
                 This is a live preview of the digital credential your attendees receive. The data below reflects the {tickets.length > 0 ? "most recently issued ticket" : "event hash profile"} straight from your database.
               </p>
               
-              {/* THE REAL DATA TICKET DESIGN */}
               <div className="max-w-sm mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col">
                 <div className="h-48 bg-slate-900 relative">
                    <img src={selectedEvent.event_image_url} className="w-full h-full object-cover opacity-60" alt="Event Cover"/>
@@ -319,7 +417,6 @@ export default function TicketGate({ session }) {
                         <p className="font-bold text-slate-800 truncate" title={preview.email}>{preview.email}</p>
                       </div>
                       <div className="p-2 bg-white rounded-lg shadow-sm ml-2 shrink-0">
-                        {/* Live QR encoding the real hash */}
                         <QRCode value={`${APP_DOMAIN}/ticket/${preview.hash}`} size={50} />
                       </div>
                    </div>
