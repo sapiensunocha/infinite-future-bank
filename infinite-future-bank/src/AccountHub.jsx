@@ -87,7 +87,7 @@ export default function AccountHub({ balances, profile }) {
         .select('*')
         .eq('user_id', profile.id)
         .order('created_at', { ascending: false })
-        .limit(20); // Increased limit to fetch enough data for the activity feed
+        .limit(20); 
         
       if (txData) setTransactions(txData);
 
@@ -128,44 +128,35 @@ export default function AccountHub({ balances, profile }) {
     }
   };
 
+  // 🛡️ SECURE CARD PROVISIONING via EDGE FUNCTION
   const handleProvisionCard = async () => {
     if (!newCardName) return triggerGlobalActionNotification('error', 'Please provide a name for this card.');
     if (!profile?.id) return triggerGlobalActionNotification('error', 'User profile ID not found.');
 
-    const p1 = '4092';
-    const p2 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
-    const p3 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
-    const p4 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
-    
-    const pan = `${p1}${p2}${p3}${p4}`;
-    const year = new Date().getFullYear() + Math.floor(3 + Math.random() * 3);
-    const month = Math.floor(1 + Math.random() * 12).toString().padStart(2, '0');
-    const expiry = `${month}/${year.toString().slice(-2)}`;
-    const cvv = Math.floor(100 + Math.random() * 900).toString().padStart(3, '0');
-    const networkId = `IFB-USR-${pan.slice(-4)}`; 
+    setIsProvisioning(true);
 
     try {
-      const { error } = await supabase.from('virtual_cards').insert([{
-        user_id: profile.id,
-        network_id: networkId,
-        pan: pan,
-        expiry: expiry,
-        cvv: cvv,
-        name: newCardName,
-        theme: newCardTheme,
-        status: 'ACTIVE'
-      }]);
+      const { data, error } = await supabase.functions.invoke('issue-ifb-card', {
+        body: {
+          userId: profile.id,
+          cardName: newCardName,
+          theme: newCardTheme
+        }
+      });
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error("Network Bridge Error: " + error.message);
+      if (data?.error) throw new Error("Issuance Rejected: " + data.error);
       
       await fetchNetworkData();
       setCurrentCardIndex(cards.length); 
       setNewCardName('');
       setNewCardTheme('obsidian');
-      triggerGlobalActionNotification('success', `${newCardName} provisioned successfully.`);
-      setIsProvisioning(false);
+      triggerGlobalActionNotification('success', `${newCardName} securely provisioned.`);
+      
     } catch (err) { 
-      triggerGlobalActionNotification('error', `Database Error: ${err.message}`); 
+      triggerGlobalActionNotification('error', `Issuance Error: ${err.message}`); 
+    } finally {
+      setIsProvisioning(false);
     }
   };
 
@@ -248,7 +239,6 @@ export default function AccountHub({ balances, profile }) {
     URL.revokeObjectURL(url);
   };
 
-  // --- PARSING ENGINE FOR ACTIVITY FEEDS ---
   const parseTransactionDetails = (tx) => {
     const typeStr = (tx.transaction_type || '').toLowerCase();
     const meta = tx.metadata || {};
@@ -277,14 +267,12 @@ export default function AccountHub({ balances, profile }) {
   const activeCard = cards[currentCardIndex];
   const theme = activeCard && CARD_THEMES[activeCard.theme] ? CARD_THEMES[activeCard.theme] : CARD_THEMES.obsidian;
 
-  // Filter transactions specifically for the active card (if metadata exists), or fallback to all card expenses
   const cardSpecificTransactions = transactions.filter(tx => {
     if (!activeCard) return false;
     const isCardTx = tx.transaction_type.toLowerCase().includes('card') || tx.transaction_type.toLowerCase().includes('expense');
-    // If we have strict network_id binding in metadata, use it. Otherwise just show card transactions to simulate the feed.
     if (tx.metadata?.network_id) return tx.metadata.network_id === activeCard.networkId;
     return isCardTx;
-  }).slice(0, 5); // Limit to 5 for the quick view
+  }).slice(0, 5);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800 relative">
