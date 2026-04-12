@@ -128,7 +128,7 @@ export default function AccountHub({ balances, profile }) {
     }
   };
 
-  // 🛡️ SECURE CARD PROVISIONING via EDGE FUNCTION
+  // 🛡️ SECURE CARD PROVISIONING via EDGE FUNCTION (BULLETPROOF AUTH)
   const handleProvisionCard = async () => {
     if (!newCardName) return triggerGlobalActionNotification('error', 'Please provide a name for this card.');
     if (!profile?.id) return triggerGlobalActionNotification('error', 'User profile ID not found.');
@@ -136,11 +136,22 @@ export default function AccountHub({ balances, profile }) {
     setIsProvisioning(true);
 
     try {
+      // 1. Explicitly grab the active session token to bypass client sync issues
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+         throw new Error("Local auth out of sync. Please completely refresh the page.");
+      }
+
+      // 2. Force the token into the headers
       const { data, error } = await supabase.functions.invoke('issue-ifb-card', {
         body: {
           userId: profile.id,
           cardName: newCardName,
           theme: newCardTheme
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}` // <--- THIS IS THE FIX
         }
       });
 
