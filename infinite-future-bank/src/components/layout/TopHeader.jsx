@@ -9,7 +9,7 @@ export default function TopHeader({
   setActiveAppPopup, isSearchExpanded, setIsSearchExpanded, searchQuery, setSearchQuery, 
   searchResults, formatCurrency, isNotificationMenuOpen, setIsNotificationMenuOpen, unreadCount, 
   isProfileMenuOpen, setIsProfileMenuOpen, profile, userName, visibleNotifications, 
-  handleConfirmRequest, handleDeclineRequest, handleAcceptP2PWithdrawal, markAsRead, setActiveTab, 
+  handleConfirmRequest, handleDeclineRequest, handleAcceptP2PWithdrawal, handleAcceptP2PDeposit, markAsRead, setActiveTab, 
   setSubTab, onSignOut, session, balances, fetchAllData, commercialProfile, activeAppPopup
 }) {
   return (
@@ -95,10 +95,11 @@ export default function TopHeader({
           handleConfirmRequest={handleConfirmRequest}
           handleDeclineRequest={handleDeclineRequest}
           handleAcceptP2PWithdrawal={handleAcceptP2PWithdrawal}
+          handleAcceptP2PDeposit={handleAcceptP2PDeposit} 
           markAsRead={markAsRead}
         />
 
-        {/* PROFILE DROPDOWN - EXACTLY WHERE IT WAS IN THE OLD DASHBOARD */}
+        {/* PROFILE DROPDOWN */}
         <ProfileDropdown 
           isProfileMenuOpen={isProfileMenuOpen}
           setIsProfileMenuOpen={setIsProfileMenuOpen}

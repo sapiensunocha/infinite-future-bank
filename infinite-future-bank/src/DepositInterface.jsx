@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from './services/supabaseClient';
-import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine } from 'lucide-react';
+import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine, History, Clock, Activity, FileText } from 'lucide-react';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -40,6 +40,7 @@ const CheckoutForm = ({ amount, onBack }) => {
 };
 
 export default function DepositInterface({ session, onClose }) {
+  const [activeTab, setActiveTab] = useState('NEW'); // 'NEW' or 'HISTORY'
   const [amount, setAmount] = useState('');
   const [routingMethod, setRoutingMethod] = useState(null); 
   const [clientSecret, setClientSecret] = useState(null);
@@ -54,8 +55,12 @@ export default function DepositInterface({ session, onClose }) {
   
   // AI Scanning States
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState(null); // { refId, detectedAmount, date, proofUrl }
+  const [scanResult, setScanResult] = useState(null); 
   const [isP2pProcessing, setIsP2pProcessing] = useState(false);
+
+  // History State
+  const [depositHistory, setDepositHistory] = useState([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const fiatOptions = [
     { id: 'Local Bank Transfer', icon: <Landmark size={20}/>, label: 'Local Bank Transfer', desc: 'Domestic Wire, ACH, SEPA' },
@@ -63,6 +68,32 @@ export default function DepositInterface({ session, onClose }) {
     { id: 'Digital Wallet', icon: <Wallet size={20}/>, label: 'Digital Wallet', desc: 'PayPal, CashApp, Venmo' },
     { id: 'Physical Cash Drop', icon: <HandCoins size={20}/>, label: 'Physical Cash', desc: 'Hand-to-Hand' }
   ];
+
+  useEffect(() => {
+    if (activeTab === 'HISTORY') fetchHistory();
+  }, [activeTab]);
+
+  const fetchHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('p2p_orders')
+        .select(`
+          id, created_at, status, amount_usd, payment_method, metadata, updated_at,
+          processor:profiles!p2p_orders_processor_id_fkey(full_name)
+        `)
+        .eq('user_id', session.user.id)
+        .eq('order_type', 'deposit')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDepositHistory(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const handleInitializeCard = async () => {
     if (!amount || amount <= 0) return;
@@ -82,9 +113,12 @@ export default function DepositInterface({ session, onClose }) {
     try {
       const { data, error } = await supabase.from('profiles').select('id, full_name, avatar_url, cot_rating, cot_completed_tx').eq('is_cot_processor', true).limit(5);
       if (error) throw error;
+      
+      // Simulate matching delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       setProcessors(data && data.length > 0 ? data : [
-        { id: '1', full_name: 'IFB Local Vault (Dakar)', avatar_url: null, cot_rating: 99.8, cot_completed_tx: 1204 },
-        { id: '2', full_name: 'Verified Cashpoint X', avatar_url: null, cot_rating: 98.5, cot_completed_tx: 856 },
+        { id: '1', full_name: 'IFB Global Operations', avatar_url: null, cot_rating: 100, cot_completed_tx: 15420 },
       ]);
       setP2pStep(2);
     } catch (err) { alert("Failed to query localized routing nodes."); } 
@@ -100,22 +134,14 @@ export default function DepositInterface({ session, onClose }) {
     setScanResult(null);
 
     try {
-      // 1. Upload the receipt to Supabase Storage FIRST (Ensure you have a 'documents' bucket)
       const fileExt = receiptFile.name.split('.').pop();
       const fileName = `p2p_receipts/${session.user.id}_${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(fileName, receiptFile);
-
+      const { error: uploadError } = await supabase.storage.from('documents').upload(fileName, receiptFile);
       if (uploadError) throw uploadError;
 
-      // Get the public URL of the uploaded image
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(fileName);
 
-      // 2. Call the secure Supabase Edge Function to analyze the image
       const { data, error: aiError } = await supabase.functions.invoke('analyze-receipt-ocr', {
         body: { imageUrl: publicUrl, expectedAmount: amount }
       });
@@ -123,12 +149,11 @@ export default function DepositInterface({ session, onClose }) {
       if (aiError) throw new Error("AI Engine failed to connect.");
       if (data?.error) throw new Error(data.error);
 
-      // 3. Set the REAL data extracted by the AI
       setScanResult({
-        refId: data.extracted_ref_id,
-        detectedAmount: data.extracted_amount,
-        date: data.extracted_date,
-        proofUrl: publicUrl // Save the URL so we don't have to upload it again
+        refId: data.extracted_ref_id || data.extracted_data?.extracted_ref_id || 'N/A',
+        detectedAmount: data.extracted_amount || data.extracted_data?.extracted_amount || amount,
+        date: data.extracted_date || data.extracted_data?.extracted_date || new Date().toISOString().split('T')[0],
+        proofUrl: publicUrl
       });
 
     } catch (err) {
@@ -147,16 +172,15 @@ export default function DepositInterface({ session, onClose }) {
     setIsP2pProcessing(true);
 
     try {
-      // Insert the actual AI-verified data into the database
       const { error: dbError } = await supabase.from('p2p_orders').insert([{
         user_id: session.user.id,
         processor_id: selectedProcessor.id,
         order_type: 'deposit',
         amount_usd: parseFloat(amount),
         payment_method: fiatMethod,
-        status: 'proof_uploaded',
+        status: 'proof_uploaded', // Deposit starts at proof_uploaded because user already sent fiat
         proof_image_url: scanResult.proofUrl,
-        ai_verification_status: 'verified', // Pre-verified by our secure edge function
+        ai_verification_status: 'verified',
         metadata: {
           extracted_ref: scanResult.refId,
           extracted_amount: scanResult.detectedAmount,
@@ -166,7 +190,7 @@ export default function DepositInterface({ session, onClose }) {
 
       if (dbError) throw dbError;
       
-      setP2pStep(4); // Move to success screen
+      setP2pStep(4); 
     } catch (err) { 
       console.error("DB Insert Error:", err);
       alert("Failed to secure the order in the ledger."); 
@@ -174,21 +198,127 @@ export default function DepositInterface({ session, onClose }) {
     finally { setIsP2pProcessing(false); }
   };
 
+  const getTimeElapsed = (created, updated, status) => {
+    const start = new Date(created);
+    const end = status === 'completed' ? new Date(updated) : new Date();
+    const diffMins = Math.floor((end - start) / 60000);
+    if (diffMins < 60) return `${diffMins} min`;
+    return `${Math.floor(diffMins / 60)} hrs ${diffMins % 60} min`;
+  };
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-[#0B0F19] rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-white/10 p-8 flex flex-col max-h-[90vh]">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-[#0B0F19] rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-white/10 p-8 flex flex-col max-h-[95vh]">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/20 blur-[60px] pointer-events-none"></div>
         <button onClick={(e) => { e.preventDefault(); onClose(); }} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors bg-white/5 p-2 rounded-xl border border-white/10 z-50 cursor-pointer">
           <X size={20} />
         </button>
 
         <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar pb-4">
-          <h2 className="text-2xl font-black text-white mb-1">Inject Capital</h2>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
-            <ShieldCheck size={14} className="text-emerald-500" /> Secure Routing Gateway
-          </p>
+          
+          {/* Header & Tabs */}
+          <div className="flex flex-col items-start gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl font-black text-white mb-1">Inject Capital</h2>
+              <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                <ShieldCheck size={14} /> Secure Routing Gateway
+              </p>
+            </div>
+            <div className="flex bg-white/10 p-1.5 rounded-xl w-full border border-white/5">
+              <button onClick={() => setActiveTab('NEW')} className={`flex-1 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'NEW' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>New Deposit</button>
+              <button onClick={() => setActiveTab('HISTORY')} className={`flex-1 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'HISTORY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}>Records</button>
+            </div>
+          </div>
 
-          {!routingMethod && (
+          {/* =========================================
+              HISTORY TAB (UBER STYLE TRACKING)
+          ========================================= */}
+          {activeTab === 'HISTORY' && (
+            <div className="space-y-4 animate-in slide-in-from-right-4">
+              {isLoadingHistory ? (
+                <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={32}/></div>
+              ) : depositHistory.length === 0 ? (
+                <div className="py-20 text-center border-2 border-dashed border-white/10 rounded-3xl bg-white/5">
+                  <History size={40} className="mx-auto text-slate-500 mb-4"/>
+                  <p className="text-slate-400 font-bold">No deposit records found.</p>
+                </div>
+              ) : (
+                depositHistory.map(order => (
+                  <div key={order.id} className="p-6 rounded-3xl border border-white/10 bg-white/5 shadow-sm hover:bg-white/10 transition-all">
+                    <div className="flex flex-col gap-4">
+                      
+                      {/* Top: Basic Info */}
+                      <div className="flex justify-between items-start border-b border-white/10 pb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">#{order.id.substring(0,8)}</span>
+                            <span className="flex items-center gap-1 text-[9px] font-black text-blue-400 uppercase bg-blue-500/10 px-2 py-1 rounded-md">
+                              <Clock size={10}/> {getTimeElapsed(order.created_at, order.updated_at, order.status)}
+                            </span>
+                          </div>
+                          <h3 className="text-2xl font-black text-white">${order.amount_usd.toFixed(2)}</h3>
+                          <p className="text-xs font-bold text-slate-400 mt-1">{order.payment_method}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Processor</p>
+                          <p className="text-sm font-bold text-slate-300">{order.processor?.full_name || 'Network Matching...'}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Bottom: Uber-Style Status Tracker */}
+                      <div className="pt-2">
+                         {order.status === 'disputed' ? (
+                           <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-center">
+                             <AlertTriangle size={24} className="mx-auto text-red-500 mb-2"/>
+                             <h4 className="font-black text-red-400 uppercase tracking-widest text-[10px]">Verification Failed</h4>
+                             <p className="text-xs text-red-300/80 font-bold mt-1">Processor rejected the receipt. Support has been notified.</p>
+                           </div>
+                         ) : (
+                           <div className="relative pt-2">
+                             {/* Connecting Line */}
+                             <div className="absolute top-4 left-6 right-6 h-1 bg-white/10 rounded-full z-0">
+                               <div className={`h-full rounded-full transition-all duration-1000 ${order.status === 'completed' ? 'bg-emerald-500 w-full' : 'bg-blue-500 w-1/2'}`}></div>
+                             </div>
+
+                             <div className="relative z-10 flex justify-between">
+                               {/* Step 1 */}
+                               <div className="flex flex-col items-center gap-2">
+                                 <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-500 text-white">
+                                   <FileText size={12}/>
+                                 </div>
+                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center">Proof<br/>Sent</span>
+                               </div>
+
+                               {/* Step 2 */}
+                               <div className="flex flex-col items-center gap-2">
+                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${order.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-blue-500 border-blue-500 text-white animate-pulse'}`}>
+                                   <Activity size={12}/>
+                                 </div>
+                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center">Processor<br/>Verifying</span>
+                               </div>
+
+                               {/* Step 3 */}
+                               <div className="flex flex-col items-center gap-2">
+                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${order.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-[#0B0F19] border-white/20 text-slate-500'}`}>
+                                   <CheckCircle2 size={12}/>
+                                 </div>
+                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center">AFR<br/>Minted</span>
+                               </div>
+                             </div>
+                           </div>
+                         )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* =========================================
+              NEW DEPOSIT TAB
+          ========================================= */}
+          {activeTab === 'NEW' && !routingMethod && (
             <div className="space-y-8 animate-in fade-in zoom-in-95">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 text-center">Amount to Deposit (USD Equivalent)</label>
@@ -223,7 +353,7 @@ export default function DepositInterface({ session, onClose }) {
             </div>
           )}
 
-          {routingMethod === 'card' && (
+          {activeTab === 'NEW' && routingMethod === 'card' && (
             <>
               {!clientSecret ? (
                 <div className="py-20 text-center flex flex-col items-center justify-center">
@@ -238,7 +368,7 @@ export default function DepositInterface({ session, onClose }) {
             </>
           )}
 
-          {routingMethod === 'p2p' && (
+          {activeTab === 'NEW' && routingMethod === 'p2p' && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               
               {p2pStep === 1 && (
@@ -256,11 +386,10 @@ export default function DepositInterface({ session, onClose }) {
                       {fiatOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
                     </select>
 
-                    {/* 🔥 STRICT SAFETY WARNING FOR CASH */}
                     {fiatMethod === 'Physical Cash Drop' && (
                       <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl animate-in zoom-in-95">
                         <h4 className="text-amber-400 text-xs font-black uppercase tracking-widest flex items-center gap-2 mb-2"><AlertTriangle size={14}/> High Risk Method</h4>
-                        <p className="text-xs text-amber-500/80 leading-relaxed font-medium">Meet in a public, well-lit place. Ensure the processor clicks "Confirm Receipt" in front of you. Verify the digital AFR is in your DEUS app before leaving. IFB cannot reverse physical cash theft.</p>
+                        <p className="text-xs text-amber-500/80 leading-relaxed font-medium">Meet in a public, well-lit place. Ensure the processor clicks "Confirm Receipt" in front of you. Verify the digital AFR is in your DEUS app before leaving.</p>
                       </div>
                     )}
                   </div>
@@ -297,7 +426,6 @@ export default function DepositInterface({ session, onClose }) {
                 </div>
               )}
 
-              {/* Step 3: Transfer & AI Upload */}
               {p2pStep === 3 && (
                 <div className="space-y-6">
                   <button onClick={() => {setP2pStep(2); setReceiptFile(null); setScanResult(null);}} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 transition-colors"><ArrowLeft size={14}/> Back</button>
@@ -335,31 +463,31 @@ export default function DepositInterface({ session, onClose }) {
 
                   {/* 🔥 AI SCANNING ENGINE */}
                   {!scanResult ? (
-                     <button 
-                       onClick={handleAiScan} disabled={!receiptFile || isScanning}
-                       className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                     >
-                       {isScanning ? <><ScanLine className="animate-pulse" size={16}/> Extracting Data...</> : <><ScanLine size={16}/> Scan Proof with IFB AI</>}
-                     </button>
+                    <button 
+                      onClick={handleAiScan} disabled={!receiptFile || isScanning}
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isScanning ? <><ScanLine className="animate-pulse" size={16}/> Extracting Data...</> : <><ScanLine size={16}/> Scan Proof with IFB AI</>}
+                    </button>
                   ) : (
-                     <div className="space-y-4 animate-in slide-in-from-bottom-2">
-                       <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                         <div className="flex justify-between items-center mb-2">
-                           <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest flex items-center gap-1"><CheckCircle2 size={12}/> AI Extracted</span>
-                           <span className="text-[10px] text-emerald-400 font-bold">{scanResult.date}</span>
-                         </div>
-                         <div className="flex justify-between items-center">
-                           <span className="text-sm font-medium text-slate-300">Ref: {scanResult.refId}</span>
-                           <span className="text-lg font-black text-white">${scanResult.detectedAmount}</span>
-                         </div>
-                       </div>
-                       <button 
-                         onClick={handleSubmitP2pProof} disabled={isP2pProcessing}
-                         className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                       >
-                         {isP2pProcessing ? <Loader2 className="animate-spin" size={16}/> : 'Confirm & Lock Escrow'}
-                       </button>
-                     </div>
+                    <div className="space-y-4 animate-in slide-in-from-bottom-2">
+                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest flex items-center gap-1"><CheckCircle2 size={12}/> AI Extracted</span>
+                          <span className="text-[10px] text-emerald-400 font-bold">{scanResult.date}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-slate-300">Ref: {scanResult.refId}</span>
+                          <span className="text-lg font-black text-white">${scanResult.detectedAmount}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={handleSubmitP2pProof} disabled={isP2pProcessing}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {isP2pProcessing ? <Loader2 className="animate-spin" size={16}/> : 'Confirm & Request AFR Mint'}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -367,10 +495,10 @@ export default function DepositInterface({ session, onClose }) {
               {p2pStep === 4 && (
                 <div className="py-10 text-center space-y-4 animate-in zoom-in-95">
                   <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6"><ShieldCheck size={40}/></div>
-                  <h3 className="text-2xl font-black text-white">Proof Verified</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed px-4">Your receipt has been scanned by the IFB AI and securely stored.</p>
-                  <p className="text-xs text-emerald-400 font-bold mt-4">Funds will be released to your balance upon final processor confirmation.</p>
-                  <div className="pt-8"><button onClick={onClose} className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors">Return to Dashboard</button></div>
+                  <h3 className="text-2xl font-black text-white">Proof Sent to Processor</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed px-4">Your receipt has been scanned by the IFB AI and sent to the routing node.</p>
+                  <p className="text-xs text-emerald-400 font-bold mt-4">AFR will be minted to your balance upon final processor confirmation.</p>
+                  <div className="pt-8"><button onClick={() => { setActiveTab('HISTORY'); setRoutingMethod(null); setAmount(''); setP2pStep(1); setReceiptFile(null); setScanResult(null); }} className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors">Track Status</button></div>
                 </div>
               )}
             </div>

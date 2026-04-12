@@ -3,7 +3,8 @@ import { supabase } from '../services/supabaseClient';
 import { 
   User, Shield, Bell, Landmark, Eye, Info, LogOut, Camera, 
   Fingerprint, RefreshCw, FileText, Scale, ShieldCheck, Mail, 
-  Lock, Plus, Globe 
+  Lock, Plus, Globe, UploadCloud, FileCheck, AlertTriangle, 
+  TrendingUp, Users, Briefcase, ArrowRightLeft, CheckCircle2 
 } from 'lucide-react';
 
 export default function SettingsHub({
@@ -17,6 +18,12 @@ export default function SettingsHub({
   const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
   const [mfaState, setMfaState] = useState({ qrCode: '', secret: '', verifyCode: '', factorId: '', step: 'init' });
   const fileInputRef = useRef(null);
+
+  // CoT Application States
+  const [cotFile, setCotFile] = useState(null);
+  const [cotError, setCotError] = useState('');
+  const [isSubmittingCot, setIsSubmittingCot] = useState(false);
+  const cotFileInputRef = useRef(null);
 
   const [kycForm, setKycForm] = useState({ 
     legalName: profile?.full_legal_name || '', 
@@ -39,7 +46,6 @@ export default function SettingsHub({
     motion: profile?.reduce_motion || false 
   });
 
-  // Keep local state synced if profile updates globally
   useEffect(() => {
     if (profile) {
       setEditedName(profile.full_name || '');
@@ -97,7 +103,6 @@ export default function SettingsHub({
     }
     setIsAiProcessing(true);
     try {
-      // AI check placeholder logic
       const isMatch = true; 
       if (isMatch) {
         const { error } = await supabase.from('profiles').update({ 
@@ -115,6 +120,45 @@ export default function SettingsHub({
       triggerNotification('error', 'AI Processing Error. Please check your connection.');
     } finally {
       setIsAiProcessing(false);
+    }
+  };
+
+  // --- CoT SUBMISSION ACTIONS ---
+  const handleCotFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (selected && (selected.type.includes('image/') || selected.type === 'application/pdf')) {
+      setCotFile(selected);
+      setCotError('');
+    } else {
+      setCotError('Please upload a valid PDF, JPG, or PNG file.');
+    }
+  };
+
+  const handleCotSubmit = async (e) => {
+    e.preventDefault();
+    if (!cotFile) {
+      setCotError('Institutional credentials are required for vetting.');
+      return;
+    }
+    setIsSubmittingCot(true);
+    setCotError('');
+
+    try {
+      const fileExt = cotFile.name.split('.').pop();
+      const fileName = `cot_applications/${session.user.id}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage.from('documents').upload(fileName, cotFile);
+      if (uploadError) throw new Error("Failed to securely upload credentials.");
+
+      const { error: updateError } = await supabase.from('profiles').update({ cot_status: 'pending' }).eq('id', session.user.id);
+      if (updateError) throw new Error("Failed to submit application to the ledger.");
+
+      triggerNotification('success', 'Credentials submitted for IFB Audit.');
+      await fetchAllData();
+    } catch (err) {
+      setCotError(err.message);
+    } finally {
+      setIsSubmittingCot(false);
     }
   };
 
@@ -213,6 +257,7 @@ export default function SettingsHub({
         {[
           { id: 'PROFILE', label: 'Identity & Legal', icon: <User size={18} /> },
           { id: 'SECURITY', label: 'Security & Access', icon: <Shield size={18} /> },
+          { id: 'TRUST_NETWORK', label: 'Community of Trust', icon: <ShieldCheck size={18} /> },
           { id: 'NOTIFICATIONS', label: 'Notifications', icon: <Bell size={18} /> },
           { id: 'LINKED_ACCOUNTS', label: 'Saved Banks', icon: <Landmark size={18} /> },
           { id: 'ACCESSIBILITY', label: 'Accessibility', icon: <Eye size={18} /> },
@@ -229,6 +274,10 @@ export default function SettingsHub({
       </div>
 
       <div className="md:col-span-3 bg-white/60 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-sm">
+        
+        {/* =======================
+            PROFILE TAB
+        =========================*/}
         {subTab === 'PROFILE' && (
           <div className="space-y-8 max-w-2xl">
             <div>
@@ -270,13 +319,7 @@ export default function SettingsHub({
               {profile?.kyc_status !== 'verified' && (
                 <>
                   <div className="grid grid-cols-1 gap-4 mb-4">
-                    <input 
-                      type="text" 
-                      placeholder="Full Legal Name (Required for verification)" 
-                      className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" 
-                      value={kycForm.legalName} 
-                      onChange={e => setKycForm({...kycForm, legalName: e.target.value})} 
-                    />
+                    <input type="text" placeholder="Full Legal Name (Required for verification)" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" value={kycForm.legalName} onChange={e => setKycForm({...kycForm, legalName: e.target.value})} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className={`group relative p-6 rounded-2xl border-2 border-dashed transition-all ${kycFiles.passport ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 hover:border-blue-300'}`}>
@@ -294,11 +337,7 @@ export default function SettingsHub({
                       </label>
                     </div>
                   </div>
-                  <button 
-                    onClick={handleDirectAiVerification}
-                    disabled={isAiProcessing || profile?.kyc_status === 'verified'}
-                    className="w-full mt-6 py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-                  >
+                  <button onClick={handleDirectAiVerification} disabled={isAiProcessing || profile?.kyc_status === 'verified'} className="w-full mt-6 py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
                     {isAiProcessing ? <><RefreshCw size={14} className="animate-spin"/> AI Analyzing Match...</> : 'Authenticate Identity Now'}
                   </button>
                 </>
@@ -318,7 +357,113 @@ export default function SettingsHub({
             </div>
           </div>
         )}
+
+        {/* =======================
+            COMMUNITY OF TRUST TAB
+        =========================*/}
+        {subTab === 'TRUST_NETWORK' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
+            <div>
+              <h2 className="text-3xl font-black text-slate-800 tracking-tighter mb-2">The Community of Trust.</h2>
+              <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">
+                This is the backbone of IFB’s local operations. We do not accept members. We verify them. A restricted network of banks, NGOs, and sovereign entities maintaining the 100% transparency of their regional capital.
+              </p>
+            </div>
+
+            {profile?.is_cot_processor ? (
+              <div className="bg-emerald-50 border border-emerald-200 p-10 rounded-[3rem] text-center shadow-sm">
+                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle2 size={40}/>
+                </div>
+                <h2 className="text-2xl font-black text-slate-800 mb-2">Verified Routing Node</h2>
+                <p className="text-slate-600 mb-6 max-w-md mx-auto">Your institutional profile is active. You are authorized to process P2P deposits and withdrawals on the IFB Ledger.</p>
+                <button onClick={() => setActiveTab('TRANSACTIONS')} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg">Access Terminal</button>
+              </div>
+            ) : profile?.cot_status === 'pending' ? (
+              <div className="bg-blue-50 border border-blue-200 p-10 rounded-[3rem] text-center shadow-sm">
+                <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Loader2 size={40} className="animate-spin"/>
+                </div>
+                <h2 className="text-2xl font-black text-slate-800 mb-2">Application Under Audit</h2>
+                <p className="text-slate-600 max-w-md mx-auto">Your institutional credentials are currently undergoing strict AI and manual review by the IFB compliance team. You will be notified upon verification.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                {/* Info Block */}
+                <div className="space-y-6">
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+                    <ShieldCheck className="text-emerald-500 mb-4" size={28}/>
+                    <h4 className="text-lg font-black text-slate-800">Zero Fees. Ironclad Vetting.</h4>
+                    <p className="text-xs text-slate-500 mt-2">Membership cannot be bought. Earning the IFB Trust Badge requires passing a rigorously strict profile review.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+                    <TrendingUp className="text-blue-500 mb-4" size={28}/>
+                    <h4 className="text-lg font-black text-slate-800">Revenue & Influence</h4>
+                    <p className="text-xs text-slate-500 mt-2">Trusted members generate revenue through participation in blocks and facilitating regional infrastructure.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200">
+                    <Lock className="text-amber-500 mb-4" size={28}/>
+                    <h4 className="text-lg font-black text-slate-800">Uncompromised Privacy</h4>
+                    <p className="text-xs text-slate-500 mt-2">Military-grade data protection ensures bad actors are immediately blocked and your participation remains shielded.</p>
+                  </div>
+                </div>
+
+                {/* Application Form */}
+                <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden text-white">
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                  <h3 className="text-xl font-black mb-2 relative z-10">Request Trust Vetting</h3>
+                  <p className="text-xs text-slate-400 mb-8 relative z-10">Submit institutional credentials for strict AI and manual review. Only verified sovereign or corporate entities will be considered.</p>
+
+                  {cotError && (
+                    <div className="p-3 mb-6 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-2 text-red-400 text-xs font-bold relative z-10">
+                      <AlertTriangle size={14} className="shrink-0 mt-0.5"/> <p>{cotError}</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleCotSubmit} className="space-y-6 relative z-10">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Institutional Email</label>
+                      <input type="email" readOnly value={session?.user?.email} className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-slate-300 font-bold outline-none cursor-not-allowed"/>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Upload Credentials Brief</label>
+                      <div onClick={() => cotFileInputRef.current.click()} className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${cotFile ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/20 hover:border-white/40 bg-white/5'}`}>
+                        {cotFile ? (
+                          <div className="flex flex-col items-center">
+                            <FileCheck size={28} className="text-emerald-400 mb-2"/>
+                            <p className="text-sm font-bold text-white truncate max-w-[200px]">{cotFile.name}</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <UploadCloud size={28} className="text-slate-400 mb-2"/>
+                            <p className="text-sm font-bold text-slate-300">Drag and drop or click</p>
+                            <p className="text-[10px] text-slate-500 mt-1">Registry Docs or ID (PDF, JPG, PNG)</p>
+                          </div>
+                        )}
+                        <input type="file" ref={cotFileInputRef} className="hidden" accept=".pdf, image/jpeg, image/png" onChange={handleCotFileChange} />
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                      <p className="text-[10px] text-amber-500/80 font-bold leading-relaxed">
+                        <strong>Warning:</strong> All submitted entities are subject to immediate and permanent ejection from the network if any credentials are found to be fraudulent.
+                      </p>
+                    </div>
+
+                    <button type="submit" disabled={isSubmittingCot || !cotFile} className="w-full py-4 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] disabled:opacity-50 flex justify-center items-center gap-2">
+                      {isSubmittingCot ? <Loader2 className="animate-spin" size={16}/> : 'Initialize Vetting'}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
+        {/* =======================
+            SECURITY TAB
+        =========================*/}
         {subTab === 'SECURITY' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div>
@@ -367,6 +512,9 @@ export default function SettingsHub({
           </div>
         )}
         
+        {/* =======================
+            NOTIFICATIONS TAB
+        =========================*/}
         {subTab === 'NOTIFICATIONS' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div>
@@ -405,6 +553,9 @@ export default function SettingsHub({
           </div>
         )}
         
+        {/* =======================
+            ACCESSIBILITY TAB
+        =========================*/}
         {subTab === 'ACCESSIBILITY' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div className="flex justify-between items-end">
@@ -443,6 +594,9 @@ export default function SettingsHub({
           </div>
         )}
         
+        {/* =======================
+            ABOUT TAB
+        =========================*/}
         {subTab === 'ABOUT' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
             <div className="text-center mb-10">
@@ -476,6 +630,9 @@ export default function SettingsHub({
           </div>
         )}
         
+        {/* =======================
+            LINKED ACCOUNTS TAB
+        =========================*/}
         {subTab === 'LINKED_ACCOUNTS' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in zoom-in-95 duration-300">
             <h2 className="text-2xl font-black text-slate-800 mb-2">Payout Methods</h2>
