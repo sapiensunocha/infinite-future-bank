@@ -4,7 +4,8 @@ import {
   Globe2, Building2, ShieldAlert, Plus, ArrowRight,
   CreditCard, Trash2, Wallet, RefreshCw, Zap, ArrowLeftRight,
   Settings, Lock, ScanLine, Store, CheckCircle2, PlusCircle,
-  ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock, Wifi
+  ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock, Wifi,
+  ShoppingBag, ArrowDownRight, MapPin
 } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
@@ -50,6 +51,7 @@ export default function AccountHub({ balances, profile }) {
   const [isSwapping, setIsSwapping] = useState(false);
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
+  const formatPan = (digits) => digits ? digits.match(/.{1,4}/g).join(' ') : '';
 
   const triggerGlobalActionNotification = (type, message) => {
     setNotification({ type, text: message });
@@ -85,7 +87,7 @@ export default function AccountHub({ balances, profile }) {
         .select('*')
         .eq('user_id', profile.id)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20); // Increased limit to fetch enough data for the activity feed
         
       if (txData) setTransactions(txData);
 
@@ -134,13 +136,11 @@ export default function AccountHub({ balances, profile }) {
     const p2 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
     const p3 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
     const p4 = Math.floor(1000 + Math.random() * 9000).toString().padStart(4, '0');
-    const pan = `${p1} ${p2} ${p3} ${p4}`;
     
-    // Dynamically generate expiry date 3-5 years in the future
+    const pan = `${p1}${p2}${p3}${p4}`;
     const year = new Date().getFullYear() + Math.floor(3 + Math.random() * 3);
     const month = Math.floor(1 + Math.random() * 12).toString().padStart(2, '0');
     const expiry = `${month}/${year.toString().slice(-2)}`;
-    
     const cvv = Math.floor(100 + Math.random() * 900).toString().padStart(3, '0');
     const networkId = `IFB-USR-${pan.slice(-4)}`; 
 
@@ -156,20 +156,15 @@ export default function AccountHub({ balances, profile }) {
         status: 'ACTIVE'
       }]);
 
-      if (error) {
-        console.error("Supabase Insert Error:", error);
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
       
       await fetchNetworkData();
       setCurrentCardIndex(cards.length); 
       setNewCardName('');
       setNewCardTheme('obsidian');
       triggerGlobalActionNotification('success', `${newCardName} provisioned successfully.`);
-      
       setIsProvisioning(false);
     } catch (err) { 
-      console.error("Provisioning Caught Error:", err);
       triggerGlobalActionNotification('error', `Database Error: ${err.message}`); 
     }
   };
@@ -183,13 +178,8 @@ export default function AccountHub({ balances, profile }) {
 
     setTimeout(async () => {
       try {
-        const { error } = await supabase
-          .from('virtual_cards')
-          .delete()
-          .eq('network_id', cardToTerminate.networkId);
-
+        const { error } = await supabase.from('virtual_cards').delete().eq('network_id', cardToTerminate.networkId);
         if (error) throw error;
-        
         await fetchNetworkData();
         setVanishingCardId(null);
         triggerGlobalActionNotification('success', `${cardToTerminate.name} terminated from ledger.`);
@@ -209,11 +199,7 @@ export default function AccountHub({ balances, profile }) {
     setCards(updatedCards);
 
     try {
-      const { error } = await supabase
-        .from('virtual_cards')
-        .update({ status: newStatus })
-        .eq('network_id', activeCard.networkId);
-
+      const { error } = await supabase.from('virtual_cards').update({ status: newStatus }).eq('network_id', activeCard.networkId);
       if (error) throw error;
       triggerGlobalActionNotification(newStatus === 'FROZEN' ? 'error' : 'success', `Card is now ${newStatus}`);
     } catch (err) {
@@ -262,8 +248,43 @@ export default function AccountHub({ balances, profile }) {
     URL.revokeObjectURL(url);
   };
 
+  // --- PARSING ENGINE FOR ACTIVITY FEEDS ---
+  const parseTransactionDetails = (tx) => {
+    const typeStr = (tx.transaction_type || '').toLowerCase();
+    const meta = tx.metadata || {};
+    
+    let merchantName = tx.description || "Point of Sale";
+    let location = meta.location || "Online Transaction";
+    let Icon = CreditCard;
+    let iconBg = "bg-blue-50";
+    let iconColor = "text-blue-500";
+
+    if (typeStr.includes('card') || typeStr.includes('expense')) {
+      merchantName = meta.merchant || tx.description || "Card Purchase";
+      Icon = ShoppingBag;
+      iconBg = "bg-purple-50";
+      iconColor = "text-purple-500";
+    } else if (typeStr.includes('deposit') || tx.amount > 0) {
+      merchantName = meta.source || tx.description || "Incoming Transfer";
+      Icon = ArrowDownRight;
+      iconBg = "bg-emerald-50";
+      iconColor = "text-emerald-500";
+    }
+
+    return { merchantName, location, Icon, iconBg, iconColor };
+  };
+
   const activeCard = cards[currentCardIndex];
   const theme = activeCard && CARD_THEMES[activeCard.theme] ? CARD_THEMES[activeCard.theme] : CARD_THEMES.obsidian;
+
+  // Filter transactions specifically for the active card (if metadata exists), or fallback to all card expenses
+  const cardSpecificTransactions = transactions.filter(tx => {
+    if (!activeCard) return false;
+    const isCardTx = tx.transaction_type.toLowerCase().includes('card') || tx.transaction_type.toLowerCase().includes('expense');
+    // If we have strict network_id binding in metadata, use it. Otherwise just show card transactions to simulate the feed.
+    if (tx.metadata?.network_id) return tx.metadata.network_id === activeCard.networkId;
+    return isCardTx;
+  }).slice(0, 5); // Limit to 5 for the quick view
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800 relative">
@@ -322,7 +343,6 @@ export default function AccountHub({ balances, profile }) {
                       </div>
                       <div className="flex gap-4">
                         <button onClick={() => setIsProvisioning(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
-                        
                         <button onClick={handleProvisionCard} className="flex-1 py-4 bg-blue-600 text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md flex items-center justify-center gap-2">
                           <Zap size={14}/> Issue to DB
                         </button>
@@ -334,37 +354,41 @@ export default function AccountHub({ balances, profile }) {
                       <h3 className="font-black text-slate-800 text-lg mb-1">{isLoadingDB ? 'Syncing Ledger...' : 'Provision Virtual Card'}</h3>
                     </div>
                   ) : (
-                    <div className="w-full max-w-md relative perspective-1000 group">
+                    <div className="w-full max-w-md relative group" style={{ perspective: '1000px' }}>
                       
                       {cards.length > 1 && (
                         <>
-                          <button onClick={() => { setIsFlipped(false); setCurrentCardIndex((prev) => (prev === 0 ? cards.length - 1 : prev - 1)); }} className="absolute -left-12 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 transition-colors"><ChevronLeft size={24}/></button>
-                          <button onClick={() => { setIsFlipped(false); setCurrentCardIndex((prev) => (prev === cards.length - 1 ? 0 : prev + 1)); }} className="absolute -right-12 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 transition-colors"><ChevronRight size={24}/></button>
+                          <button onClick={() => { setIsFlipped(false); setCurrentCardIndex((prev) => (prev === 0 ? cards.length - 1 : prev - 1)); }} className="absolute -left-10 sm:-left-12 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 transition-colors z-20"><ChevronLeft size={24}/></button>
+                          <button onClick={() => { setIsFlipped(false); setCurrentCardIndex((prev) => (prev === cards.length - 1 ? 0 : prev + 1)); }} className="absolute -right-10 sm:-right-12 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-blue-600 transition-colors z-20"><ChevronRight size={24}/></button>
                         </>
                       )}
 
                       {/* THE MAGIC CARD RENDER */}
                       <div 
                         onClick={() => setIsFlipped(!isFlipped)}
-                        className={`w-full aspect-[1.586/1] cursor-pointer transition-all duration-700 ease-in-out ${vanishingCardId === activeCard.networkId ? 'scale-50 blur-2xl opacity-0 rotate-12 -translate-y-10' : 'scale-100 blur-0 opacity-100'}`} 
-                        style={{ transformStyle: 'preserve-3d', transform: isFlipped && vanishingCardId !== activeCard.networkId ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+                        className={`w-full cursor-pointer transition-all duration-700 ease-in-out relative ${vanishingCardId === activeCard.networkId ? 'scale-50 blur-2xl opacity-0 rotate-12 -translate-y-10' : 'scale-100 blur-0 opacity-100'}`} 
+                        style={{ 
+                          transformStyle: 'preserve-3d', 
+                          transform: isFlipped && vanishingCardId !== activeCard.networkId ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                          minHeight: '220px',
+                          aspectRatio: '1.586/1'
+                        }}
                       >
-                        {/* FRONT FACE (FULLY CONTAINED, EXPIRY & CVV ADDED) */}
-                        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border border-white/20`}`} style={{ backfaceVisibility: 'hidden' }}>
+                        {/* FRONT FACE */}
+                        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl p-5 sm:p-7 flex flex-col justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale border-slate-600' : `${theme.bg} border border-white/20`}`} 
+                             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                           
-                          {/* Top Row: Logo & Designation */}
                           <div className="flex justify-between items-start z-10 w-full">
                             <div className="flex items-center gap-2">
-                              <Zap size={28} className={theme.textPrimary} fill="currentColor" />
-                              <h2 className={`${theme.textPrimary} font-black text-xl tracking-tighter`}>IFB</h2>
+                              <Zap size={24} className={theme.textPrimary} fill="currentColor" />
+                              <h2 className={`${theme.textPrimary} font-black text-lg tracking-tighter`}>IFB</h2>
                             </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <Wifi size={20} className={`${theme.textPrimary} opacity-80 rotate-90`} />
-                              <span className={`px-3 py-1 bg-white/10 rounded-lg text-[8px] font-black ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm truncate max-w-[120px]`}>{activeCard.name}</span>
+                            <div className="flex flex-col items-end gap-1">
+                              <Wifi size={18} className={`${theme.textPrimary} opacity-80 rotate-90`} />
+                              <span className={`px-2 py-0.5 bg-white/10 rounded-lg text-[7px] font-black ${theme.accent} backdrop-blur-md border border-white/20 uppercase tracking-widest shadow-sm truncate max-w-[100px]`}>{activeCard.name}</span>
                             </div>
                           </div>
 
-                          {/* Middle: EMV Chip & PAN */}
                           <div className="z-10 flex flex-col mt-auto mb-4 sm:mb-6">
                             <div className="w-10 h-7 sm:w-12 sm:h-9 rounded-md bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 border border-yellow-500/50 opacity-90 shadow-sm relative overflow-hidden mb-3 sm:mb-4">
                               <div className="absolute top-1/2 left-0 w-full h-[1px] bg-yellow-600/30"></div>
@@ -372,42 +396,42 @@ export default function AccountHub({ balances, profile }) {
                               <div className="absolute top-0 right-1/3 w-[1px] h-full bg-yellow-600/30"></div>
                             </div>
                             
-                            <p className={`${theme.textPrimary} font-mono text-xl sm:text-[26px] tracking-widest sm:tracking-[0.15em] whitespace-nowrap drop-shadow-md transition-all`}>
-                              {showCardDetails ? activeCard.pan : `**** **** **** ${activeCard.pan?.slice(-4) || '0000'}`}
+                            <p className={`${theme.textPrimary} font-mono text-lg sm:text-2xl tracking-[0.1em] sm:tracking-[0.15em] whitespace-nowrap drop-shadow-md transition-all`}>
+                              {showCardDetails ? formatPan(activeCard.pan) : `•••• •••• •••• ${activeCard.pan?.slice(-4) || '0000'}`}
                             </p>
                           </div>
                           
-                          {/* Bottom: Expiry, CVV, Name & Status */}
                           <div className="flex justify-between items-end z-10 w-full">
                             <div className="flex flex-col gap-2">
-                              <div className="flex gap-6">
+                              <div className="flex gap-4">
                                 <div>
-                                  <p className={`${theme.textSecondary} text-[7px] sm:text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-0.5`}>Valid Thru</p>
-                                  <p className={`${theme.textPrimary} font-mono text-[10px] sm:text-xs tracking-widest`}>{showCardDetails ? activeCard.expiry : '**/**'}</p>
+                                  <p className={`${theme.textSecondary} text-[6px] sm:text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-0.5`}>Valid Thru</p>
+                                  <p className={`${theme.textPrimary} font-mono text-[10px] sm:text-xs tracking-widest`}>{showCardDetails ? activeCard.expiry : '••/••'}</p>
                                 </div>
                                 <div>
-                                  <p className={`${theme.textSecondary} text-[7px] sm:text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-0.5`}>CVV</p>
-                                  <p className={`${theme.textPrimary} font-mono text-[10px] sm:text-xs tracking-widest`}>{showCardDetails ? activeCard.cvv : '***'}</p>
+                                  <p className={`${theme.textSecondary} text-[6px] sm:text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-0.5`}>CVV</p>
+                                  <p className={`${theme.textPrimary} font-mono text-[10px] sm:text-xs tracking-widest`}>{showCardDetails ? activeCard.cvv : '•••'}</p>
                                 </div>
                               </div>
                               <p className={`${theme.textPrimary} font-black uppercase tracking-[0.1em] text-xs sm:text-sm drop-shadow-md truncate max-w-[200px]`}>{profile?.full_name || 'SOVEREIGN ENTITY'}</p>
                             </div>
                             <div className="text-right">
-                              <p className={`font-black text-[9px] uppercase tracking-widest drop-shadow-md px-2 py-1 rounded border ${activeCard.isFrozen ? 'bg-red-500/20 text-red-100 border-red-500/30' : 'bg-white/10 text-white border-white/20'}`}>
+                              <p className={`font-black text-[8px] sm:text-[9px] uppercase tracking-widest drop-shadow-md px-2 py-1 rounded border ${activeCard.isFrozen ? 'bg-red-500/20 text-red-100 border-red-500/30' : 'bg-white/10 text-white border-white/20'}`}>
                                 {activeCard.isFrozen ? 'FROZEN' : 'ACTIVE'}
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        {/* BACK FACE (Network ID & Magstripe) */}
-                        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg} border border-white/20`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                        {/* BACK FACE */}
+                        <div className={`absolute inset-0 rounded-2xl sm:rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden ${activeCard.isFrozen ? 'bg-slate-800 grayscale' : theme.bg} border border-white/20`} 
+                             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                           
                           <div className="w-full h-10 sm:h-14 bg-slate-900 mt-6 shadow-inner"></div> 
 
                           <div className="px-6 sm:px-8 py-4 flex-1 flex flex-col justify-center z-10 w-full text-center">
                             <p className={`${theme.textSecondary} text-[8px] uppercase tracking-[0.2em] font-black opacity-80 mb-2`}>Internal Network ID</p>
-                            <p className={`${theme.textPrimary} font-mono text-xs tracking-widest bg-white/5 p-3 rounded-lg border border-white/10`}>{activeCard.network_id || activeCard.networkId}</p>
+                            <p className={`${theme.textPrimary} font-mono text-[10px] tracking-tighter bg-white/5 p-3 rounded-lg border border-white/10 break-all`}>{activeCard.network_id || activeCard.networkId}</p>
                             <p className={`${theme.textSecondary} text-[8px] uppercase tracking-widest mt-6 opacity-50`}>Authorized signature required. Issued by IFB.</p>
                           </div>
                         </div>
@@ -434,12 +458,53 @@ export default function AccountHub({ balances, profile }) {
                         </button>
                       </div>
 
+                      {/* 🔥 NEW: CARD SPECIFIC RECENT ACTIVITY */}
+                      <div className="mt-12 w-full border-t border-slate-200 pt-8">
+                        <div className="flex items-center justify-between mb-6">
+                          <h4 className="font-black text-slate-800 tracking-tight text-sm">Recent Card Activity</h4>
+                          <button onClick={() => setCardTab('LEDGER')} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline">View All</button>
+                        </div>
+                        
+                        {cardSpecificTransactions.length === 0 ? (
+                          <div className="text-center py-6 bg-slate-50 border border-slate-100 rounded-2xl">
+                            <Store size={24} className="mx-auto mb-2 text-slate-300"/>
+                            <p className="text-xs font-bold text-slate-500">No recent sweeps on this card.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {cardSpecificTransactions.map(tx => {
+                              const { merchantName, location, Icon, iconBg, iconColor } = parseTransactionDetails(tx);
+                              return (
+                                <div key={tx.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-slate-200 transition-colors">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${iconBg} ${iconColor} shrink-0`}>
+                                      <Icon size={16} />
+                                    </div>
+                                    <div className="overflow-hidden">
+                                      <p className="font-bold text-sm text-slate-800 truncate">{merchantName}</p>
+                                      <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1 mt-0.5">
+                                        <MapPin size={10} /> {location} • {new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                    <p className={`font-black text-sm ${tx.amount > 0 ? 'text-emerald-600' : 'text-slate-800'}`}>
+                                      {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
                     </div>
                   )}
                 </div>
 
                 {/* Right: AI Routing Logic Display */}
-                <div className="flex-1 bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-inner">
+                <div className="flex-1 bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-inner h-fit hidden lg:block">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><Zap size={16}/></div>
                     <div><h4 className="font-black text-slate-800 tracking-tight">AI Payment Routing</h4><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Auto-funding prioritization</p></div>
@@ -509,7 +574,7 @@ export default function AccountHub({ balances, profile }) {
               </div>
             )}
 
-            {/* VIEW 4: TRANSACTIONS LEDGER */}
+            {/* VIEW 4: TRANSACTIONS LEDGER (UPGRADED) */}
             {cardTab === 'LEDGER' && (
               <div className="animate-in fade-in">
                 <h4 className="font-black text-slate-800 text-xl tracking-tight mb-6 border-b border-slate-200 pb-4 flex justify-between">
@@ -523,28 +588,42 @@ export default function AccountHub({ balances, profile }) {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {transactions.map(tx => (
-                      <div key={tx.id} className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all">
-                        <div className="flex items-center gap-4 w-full md:w-auto">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.status === 'completed' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}>
-                            {tx.status === 'completed' ? <CheckCircle2 size={20}/> : <RefreshCw size={20}/>}
+                    {transactions.map(tx => {
+                      const { merchantName, location, Icon, iconBg, iconColor } = parseTransactionDetails(tx);
+                      
+                      return (
+                        <div key={tx.id} className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm hover:shadow-md transition-all group">
+                          <div className="flex items-center gap-4 w-full md:w-auto">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${iconBg} ${iconColor}`}>
+                              <Icon size={20}/>
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-800 text-base">{merchantName}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-0.5">
+                                <MapPin size={10} className="inline" /> {location} • {new Date(tx.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-slate-800">{tx.transaction_type}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(tx.created_at).toLocaleString()}</p>
+                          
+                          <div className="flex items-center justify-between w-full md:w-auto gap-8">
+                            <div className="text-right">
+                              <p className={`font-black text-lg ${tx.amount > 0 ? 'text-emerald-600' : 'text-slate-800'}`}>
+                                {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                              </p>
+                              <div className="flex items-center justify-end gap-1 mt-0.5">
+                                <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                  {tx.status} {tx.metadata?.last4 ? `• *${tx.metadata.last4}` : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <button onClick={() => downloadReceipt(tx)} className="p-3 bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-xl transition-colors border border-slate-200 opacity-0 group-hover:opacity-100" title="Download Receipt">
+                              <Download size={16}/>
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between w-full md:w-auto gap-8">
-                          <div className="text-right">
-                            <p className="font-black text-slate-800 text-lg">${Math.abs(tx.amount)}</p>
-                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Via Primary Balance</p>
-                          </div>
-                          <button onClick={() => downloadReceipt(tx)} className="p-3 bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 rounded-xl transition-colors border border-slate-200" title="Download Receipt">
-                            <Download size={16}/>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -629,7 +708,6 @@ export default function AccountHub({ balances, profile }) {
                 {isSwapping ? 'Executing Swap...' : 'Confirm Exchange'}
               </button>
             </div>
-            {/* END EXCHANGE UI */}
 
           </div>
         </div>
