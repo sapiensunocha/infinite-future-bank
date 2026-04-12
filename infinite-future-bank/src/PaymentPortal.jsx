@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
+import { loadStripe } from '@stripe/stripe-js';
 import { 
   ArrowLeft, ShieldCheck, Zap, Send, Loader2, 
-  CheckCircle2, Circle, Square, User 
+  CheckCircle2, Circle, User, CreditCard 
 } from 'lucide-react';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
 export default function PaymentPortal({ session, balances }) {
   const [receiver, setReceiver] = useState(null);
@@ -11,14 +14,12 @@ export default function PaymentPortal({ session, balances }) {
   const [error, setError] = useState('');
   
   const [amount, setAmount] = useState('');
-  const [asset, setAsset] = useState('AFR'); // 'AFR' or 'USD'
+  const [asset, setAsset] = useState('USD'); 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Execution Tracker
   const [executionPlan, setExecutionPlan] = useState({ isActive: false, steps: [], currentDetail: '', progressPct: 0 });
 
-  // Extract the receiver ID from the URL: e.g., ?to=1234-5678-abcd
   useEffect(() => {
     const fetchReceiver = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -30,14 +31,13 @@ export default function PaymentPortal({ session, balances }) {
         return;
       }
 
-      if (targetId === session?.user?.id) {
+      if (session && targetId === session?.user?.id) {
         setError('You cannot initiate a payment to your own account.');
         setIsLoading(false);
         return;
       }
 
       try {
-        // Fetch the receiver's public profile data
         const { data, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url, active_tier')
@@ -61,12 +61,36 @@ export default function PaymentPortal({ session, balances }) {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) return;
 
-    // Basic local balance check
-    if (asset === 'AFR' && numAmount > (balances?.afr_balance || 0)) {
+    // --- EXTERNAL FLOW (STRIPE) ---
+    if (!session) {
+      setIsProcessing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('create-external-checkout', {
+          body: { recipientId: receiver.id, amount: numAmount }
+        });
+        
+        if (error) throw error;
+        
+        const stripe = await stripePromise;
+        await stripe.redirectToCheckout({ sessionId: data.sessionId });
+      } catch (err) {
+        console.error(err);
+        alert("Payment Gateway Error: " + err.message);
+        setIsProcessing(false);
+      }
+      return; 
+    }
+
+    // --- INTERNAL FLOW (AFR/USD) ---
+    // Safe access using optional chaining
+    const safeAfr = balances?.afr_balance || 0;
+    const safeUsd = balances?.liquid_usd || 0;
+
+    if (asset === 'AFR' && numAmount > safeAfr) {
       alert("Insufficient AFR Balance.");
       return;
     }
-    if (asset === 'USD' && numAmount > (balances?.liquid_usd || 0)) {
+    if (asset === 'USD' && numAmount > safeUsd) {
       alert("Insufficient USD Balance.");
       return;
     }
@@ -81,27 +105,21 @@ export default function PaymentPortal({ session, balances }) {
     ];
 
     setExecutionPlan({ isActive: true, steps: [...mockSteps], currentDetail: "Initiating protocol...", progressPct: 15 });
-
     const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
     try {
-      // Step 1
       await delay(1200);
       mockSteps[0].status = "completed"; mockSteps[1].status = "active";
       setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Routing through IFB secure switch...", progressPct: 40 }));
 
-      // Step 2
       await delay(1500);
       mockSteps[1].status = "completed"; mockSteps[2].status = "active";
       setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Pinging Agent Sentinel for AML clearance...", progressPct: 65 }));
 
-      // Step 3
       await delay(1500);
       mockSteps[2].status = "completed"; mockSteps[3].status = "active";
       setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Committing transaction block...", progressPct: 85 }));
 
-      // Step 4: Real Database Execution (Logging the transfer)
-      // Note: In production, use a secure Supabase RPC to handle double-entry accounting (Debit sender, Credit receiver)
       const { error: txError } = await supabase.from('market_transactions').insert({
         user_id: session.user.id,
         asset: asset,
@@ -134,7 +152,6 @@ export default function PaymentPortal({ session, balances }) {
     return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
   }
 
-  // Handle Invalid Link State
   if (error) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in">
@@ -146,7 +163,6 @@ export default function PaymentPortal({ session, balances }) {
     );
   }
 
-  // SUCCESS STATE
   if (isSuccess) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-emerald-50 p-6 text-center animate-in fade-in">
@@ -169,14 +185,12 @@ export default function PaymentPortal({ session, balances }) {
     <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-[3rem] shadow-2xl p-8 relative overflow-hidden animate-in slide-in-from-bottom-8">
         
-        {/* Header */}
         <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
           <button onClick={() => window.location.href = '/'} className="p-2 bg-slate-50 text-slate-400 rounded-full hover:text-slate-800 transition-colors"><ArrowLeft size={20}/></button>
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Secure Transfer</span>
-          <div className="w-8"></div> {/* Spacer for centering */}
+          <div className="w-8"></div>
         </div>
 
-        {/* Receiver Info */}
         <div className="flex flex-col items-center mb-10">
           <div className="w-24 h-24 rounded-full bg-slate-100 shadow-inner border-4 border-white mb-4 flex items-center justify-center overflow-hidden">
             {receiver.avatar_url ? <img src={receiver.avatar_url} className="w-full h-full object-cover" alt="Receiver"/> : <User size={40} className="text-slate-300"/>}
@@ -185,19 +199,27 @@ export default function PaymentPortal({ session, balances }) {
           <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">{receiver.active_tier || 'Verified'} Tier</p>
         </div>
 
-        {/* Asset Selector */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full mb-6">
-          <button onClick={() => setAsset('AFR')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${asset === 'AFR' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-            <Zap size={14}/> AFR 
-          </button>
-          <button onClick={() => setAsset('USD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${asset === 'USD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-            USD Fiat
-          </button>
-        </div>
+        {session ? (
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full mb-6">
+            <button onClick={() => setAsset('AFR')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${asset === 'AFR' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+              <Zap size={14}/> AFR 
+            </button>
+            <button onClick={() => setAsset('USD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${asset === 'USD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+              USD Fiat
+            </button>
+          </div>
+        ) : (
+          <div className="text-center mb-6">
+             <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 flex items-center justify-center gap-2 max-w-[200px] mx-auto">
+               <ShieldCheck size={14}/> External Payment
+             </span>
+          </div>
+        )}
 
-        {/* Amount Input */}
         <div className="mb-10 relative">
-          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-400">{asset === 'USD' ? '$' : '⚡'}</span>
+          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-400">
+            {asset === 'USD' || !session ? '$' : '⚡'}
+          </span>
           <input 
             type="number" 
             placeholder="0.00"
@@ -206,26 +228,28 @@ export default function PaymentPortal({ session, balances }) {
             disabled={isProcessing}
             className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-14 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
           />
-          <div className="text-center mt-3">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Available: {asset === 'AFR' ? balances?.afr_balance : balances?.liquid_usd} {asset}
-            </span>
-          </div>
+          {session && (
+            <div className="text-center mt-3">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                Available: {asset === 'AFR' ? (balances?.afr_balance || 0) : (balances?.liquid_usd || 0)} {asset}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Execute Button */}
         {!executionPlan.isActive && (
           <button 
             onClick={handleExecutePayment}
             disabled={!amount || isProcessing}
-            className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:shadow-none"
+            className={`w-full py-6 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none ${session ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/30'}`}
           >
-            {isProcessing ? <Loader2 size={18} className="animate-spin"/> : <><Send size={16}/> Authorize Payment</>}
+            {isProcessing ? <Loader2 size={18} className="animate-spin"/> : (
+              session ? <><Send size={16}/> Authorize Transfer</> : <><CreditCard size={16}/> Pay via Card</>
+            )}
           </button>
         )}
 
-        {/* 🔥 TRANSPARENT EXECUTION TRACKER UI */}
-        {executionPlan.isActive && (
+        {executionPlan.isActive && session && (
           <div className="w-full bg-[#111111] text-slate-200 rounded-[2rem] p-6 shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4">
             <div className="flex justify-between items-center mb-6">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">Protocol Active</h4>
@@ -253,7 +277,6 @@ export default function PaymentPortal({ session, balances }) {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
