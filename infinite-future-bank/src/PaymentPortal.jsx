@@ -68,7 +68,9 @@ export default function PaymentPortal({ session, balances }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
+  // 🔥 NEW: Added isFixedAmount state to lock the input
   const [amount, setAmount] = useState('');
+  const [isFixedAmount, setIsFixedAmount] = useState(false); 
   const [asset, setAsset] = useState('USD'); // 'USD' | 'AFR' | 'CARD'
   
   // IFB Card State (Internal Users)
@@ -87,6 +89,7 @@ export default function PaymentPortal({ session, balances }) {
     const fetchReceiver = async () => {
       const params = new URLSearchParams(window.location.search);
       const targetId = params.get('to');
+      const presetAmount = params.get('amount'); // 🔥 Extract amount from URL
 
       if (!targetId) {
         setError('Invalid Routing Link. No destination ID provided.');
@@ -100,13 +103,18 @@ export default function PaymentPortal({ session, balances }) {
         return;
       }
 
+      // 🔥 If amount is in URL, set it and lock the field
+      if (presetAmount) {
+        setAmount(presetAmount);
+        setIsFixedAmount(true);
+      }
+
       try {
-        // 🔥 FIX: Changed from .single() to .maybeSingle() to prevent 406 panic for external users
         const { data, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url, active_tier')
           .eq('id', targetId)
-          .maybeSingle(); 
+          .maybeSingle();
 
         if (dbError || !data) throw new Error('Beneficiary not found on the IFB Network.');
 
@@ -335,9 +343,16 @@ export default function PaymentPortal({ session, balances }) {
                 placeholder="0.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                disabled={isProcessing}
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] py-6 pl-14 pr-6 text-4xl font-black text-slate-800 outline-none focus:border-blue-500 transition-colors disabled:opacity-50 mb-4"
+                disabled={isProcessing || isFixedAmount}
+                className={`w-full border-2 rounded-[2rem] py-6 pl-14 pr-6 text-4xl font-black outline-none transition-colors mb-4 ${isFixedAmount ? 'bg-slate-100 border-slate-200 text-slate-500 opacity-90 cursor-not-allowed' : 'bg-slate-50 border-slate-100 text-slate-800 focus:border-blue-500'}`}
               />
+              
+              {/* 🔥 NEW: Fixed Invoice Badge */}
+              {isFixedAmount && (
+                <span className="absolute right-6 top-[28px] -translate-y-1/2 text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 shadow-sm flex items-center gap-1">
+                  <ShieldCheck size={12}/> Fixed Invoice
+                </span>
+              )}
               
               {asset === 'CARD' && session && (
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
