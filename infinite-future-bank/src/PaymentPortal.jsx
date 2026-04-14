@@ -101,11 +101,12 @@ export default function PaymentPortal({ session, balances }) {
       }
 
       try {
+        // 🔥 FIX: Changed from .single() to .maybeSingle() to prevent 406 panic for external users
         const { data, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url, active_tier')
           .eq('id', targetId)
-          .single();
+          .maybeSingle(); 
 
         if (dbError || !data) throw new Error('Beneficiary not found on the IFB Network.');
 
