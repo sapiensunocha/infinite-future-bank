@@ -43,22 +43,32 @@ serve(async (req: Request) => {
     if (balanceError || !userBalance) throw new Error("DECLINED: Account routing error.")
     if (userBalance.liquid_usd < amount) throw new Error("DECLINED: Insufficient Liquid USD.")
 
-    // 4. Verify the Merchant Account exists in IFB
-    const { data: merchantBalance, error: merchError } = await supabaseAdmin
-      .from('balances')
-      .select('liquid_usd')
-      .eq('user_id', merchantId)
-      .single()
+    // 4. Handle Merchant Routing (NEW: Internal System Bypass)
+    const isInternalSystem = merchantId === 'MICHAEL-SYSTEM';
+    let merchantBalance = null;
 
-    if (merchError || !merchantBalance) throw new Error("DECLINED: Invalid Merchant ID.")
+    if (!isInternalSystem) {
+      // If it is a normal user-to-user merchant, verify they exist
+      const { data: mBalance, error: merchError } = await supabaseAdmin
+        .from('balances')
+        .select('liquid_usd')
+        .eq('user_id', merchantId)
+        .single()
+
+      if (merchError || !mBalance) throw new Error("DECLINED: Invalid Merchant ID.")
+      merchantBalance = mBalance;
+    }
 
     // 5. EXECUTE THE SETTLEMENT (Atomic Ledger Transfer)
     // Deduct from User
     await supabaseAdmin.from('balances').update({ liquid_usd: userBalance.liquid_usd - amount }).eq('user_id', card.user_id)
     
-    // Credit the Merchant (Minus a hypothetical 1% IFB Network Fee)
     const netAmount = amount * 0.99;
-    await supabaseAdmin.from('balances').update({ liquid_usd: merchantBalance.liquid_usd + netAmount }).eq('user_id', merchantId)
+
+    // Credit the Merchant (Only if it's NOT an internal system charge)
+    if (!isInternalSystem && merchantBalance) {
+      await supabaseAdmin.from('balances').update({ liquid_usd: merchantBalance.liquid_usd + netAmount }).eq('user_id', merchantId)
+    }
 
     // 6. Log the Transactions
     // User outflow
@@ -71,15 +81,17 @@ serve(async (req: Request) => {
       metadata: { network_id: card.network_id, merchant_id: merchantId, last4: pan.slice(-4) }
     }])
 
-    // Merchant inflow
-    await supabaseAdmin.from('transactions').insert([{
-      user_id: merchantId,
-      amount: netAmount,
-      transaction_type: 'merchant_deposit',
-      description: `Card Payment Received (Network Fee applied)`,
-      status: 'completed',
-      metadata: { source_network_id: card.network_id }
-    }])
+    // Merchant inflow (Only if it's NOT an internal system charge)
+    if (!isInternalSystem) {
+      await supabaseAdmin.from('transactions').insert([{
+        user_id: merchantId,
+        amount: netAmount,
+        transaction_type: 'merchant_deposit',
+        description: `Card Payment Received (Network Fee applied)`,
+        status: 'completed',
+        metadata: { source_network_id: card.network_id }
+      }])
+    }
 
     // 7. Return the 200 OK Success to the Merchant's Website
     return new Response(JSON.stringify({ 
