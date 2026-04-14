@@ -72,6 +72,7 @@ export default function PaymentPortal({ session, balances }) {
   const [isFixedAmount, setIsFixedAmount] = useState(false); 
   const [paymentContext, setPaymentContext] = useState('');
   const [eventIdContext, setEventIdContext] = useState(null);
+  const [eventNameContext, setEventNameContext] = useState('');
   const [asset, setAsset] = useState('USD'); 
   
   // IFB Card State (Internal Users)
@@ -109,11 +110,12 @@ export default function PaymentPortal({ session, balances }) {
           }
 
           // Lock the price securely from the database
-          setAmount(eventData.ticket_price.toString());
+          setAmount(parseFloat(eventData.ticket_price).toFixed(2));
           setIsFixedAmount(true);
           targetId = eventData.organizer_id; // Set the merchant to the event organizer
           setPaymentContext(`Ticket: ${eventData.event_name}`);
           setEventIdContext(eventId);
+          setEventNameContext(eventData.event_name);
         } 
         // LEGACY/DIRECT FLOW: If no event ID, fallback to URL parameters (for standard transfers)
         else if (presetAmount) {
@@ -169,7 +171,7 @@ export default function PaymentPortal({ session, balances }) {
       setIsProcessing(true);
       try {
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: { userId: receiver.id, amount: numAmount, description: txDescription }
+          body: { userId: receiver.id, amount: numAmount, description: txDescription, eventId: eventIdContext }
         });
         
         if (error) throw error;
@@ -253,7 +255,7 @@ export default function PaymentPortal({ session, balances }) {
       mockSteps[2].status = "completed"; mockSteps[3].status = "active";
       setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Committing transaction block...", progressPct: 85 }));
 
-      // Only manually insert a transaction if it was an internal balance transfer 
+      // Insert transaction for internal balance transfers
       if (asset !== 'CARD') {
         const { error: txError } = await supabase.from('market_transactions').insert({
           user_id: session.user.id,
@@ -267,9 +269,18 @@ export default function PaymentPortal({ session, balances }) {
         if (txError) throw txError;
       }
 
-      // If this was a ticket purchase for a logged in user, optionally call the issue-ticket function here
+      // 🔥 AUTO-ISSUE THE TICKET IF THIS IS AN EVENT PURCHASE
       if (eventIdContext) {
-         // Optionally you could fire off a webhook to register the ticket in ifb_tickets here
+        setExecutionPlan(prev => ({ ...prev, currentDetail: "Minting Cryptographic Ticket...", progressPct: 92 }));
+        
+        await supabase.functions.invoke('issue-ticket', {
+          body: { 
+            eventId: eventIdContext, 
+            eventName: eventNameContext,
+            prompt: session?.user?.email, // Issue directly to the logged in user
+            organizerEmail: 'System'
+          }
+        });
       }
 
       await delay(1000);
@@ -312,7 +323,8 @@ export default function PaymentPortal({ session, balances }) {
         </div>
         <h2 className="text-4xl font-black text-emerald-950 tracking-tighter mb-2 relative z-10">Payment Sent</h2>
         <p className="text-emerald-800 font-medium mb-10 relative z-10">
-          Successfully routed {amount} {asset === 'CARD' ? 'USD' : asset} to {receiver.full_name}.
+          Successfully routed ${amount} to {receiver.full_name}.
+          {eventIdContext && <><br/>Your ticket has been minted and sent to your email.</>}
         </p>
         <button onClick={() => window.location.href = '/'} className="px-10 py-5 bg-emerald-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-emerald-500 transition-all relative z-10">
           Done
