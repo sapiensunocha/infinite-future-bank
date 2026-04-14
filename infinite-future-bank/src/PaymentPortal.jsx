@@ -4,7 +4,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { 
   ArrowLeft, ShieldCheck, Zap, Send, Loader2, 
-  CheckCircle2, Circle, User, CreditCard 
+  CheckCircle2, Circle, User, CreditCard, Ticket
 } from 'lucide-react';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
@@ -12,7 +12,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 // ==========================================
 // EMBEDDED STRIPE CHECKOUT FORM (EXTERNAL USERS)
 // ==========================================
-const CheckoutForm = ({ amount, receiverName, onBack }) => {
+const CheckoutForm = ({ amount, receiverName, onBack, context }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -57,7 +57,7 @@ const CheckoutForm = ({ amount, receiverName, onBack }) => {
         disabled={isProcessing || !stripe || !elements} 
         className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `AUTHORIZE $${amount} TO ${receiverName.toUpperCase()}`}
+        {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `AUTHORIZE $${amount} FOR ${context ? 'TICKET' : receiverName.toUpperCase()}`}
       </button>
     </form>
   );
@@ -68,10 +68,11 @@ export default function PaymentPortal({ session, balances }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // 🔥 NEW: Added isFixedAmount state to lock the input
   const [amount, setAmount] = useState('');
   const [isFixedAmount, setIsFixedAmount] = useState(false); 
-  const [asset, setAsset] = useState('USD'); // 'USD' | 'AFR' | 'CARD'
+  const [paymentContext, setPaymentContext] = useState('');
+  const [eventIdContext, setEventIdContext] = useState(null);
+  const [asset, setAsset] = useState('USD'); 
   
   // IFB Card State (Internal Users)
   const [ifbPan, setIfbPan] = useState('');
@@ -88,37 +89,63 @@ export default function PaymentPortal({ session, balances }) {
   useEffect(() => {
     const fetchReceiver = async () => {
       const params = new URLSearchParams(window.location.search);
-      const targetId = params.get('to');
-      const presetAmount = params.get('amount'); // 🔥 Extract amount from URL
-
-      if (!targetId) {
-        setError('Invalid Routing Link. No destination ID provided.');
-        setIsLoading(false);
-        return;
-      }
-
-      if (session && targetId === session?.user?.id) {
-        setError('You cannot initiate a payment to your own account.');
-        setIsLoading(false);
-        return;
-      }
-
-      // 🔥 If amount is in URL, set it and lock the field
-      if (presetAmount) {
-        setAmount(presetAmount);
-        setIsFixedAmount(true);
-      }
+      const eventId = params.get('eventId');
+      let targetId = params.get('to');
+      const presetAmount = params.get('amount');
 
       try {
-        const { data, error: dbError } = await supabase
+        // 🔥 SECURE FLOW: Fetch exact details from the Database if an Event ID is passed
+        if (eventId) {
+          const { data: eventData, error: eventError } = await supabase
+            .from('ifb_events')
+            .select('organizer_id, ticket_price, event_name')
+            .eq('id', eventId)
+            .maybeSingle();
+
+          if (eventError || !eventData) {
+            setError('Event not found or no longer active on the IFB Network.');
+            setIsLoading(false);
+            return;
+          }
+
+          // Lock the price securely from the database
+          setAmount(eventData.ticket_price.toString());
+          setIsFixedAmount(true);
+          targetId = eventData.organizer_id; // Set the merchant to the event organizer
+          setPaymentContext(`Ticket: ${eventData.event_name}`);
+          setEventIdContext(eventId);
+        } 
+        // LEGACY/DIRECT FLOW: If no event ID, fallback to URL parameters (for standard transfers)
+        else if (presetAmount) {
+          setAmount(presetAmount);
+          setIsFixedAmount(true);
+          setPaymentContext('Direct Invoice Payment');
+        } else {
+          setPaymentContext('Secure Transfer');
+        }
+
+        if (!targetId) {
+          setError('Invalid Routing Link. No destination ID provided.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (session && targetId === session?.user?.id) {
+          setError('You cannot initiate a payment to your own account.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch the receiver profile
+        const { data: profileData, error: dbError } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url, active_tier')
           .eq('id', targetId)
           .maybeSingle();
 
-        if (dbError || !data) throw new Error('Beneficiary not found on the IFB Network.');
+        if (dbError || !profileData) throw new Error('Beneficiary not found on the IFB Network.');
 
-        setReceiver(data);
+        setReceiver(profileData);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -133,13 +160,16 @@ export default function PaymentPortal({ session, balances }) {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) return;
 
+    const txDescription = eventIdContext 
+      ? `Ticket Purchase: ${paymentContext}` 
+      : `External Payment to ${receiver.full_name}`;
+
     // --- EXTERNAL FLOW (EMBEDDED STRIPE FOR NON-USERS) ---
     if (!session) {
       setIsProcessing(true);
       try {
-        // Ping the backend to generate the Stripe Payment Intent
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: { userId: receiver.id, amount: numAmount, description: `External Payment to ${receiver.full_name}` }
+          body: { userId: receiver.id, amount: numAmount, description: txDescription }
         });
         
         if (error) throw error;
@@ -205,7 +235,7 @@ export default function PaymentPortal({ session, balances }) {
             expiry: ifbExpiry,
             cvv: ifbCvv,
             amount: numAmount,
-            description: `Payment / Ticket Transfer to ${receiver.full_name}`
+            description: txDescription
           })
         });
 
@@ -235,6 +265,11 @@ export default function PaymentPortal({ session, balances }) {
           blockchain_sig: `P2P_TO_${receiver.id.substring(0,8)}`
         });
         if (txError) throw txError;
+      }
+
+      // If this was a ticket purchase for a logged in user, optionally call the issue-ticket function here
+      if (eventIdContext) {
+         // Optionally you could fire off a webhook to register the ticket in ifb_tickets here
       }
 
       await delay(1000);
@@ -292,7 +327,9 @@ export default function PaymentPortal({ session, balances }) {
         
         <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
           <button onClick={() => window.location.href = '/'} className="p-2 bg-slate-50 text-slate-400 rounded-full hover:text-slate-800 transition-colors"><ArrowLeft size={20}/></button>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Secure Transfer</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center max-w-[200px] truncate" title={paymentContext}>
+            {paymentContext || 'Secure Transfer'}
+          </span>
           <div className="w-8"></div>
         </div>
 
@@ -300,7 +337,7 @@ export default function PaymentPortal({ session, balances }) {
           <div className="w-24 h-24 rounded-full bg-slate-100 shadow-inner border-4 border-white mb-4 flex items-center justify-center overflow-hidden">
             {receiver.avatar_url ? <img src={receiver.avatar_url} className="w-full h-full object-cover" alt="Receiver"/> : <User size={40} className="text-slate-300"/>}
           </div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{receiver.full_name}</h2>
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight text-center">{receiver.full_name}</h2>
           <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">{receiver.active_tier || 'Verified'} Tier</p>
         </div>
 
@@ -310,7 +347,7 @@ export default function PaymentPortal({ session, balances }) {
             clientSecret, 
             appearance: { theme: 'stripe', variables: { colorPrimary: '#2563EB', borderRadius: '12px' } } 
           }}>
-            <CheckoutForm amount={amount} receiverName={receiver.full_name} onBack={() => { setClientSecret(null); setIsProcessing(false); }} />
+            <CheckoutForm amount={amount} receiverName={receiver.full_name} context={eventIdContext} onBack={() => { setClientSecret(null); setIsProcessing(false); }} />
           </Elements>
         ) : (
           <>
@@ -347,10 +384,11 @@ export default function PaymentPortal({ session, balances }) {
                 className={`w-full border-2 rounded-[2rem] py-6 pl-14 pr-6 text-4xl font-black outline-none transition-colors mb-4 ${isFixedAmount ? 'bg-slate-100 border-slate-200 text-slate-500 opacity-90 cursor-not-allowed' : 'bg-slate-50 border-slate-100 text-slate-800 focus:border-blue-500'}`}
               />
               
-              {/* 🔥 NEW: Fixed Invoice Badge */}
+              {/* Fixed Invoice / Ticket Badge */}
               {isFixedAmount && (
                 <span className="absolute right-6 top-[28px] -translate-y-1/2 text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 shadow-sm flex items-center gap-1">
-                  <ShieldCheck size={12}/> Fixed Invoice
+                  {eventIdContext ? <Ticket size={12}/> : <ShieldCheck size={12}/>} 
+                  {eventIdContext ? 'Fixed Ticket' : 'Fixed Invoice'}
                 </span>
               )}
               
