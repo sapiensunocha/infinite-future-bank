@@ -4,8 +4,18 @@ import {
   HeartHandshake, ShieldCheck, Link as LinkIcon, Loader2, Copy, 
   CheckCircle2, Search, Heart, ArrowRight, Globe2, Activity, 
   BarChart3, BrainCircuit, DollarSign, Send, XCircle, ChevronRight, 
-  Building2, Users, FileText, Target, Flame, AlertTriangle
+  Building2, Users, FileText, Target, Flame, AlertTriangle, Network
 } from 'lucide-react';
+
+// --- CRASH-PROOF JSON PARSER ---
+const safeParseAmounts = (amountsString) => {
+  try {
+    return JSON.parse(amountsString);
+  } catch (e) {
+    console.warn("Invalid JSON in preset_amounts, falling back to safe defaults.");
+    return [10, 50, 100]; 
+  }
+};
 
 export default function NpoHub({ session }) {
   const [viewTab, setViewTab] = useState('EXPLORE'); // 'EXPLORE', 'MANAGE', 'COMMAND'
@@ -26,11 +36,12 @@ export default function NpoHub({ session }) {
   const [donateAmount, setDonateAmount] = useState('');
   const [isDonating, setIsDonating] = useState(false);
 
-  // Application States (Upgraded for AI Compliance)
+  // Application & AI Telemetry States
   const [applyForm, setApplyForm] = useState({ 
     name: '', taxId: '', mission: '', sector: '', country: '', estimated_volume: '' 
   });
   const [isApplying, setIsApplying] = useState(false);
+  const [liveAiStatus, setLiveAiStatus] = useState(''); // Stores real-time backend updates
   const [configForm, setConfigForm] = useState({ message: '', amounts: '', notify: true });
 
   // Admin AI Copilot States
@@ -41,6 +52,27 @@ export default function NpoHub({ session }) {
   useEffect(() => {
     checkAccessAndFetchData();
   }, [viewTab]);
+
+  // --- LIVE AI TELEMETRY LISTENER ---
+  useEffect(() => {
+    if (!isApplying) return;
+    
+    // Listen strictly to this user's NPO profile changes from the Edge Function
+    const channel = supabase.channel('real-telemetry')
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'npo_profiles', 
+        filter: `id=eq.${session.user.id}` 
+      }, (payload) => {
+        if (payload.new.live_ai_status) {
+          setLiveAiStatus(payload.new.live_ai_status);
+        }
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [isApplying, session.user.id]);
 
   const checkAccessAndFetchData = async () => {
     setIsLoading(true);
@@ -56,7 +88,8 @@ export default function NpoHub({ session }) {
       setNpoData(myNpo);
       setConfigForm({
         message: myNpo.donation_message || '',
-        amounts: myNpo.preset_amounts ? JSON.parse(myNpo.preset_amounts).join(', ') : '10, 50, 100',
+        // FIX: Using safeParseAmounts to prevent crashing on bad DB data
+        amounts: myNpo.preset_amounts ? safeParseAmounts(myNpo.preset_amounts).join(', ') : '10, 50, 100',
         notify: myNpo.notify_on_donation ?? true
       });
     }
@@ -98,7 +131,7 @@ export default function NpoHub({ session }) {
         }]);
       }
 
-      alert(`Successfully deployed$${amount.toFixed(2)} to ${donateModal.npo_name}!`);
+      alert(`Successfully deployed $${amount.toFixed(2)} to ${donateModal.npo_name}!`);
       setDonateModal(null);
       setDonateAmount('');
       checkAccessAndFetchData();
@@ -113,9 +146,10 @@ export default function NpoHub({ session }) {
   const handleApply = async (e) => {
     e.preventDefault();
     setIsApplying(true);
+    setLiveAiStatus('Connecting to IFB Sovereign Ledger...');
 
     try {
-      // 1. Insert into Database as Pending
+      // 1. Insert into Database as Pending with telemetry initiated
       const { error: dbError } = await supabase.from('npo_profiles').insert([{
         id: session.user.id,
         npo_name: applyForm.name,
@@ -125,7 +159,8 @@ export default function NpoHub({ session }) {
         country: applyForm.country,
         estimated_volume: applyForm.estimated_volume,
         program_tier: 'Pending_AI_Review',
-        verification_status: 'pending_review'
+        verification_status: 'pending_review',
+        live_ai_status: 'Awaiting Pipeline Ignition...'
       }]);
       
       if (dbError) throw dbError;
@@ -135,16 +170,16 @@ export default function NpoHub({ session }) {
         body: { npoId: session.user.id }
       });
 
-      if (aiError) {
-        console.error("AI Routing Warning: Fallback to manual review.");
-      }
+      if (aiError) throw aiError;
 
       checkAccessAndFetchData();
     } catch (err) {
-      alert("Application failed to process.");
+      alert("Application processing failed: " + (err.message || "Unknown error"));
       console.error(err);
     } finally {
+      // CRITICAL: Ensure the UI resets even if the network fails
       setIsApplying(false);
+      setLiveAiStatus('');
     }
   };
 
@@ -304,7 +339,7 @@ export default function NpoHub({ session }) {
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Select Amount</label>
                     <div className="grid grid-cols-4 gap-2 mb-4">
-                      {donateModal.preset_amounts && JSON.parse(donateModal.preset_amounts).map(amt => (
+                      {donateModal.preset_amounts && safeParseAmounts(donateModal.preset_amounts).map(amt => (
                         <button 
                           key={amt} type="button" 
                           onClick={() => setDonateAmount(amt.toString())}
@@ -360,9 +395,24 @@ export default function NpoHub({ session }) {
                 </div>
                 <input required type="text" placeholder="Estimated Annual Capital Need (e.g., $50,000)" value={applyForm.estimated_volume} onChange={e=>setApplyForm({...applyForm, estimated_volume: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" />
                 <textarea required placeholder="What is your organization's mission?" value={applyForm.mission} onChange={e=>setApplyForm({...applyForm, mission: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500 h-32" />
-                <button type="submit" disabled={isApplying} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-2">
-                  {isApplying ? <Loader2 className="animate-spin" size={16}/> : 'Submit Application to I3P Compliance'}
-                </button>
+                
+                {/* 🔴 LIVE TELEMETRY UI REPLACES BUTTON WHEN PROCESSING */}
+                {isApplying ? (
+                  <div className="w-full bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800 text-left">
+                    <div className="flex items-center gap-3 mb-2">
+                      <BrainCircuit size={18} className="text-emerald-400 animate-pulse" />
+                      <span className="text-white font-black text-xs uppercase tracking-widest">Live Telemetry</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-emerald-500 font-mono text-sm pl-7">
+                      <Loader2 size={14} className="animate-spin shrink-0" />
+                      <span className="animate-pulse">{liveAiStatus || 'Processing...'}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl">
+                    Submit Application to I3P Compliance
+                  </button>
+                )}
               </form>
             </div>
           )}

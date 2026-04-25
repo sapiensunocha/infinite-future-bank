@@ -11,14 +11,20 @@ serve(async (req) => {
 
   try {
     const { npoId } = await req.json();
-    
-    // 1. Initialize Supabase Admin (bypasses RLS to write the AI decision)
+    if (!npoId) throw new Error("Missing npoId");
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // 2. Fetch the Pending Application Data
+    // 🔴 NEW: Helper function to push live telemetry to the database
+    const updateStatus = async (status: string) => {
+      await supabaseAdmin.from('npo_profiles').update({ live_ai_status: status }).eq('id', npoId);
+    };
+
+    await updateStatus("Initializing AI Compliance Pipeline...");
+
     const { data: npo, error: fetchError } = await supabaseAdmin
       .from('npo_profiles')
       .select('*')
@@ -27,7 +33,8 @@ serve(async (req) => {
 
     if (fetchError || !npo) throw new Error("NPO not found in database.");
 
-    // 3. Construct the Strict AI Prompt
+    await updateStatus("Constructing parameter matrices...");
+
     const systemPrompt = `You are the IFB Chief Compliance Officer. Evaluate this NPO application:
     Name: ${npo.npo_name}
     Tax ID: ${npo.tax_id}
@@ -52,10 +59,9 @@ serve(async (req) => {
 
     let aiResponseText = "";
 
-    // 4. DUAL-ENGINE AI ARCHITECTURE
     try {
-      // PRIMARY ENGINE: Grok (xAI)
-      console.log("Attempting Primary Engine: Grok...");
+      await updateStatus("Attempting primary connection to Grok Neural Net...");
+      
       const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: { 
@@ -64,38 +70,47 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: 'grok-beta', 
-          messages: [{ role: 'system', content: systemPrompt }],
-          response_format: { type: "json_object" }
+          // FIX: Added a user message and removed response_format to prevent 400 errors
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: 'Analyze this NPO and return the JSON.' }
+          ]
         })
       });
 
       if (!grokResponse.ok) throw new Error(`Grok failed with status: ${grokResponse.status}`);
+      await updateStatus("Grok analysis received. Parsing neural data...");
+      
       const data = await grokResponse.json();
       aiResponseText = data.choices[0].message.content;
 
     } catch (grokError) {
-      // FALLBACK ENGINE: Gemini (Google)
-      console.log(`Grok unavailable (${grokError.message}). Initiating Fallback Engine: Gemini...`);
-      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${Deno.env.get('GEMINI_API_KEY')}`, {
+      await updateStatus(`Grok unavailable. Initiating Fallback to Gemini Core...`);
+      
+      // FIX: Changed to gemini-1.5-flash for reliability and speed to prevent 404
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${Deno.env.get('GEMINI_API_KEY')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: systemPrompt }] }],
-          generationConfig: { response_mime_type: "application/json" }
+          contents: [{ parts: [{ text: systemPrompt + "\n\nAnalyze this NPO and return the JSON." }] }]
         })
       });
 
       if (!geminiResponse.ok) throw new Error(`Gemini Fallback failed: ${geminiResponse.statusText}`);
+      await updateStatus("Gemini analysis received. Parsing core data...");
+      
       const data = await geminiResponse.json();
       aiResponseText = data.candidates[0].content.parts[0].text;
     }
 
-    // 5. Clean and Parse the JSON Output
-    // Strips out potential markdown backticks that some LLMs stubbornly include
-    const cleanJsonString = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    await updateStatus("Sanitizing and executing decision payload...");
+    const cleanJsonString = aiResponseText.match(/\{[\s\S]*\}/)?.[0] || "{}";
     const result = JSON.parse(cleanJsonString);
 
-    // 6. Execute the AI's Decision in the Database
+    if (!result.decision) throw new Error("AI returned invalid structure.");
+
+    await updateStatus("Finalizing ledger insertion...");
+
     const { error: updateError } = await supabaseAdmin
       .from('npo_profiles')
       .update({
@@ -103,7 +118,8 @@ serve(async (req) => {
         verification_status: result.decision === 'Banned' ? 'rejected' : 'verified',
         ai_risk_score: result.risk_score,
         ai_compliance_notes: result.notes,
-        assigned_support_cluster: result.cluster_name
+        assigned_support_cluster: result.cluster_name,
+        live_ai_status: 'COMPLETE'
       })
       .eq('id', npoId);
 
@@ -114,7 +130,11 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error("AI Routing Pipeline Failed:", error);
+    console.error("AI Pipeline Failed:", error);
+    // Even if it fails, tell the database so the frontend knows it died
+    const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    await supabaseAdmin.from('npo_profiles').update({ live_ai_status: 'FAILED: Network Error' }).eq('id', error.message || 'unknown');
+    
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
