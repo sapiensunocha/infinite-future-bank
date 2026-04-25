@@ -26,6 +26,7 @@ export default function NpoHub({ session }) {
   const [verifiedNpos, setVerifiedNpos] = useState([]); // Public Market
   const [allNpos, setAllNpos] = useState([]); // Admin Command View
   const [searchQuery, setSearchQuery] = useState('');
+  const [countryList, setCountryList] = useState([]); // Dynamic Country List
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -102,6 +103,12 @@ export default function NpoHub({ session }) {
     if (userIsAdmin) {
       const { data: fullList } = await supabase.from('npo_profiles').select('*').order('created_at', { ascending: false });
       if (fullList) setAllNpos(fullList);
+    }
+
+    // 5. Fetch Countries directly from the database
+    const { data: countriesData } = await supabase.from('countries').select('name').order('name');
+    if (countriesData) {
+      setCountryList(countriesData.map(c => c.name));
     }
     
     setIsLoading(false);
@@ -391,7 +398,22 @@ export default function NpoHub({ session }) {
                   <input required type="text" placeholder="Registered NPO Name" value={applyForm.name} onChange={e=>setApplyForm({...applyForm, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" />
                   <input required type="text" placeholder="Gov Tax / Reg ID" value={applyForm.taxId} onChange={e=>setApplyForm({...applyForm, taxId: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" />
                   <input required type="text" placeholder="Sector (e.g., Education, Health)" value={applyForm.sector} onChange={e=>setApplyForm({...applyForm, sector: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" />
-                  <input required type="text" placeholder="Primary Operating Country" value={applyForm.country} onChange={e=>setApplyForm({...applyForm, country: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" />
+                  
+                  {/* 🔥 NEW DYNAMIC COUNTRY DROPDOWN */}
+                  <select 
+                    required 
+                    value={applyForm.country} 
+                    onChange={e => setApplyForm({...applyForm, country: e.target.value})} 
+                    className={`w-full border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500 transition-all cursor-pointer ${applyForm.country ? 'bg-slate-50 text-slate-800' : 'bg-slate-50 text-slate-400'}`}
+                  >
+                    <option value="" disabled>Select Operating Country</option>
+                    {countryList.map(countryName => (
+                      <option key={countryName} value={countryName} className="text-slate-800">
+                        {countryName}
+                      </option>
+                    ))}
+                  </select>
+                  
                 </div>
                 <input required type="text" placeholder="Estimated Annual Capital Need (e.g., $50,000)" value={applyForm.estimated_volume} onChange={e=>setApplyForm({...applyForm, estimated_volume: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" />
                 <textarea required placeholder="What is your organization's mission?" value={applyForm.mission} onChange={e=>setApplyForm({...applyForm, mission: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500 h-32" />

@@ -9,8 +9,13 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  // 🔴 FIX: Declare npoId OUTSIDE the try block so the catch block can use it
+  let npoId: string | null = null;
+
   try {
-    const { npoId } = await req.json();
+    const body = await req.json();
+    npoId = body.npoId;
+    
     if (!npoId) throw new Error("Missing npoId");
 
     const supabaseAdmin = createClient(
@@ -18,7 +23,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // 🔴 NEW: Helper function to push live telemetry to the database
+    // Helper function to push live telemetry to the database
     const updateStatus = async (status: string) => {
       await supabaseAdmin.from('npo_profiles').update({ live_ai_status: status }).eq('id', npoId);
     };
@@ -70,7 +75,6 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: 'grok-beta', 
-          // FIX: Added a user message and removed response_format to prevent 400 errors
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: 'Analyze this NPO and return the JSON.' }
@@ -87,7 +91,6 @@ serve(async (req) => {
     } catch (grokError) {
       await updateStatus(`Grok unavailable. Initiating Fallback to Gemini Core...`);
       
-      // FIX: Changed to gemini-1.5-flash for reliability and speed to prevent 404
       const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${Deno.env.get('GEMINI_API_KEY')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,11 +132,17 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("AI Pipeline Failed:", error);
-    // Even if it fails, tell the database so the frontend knows it died
-    const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-    await supabaseAdmin.from('npo_profiles').update({ live_ai_status: 'FAILED: Network Error' }).eq('id', error.message || 'unknown');
+    
+    // 🔴 FIX: Now we correctly use npoId to flag the failure back to the specific user's screen
+    if (npoId) {
+      const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+      await supabaseAdmin.from('npo_profiles').update({ 
+        live_ai_status: 'FAILED: ' + (error.message || 'Network Error'),
+        program_tier: 'Pending_AI_Review'
+      }).eq('id', npoId);
+    }
     
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
