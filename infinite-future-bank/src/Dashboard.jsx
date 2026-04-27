@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './services/supabaseClient';
-import Joyride, { STATUS } from 'react-joyride'; 
-import { MessageSquare, X } from 'lucide-react'; 
+import Joyride, { STATUS } from 'react-joyride';
+import { MessageSquare, X } from 'lucide-react';
+import { useTranslation } from './i18n/useTranslation';
 
 // --- EXISTING MODULAR COMPONENTS ---
 import Chat from './Chat';
@@ -27,12 +28,15 @@ import SettingsHub from './views/SettingsHub';
 import CommercialUnderwriting from './views/CommercialUnderwriting';
 import Sidebar from './components/layout/Sidebar';
 import TopHeader from './components/layout/TopHeader';
+import BottomNav from './components/layout/BottomNav';
 import TransactionModal from './components/modals/TransactionModal';
 import StatementExportModal from './components/modals/StatementExportModal';
 import GlobalToastAlert from './components/ui/GlobalToastAlert';
 import { TOUR_CONTENT, CustomTourTooltip } from './config/AppTourConfig';
 
 export default function Dashboard({ session, onSignOut }) {
+  const { t, lang, setLanguage } = useTranslation();
+
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('NET_POSITION');
   const [subTab, setSubTab] = useState('PROFILE');
@@ -195,10 +199,10 @@ export default function Dashboard({ session, onSignOut }) {
       </div>
 
       <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
-        <Sidebar 
+        <Sidebar
           isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
-          activeTab={activeTab} setActiveTab={setActiveTab} 
-          tabTitles={tabTitles} onSignOut={onSignOut} 
+          activeTab={activeTab} setActiveTab={setActiveTab}
+          onSignOut={onSignOut} t={t}
         />
         
         <main className="flex-1 flex flex-col relative overflow-hidden">
@@ -216,7 +220,7 @@ export default function Dashboard({ session, onSignOut }) {
             setSubTab={setSubTab} onSignOut={onSignOut} session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} activeAppPopup={activeAppPopup}
           />
           
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10 no-scrollbar pb-[env(safe-area-inset-bottom)]" id="main-scroll">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 no-scrollbar scroll-container pb-24 md:pb-8" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 5rem), 2rem)' }} id="main-scroll">
             
             {/* DYNAMIC VIEW ROUTER */}
             {activeTab === 'NET_POSITION' && (
@@ -241,15 +245,17 @@ export default function Dashboard({ session, onSignOut }) {
             )}
             
             {activeTab === 'SETTINGS' && (
-              <SettingsHub 
-                session={session} 
-                profile={profile} 
-                subTab={subTab} 
-                setSubTab={setSubTab} 
-                setActiveTab={setActiveTab} 
-                onSignOut={onSignOut} 
-                fetchAllData={fetchAllData} 
-                triggerNotification={triggerGlobalActionNotification} 
+              <SettingsHub
+                session={session}
+                profile={profile}
+                subTab={subTab}
+                setSubTab={setSubTab}
+                setActiveTab={setActiveTab}
+                onSignOut={onSignOut}
+                fetchAllData={fetchAllData}
+                triggerNotification={triggerGlobalActionNotification}
+                lang={lang}
+                setLanguage={setLanguage}
               />
             )}
             
@@ -277,12 +283,22 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
           </div>
 
-          <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-8 right-8 z-50 bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 border-2 border-white/20 mb-[env(safe-area-inset-bottom)]">
+          <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-24 md:bottom-8 right-5 md:right-8 z-[110] bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 border-2 border-white/20" style={{ marginBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
             <MessageSquare size={24} className="animate-pulse" />
             <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
           </button>
         </main>
       </div>
+
+      {/* MOBILE BOTTOM NAV */}
+      <BottomNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        setIsAppDrawerOpen={setIsAppDrawerOpen}
+        unreadCount={notifications.filter(n => !n.read).length}
+        setIsSidebarOpen={setIsSidebarOpen}
+        t={t}
+      />
 
       {/* GLOBAL OVERLAYS */}
       <AppPopupModal 

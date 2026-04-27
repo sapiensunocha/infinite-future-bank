@@ -9,8 +9,9 @@ import {
 } from 'lucide-react';
 
 export default function SettingsHub({
-  session, profile, subTab, setSubTab, setActiveTab, 
-  onSignOut, fetchAllData, triggerNotification
+  session, profile, subTab, setSubTab, setActiveTab,
+  onSignOut, fetchAllData, triggerNotification,
+  lang, setLanguage
 }) {
   // Local States specific to Settings
   const [isLoading, setIsLoading] = useState(false);
@@ -726,6 +727,46 @@ export default function SettingsHub({
                 <div className={`w-12 h-6 rounded-full transition-colors relative ${previewAccess.motion ? 'bg-blue-600' : 'bg-slate-300'}`}><div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${previewAccess.motion ? 'translate-x-6' : ''}`}></div></div>
               </button>
             </div>
+
+            {/* Language Selector */}
+            {setLanguage && (
+              <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-slate-100">
+                  <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2"><Globe size={16} className="text-blue-500" /> Language / Langue / Lugha / Idioma</h4>
+                  <p className="text-xs text-slate-400 mt-1">Auto-detected from your device. Stored in your profile.</p>
+                </div>
+                {[
+                  { code: 'en', label: 'English', flag: '🇺🇸' },
+                  { code: 'fr', label: 'Français', flag: '🇫🇷', hint: 'DRC, Congo, Belgique...' },
+                  { code: 'sw', label: 'Kiswahili', flag: '🇰🇪', hint: 'Kenya, Tanzania, DRC...' },
+                  { code: 'es', label: 'Español', flag: '🇪🇸', hint: 'España, Latinoamérica...' },
+                ].map(({ code, label, flag, hint }) => (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={async () => {
+                      setLanguage(code);
+                      await supabase.from('profiles').update({ preferred_language: code }).eq('id', session.user.id);
+                      triggerNotification('success', `Language set to ${label}`);
+                    }}
+                    className={`w-full p-5 flex items-center justify-between text-left transition-colors border-b border-slate-100 last:border-b-0 ${lang === code ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{flag}</span>
+                      <div>
+                        <p className={`text-sm font-bold ${lang === code ? 'text-blue-700' : 'text-slate-800'}`}>{label}</p>
+                        {hint && <p className="text-[10px] text-slate-400">{hint}</p>}
+                      </div>
+                    </div>
+                    {lang === code && (
+                      <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, LayoutGrid, Search, Bell } from 'lucide-react';
+import { LayoutGrid, Search, Bell } from 'lucide-react';
 import AppDrawerMenu from '../menus/AppDrawerMenu';
 import NotificationDropdown from '../menus/NotificationDropdown';
 import ProfileDropdown from '../menus/ProfileDropdown';
@@ -13,44 +13,47 @@ export default function TopHeader({
   setSubTab, onSignOut, session, balances, fetchAllData, commercialProfile, activeAppPopup
 }) {
   return (
-    <header className="border-b border-slate-200/50 bg-white/40 backdrop-blur-xl flex items-center justify-between px-6 z-[100] sticky top-0 pt-[env(safe-area-inset-top)] min-h-[calc(5rem+env(safe-area-inset-top))]">
-      <div className="flex items-center gap-4">
+    <header className="border-b border-slate-200/50 bg-white/80 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-[100] sticky top-0 pt-[env(safe-area-inset-top)] min-h-[calc(4rem+env(safe-area-inset-top))]">
+      <div className="flex items-center gap-3">
+        {/* Mobile: DEUS logo mark; Desktop: hamburger + title */}
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); setIsSidebarOpen(true); }}
-          className="md:hidden text-slate-800 hover:text-blue-500 transition-colors p-2 -ml-2 rounded-xl hover:bg-white/40 active:bg-slate-200 relative z-50 cursor-pointer"
+          className="md:hidden flex items-center gap-1 -ml-1"
+          aria-label="Open menu"
         >
-          <Menu size={24} />
+          <span className="text-2xl font-black text-[#4285F4]">D</span>
+          <span className="text-2xl font-black text-[#EA4335]">E</span>
+          <span className="text-2xl font-black text-[#FBBC04]">U</span>
+          <span className="text-2xl font-black text-[#34A853]">S</span>
         </button>
         <h2 className="hidden md:block font-black text-lg text-slate-800 tracking-tight">
           {tabTitles[activeTab]}
         </h2>
       </div>
       
-      {/* RIGHT SIDE ICONS & PROFILE */}
+      {/* RIGHT SIDE ICONS & PROFILE — outer div is the positioning root for AppDrawerMenu */}
       <div className="flex items-center gap-4 md:gap-6 relative">
-        
-        {/* App Drawer */}
-        <div className="relative">
-          <button 
-            id="tour-app-drawer"
-            onClick={() => setIsAppDrawerOpen(!isAppDrawerOpen)}
-            className="text-slate-400 hover:text-blue-600 transition-colors p-2 z-50 relative focus:outline-none cursor-pointer"
-          >
-            <LayoutGrid size={22} />
-          </button>
-          <AppDrawerMenu 
-            isAppDrawerOpen={isAppDrawerOpen} 
-            setIsAppDrawerOpen={setIsAppDrawerOpen} 
-            setActiveAppPopup={setActiveAppPopup}
-            activeAppPopup={activeAppPopup}
-            session={session}
-            balances={balances}
-            fetchAllData={fetchAllData}
-            commercialProfile={commercialProfile}
-            profile={profile}
-          />
-        </div>
+
+        {/* App Drawer button — no inner relative wrapper so AppDrawerMenu uses the outer div */}
+        <button
+          id="tour-app-drawer"
+          onClick={() => setIsAppDrawerOpen(!isAppDrawerOpen)}
+          className="text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none cursor-pointer"
+        >
+          <LayoutGrid size={22} />
+        </button>
+        <AppDrawerMenu
+          isAppDrawerOpen={isAppDrawerOpen}
+          setIsAppDrawerOpen={setIsAppDrawerOpen}
+          setActiveAppPopup={setActiveAppPopup}
+          activeAppPopup={activeAppPopup}
+          session={session}
+          balances={balances}
+          fetchAllData={fetchAllData}
+          commercialProfile={commercialProfile}
+          profile={profile}
+        />
 
         {/* Search Bar */}
         <div className={`relative transition-all duration-300 ease-in-out hidden sm:block ${isSearchExpanded ? 'w-80' : 'w-40'}`}>
