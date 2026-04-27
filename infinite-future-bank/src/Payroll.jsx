@@ -9,6 +9,7 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
   const [salary, setSalary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [payrollConfirm, setPayrollConfirm] = useState(null); // { activeEmps, totalGross, calculatedFee, totalInstitutionalLiability }
 
   // Fee Config (In production, this could be fetched from 'ifb_fee_config' table)
   const INSTITUTIONAL_FEE_PCT = 2.0; 
@@ -57,15 +58,18 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
     const totalGross = activeEmps.reduce((sum, e) => sum + parseFloat(e.salary_amount), 0);
     const calculatedFee = totalGross * (INSTITUTIONAL_FEE_PCT / 100);
     const totalInstitutionalLiability = totalGross + calculatedFee;
-    
+
     if (totalInstitutionalLiability > balances.liquid_usd) {
       return showToast("Insufficient total liquidity (Gross + Fees).", "error");
     }
 
-    if (!window.confirm(`PAYROLL CONFIRMATION\n\nTotal Gross Salaries: ${formatCurrency(totalGross)}\nIFB Service Fee (${INSTITUTIONAL_FEE_PCT}%): ${formatCurrency(calculatedFee)}\n\nTotal deduction from Corporate account: ${formatCurrency(totalInstitutionalLiability)}\n\nProceed with execution?`)) {
-        return;
-    }
+    setPayrollConfirm({ activeEmps, totalGross, calculatedFee, totalInstitutionalLiability });
+  };
 
+  const executePayroll = async () => {
+    if (!payrollConfirm) return;
+    const { totalGross, calculatedFee, activeEmps } = payrollConfirm;
+    setPayrollConfirm(null);
     setIsLoading(true);
     try {
       // Execute Atomic Balance Deduction via v2 Engine (Handles Revenue Split)
@@ -117,7 +121,46 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      
+
+      {/* PAYROLL CONFIRMATION MODAL */}
+      {payrollConfirm && (
+        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 space-y-6 animate-in zoom-in-95">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Send size={28} className="text-blue-600" />
+              </div>
+              <h4 className="font-black text-slate-800 text-xl">Payroll Execution</h4>
+              <p className="text-sm text-slate-400 font-bold mt-1">Review before authorizing the run</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-3">
+              <div className="flex justify-between text-sm font-bold text-slate-600">
+                <span>Personnel</span>
+                <span className="font-black text-slate-800">{payrollConfirm.activeEmps.length} Active</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-slate-600">
+                <span>Gross Salaries</span>
+                <span className="font-black text-slate-800">{formatCurrency(payrollConfirm.totalGross)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-slate-600">
+                <span>IFB Service Fee ({INSTITUTIONAL_FEE_PCT}%)</span>
+                <span className="font-black text-slate-800">{formatCurrency(payrollConfirm.calculatedFee)}</span>
+              </div>
+              <div className="pt-3 border-t border-slate-200 flex justify-between font-black text-blue-900">
+                <span>Total Deduction</span>
+                <span className="text-xl">{formatCurrency(payrollConfirm.totalInstitutionalLiability)}</span>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setPayrollConfirm(null)} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={executePayroll} disabled={isLoading} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-colors shadow-xl disabled:opacity-50 flex items-center justify-center gap-2">
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Authorize Run'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* HEADER SECTION */}
       <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden shadow-2xl border border-slate-800">
         <div className="relative z-10">

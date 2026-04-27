@@ -192,7 +192,6 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
 
   // --- HISTORY ACTIONS ---
   const confirmReceipt = async (orderId) => {
-    if (!window.confirm("WARNING: Only confirm if you have successfully received the funds in your real-world account. Escrow will be irreversibly released to the processor.")) return;
     setIsProcessing(true);
     try {
       const { error } = await supabase.rpc('finalize_p2p_trade', { p_trade_id: orderId });
@@ -209,7 +208,6 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
   };
 
   const openDispute = async (orderId) => {
-    if (!window.confirm("Are you sure you want to dispute this transaction? IFB Support will intervene.")) return;
     setIsProcessing(true);
     try {
       await supabase.from('p2p_orders').update({ status: 'disputed' }).eq('id', orderId);

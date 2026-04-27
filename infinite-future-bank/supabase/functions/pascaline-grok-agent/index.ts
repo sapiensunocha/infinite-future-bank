@@ -61,7 +61,7 @@ serve(async (req) => {
     if (!grokApiKey) throw new Error("Missing GROK_API_KEY");
 
     let payload = {
-      model: "grok-beta", // Or grok-2 if you have access
+      model: "grok-3",
       messages: [systemPrompt, ...messages],
       tools: tools,
       tool_choice: "auto"
@@ -77,6 +77,9 @@ serve(async (req) => {
     });
 
     let grokData = await grokRes.json();
+    if (!grokData.choices || grokData.choices.length === 0) {
+      throw new Error(grokData.error || grokData.message || 'Grok API returned no response.');
+    }
     let responseMessage = grokData.choices[0].message;
 
     // 5. Handle Grok using a Tool (e.g. touching the database)
@@ -121,12 +124,15 @@ serve(async (req) => {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${grokApiKey}` },
         body: JSON.stringify({
-          model: "grok-beta",
+          model: "grok-3",
           messages: [systemPrompt, ...messages]
         })
       });
 
       grokData = await finalGrokRes.json();
+      if (!grokData.choices || grokData.choices.length === 0) {
+        throw new Error(grokData.error || grokData.message || 'Grok API returned no final response.');
+      }
       responseMessage = grokData.choices[0].message;
     }
 
