@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
+import { APP_URL } from './config/constants';
 import {
   HeartHandshake, ShieldCheck, Link as LinkIcon, Loader2, Copy,
   CheckCircle2, Search, ArrowRight, Globe2, BrainCircuit,
@@ -242,7 +243,7 @@ export default function NpoHub({ session }) {
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/donate?npo=${session.user.id}`);
+    navigator.clipboard.writeText(`${APP_URL}/donate?npo=${session.user.id}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
   };

@@ -96,10 +96,11 @@ export default function Dashboard({ session, onSignOut }) {
   const [tourStepIndex, setTourStepIndex] = useState(0);
 
   const tabTitles = {
-    NET_POSITION: 'Home', ACCOUNTS: 'Accounts', ORGANIZE: 'Organize', INVEST: 'Wealth',
-    PLANNER: 'Planner', LIFESTYLE: 'Lifestyle', SOS: 'SOS', TRAINING: 'Training',
-    SETTINGS: 'Settings', AGENTS: 'Your Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
-    COMMERCIAL_HUB: 'Commercial Underwriting', NETWORK: 'Capital Network'
+    NET_POSITION: 'Home', ACCOUNTS: 'My Accounts', ORGANIZE: 'Organize',
+    INVEST: 'Investments', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
+    SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
+    AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
+    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'Refer & Earn'
   };
 
   const triggerGlobalActionNotification = (type, message) => {
@@ -271,7 +272,7 @@ export default function Dashboard({ session, onSignOut }) {
             )}
             
             {activeTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
-            {activeTab === 'NETWORK' && <CapitalNetwork session={session} profile={profile} balances={balances} formatCurrency={formatCurrency} />}
+            {activeTab === 'NETWORK' && <CapitalNetwork session={session} profile={profile} balances={balances} formatCurrency={formatCurrency} fetchAllData={fetchAllData} />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
@@ -345,7 +346,6 @@ export default function Dashboard({ session, onSignOut }) {
         showQR={showQR} 
         setShowQR={setShowQR} 
         isSendingEmail={isSendingEmail} 
-        handleSendEmailInvoice={() => {}} 
         triggerGlobalActionNotification={triggerGlobalActionNotification}
         session={session}
         fetchAllData={fetchAllData}

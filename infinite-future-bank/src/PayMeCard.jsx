@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  X, QrCode, ScanLine, ShieldCheck, Sparkles, User, 
-  ArrowDownToLine, AlertCircle, Palette, Hexagon, Star, 
-  Circle as CircleIcon, Square as SquareIcon, Check, Share2
+import React, { useState } from 'react';
+import {
+  X, QrCode, ScanLine, ShieldCheck, Sparkles, User,
+  ArrowDownToLine, AlertCircle, Palette, Hexagon, Star,
+  Circle as CircleIcon, Square as SquareIcon, Check, Share2, CheckCircle2
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { APP_URL } from './config/constants';
 
 // --- CONFIGURATION DICTIONARIES ---
 const THEMES = {
@@ -44,17 +45,15 @@ const SHAPES = {
 };
 
 export default function PayMeCard({ profile, onClose }) {
-  const [mode, setMode] = useState('receive'); // 'receive', 'scan', 'design'
+  const [mode, setMode] = useState('receive');
   const [scanError, setScanError] = useState('');
-
-  // Load saved preferences from local storage or default
+  const [copied, setCopied] = useState(false);
   const [activeTheme, setActiveTheme] = useState(() => localStorage.getItem('ifb_card_theme') || 'midnight');
   const [activeShape, setActiveShape] = useState(() => localStorage.getItem('ifb_card_shape') || 'circle');
 
-  // If profile isn't loaded yet, don't crash
   if (!profile) return null;
 
-  const payLink = `${window.location.origin}/pay/${profile.id}`;
+  const payLink = `${APP_URL}/pay/${profile.id}`;
   const userName = profile.full_name || 'IFB Member';
   const tier = profile.active_tier || 'Personal';
 
@@ -63,13 +62,21 @@ export default function PayMeCard({ profile, onClose }) {
 
   const handleScan = (text) => {
     if (text) {
-      if (text.includes('/pay/')) {
-        window.location.href = text;
+      if (text.includes('/pay/') || text.includes(APP_URL)) {
+        // Open the pay link in the device browser so the recipient can pay
+        window.open(text, '_blank');
+        onClose();
       } else {
-        setScanError('Invalid IFB QR Code');
+        setScanError('Not a valid DEUS payment code');
         setTimeout(() => setScanError(''), 3000);
       }
     }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(payLink).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const saveDesign = () => {
@@ -175,18 +182,14 @@ export default function PayMeCard({ profile, onClose }) {
                 </div>
               </div>
 
-              {/* Share Link Button */}
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(payLink);
-                  alert("Public Payment Link Copied!"); 
-                }}
-                className="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl flex items-center justify-center gap-2 transition-all group"
+              {/* Share / Copy Link Button */}
+              <button
+                onClick={handleCopyLink}
+                className="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
               >
-                <Share2 size={16} className={currentTheme.textMain} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${currentTheme.textMain}`}>
-                  Copy Public Pay Link
-                </span>
+                {copied
+                  ? <><CheckCircle2 size={16} className="text-emerald-400" /><span className={`text-[10px] font-black uppercase tracking-widest ${currentTheme.textMain}`}>Link Copied!</span></>
+                  : <><Share2 size={16} className={currentTheme.textMain} /><span className={`text-[10px] font-black uppercase tracking-widest ${currentTheme.textMain}`}>Copy Pay Link</span></>}
               </button>
             </div>
           )}
@@ -199,7 +202,7 @@ export default function PayMeCard({ profile, onClose }) {
                 <div className="w-full aspect-square relative">
                   <Scanner 
                     onResult={(text) => handleScan(text)} 
-                    onError={(error) => console.log(error?.message)} 
+                    onError={() => setScanError('Camera access required — check permissions')} 
                     options={{ delayBetweenScanAttempts: 1000 }}
                   />
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center">

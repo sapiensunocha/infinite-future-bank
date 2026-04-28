@@ -7,6 +7,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
+import { useTranslation } from '../i18n/useTranslation';
 
 // ─── tiny transaction icon helper ───────────────────────────
 const txIcon = (tx) => {
@@ -25,6 +26,7 @@ export default function NetPositionHome({
   setShowPayMe, setShowDepositUI, setIsWithdrawOpen,
   showAnalytics, setShowAnalytics
 }) {
+  const { t } = useTranslation();
   const safeTotalNetWorth = totalNetWorth || 1;
   const liquidPct  = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
   const alphaPct   = ((balances.alpha_equity_usd || 0) / safeTotalNetWorth) * 100;
@@ -46,13 +48,13 @@ export default function NetPositionHome({
   const moneyOut = monthTxs.filter(tx => tx.amount < 0).reduce((s, tx) => s + Math.abs(tx.amount), 0);
 
   const quickActions = [
-    { id: 'SEND',      icon: Send,           label: 'Send',     color: 'bg-blue-600',    action: () => setActiveModal('SEND') },
-    { id: 'REQUEST',   icon: Download,       label: 'Receive',  color: 'bg-emerald-600', action: () => setActiveModal('REQUEST') },
-    { id: 'PAY_ME',    icon: QrCode,         label: 'Pay Me',   color: 'bg-blue-500',    action: () => setShowPayMe(true) },
-    { id: 'DEPOSIT',   icon: Plus,           label: 'Add',      color: 'bg-emerald-500', action: () => setShowDepositUI(true) },
-    { id: 'WITHDRAW',  icon: Landmark,       label: 'Withdraw', color: 'bg-slate-700',   action: () => setIsWithdrawOpen(true) },
-    { id: 'TRANSFER',  icon: ArrowRightLeft, label: 'Exchange', color: 'bg-indigo-600',  action: () => setActiveModal('TRANSFER') },
-    { id: 'ANALYTICS', icon: BarChart2,      label: 'Analytics',color: showAnalytics ? 'bg-indigo-700' : 'bg-slate-500', action: () => setShowAnalytics(!showAnalytics) },
+    { id: 'SEND',      icon: Send,           label: t('actions.send'),     color: 'bg-blue-600',    action: () => setActiveModal('SEND') },
+    { id: 'REQUEST',   icon: Download,       label: t('actions.receive'),  color: 'bg-emerald-600', action: () => setActiveModal('REQUEST') },
+    { id: 'PAY_ME',    icon: QrCode,         label: t('actions.payMe'),    color: 'bg-blue-500',    action: () => setShowPayMe(true) },
+    { id: 'DEPOSIT',   icon: Plus,           label: t('actions.add'),      color: 'bg-emerald-500', action: () => setShowDepositUI(true) },
+    { id: 'WITHDRAW',  icon: Landmark,       label: t('actions.withdraw'), color: 'bg-slate-700',   action: () => setIsWithdrawOpen(true) },
+    { id: 'TRANSFER',  icon: ArrowRightLeft, label: t('actions.exchange'), color: 'bg-indigo-600',  action: () => setActiveModal('TRANSFER') },
+    { id: 'ANALYTICS', icon: BarChart2,      label: t('actions.analytics'),color: showAnalytics ? 'bg-indigo-700' : 'bg-slate-500', action: () => setShowAnalytics(!showAnalytics) },
   ];
 
   const recentTxs = transactions.slice(0, 8);
@@ -64,11 +66,11 @@ export default function NetPositionHome({
       {profile && profile.kyc_status !== 'verified' && (
         <div className="bg-red-50 border border-red-200 p-4 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-sm">
           <div>
-            <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16} /> Regulatory Action Required</h3>
-            <p className="text-slate-600 text-sm mt-1 font-medium">Complete Identity Verification (KYC) within 30 days to avoid account suspension.</p>
+            <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16} /> {t('kyc.required')}</h3>
+            <p className="text-slate-600 text-sm mt-1 font-medium">{t('kyc.desc')}</p>
           </div>
           <button onClick={() => setActiveTab('SETTINGS')} className="w-full md:w-auto px-5 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
-            Verify Identity Now
+            {t('kyc.cta')}
           </button>
         </div>
       )}
@@ -160,17 +162,17 @@ export default function NetPositionHome({
       <div className="md:hidden grid grid-cols-2 gap-3">
         <div className="bg-white rounded-[1.5rem] p-4 border border-slate-100 shadow-sm">
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-1.5">
-            <ArrowDownRight size={11} className="text-emerald-500" /> Money In
+            <ArrowDownRight size={11} className="text-emerald-500" /> {t('home.moneyIn')}
           </p>
           <p className="text-lg font-black text-emerald-600">{formatCurrency(moneyIn)}</p>
-          <p className="text-[8px] text-slate-400 mt-0.5 font-bold">This month</p>
+          <p className="text-[8px] text-slate-400 mt-0.5 font-bold">{t('home.thisMonth')}</p>
         </div>
         <div className="bg-white rounded-[1.5rem] p-4 border border-slate-100 shadow-sm">
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-1.5">
-            <ArrowUpRight size={11} className="text-slate-400" /> Money Out
+            <ArrowUpRight size={11} className="text-slate-400" /> {t('home.moneyOut')}
           </p>
           <p className="text-lg font-black text-slate-800">{formatCurrency(moneyOut)}</p>
-          <p className="text-[8px] text-slate-400 mt-0.5 font-bold">This month</p>
+          <p className="text-[8px] text-slate-400 mt-0.5 font-bold">{t('home.thisMonth')}</p>
         </div>
       </div>
 
@@ -286,12 +288,12 @@ export default function NetPositionHome({
       {recentTxs.length > 0 && (
         <div className="md:hidden bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-700">Recent Activity</h3>
+            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-700">{t('home.recentActivity')}</h3>
             <button
               onClick={() => setActiveTab('TRANSACTIONS')}
               className="flex items-center gap-1 text-blue-600 text-[10px] font-black uppercase tracking-widest"
             >
-              See All <ChevronRight size={13} />
+              {t('home.seeAll')} <ChevronRight size={13} />
             </button>
           </div>
           <div className="divide-y divide-slate-50">

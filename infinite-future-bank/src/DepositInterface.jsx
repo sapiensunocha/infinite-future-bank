@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import { APP_URL } from './config/constants';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from './services/supabaseClient';
 import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine, History, Clock, Activity, FileText } from 'lucide-react';
@@ -19,7 +20,7 @@ const CheckoutForm = ({ amount, onBack }) => {
     setErrorMessage(null);
 
     const { error } = await stripe.confirmPayment({
-      elements, confirmParams: { return_url: `${window.location.origin}/?status=success` },
+      elements, confirmParams: { return_url: `${APP_URL}/?status=success` },
     });
 
     if (error) { setErrorMessage(error.message); setIsProcessing(false); }

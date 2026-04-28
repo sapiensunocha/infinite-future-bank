@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
+import { APP_URL } from './config/constants';
 import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert } from 'lucide-react';
 
 import Dashboard from './Dashboard';
@@ -178,7 +179,7 @@ function MainApp() {
       sessionStorage.setItem('deus_just_registered', 'true'); 
       const { data, error } = await supabase.auth.signUp({
         email: emailValue.trim().toLowerCase(), password: passwordValue,
-        options: { data: { full_name: nameValue }, emailRedirectTo: `${window.location.origin}/auth/callback` }
+        options: { data: { full_name: nameValue }, emailRedirectTo: `${APP_URL}/auth/callback` }
       });
       if (error) throw error;
       if (data?.user && !data?.session) setCurrentView('check_email');
@@ -190,7 +191,7 @@ function MainApp() {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(emailValue.trim().toLowerCase(), {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${APP_URL}/auth/callback`,
       });
       if (error) throw error;
       showMessage('Recovery link dispatched to your inbox.', 'success');

@@ -1,28 +1,35 @@
 import React, { useState } from 'react';
-import { Share2, Users, ArrowUpRight, Copy, ShieldCheck, Zap, Network, ChevronRight } from 'lucide-react';
+import { Share2, Users, Copy, ShieldCheck, Zap, Network } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
+import { APP_URL } from './config/constants';
 
-export default function CapitalNetwork({ session, profile, balances, formatCurrency }) {
+export default function CapitalNetwork({ session, profile, balances, formatCurrency, fetchAllData }) {
   const [isCopied, setIsCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [localReferralCode, setLocalReferralCode] = useState(profile?.referral_code || null);
 
-  // Auto-generate a unique code if they don't have one yet (Fall back generation)
   const handleGenerateCode = async () => {
     setIsGenerating(true);
-    const newCode = `IFB-${profile.full_name?.substring(0,3).toUpperCase() || 'USR'}-${Math.floor(Math.random() * 10000)}`;
+    const newCode = `IFB-${(profile.full_name || 'USR').substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 10000)}`;
     try {
-      await supabase.from('profiles').update({ referral_code: newCode }).eq('id', session.user.id);
-      window.location.reload(); // Quick refresh to grab the new code from DB
+      const { error } = await supabase.from('profiles').update({ referral_code: newCode }).eq('id', session.user.id);
+      if (error) throw error;
+      setLocalReferralCode(newCode);
+      if (fetchAllData) await fetchAllData();
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
+  const activeCode = localReferralCode || profile?.referral_code;
+  const inviteLink = `${APP_URL}/?ref=${activeCode}`;
+
   const handleCopyLink = () => {
-    const inviteLink = `${window.location.origin}/?ref=${profile?.referral_code}`;
-    navigator.clipboard.writeText(inviteLink);
+    navigator.clipboard.writeText(inviteLink).catch(() => {});
     setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    setTimeout(() => setIsCopied(false), 2500);
   };
 
   return (
@@ -55,15 +62,15 @@ export default function CapitalNetwork({ session, profile, balances, formatCurre
             <h3 className="font-black text-slate-800 text-lg mb-2">Your Invite Link</h3>
             <p className="text-xs text-slate-500 mb-6">Share this cryptographic link. When someone joins and funds their account, they are permanently locked to your ancestry tree.</p>
             
-            {!profile?.referral_code ? (
+            {!activeCode ? (
               <button onClick={handleGenerateCode} disabled={isGenerating} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
                 {isGenerating ? 'Generating...' : <><Zap size={14}/> Activate Protocol</>}
               </button>
             ) : (
               <div className="space-y-4">
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl break-all">
-                  <p className="text-sm font-bold text-blue-600 selection:bg-blue-200">
-                    {window.location.origin}/?ref={profile.referral_code}
+                  <p className="text-sm font-bold text-blue-600 selection:bg-blue-200 break-all">
+                    {inviteLink}
                   </p>
                 </div>
                 <button onClick={handleCopyLink} className="w-full py-4 bg-slate-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-700 transition-all flex items-center justify-center gap-2">

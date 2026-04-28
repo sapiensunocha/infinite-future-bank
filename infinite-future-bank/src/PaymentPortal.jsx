@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { loadStripe } from '@stripe/stripe-js';
+import { APP_URL } from './config/constants';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { 
   ArrowLeft, ShieldCheck, Zap, Send, Loader2, 
@@ -27,7 +28,7 @@ const CheckoutForm = ({ amount, receiverName, onBack, context }) => {
     const { error } = await stripe.confirmPayment({
       elements, 
       confirmParams: { 
-        return_url: `${window.location.origin}/?status=success` 
+        return_url: `${APP_URL}/?status=success`
       },
     });
 

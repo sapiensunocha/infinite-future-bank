@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Moon, Eye, EyeOff, ArrowRight, Zap, Wallet, RefreshCw, Activity, AlertTriangle, Waves, Flame, ShieldAlert, ChevronDown, Globe } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
+import { useTranslation } from './i18n/useTranslation';
 
 const EID_IMAGE = "/eid-mubarak.png";
 const FALLBACK_BACKGROUNDS = [
@@ -10,6 +11,7 @@ const FALLBACK_BACKGROUNDS = [
 ];
 
 export default function HeroBanner({ profile, balances, wallets = [], transactions = [], formatCurrency, showBalances, setShowBalances, setActiveModal }) {
+  const { t } = useTranslation();
   const [time, setTime] = useState(new Date());
   const [weather, setWeather] = useState({ city: 'Global Network', temp: '--', condition: 0 });
   const [localRisk, setLocalRisk] = useState({ score: 1, colorText: 'text-yellow-400', colorBorder: 'border-yellow-400/30', topRisks: [], totalEvents: 0, isLoaded: false });
@@ -22,11 +24,11 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
 
   const firstName = profile?.full_name?.split(' ')[0] || 'Client';
   const hour = time.getHours();
-  let greeting = "Good Evening";
+  let greeting = t('home.goodEvening');
   let TimeIcon = Moon;
   let iconColor = "text-indigo-300";
-  if (hour >= 5 && hour < 12) { greeting = "Good Morning"; TimeIcon = Sun; iconColor = "text-yellow-400"; }
-  else if (hour >= 12 && hour < 18) { greeting = "Good Afternoon"; TimeIcon = Sun; iconColor = "text-amber-400"; }
+  if (hour >= 5 && hour < 12) { greeting = t('home.goodMorning'); TimeIcon = Sun; iconColor = "text-yellow-400"; }
+  else if (hour >= 12 && hour < 18) { greeting = t('home.goodAfternoon'); TimeIcon = Sun; iconColor = "text-amber-400"; }
 
   const activeWallets = wallets.length > 0 ? wallets : [{ currency_code: 'USD', balance: balances?.liquid_usd || 0 }];
   const primaryUsdBalance = activeWallets.find(w => w.currency_code === 'USD')?.balance || balances?.liquid_usd || 0;
@@ -187,9 +189,9 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
           {/* Balance breakdown pills */}
           <div className="flex gap-2">
             {[
-              { label: 'Cash', val: balances?.liquid_usd || 0, gradient: 'from-white/20 to-white/8' },
-              { label: 'Alpha', val: balances?.alpha_equity_usd || 0, gradient: 'from-blue-400/30 to-blue-400/8' },
-              { label: 'Vault', val: balances?.mysafe_digital_usd || 0, gradient: 'from-indigo-400/30 to-indigo-400/8' },
+              { label: t('home.cash'),    val: balances?.liquid_usd || 0,          gradient: 'from-white/20 to-white/8' },
+              { label: t('home.invested'),val: balances?.alpha_equity_usd || 0,    gradient: 'from-blue-400/30 to-blue-400/8' },
+              { label: t('home.vault'),   val: balances?.mysafe_digital_usd || 0,  gradient: 'from-indigo-400/30 to-indigo-400/8' },
             ].map(({ label, val, gradient }) => (
               <div key={label} className={`flex-1 bg-gradient-to-b ${gradient} backdrop-blur-sm rounded-2xl p-3 border border-white/10`}>
                 <p className="text-blue-200/70 text-[8px] font-black uppercase tracking-wide mb-1">{label}</p>
