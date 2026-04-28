@@ -37,6 +37,24 @@
 }
 
 /* ==============================================================
+   REVOLUT-GRADE MOBILE POLISH
+   ============================================================== */
+
+/* Active press: subtle scale feedback on tap */
+@layer utilities {
+  .active\:scale-98:active { transform: scale(0.98); }
+  .active\:scale-90:active { transform: scale(0.90); }
+}
+
+/* Smooth spring-feel transitions everywhere */
+button { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Bottom nav glow shadow */
+.bottom-nav-shadow {
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.08), 0 -1px 0 rgba(0,0,0,0.04);
+}
+
+/* ==============================================================
    DEUS NATIVE MOBILE OPTIMIZATIONS
    ============================================================== */
 

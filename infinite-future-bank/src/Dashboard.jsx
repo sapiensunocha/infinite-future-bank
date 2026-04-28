@@ -283,9 +283,17 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
           </div>
 
-          <button onClick={() => setActiveModal('ADVISOR')} className="fixed bottom-24 md:bottom-8 right-5 md:right-8 z-[110] bg-blue-700 text-white shadow-2xl rounded-full p-4 flex items-center gap-3 hover:-translate-y-2 transition-all active:scale-95 border-2 border-white/20" style={{ marginBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
-            <MessageSquare size={24} className="animate-pulse" />
-            <span className="font-black text-[10px] uppercase tracking-widest pr-2 hidden md:block">Your Financial AI</span>
+          <button
+            onClick={() => setActiveModal('ADVISOR')}
+            className="fixed z-[110] bg-blue-700 text-white shadow-2xl rounded-full flex items-center gap-3 hover:-translate-y-1 transition-all active:scale-95 border-2 border-white/20"
+            style={{
+              bottom: 'calc(max(env(safe-area-inset-bottom), 6px) + 4.5rem)',
+              right: '1.25rem',
+              padding: '0.875rem',
+            }}
+          >
+            <MessageSquare size={22} className="animate-pulse" />
+            <span className="font-black text-[10px] uppercase tracking-widest pr-1 hidden md:block">Your Financial AI</span>
           </button>
         </main>
       </div>
@@ -297,6 +305,7 @@ export default function Dashboard({ session, onSignOut }) {
         setIsAppDrawerOpen={setIsAppDrawerOpen}
         unreadCount={notifications.filter(n => !n.read).length}
         setIsSidebarOpen={setIsSidebarOpen}
+        setIsNotificationMenuOpen={setIsNotificationMenuOpen}
         t={t}
       />
 

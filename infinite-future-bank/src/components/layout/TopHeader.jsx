@@ -47,12 +47,6 @@ export default function TopHeader({
           isAppDrawerOpen={isAppDrawerOpen}
           setIsAppDrawerOpen={setIsAppDrawerOpen}
           setActiveAppPopup={setActiveAppPopup}
-          activeAppPopup={activeAppPopup}
-          session={session}
-          balances={balances}
-          fetchAllData={fetchAllData}
-          commercialProfile={commercialProfile}
-          profile={profile}
         />
 
         {/* Search Bar */}
