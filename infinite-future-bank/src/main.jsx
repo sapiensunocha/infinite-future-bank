@@ -1,21 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import './index.css';
 
-// This single line injects the entire IFB "Mission Blue & Alpha Glass" 
-// design system into the application before anything else renders.
-import './index.css'; 
+const hideSplash = () => {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  splash.classList.add('hide');
+  setTimeout(() => { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 550);
+};
 
-// ----------------------------------------------------------------------
-// 🚀 DEUS ARCHITECTURE IGNITION
-// ----------------------------------------------------------------------
-// We use React 18's createRoot to enable Concurrent Rendering. 
-// This allows DEUS to process heavy AI data in the background 
-// without freezing or slowing down the UI for the user.
-// ----------------------------------------------------------------------
-
-ReactDOM.createRoot(document.getElementById('root')).render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
-    <App />
+    <App onReady={hideSplash} />
   </React.StrictMode>,
 );

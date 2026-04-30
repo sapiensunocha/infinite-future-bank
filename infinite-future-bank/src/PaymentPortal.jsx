@@ -64,10 +64,14 @@ const CheckoutForm = ({ amount, receiverName, onBack, context }) => {
   );
 };
 
-export default function PaymentPortal({ session, balances }) {
+export default function PaymentPortal({ session }) {
   const [receiver, setReceiver] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isSelfLink, setIsSelfLink] = useState(false);
+  const [selfProfile, setSelfProfile] = useState(null);
+  const [selfCopied, setSelfCopied] = useState(false);
+  const [balances, setBalances] = useState({ liquid_usd: 0, afr_balance: 0 });
   
   const [amount, setAmount] = useState('');
   const [isFixedAmount, setIsFixedAmount] = useState(false); 
@@ -134,7 +138,14 @@ export default function PaymentPortal({ session, balances }) {
         }
 
         if (session && targetId === session?.user?.id) {
-          setError('You cannot initiate a payment to your own account.');
+          // Self-link: show share/preview mode instead of error
+          const { data: myProfile } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, active_tier')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          setSelfProfile(myProfile);
+          setIsSelfLink(true);
           setIsLoading(false);
           return;
         }
@@ -149,6 +160,12 @@ export default function PaymentPortal({ session, balances }) {
         if (dbError || !profileData) throw new Error('Beneficiary not found on the IFB Network.');
 
         setReceiver(profileData);
+
+        // Fetch the current user's balances for internal payments
+        if (session) {
+          const { data: bal } = await supabase.from('balances').select('liquid_usd, afr_balance').eq('user_id', session.user.id).maybeSingle();
+          if (bal) setBalances({ liquid_usd: bal.liquid_usd || 0, afr_balance: bal.afr_balance || 0 });
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -302,6 +319,37 @@ export default function PaymentPortal({ session, balances }) {
 
   if (isLoading) {
     return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-500" size={40}/></div>;
+  }
+
+  if (isSelfLink) {
+    const selfLink = `${APP_URL}/pay?to=${selfProfile?.id}`;
+    return (
+      <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4 animate-in fade-in">
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-[3rem] shadow-2xl p-8 text-center">
+          <div className="w-24 h-24 rounded-full bg-slate-100 shadow-inner border-4 border-white mx-auto mb-4 flex items-center justify-center overflow-hidden">
+            {selfProfile?.avatar_url ? <img src={selfProfile.avatar_url} className="w-full h-full object-cover" alt="You" /> : <User size={40} className="text-slate-300" />}
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-1">{selfProfile?.full_name}</h2>
+          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-6">{selfProfile?.active_tier || 'Verified'} · Your Pay Me Link</p>
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 text-left">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Your Payment Link</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-700 truncate flex-1">{selfLink}</span>
+              <button
+                onClick={() => { navigator.clipboard.writeText(selfLink); setSelfCopied(true); setTimeout(() => setSelfCopied(false), 2500); }}
+                className="shrink-0 bg-blue-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-blue-500 transition-colors"
+              >
+                {selfCopied ? <><CheckCircle2 size={12}/> Copied!</> : <><CreditCard size={12}/> Copy</>}
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 font-medium mb-6">Share this link so others can pay you instantly. You cannot send money to yourself.</p>
+          <button onClick={() => window.location.href = '/'} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-colors">
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (error) {

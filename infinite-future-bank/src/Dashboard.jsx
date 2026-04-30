@@ -156,6 +156,55 @@ export default function Dashboard({ session, onSignOut }) {
     return () => supabase.removeChannel(channel);
   }, [session?.user?.id]);
 
+  // ==========================================
+  // NOTIFICATION HANDLERS
+  // ==========================================
+  const markAsRead = async (notifId) => {
+    await supabase.from('notifications').update({ read: true }).eq('id', notifId);
+    setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
+  };
+
+  const handleConfirmRequest = async (notif) => {
+    try {
+      const meta = typeof notif.metadata === 'string' ? JSON.parse(notif.metadata) : (notif.metadata || {});
+      const amount = meta.amount || 0;
+      const requesterId = meta.requester_id;
+      if (!requesterId || !amount) throw new Error('Invalid request data.');
+      const { error } = await supabase.rpc('process_payment_request', {
+        p_sender_id: session.user.id,
+        p_receiver_id: requesterId,
+        p_amount: amount,
+        p_notification_id: notif.id
+      });
+      if (error) throw error;
+      triggerGlobalActionNotification('success', `Payment of $${amount} confirmed.`);
+      fetchAllData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', err.message || 'Could not confirm payment request.');
+    }
+  };
+
+  const handleDeclineRequest = async (notif) => {
+    await supabase.from('notifications').update({ status: 'declined', read: true }).eq('id', notif.id);
+    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, status: 'declined', read: true } : n));
+    triggerGlobalActionNotification('success', 'Request declined.');
+  };
+
+  const handleAcceptP2PWithdrawal = async (notif) => {
+    try {
+      const meta = typeof notif.metadata === 'string' ? JSON.parse(notif.metadata) : (notif.metadata || {});
+      const orderId = meta.order_id;
+      if (!orderId) throw new Error('No order reference found.');
+      const { error } = await supabase.from('p2p_orders').update({ status: 'proof_uploaded' }).eq('id', orderId);
+      if (error) throw error;
+      await supabase.from('notifications').update({ status: 'completed', read: true }).eq('id', notif.id);
+      triggerGlobalActionNotification('success', 'P2P withdrawal accepted. Awaiting proof.');
+      fetchAllData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', err.message || 'Could not accept withdrawal request.');
+    }
+  };
+
   const handleCommercialSubmit = async (e) => {
     e.preventDefault();
     setIsSubmittingCommercial(true);
@@ -218,6 +267,8 @@ export default function Dashboard({ session, onSignOut }) {
             isProfileMenuOpen={isProfileMenuOpen} setIsProfileMenuOpen={setIsProfileMenuOpen}
             profile={profile} userName={profile?.full_name?.split('@')[0] || 'Client'}
             visibleNotifications={notifications} setActiveTab={setActiveTab}
+            markAsRead={markAsRead} handleConfirmRequest={handleConfirmRequest}
+            handleDeclineRequest={handleDeclineRequest} handleAcceptP2PWithdrawal={handleAcceptP2PWithdrawal}
             setSubTab={setSubTab} onSignOut={onSignOut} session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} activeAppPopup={activeAppPopup}
           />
           

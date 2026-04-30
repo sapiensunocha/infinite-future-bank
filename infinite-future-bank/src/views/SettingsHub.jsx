@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
-import { 
-  User, Shield, Bell, Landmark, Eye, Info, LogOut, Camera, 
-  Fingerprint, RefreshCw, FileText, Scale, ShieldCheck, Mail, 
-  Lock, Plus, Globe, UploadCloud, FileCheck, AlertTriangle, 
+import {
+  User, Shield, Bell, Landmark, Eye, Info, LogOut, Camera,
+  Fingerprint, RefreshCw, FileText, Scale, ShieldCheck, Mail,
+  Lock, Plus, Globe, UploadCloud, FileCheck, AlertTriangle,
   TrendingUp, Users, Briefcase, ArrowRightLeft, CheckCircle2,
-  Building, MapPin, DollarSign, FileWarning
+  Building, MapPin, DollarSign, FileWarning, ScanFace, XCircle
 } from 'lucide-react';
+import FaceAuthManager from '../features/auth/FaceAuthManager';
+import { useFaceAuth } from '../features/auth/useFaceAuth';
 
 export default function SettingsHub({
   session, profile, subTab, setSubTab, setActiveTab,
@@ -41,10 +43,16 @@ export default function SettingsHub({
   });
   const [kycFiles, setKycFiles] = useState({ passport: null, selfie: null, proofOfAddress: null });
 
-  const [notificationPrefs, setNotificationPrefs] = useState({ 
-    payment_requests: profile?.pref_notif_payments ?? true, 
-    system_alerts: profile?.pref_notif_system ?? true, 
-    market_loans: profile?.pref_notif_loans ?? true 
+  // Face Auth state
+  const faceAuth = useFaceAuth(session);
+  const [showFaceEnroll, setShowFaceEnroll] = useState(false);
+  const [faceActionLoading, setFaceActionLoading] = useState(false);
+  const [faceMsg, setFaceMsg] = useState({ text: '', type: '' });
+
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    payment_requests: profile?.pref_notif_payments ?? true,
+    system_alerts: profile?.pref_notif_system ?? true,
+    market_loans: profile?.pref_notif_loans ?? true
   });
 
   const [previewAccess, setPreviewAccess] = useState({ 
@@ -645,9 +653,129 @@ export default function SettingsHub({
                 </div>
               )}
             </div>
+
+            {/* ─── FACE LOGIN ─────────────────────────────────────────────── */}
+            <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                  <ScanFace size={16} className="text-indigo-500" /> Face Login
+                </h3>
+                {faceAuth.faceEnabled && (
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1 rounded-lg">Active</span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                {faceAuth.isNative
+                  ? 'Use Face ID or device face recognition to sign in instantly — no password needed.'
+                  : 'Enable camera-based face recognition to sign in from any web browser.'}
+              </p>
+
+              {faceMsg.text && (
+                <div className={`p-3 rounded-xl text-xs font-bold mb-4 flex items-center gap-2 ${faceMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                  {faceMsg.type === 'error' ? <XCircle size={14} /> : <CheckCircle2 size={14} />}
+                  {faceMsg.text}
+                </div>
+              )}
+
+              {faceAuth.isCheckingAvailability ? (
+                <div className="flex items-center gap-2 text-slate-400">
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span className="text-xs font-bold">Checking biometric availability...</span>
+                </div>
+              ) : !faceAuth.biometricAvailable ? (
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-xs text-amber-700 font-bold flex items-center gap-2">
+                  <AlertTriangle size={14} />
+                  {faceAuth.isNative ? 'No biometric sensor found on this device.' : 'No camera found. Please connect a camera.'}
+                </div>
+              ) : !faceAuth.faceEnabled ? (
+                <button
+                  onClick={async () => {
+                    setFaceMsg({ text: '', type: '' });
+                    if (faceAuth.isNative) {
+                      setFaceActionLoading(true);
+                      try {
+                        await faceAuth.enrollNative();
+                        setFaceMsg({ text: 'Face Login enabled! You can now sign in with your face.', type: 'success' });
+                        triggerNotification('success', 'Face Login activated.');
+                      } catch (err) {
+                        setFaceMsg({ text: err.message || 'Enrolment failed.', type: 'error' });
+                      } finally {
+                        setFaceActionLoading(false);
+                      }
+                    } else {
+                      setShowFaceEnroll(true);
+                    }
+                  }}
+                  disabled={faceActionLoading}
+                  className="w-full py-4 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg hover:bg-indigo-500 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {faceActionLoading
+                    ? <><RefreshCw size={14} className="animate-spin" /> Setting up...</>
+                    : <><ScanFace size={14} /> Enable Face Login</>}
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center gap-3">
+                    <ShieldCheck className="text-emerald-500 shrink-0" size={20} />
+                    <div>
+                      <p className="text-sm font-black text-emerald-800">Face Login is active</p>
+                      <p className="text-[10px] text-emerald-600">
+                        {faceAuth.isNative ? 'Using device Face ID / biometric sensor.' : 'Using camera face recognition.'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    {!faceAuth.isNative && (
+                      <button
+                        onClick={() => setShowFaceEnroll(true)}
+                        className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors"
+                      >
+                        Update Face
+                      </button>
+                    )}
+                    <button
+                      onClick={async () => {
+                        setFaceActionLoading(true);
+                        try {
+                          await faceAuth.disableFace();
+                          setFaceMsg({ text: 'Face Login disabled.', type: 'success' });
+                          triggerNotification('success', 'Face Login deactivated.');
+                        } catch (err) {
+                          setFaceMsg({ text: err.message || 'Failed to disable.', type: 'error' });
+                        } finally { setFaceActionLoading(false); }
+                      }}
+                      disabled={faceActionLoading}
+                      className="flex-1 py-3 bg-red-50 text-red-600 border border-red-200 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-colors disabled:opacity-50"
+                    >
+                      {faceActionLoading ? <RefreshCw size={12} className="animate-spin mx-auto" /> : 'Disable Face Login'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* ─── END FACE LOGIN ─────────────────────────────────────────── */}
+
+            {/* Web face enrolment camera modal */}
+            {showFaceEnroll && (
+              <FaceAuthManager
+                mode="enroll"
+                onEnrolled={async (descriptor) => {
+                  setShowFaceEnroll(false);
+                  setFaceActionLoading(true);
+                  try {
+                    await faceAuth.saveWebDescriptor(descriptor);
+                    setFaceMsg({ text: 'Face captured and secured to your vault!', type: 'success' });
+                    triggerNotification('success', 'Face Login activated.');
+                  } catch (err) {
+                    setFaceMsg({ text: err.message || 'Failed to save face data.', type: 'error' });
+                  } finally { setFaceActionLoading(false); }
+                }}
+                onCancel={() => setShowFaceEnroll(false)}
+              />
+            )}
           </div>
         )}
-        
+
         {/* =======================
             NOTIFICATIONS TAB
         =========================*/}
