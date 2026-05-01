@@ -1,13 +1,142 @@
-import { useState, useEffect } from 'react';
-import { 
-  Briefcase, Users, Baby, Link as LinkIcon, 
+import { useState, useEffect, useRef } from 'react';
+import {
+  Briefcase, Users, Baby, Link as LinkIcon,
   Globe2, Building2, ShieldAlert, Plus, ArrowRight,
   CreditCard, Trash2, Wallet, RefreshCw, Zap, ArrowLeftRight,
   Settings, Lock, ScanLine, Store, CheckCircle2, PlusCircle,
   ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock, Wifi,
-  ShoppingBag, ArrowDownRight, MapPin
+  ShoppingBag, ArrowDownRight, MapPin, Upload, ShieldCheck, FileText, Camera, Loader2, AlertCircle
 } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
+
+// ─── KYC Section Component ───────────────────────────────────────────────────
+function KYCSection({ profile }) {
+  const [submission, setSubmission] = useState(null);
+  const [uploading, setUploading] = useState(null);
+  const [status, setStatus] = useState(null);
+  const fileInputRef = useRef(null);
+  const [pendingDocType, setPendingDocType] = useState(null);
+
+  useEffect(() => { fetchSubmission(); }, []);
+
+  async function fetchSubmission() {
+    const { data } = await supabase.from('kyc_submissions').select('*').eq('user_id', profile?.id || (await supabase.auth.getUser()).data.user?.id).maybeSingle();
+    setSubmission(data);
+  }
+
+  async function uploadDocument(file, docType) {
+    setUploading(docType);
+    setStatus(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const ext = file.name.split('.').pop();
+      const path = `kyc/${user.id}/${docType}_${Date.now()}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+
+      const { data: { publicUrl } } = supabase.storage.from('kyc-documents').getPublicUrl(path);
+
+      const { data, error: fnErr } = await supabase.functions.invoke('kyc-ai-extract', {
+        body: { document_url: publicUrl, document_type: docType }
+      });
+      if (fnErr) throw fnErr;
+
+      setStatus({ type: 'success', msg: `Document processed. Status: ${data.status} (AI confidence: ${data.ai_confidence}%)` });
+      await fetchSubmission();
+    } catch (e) {
+      setStatus({ type: 'error', msg: e.message || 'Upload failed' });
+    } finally {
+      setUploading(null);
+      setPendingDocType(null);
+    }
+  }
+
+  function triggerUpload(docType) {
+    setPendingDocType(docType);
+    fileInputRef.current?.click();
+  }
+
+  const kycStatus = profile?.kyc_status || 'unverified';
+  const isVerified = kycStatus === 'verified';
+
+  const documents = [
+    { type: 'id_front', label: 'ID / Passport (Front)', icon: FileText },
+    { type: 'id_back', label: 'ID (Back)', icon: FileText },
+    { type: 'selfie', label: 'Selfie Photo', icon: Camera },
+    { type: 'proof_of_address', label: 'Proof of Address', icon: MapPin },
+  ];
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <input ref={fileInputRef} type="file" className="hidden" accept="image/*,application/pdf"
+        onChange={(e) => { if (e.target.files?.[0] && pendingDocType) uploadDocument(e.target.files[0], pendingDocType); }} />
+
+      {/* Status Banner */}
+      <div className={`rounded-[2rem] p-8 flex items-center gap-6 ${isVerified ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
+        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 ${isVerified ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+          {isVerified ? <ShieldCheck size={32} className="text-emerald-600" /> : <ShieldAlert size={32} className="text-amber-600" />}
+        </div>
+        <div>
+          <p className={`font-black text-lg ${isVerified ? 'text-emerald-800' : 'text-amber-800'}`}>
+            {isVerified ? 'Identity Verified' : 'Identity Verification Required'}
+          </p>
+          <p className={`text-sm font-medium mt-1 ${isVerified ? 'text-emerald-600' : 'text-amber-600'}`}>
+            {isVerified ? 'Your identity has been verified by our AI compliance system.' : 'Upload your documents below to verify your identity and unlock full account access.'}
+          </p>
+          {submission && (
+            <p className="text-xs font-black uppercase tracking-widest mt-2 text-slate-500">
+              Submission status: {submission.status} · AI confidence: {submission.ai_confidence_score ?? 'N/A'}%
+            </p>
+          )}
+        </div>
+      </div>
+
+      {status && (
+        <div className={`p-4 rounded-2xl text-sm font-bold flex items-center gap-3 ${status.type === 'error' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>
+          {status.type === 'error' ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+          {status.msg}
+        </div>
+      )}
+
+      {/* Document Upload Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {documents.map(({ type, label, icon: Icon }) => {
+          const hasDoc = submission?.[`${type}_url`];
+          const isUploading = uploading === type;
+          return (
+            <button key={type} onClick={() => triggerUpload(type)} disabled={!!uploading}
+              className={`flex items-center gap-4 p-6 rounded-[2rem] border text-left transition-all hover:shadow-md active:scale-98 disabled:opacity-60
+                ${hasDoc ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'}`}>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${hasDoc ? 'bg-emerald-100' : 'bg-slate-100'}`}>
+                {isUploading ? <Loader2 size={20} className="animate-spin text-blue-600" /> : hasDoc ? <CheckCircle2 size={20} className="text-emerald-600" /> : <Icon size={20} className="text-slate-400" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`font-black text-sm ${hasDoc ? 'text-emerald-700' : 'text-slate-700'}`}>{label}</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {isUploading ? 'Processing with AI...' : hasDoc ? 'Uploaded · Tap to replace' : 'Tap to upload'}
+                </p>
+              </div>
+              <Upload size={16} className="text-slate-300 flex-shrink-0" />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-6">
+        <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">How it works</p>
+        <div className="space-y-2">
+          {['Upload your ID document (passport, national ID, or driver\'s license)', 'Our Gemini AI extracts and verifies your identity in seconds', 'Documents with 80%+ confidence are auto-approved instantly', 'Others are reviewed by our compliance team within 24-48 hours'].map((step, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{i+1}</div>
+              <p className="text-xs text-slate-600 font-medium">{step}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const CARD_THEMES = {
   obsidian: { name: 'Obsidian Dark', bg: 'bg-gradient-to-br from-slate-900 via-blue-950 to-black', border: 'border-blue-500/30', textPrimary: 'text-white', textSecondary: 'text-blue-200/70', accent: 'text-blue-200' },
@@ -295,7 +424,7 @@ export default function AccountHub({ balances, profile }) {
           <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">Manage your institutional entities</p>
         </div>
         <div className="flex bg-slate-100 p-2 rounded-2xl border border-slate-200 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
-          {[{ id: 'PERSONAL', label: 'Retail & Private' }, { id: 'CARDS', label: 'Infinite Cards' }, { id: 'BUSINESS', label: 'Commercial' }].map((tier) => (
+          {[{ id: 'PERSONAL', label: 'Retail & Private' }, { id: 'CARDS', label: 'Infinite Cards' }, { id: 'BUSINESS', label: 'Commercial' }, { id: 'KYC', label: 'Identity (KYC)' }].map((tier) => (
             <button key={tier.id} onClick={() => setActiveTier(tier.id)} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTier === tier.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>
               {tier.label}
             </button>
@@ -712,6 +841,9 @@ export default function AccountHub({ balances, profile }) {
         </div>
       )}
       
+      {/* KYC IDENTITY VERIFICATION */}
+      {activeTier === 'KYC' && <KYCSection profile={profile} />}
+
       {/* 🟢 GLOBAL NOTIFICATION LAYER */}
       {notification && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-top-10 duration-500">

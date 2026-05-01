@@ -81,7 +81,7 @@ export default function PayInterface() {
     // GUEST FLOW (CREDIT CARD / STRIPE)
     // ==========================================
     if (isGuest) {
-      if (!guestEmail) return alert("Please enter an email for your receipt.");
+      if (!guestEmail) { setError("Please enter your email to receive the receipt."); return; }
       setIsProcessing(true);
       
       try {
@@ -95,14 +95,15 @@ export default function PayInterface() {
         });
 
         if (error) throw error;
-        if (data?.url) {
-          window.location.href = data.url; 
+        const checkoutUrl = data?.url;
+        if (checkoutUrl && (checkoutUrl.startsWith('https://checkout.stripe.com/') || checkoutUrl.startsWith('https://buy.stripe.com/'))) {
+          window.location.href = checkoutUrl;
         } else {
-          throw new Error("Failed to generate secure card link.");
+          throw new Error("Invalid checkout link received.");
         }
       } catch (err) {
         console.error("Stripe Error:", err);
-        alert("Failed to initialize card processor. Please try again later.");
+        setError("Failed to initialize card processor. Please try again.");
         setIsProcessing(false);
       }
       return;
@@ -111,57 +112,68 @@ export default function PayInterface() {
     // ==========================================
     // MEMBER FLOW (INTERNAL AFR / USD LEDGER)
     // ==========================================
-    if (asset === 'AFR' && numAmount > (balances?.afr_balance || 0)) return alert("Insufficient AFR Balance.");
-    if (asset === 'USD' && numAmount > (balances?.liquid_usd || 0)) return alert("Insufficient USD Balance.");
+    if (asset === 'AFR' && numAmount > (balances?.afr_balance || 0)) { setError('Insufficient AFR balance.'); return; }
+    if (asset === 'USD' && numAmount > (balances?.liquid_usd || 0)) { setError('Insufficient USD balance.'); return; }
 
     setIsProcessing(true);
 
-    let mockSteps = [
-      { id: 1, text: `Verifying ${asset} Liquidity & Cryptographic Signatures.`, status: "active" },
-      { id: 2, text: `Establishing secure P2P tunnel to ${receiver.full_name}.`, status: "pending" },
-      { id: 3, text: "Awaiting AI Validator Consensus (Anti-Fraud).", status: "pending" },
-      { id: 4, text: "Settling on IFB Core Ledger.", status: "pending" }
+    const steps = [
+      { id: 1, text: `Verifying ${asset} liquidity.`, status: "active" },
+      { id: 2, text: `Routing to ${receiver.full_name}.`, status: "pending" },
+      { id: 3, text: "IFB ledger settlement.", status: "pending" },
+      { id: 4, text: "Confirmation.", status: "pending" }
     ];
-
-    setExecutionPlan({ isActive: true, steps: [...mockSteps], currentDetail: "Initiating protocol...", progressPct: 15 });
-    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+    setExecutionPlan({ isActive: true, steps: [...steps], currentDetail: "Initiating...", progressPct: 15 });
 
     try {
-      await delay(1200);
-      mockSteps[0].status = "completed"; mockSteps[1].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Routing through IFB secure switch...", progressPct: 40 }));
+      // Step 1: deduct sender balance
+      const balanceField = asset === 'AFR' ? 'afr_balance' : 'liquid_usd';
+      const currentBal = asset === 'AFR' ? (balances?.afr_balance || 0) : (balances?.liquid_usd || 0);
+      const { error: deductErr } = await supabase.from('balances')
+        .update({ [balanceField]: currentBal - numAmount })
+        .eq('user_id', session.user.id);
+      if (deductErr) throw deductErr;
 
-      await delay(1500);
-      mockSteps[1].status = "completed"; mockSteps[2].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Pinging Agent Sentinel for AML clearance...", progressPct: 65 }));
+      steps[0].status = "completed"; steps[1].status = "active";
+      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Crediting receiver...", progressPct: 45 }));
 
-      await delay(1500);
-      mockSteps[2].status = "completed"; mockSteps[3].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Committing transaction block...", progressPct: 85 }));
+      // Step 2: credit receiver balance
+      const { data: recvBal } = await supabase.from('balances').select(balanceField).eq('user_id', receiver.id).maybeSingle();
+      if (recvBal) {
+        await supabase.from('balances').update({ [balanceField]: (recvBal[balanceField] || 0) + numAmount }).eq('user_id', receiver.id);
+      } else {
+        await supabase.from('balances').insert([{ user_id: receiver.id, liquid_usd: asset === 'USD' ? numAmount : 0, afr_balance: asset === 'AFR' ? numAmount : 0 }]);
+      }
 
-      const { error: txError } = await supabase.from('market_transactions').insert({
-        user_id: session.user.id,
-        asset: asset,
-        side: 'P2P_SEND',
-        execution_price: 1.00,
-        quantity: numAmount,
-        status: 'COMPLETED',
-        blockchain_sig: `P2P_TO_${receiver.id.substring(0,8)}`
-      });
+      steps[1].status = "completed"; steps[2].status = "active";
+      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Recording on IFB ledger...", progressPct: 70 }));
 
-      if (txError) throw txError;
+      // Step 3: log both sides
+      const txRef = `P2P-${Date.now()}-${session.user.id.slice(0,6)}`;
+      await supabase.from('market_transactions').insert([
+        { user_id: session.user.id, asset, side: 'P2P_SEND', execution_price: 1.00, quantity: numAmount, status: 'COMPLETED', blockchain_sig: txRef },
+        { user_id: receiver.id, asset, side: 'P2P_RECEIVE', execution_price: 1.00, quantity: numAmount, status: 'COMPLETED', blockchain_sig: txRef }
+      ]);
 
-      await delay(1000);
-      mockSteps[3].status = "completed";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Capital successfully transferred.", progressPct: 100 }));
+      steps[2].status = "completed"; steps[3].status = "active";
+      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Complete.", progressPct: 95 }));
 
-      await delay(1500);
-      setIsSuccess(true);
-      setExecutionPlan(prev => ({ ...prev, isActive: false }));
+      // Step 4: notify receiver
+      await supabase.from('notifications').insert([{
+        user_id: receiver.id,
+        type: 'payment_received',
+        title: `${asset} ${numAmount.toFixed(2)} received`,
+        body: `From ${session.user.email} · Ref: ${txRef}`,
+        read: false,
+      }]);
+
+      steps[3].status = "completed";
+      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Capital successfully transferred.", progressPct: 100 }));
+      setTimeout(() => { setIsSuccess(true); setExecutionPlan(prev => ({ ...prev, isActive: false })); }, 800);
 
     } catch (err) {
       console.error(err);
-      alert("Transfer failed. Please try again.");
+      setError("Transfer failed. Please try again.");
       setExecutionPlan(prev => ({ ...prev, isActive: false }));
       setIsProcessing(false);
     }

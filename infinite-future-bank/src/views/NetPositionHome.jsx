@@ -278,6 +278,15 @@ export default function NetPositionHome({
               <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
               <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
             </button>
+            <button type="button" className="text-left bg-gradient-to-br from-blue-900 to-blue-700 rounded-2xl p-5 md:p-6 border border-blue-500/30 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full active:scale-98" onClick={() => setActiveTab('ACCOUNTS')}>
+              <div className="flex justify-between items-start mb-3 w-full">
+                <span className="text-[10px] font-black uppercase tracking-widest text-blue-200 bg-blue-800/50 px-2 py-1 rounded-full border border-blue-500/30">AFR</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-blue-300/70">Chain 2026</span>
+              </div>
+              <p className="text-blue-200 font-medium text-sm mb-1">AFR Tokens</p>
+              <p className="text-2xl font-black text-white">{(balances.afr_balance || 0).toLocaleString()} <span className="text-sm text-blue-300">AFR</span></p>
+              <p className="text-[10px] text-blue-400 mt-1">{((balances.afr_balance || 0) * 1_000_000).toLocaleString()} uAFR</p>
+            </button>
           </div>
         )}
       </div>

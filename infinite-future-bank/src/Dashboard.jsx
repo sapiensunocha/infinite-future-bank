@@ -109,7 +109,8 @@ export default function Dashboard({ session, onSignOut }) {
   };
 
   const formatCurrency = (val) => showBalances ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0) : 'XXXX';
-  const totalNetWorth = (balances.liquid_usd || 0) + (balances.alpha_equity_usd || 0) + (balances.mysafe_digital_usd || 0);
+  const AFR_USD_RATE = 0.01; // 1 AFR = $0.01
+  const totalNetWorth = (balances.liquid_usd || 0) + (balances.alpha_equity_usd || 0) + (balances.mysafe_digital_usd || 0) + ((balances.afr_balance || 0) * AFR_USD_RATE);
 
   // ==========================================
   // DATA FETCHING & REALTIME LISTENER ENGINE
