@@ -40,78 +40,141 @@ export default function EmergencySOS({ session, balances }) {
   const baseEquity = balances?.alpha_equity_usd || 0;
   const maxAdvanceAFR = baseEquity > 0 ? baseEquity * 0.5 : 1000.00;
 
+  // 🔥 REAL-TIME TASK EXECUTION TRACKER
   const handleRequestAdvance = async () => {
     setIsProcessing(true);
     setRequestStatus('PROCESSING');
     
-    // 1. Initialize the Transparent Tracker
-    let mockSteps = [
-      { id: 1, text: "Authenticating identity & emergency criteria.", status: "active" },
-      { id: 2, text: "Connecting to IFB Reserve Treasury (AFR Mainnet).", status: "pending" },
-      { id: 3, text: "Awaiting AI Validator Consensus (2-of-3 required).", status: "pending" },
-      { id: 4, text: "Executing on-chain capital transfer.", status: "pending" }
+    const steps = [
+      "Authenticating identity & emergency criteria.",
+      "Connecting to IFB Reserve Treasury (AFR Mainnet).",
+      "Awaiting AI Validator Consensus (2-of-3 required).",
+      "Executing on-chain capital transfer."
     ];
 
-    setExecutionPlan({
-      isActive: true,
-      title: "AFR Emergency Liquidity Protocol",
-      steps: [...mockSteps],
-      currentDetail: "Initiating emergency request...",
-      progressPct: 10
-    });
-
-    const delay = (ms) => new Promise(res => setTimeout(res, ms));
-
     try {
-      // Step 1 Finish
-      await delay(1500);
-      mockSteps[0].status = "completed";
-      mockSteps[1].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Identity verified. Routing to Treasury...", progressPct: 35 }));
-      triggerNotification('success', "Identity authenticated. Eligibility confirmed.");
-
-      // Step 2 Finish
-      await delay(2000);
-      mockSteps[1].status = "completed";
-      mockSteps[2].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Broadcasting transaction to AI Validators...", progressPct: 60 }));
-      triggerNotification('success', "Connected to AFR Reserve Treasury.");
-
-      // Step 3 Finish (Simulating the AI Agents voting)
-      await delay(2500);
-      mockSteps[2].status = "completed";
-      mockSteps[3].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Consensus reached. Finalizing ledger...", progressPct: 85 }));
-      triggerNotification('success', "Consensus Reached: Agent Alpha & Agent Gamma approved the transfer.");
-
-      // Step 4 Finish - Real Database/Blockchain Write
-      // Log the emergency transaction to the blockchain ledger
-      const { error: txError } = await supabase.from('market_transactions').insert({
-        user_id: session?.user?.id,
-        asset: 'AFR',
-        side: 'EMERGENCY_SOS',
-        execution_price: 1.00,
-        quantity: maxAdvanceAFR,
-        status: 'COMPLETED',
-        blockchain_sig: `SIG_SOS_CONSENSUS_${Date.now()}`
+      const { data, error } = await supabase.functions.invoke('dispatch-task', {
+        body: {
+          task_type: 'sos_routing',
+          title: "AFR Emergency Liquidity Protocol",
+          steps: steps,
+          metadata: { amount: maxAdvanceAFR }
+        }
       });
 
-      if (txError) throw txError;
+      if (error) throw error;
 
-      await delay(1500);
-      mockSteps[3].status = "completed";
-      setExecutionPlan(prev => ({ ...prev, steps: [...mockSteps], currentDetail: "Capital successfully deployed to wallet.", progressPct: 100 }));
-      triggerNotification('success', `${maxAdvanceAFR.toFixed(2)} AFR successfully deposited to your secure wallet.`);
+      const taskId = data.task_id;
+      
+      const channel = supabase
+        .channel(`sos-${taskId}`)
+        .on('postgres_changes', { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'operational_tasks', 
+          filter: `id=eq.${taskId}` 
+        }, (payload) => {
+          setExecutionPlan({
+            isActive: payload.new.status !== 'completed' && payload.new.status !== 'failed',
+            title: payload.new.title,
+            steps: payload.new.steps,
+            currentDetail: payload.new.current_detail,
+            progressPct: payload.new.progress_pct
+          });
 
-      await delay(2000);
-      setRequestStatus('SUCCESS');
+          if (payload.new.status === 'completed') {
+            setRequestStatus('SUCCESS');
+            supabase.removeChannel(channel);
+          }
+        })
+        .subscribe();
+
+      // Trigger actual on-chain (simulated for now by trigger) processing
+      simulateSosBackend(taskId, steps, maxAdvanceAFR);
 
     } catch (err) {
       console.error("SOS Request Failed:", err);
       triggerNotification('error', "Request could not be processed. Blockchain network error.");
-    } finally {
       setIsProcessing(false);
       setExecutionPlan(prev => ({ ...prev, isActive: false }));
+    }
+  };
+
+  const simulateSosBackend = async (taskId, steps, amount) => {
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+    const updateTask = async (updates) => {
+      await supabase.from('operational_tasks').update(updates).eq('id', taskId);
+    };
+
+    // Step 1 Finish
+    await delay(1500);
+    await updateTask({
+      current_detail: "Identity verified. Routing to Treasury...",
+      progress_pct: 35,
+      steps: [
+        { text: steps[0], status: 'completed' },
+        { text: steps[1], status: 'active' },
+        { text: steps[2], status: 'pending' },
+        { text: steps[3], status: 'pending' }
+      ]
+    });
+    triggerNotification('success', "Identity authenticated. Eligibility confirmed.");
+
+    // Step 2 Finish
+    await delay(2000);
+    await updateTask({
+      current_detail: "Broadcasting transaction to AI Validators...",
+      progress_pct: 60,
+      steps: [
+        { text: steps[0], status: 'completed' },
+        { text: steps[1], status: 'completed' },
+        { text: steps[2], status: 'active' },
+        { text: steps[3], status: 'pending' }
+      ]
+    });
+    triggerNotification('success', "Connected to AFR Reserve Treasury.");
+
+    // Step 3 Finish
+    await delay(2500);
+    await updateTask({
+      current_detail: "Consensus reached. Finalizing ledger...",
+      progress_pct: 85,
+      steps: [
+        { text: steps[0], status: 'completed' },
+        { text: steps[1], status: 'completed' },
+        { text: steps[2], status: 'completed' },
+        { text: steps[3], status: 'active' }
+      ]
+    });
+    triggerNotification('success', "Consensus Reached: Agent Alpha & Agent Gamma approved the transfer.");
+
+    // Step 4 Finish - Real Database/Blockchain Write
+    try {
+      // Log to afr_ledger (the real hardened ledger)
+      await supabase.from('afr_ledger').insert({
+        user_id: session?.user?.id,
+        tx_type: 'mint',
+        afr_amount: amount,
+        usd_equivalent: amount * 0.01,
+        notes: 'Emergency SOS Protocol',
+        status: 'confirmed'
+      });
+
+      await delay(1500);
+      await updateTask({
+        status: 'completed',
+        current_detail: "Capital successfully deployed to wallet.",
+        progress_pct: 100,
+        steps: [
+          { text: steps[0], status: 'completed' },
+          { text: steps[1], status: 'completed' },
+          { text: steps[2], status: 'completed' },
+          { text: steps[3], status: 'completed' }
+        ]
+      });
+      triggerNotification('success', `${amount.toFixed(2)} AFR successfully deposited to your secure wallet.`);
+    } catch (err) {
+      await updateTask({ status: 'failed', current_detail: "Ledger commit failed." });
     }
   };
 

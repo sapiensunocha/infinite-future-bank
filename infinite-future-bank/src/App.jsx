@@ -76,6 +76,12 @@ function MainApp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showApkPrompt, setShowApkPrompt] = useState(false);
 
+  // Phone Verification States
+  const [phoneValue, setPhoneValue] = useState('');
+  const [otpValue, setOtpValue] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otpLoading, setOtpOtpLoading] = useState(false);
+
   // Face login state
   const [showFaceLogin, setShowFaceLogin] = useState(false);
   const [faceLoginEmail, setFaceLoginEmail] = useState('');
@@ -95,6 +101,22 @@ function MainApp() {
     const hash = window.location.hash;
     if (hash && (hash.includes('type=invite') || hash.includes('type=recovery'))) {
       setCurrentView('update_password');
+    }
+
+    // Stripe redirect-back: confirm deposit so balance is credited even if webhook is delayed
+    const piId = urlParams.get('payment_intent');
+    const piStatus = urlParams.get('redirect_status');
+    if (piId && piStatus === 'succeeded') {
+      supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+        if (!s) return;
+        try {
+          await supabase.functions.invoke('confirm-deposit', { body: { payment_intent_id: piId } });
+        } catch (e) {
+          console.warn('confirm-deposit error:', e);
+        }
+        // Clean URL so refreshing doesn't re-trigger
+        window.history.replaceState({}, '', window.location.pathname);
+      });
     }
   }, []);
 
@@ -148,6 +170,8 @@ function MainApp() {
             p_ref_code: refCode
           });
         }
+        // Silently reconcile any deposits that webhook may have missed
+        supabase.functions.invoke('reconcile-deposits').catch(() => {});
       } catch (err) {
         console.error("Profile initialization error:", err);
       } finally {
@@ -194,16 +218,51 @@ function MainApp() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setCurrentView('phone_verification');
+  };
+
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    setOtpOtpLoading(true);
     try {
-      sessionStorage.setItem('deus_just_registered', 'true'); 
-      const { data, error } = await supabase.auth.signUp({
-        email: emailValue.trim().toLowerCase(), password: passwordValue,
-        options: { data: { full_name: nameValue }, emailRedirectTo: `${APP_URL}/auth/callback` }
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: { phoneNumber: phoneValue, email: emailValue.trim().toLowerCase() }
       });
       if (error) throw error;
-      if (data?.user && !data?.session) setCurrentView('check_email');
-    } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
+      setIsOtpSent(true);
+      showMessage('Verification code dispatched via Sovereign Gmail Engine.', 'success');
+    } catch (err) {
+      showMessage(err.message, 'error');
+    } finally {
+      setOtpOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      // 1. Perform Real Auth Signup
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: emailValue.trim().toLowerCase(), password: passwordValue,
+        options: { data: { full_name: nameValue, phone: phoneValue }, emailRedirectTo: `${APP_URL}/auth/callback` }
+      });
+      if (authError) throw authError;
+
+      // 2. Verify OTP in backend
+      const { error: otpError } = await supabase.functions.invoke('verify-otp', {
+        body: { phoneNumber: phoneValue, otpCode: otpValue, userId: authData.user?.id }
+      });
+      if (otpError) throw otpError;
+
+      if (authData?.user && !authData?.session) setCurrentView('check_email');
+      else showMessage('Identity Secured. Welcome to IFB.', 'success');
+      
+    } catch (err) {
+      showMessage(err.message, 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResetPassword = async (e) => {
@@ -507,9 +566,43 @@ function MainApp() {
                 <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Set Password" minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
                 <button type="submit" disabled={isLoading || !nameValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? 'Creating...' : 'Create Vault'}</span>
+                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Register Identity</span>
                 </button>
               </form>
+            </div>
+          )}
+
+          {currentView === 'phone_verification' && (
+            <div className="animate-in slide-in-from-right-4 duration-300 text-center">
+              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Verify Phone</h2>
+              <p className="text-xs font-bold text-slate-500 mb-8">Secure your account with a mobile number.</p>
+              
+              {!isOtpSent ? (
+                <form onSubmit={handleSendOTP} className="space-y-4">
+                  <div className="relative group">
+                    <Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                    <input type="tel" required autoFocus value={phoneValue} onChange={(e) => setPhoneValue(e.target.value)} placeholder="+1 555 000 0000" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
+                  </div>
+                  <button type="submit" disabled={otpLoading || !phoneValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl transition-all disabled:opacity-50 group">
+                    <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">
+                      {otpLoading ? <RefreshCw className="animate-spin" size={18}/> : 'Send Sovereign OTP'}
+                    </span>
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOTP} className="space-y-4">
+                  <div className="relative group">
+                    <ShieldAlert className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                    <input type="text" maxLength="6" required autoFocus value={otpValue} onChange={(e) => setOtpValue(e.target.value.replace(/\D/g,''))} placeholder="Enter 6-digit code" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-2xl tracking-[0.5em] text-center font-black outline-none focus:border-emerald-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
+                  </div>
+                  <button type="submit" disabled={isLoading || otpValue.length < 6} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl transition-all disabled:opacity-50 group">
+                    <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">
+                      {isLoading ? <RefreshCw className="animate-spin" size={18}/> : 'Finalize Verification'}
+                    </span>
+                  </button>
+                  <button type="button" onClick={()=>setIsOtpSent(false)} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors mt-4">Change Phone Number</button>
+                </form>
+              )}
             </div>
           )}
 

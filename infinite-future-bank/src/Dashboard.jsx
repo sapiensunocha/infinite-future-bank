@@ -134,7 +134,8 @@ export default function Dashboard({ session, onSignOut }) {
     const { data: rData } = await supabase.from('recipients').select('*').eq('user_id', session.user.id);
     if (rData) setRecipients(rData);
     
-    const { data: notifData } = await supabase.from('notifications').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
+    // Unified Notification Engine Fetch
+    const { data: notifData } = await supabase.from('venturex_notifications').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(20);
     if (notifData) setNotifications(notifData);
     
     const { data: escrowData } = await supabase.from('p2p_orders').select('*').eq('user_id', session.user.id).in('status', ['open', 'locked_in_escrow', 'proof_uploaded', 'disputed']).order('created_at', { ascending: false });
@@ -151,7 +152,10 @@ export default function Dashboard({ session, onSignOut }) {
         triggerGlobalActionNotification('success', `Inbound Transfer Detected: $${Math.abs(payload.new.amount).toFixed(2)}`);
         fetchAllData();
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${session.user.id}` }, fetchAllData)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'venturex_notifications', filter: `user_id=eq.${session.user.id}` }, (payload) => {
+        setNotifications(prev => [payload.new, ...prev]);
+        triggerGlobalActionNotification('success', payload.new.message);
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'p2p_orders', filter: `user_id=eq.${session.user.id}` }, fetchAllData)
       .subscribe();
     return () => supabase.removeChannel(channel);
@@ -161,8 +165,8 @@ export default function Dashboard({ session, onSignOut }) {
   // NOTIFICATION HANDLERS
   // ==========================================
   const markAsRead = async (notifId) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', notifId);
-    setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
+    await supabase.from('venturex_notifications').update({ is_read: true }).eq('id', notifId);
+    setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, is_read: true } : n));
   };
 
   const handleConfirmRequest = async (notif) => {
@@ -264,7 +268,7 @@ export default function Dashboard({ session, onSignOut }) {
             setIsSearchExpanded={setIsSearchExpanded} searchQuery={searchQuery}
             setSearchQuery={setSearchQuery} searchResults={searchResults}
             formatCurrency={formatCurrency} isNotificationMenuOpen={isNotificationMenuOpen}
-            setIsNotificationMenuOpen={setIsNotificationMenuOpen} unreadCount={notifications.filter(n => !n.read).length}
+            setIsNotificationMenuOpen={setIsNotificationMenuOpen} unreadCount={notifications.filter(n => !n.is_read).length}
             isProfileMenuOpen={isProfileMenuOpen} setIsProfileMenuOpen={setIsProfileMenuOpen}
             profile={profile} userName={profile?.full_name?.split('@')[0] || 'Client'}
             visibleNotifications={notifications} setActiveTab={setActiveTab}

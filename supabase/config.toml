@@ -9,3 +9,21 @@ entrypoint = "./functions/process-p2p-receipt/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/process-p2p-receipt/*.html" ]
+
+[functions.analyze-receipt-ocr]
+verify_jwt = true
+
+[functions.dispatch-task]
+verify_jwt = true
+
+[functions.market-engine]
+verify_jwt = true
+
+[functions.issue-ifb-card]
+verify_jwt = true
+
+[functions.send-otp]
+verify_jwt = true
+
+[functions.verify-otp]
+verify_jwt = true

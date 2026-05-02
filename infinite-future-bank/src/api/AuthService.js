@@ -55,5 +55,24 @@ export const AuthService = {
 
     if (error) throw error;
     return data;
+  },
+
+  // ==========================================
+  // 5. SOVEREIGN PHONE VERIFICATION (Free SMS Engine)
+  // ==========================================
+  sendOTP: async (phoneNumber) => {
+    const { data, error } = await supabase.functions.invoke('send-otp', {
+      body: { phoneNumber }
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  verifyOTP: async (phoneNumber, otpCode, userId) => {
+    const { data, error } = await supabase.functions.invoke('verify-otp', {
+      body: { phoneNumber, otpCode, userId }
+    });
+    if (error) throw error;
+    return data;
   }
 };

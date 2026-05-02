@@ -46,8 +46,21 @@
   .active\:scale-90:active { transform: scale(0.90); }
 }
 
-/* Smooth spring-feel transitions everywhere */
-button { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+/* 🚀 Hardware-Accelerated Native Transitions */
+.accelerated {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* Smooth spring-feel transitions everywhere with GPU support */
+.smooth-trans { 
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
 
 /* Bottom nav glow shadow */
 .bottom-nav-shadow {
@@ -59,33 +72,31 @@ button { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
    ============================================================== */
 
 /* 1. Kill the 300ms click delay and disable double-tap to zoom */
-* {
+.touch-optimized {
   touch-action: manipulation;
-}
-
-/* 2. Remove the ugly grey flash when tapping a button on mobile */
-button, a, input, select, textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 3. Prevent the magnifying glass / text selection on UI elements */
-button, a, .no-select {
-  -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-  user-select: none; /* Non-prefixed version */
+/* 2. Prevent the magnifying glass / text selection on UI elements */
+.no-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-/* 4. Ensure smooth scrolling for lists/menus */
-.scroll-container {
+/* 3. Native Momentum Scrolling */
+.scroll-container, .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
-/* 5. Safe-area shorthand utilities */
+/* 4. Safe-area shorthand utilities */
 .safe-bottom {
-  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
 }
 .safe-top {
-  padding-top: max(env(safe-area-inset-top), 0px);
+  padding-top: max(env(safe-area-inset-top), 16px);
 }
 
 /* ==============================================================
