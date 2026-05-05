@@ -187,9 +187,12 @@ export default function Chat({ session, onClose, balances, profile }) {
       
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "Institutional bridge to Pascaline Core interrupted. Please retry sequence." 
+      const isNetworkErr = err?.message?.toLowerCase().includes('fetch') || err?.message?.toLowerCase().includes('network');
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: isNetworkErr
+          ? "Connection to Pascaline Intelligence lost. Please check your network and retry."
+          : "I am temporarily unable to process your request. Please try again in a moment, or escalate to a human specialist using the button above."
       }]);
     } finally {
       setIsTyping(false);
