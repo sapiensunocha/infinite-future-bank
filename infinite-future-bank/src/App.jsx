@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
-import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, ScanFace } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, ScanFace, Share2, Plus } from 'lucide-react';
 
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
@@ -74,7 +74,7 @@ function MainApp() {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showApkPrompt, setShowApkPrompt] = useState(false);
+  const [mobileOS, setMobileOS] = useState(null); // 'android' | 'ios' | null
 
 
   // Face login state
@@ -128,10 +128,11 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isAndroid = /android/i.test(userAgent);
-    const isNativeApp = window?.Capacitor?.isNativePlatform?.() || window?.Capacitor?.isNative;
-    if (isAndroid && !isNativeApp) setShowApkPrompt(true);
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const isNative = window?.Capacitor?.isNativePlatform?.() || window?.Capacitor?.isNative;
+    if (isNative) return;
+    if (/android/i.test(ua)) setMobileOS('android');
+    else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) setMobileOS('ios');
   }, []);
 
   useEffect(() => { setShowPassword(false); }, [currentView]);
@@ -571,18 +572,68 @@ function MainApp() {
           Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. Regulated by US and Canadian governments. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Trust Framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>.
         </div>
 
-        {showApkPrompt && (
+        {/* ── ANDROID: APK download ── */}
+        {mobileOS === 'android' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
-            <a href="https://drive.google.com/file/d/1hMZPScVf1uak-BiL312HEXLwYo9DZPC1/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group">
+            <a
+              href="https://github.com/sapiensunocha/infinite-future-bank/releases/download/v1.1.0/app-release.apk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
+            >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner border border-slate-700/50"><Smartphone size={24} /></div>
+                <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner border border-slate-700/50">
+                  <Smartphone size={24} />
+                </div>
                 <div className="text-left">
-                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Native Android App</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Optimized & Secure</p>
+                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Install Android App</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Signed · v1.1.0 · Free</p>
                 </div>
               </div>
-              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-500/30"><DownloadCloud size={18} /></div>
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-500/30">
+                <DownloadCloud size={18} />
+              </div>
             </a>
+            <p className="mt-2 text-center text-[10px] text-slate-400 font-medium">
+              Allow <span className="font-bold text-slate-300">Install unknown apps</span> in Android settings if prompted.
+            </p>
+          </div>
+        )}
+
+        {/* ── iOS: Add to Home Screen guide ── */}
+        {mobileOS === 'ios' && (
+          <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
+            <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-5 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-2xl flex items-center justify-center border border-blue-500/30">
+                  <Smartphone size={20} className="text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-white font-black text-sm leading-none mb-1">Add DEUS to Home Screen</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">iOS · App-like experience</p>
+                </div>
+              </div>
+              <ol className="space-y-2.5">
+                <li className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                  <p className="text-slate-300 text-xs font-semibold leading-snug">
+                    Tap the <Share2 size={12} className="inline text-blue-400 mx-0.5" /> <span className="text-white font-black">Share</span> button at the bottom of Safari
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                  <p className="text-slate-300 text-xs font-semibold leading-snug">
+                    Scroll down and tap <span className="text-white font-black">"Add to Home Screen"</span> <Plus size={12} className="inline text-blue-400 mx-0.5" />
+                  </p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                  <p className="text-slate-300 text-xs font-semibold leading-snug">
+                    Tap <span className="text-white font-black">"Add"</span> — DEUS opens fullscreen like a native app
+                  </p>
+                </li>
+              </ol>
+            </div>
           </div>
         )}
 
