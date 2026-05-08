@@ -36,7 +36,10 @@ DECLARE
   v_countries BIGINT;
 BEGIN
   SELECT COUNT(*) INTO v_users FROM public.profiles;
-  SELECT COUNT(*) INTO v_orgs FROM public.profiles WHERE is_org = TRUE;
+  SELECT (
+    (SELECT COUNT(*) FROM public.npo_profiles) +
+    (SELECT COUNT(*) FROM public.ifb_companies)
+  ) INTO v_orgs;
   SELECT COUNT(DISTINCT country) INTO v_countries FROM public.profiles WHERE country IS NOT NULL AND country <> '';
 
   RETURN json_build_object(
