@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
-import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, Share2, Plus } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap } from 'lucide-react';
+import DEUSAcademy from './features/learning/DEUSAcademy';
 
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
@@ -72,6 +73,7 @@ function MainApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mobileOS, setMobileOS] = useState(null); // 'android' | 'ios' | null
+  const [showAcademy, setShowAcademy] = useState(false);
 
 
   const [activeModal, setActiveModal] = useState(null);
@@ -412,6 +414,19 @@ function MainApp() {
         <div className="mt-8 text-center text-[11px] font-medium text-slate-500 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
           Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. Regulated by US and Canadian governments. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Trust Framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>.
         </div>
+
+        {/* DEUS ACADEMY LINK */}
+        <div className="mt-5 flex justify-center animate-in fade-in duration-700 delay-200">
+          <button
+            onClick={() => setShowAcademy(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors text-indigo-700 font-bold text-[11px] uppercase tracking-widest shadow-sm hover:shadow-indigo-100"
+          >
+            <GraduationCap size={14} />
+            Explore DEUS — Interactive Learning
+          </button>
+        </div>
+
+        {showAcademy && <DEUSAcademy onClose={() => setShowAcademy(false)} />}
 
         {/* ── ANDROID: APK download ── */}
         {mobileOS === 'android' && (
