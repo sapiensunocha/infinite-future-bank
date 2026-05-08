@@ -196,6 +196,14 @@ export default function VentureExchange({ session, balances, profile }) {
   // Real-time tracking state
   const [liveMetrics, setLiveMetrics] = useState({});
 
+  // ── Virtual CFO AI state ──────────────────────────────────────────────
+  const [cfoMessages, setCfoMessages] = useState([{
+    role: 'assistant',
+    content: `I'm Pascaline, your dedicated CFO. I have access to IFB's financial intelligence network. Share your startup's metrics and I'll give you institutional-grade financial guidance. What would you like to analyze today?`
+  }]);
+  const [cfoInput, setCfoInput] = useState('');
+  const [cfoLoading, setCfoLoading] = useState(false);
+
   const notify = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 4500); };
 
   // ── Company form state ─────────────────────────────────────────────────
@@ -508,6 +516,29 @@ export default function VentureExchange({ session, balances, profile }) {
     else { notify(`Funds released via Smart Contract!`); fetchAll(); loadDealMilestones(selectedDeal.id); }
   };
 
+  const sendCfoMessage = async () => {
+    if (!cfoInput.trim() || cfoLoading) return;
+    const userMsg = { role: 'user', content: cfoInput.trim() };
+    const company = myCompany;
+    const contextMsg = { role: 'user', content: `[CFO CONTEXT: You are acting as a startup CFO. The entrepreneur's company: ${company?.legal_name || 'an early-stage startup'}, sector: ${company?.sector || 'tech'}, monthly revenue: $${company?.monthly_revenue || 0}, burn rate: $${company?.monthly_burn_rate || 0}/mo, runway: ${company?.runway_months || 0} months, team size: ${company?.team_size || 1}, stage: ${company?.current_round || 'pre-seed'}. Give specific, actionable CFO-level advice.]` };
+    const newMessages = [...cfoMessages, userMsg];
+    setCfoMessages(newMessages);
+    setCfoInput('');
+    setCfoLoading(true);
+    try {
+      const payload = [contextMsg, ...newMessages.filter(m => m.role !== 'system')].map(m => ({ role: m.role, content: m.content }));
+      const { data, error } = await supabase.functions.invoke('pascaline-grok-agent', {
+        body: { messages: payload, userId: session?.user?.id }
+      });
+      if (error) throw error;
+      setCfoMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+    } catch (err) {
+      setCfoMessages(prev => [...prev, { role: 'assistant', content: 'CFO intelligence temporarily offline. Please retry.' }]);
+    } finally {
+      setCfoLoading(false);
+    }
+  };
+
   const fmtK = (v) => !v ? '$0' : v >= 1e9 ? `$${(v/1e9).toFixed(1)}B` : v >= 1e6 ? `$${(v/1e6).toFixed(1)}M` : v >= 1e3 ? `$${(v/1e3).toFixed(0)}K` : `$${v}`;
 
   if (isLoading) return <div className="h-96 flex items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={36} /></div>;
@@ -530,6 +561,7 @@ export default function VentureExchange({ session, balances, profile }) {
             { id:'INVESTOR', label: myInvestor ? 'Inv. Profile' : '+ Investor' },
             { id:'MARKETPLACE', label:'Marketplace' },
             { id:'DEALS', label:`Contracts${deals.length ? ` (${deals.length})` : ''}` },
+            { id:'CFO', label:'CFO' },
           ].filter(t => t.label).map(t => (
             <button key={t.id} onClick={() => { setTab(t.id); setSelectedDeal(null); }}
               className={`shrink-0 px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-2xl border-b-4 transition-all ${tab === t.id ? 'border-blue-600 text-blue-700 bg-white shadow-[0_-5px_15px_-10px_rgba(0,0,0,0.1)]' : 'border-transparent text-slate-400 hover:text-slate-700 hover:bg-white/50'}`}>
@@ -1103,6 +1135,125 @@ export default function VentureExchange({ session, balances, profile }) {
                    </div>
                 </div>
              </div>
+          </div>
+        )}
+
+        {/* ═════════ VIRTUAL CFO AI AGENT ═════════ */}
+        {tab === 'CFO' && (
+          <div className="space-y-6 animate-in fade-in max-w-4xl mx-auto">
+            {/* Header card */}
+            <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 border border-slate-800 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-[120px] opacity-10 pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="p-3 bg-blue-600 rounded-2xl">
+                    <BrainCircuit size={28} className="text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black tracking-tight">Pascaline CFO</h2>
+                    <p className="text-sm text-slate-400 font-medium">Your AI Chief Financial Officer</p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-300">
+                  <Zap size={10} /> Powered by Pascaline Intelligence
+                </span>
+              </div>
+            </div>
+
+            {/* Quick prompt chips */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                'Analyze my burn rate and give me 90-day runway',
+                'Should I raise a Series A or bridge round?',
+                'Build me a hiring plan for $500K',
+                "What's my unit economics health?",
+                'How do I optimize CAC/LTV ratio?',
+              ].map(chip => (
+                <button
+                  key={chip}
+                  onClick={() => setCfoInput(chip)}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-600 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-all shadow-sm"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+
+            {/* Chat area */}
+            <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] overflow-hidden flex flex-col" style={{ minHeight: '520px' }}>
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ maxHeight: '440px' }}>
+                {cfoMessages.map((msg, i) => (
+                  msg.role === 'assistant' ? (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="p-2 bg-blue-600 rounded-xl shrink-0">
+                        <BrainCircuit size={14} className="text-white" />
+                      </div>
+                      <div className="bg-slate-800 border-l-4 border-blue-500 rounded-2xl px-5 py-4 max-w-[85%]">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1.5">Pascaline CFO</p>
+                        <p className="text-sm text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={i} className="flex justify-end">
+                      <div className="bg-blue-600 rounded-2xl px-5 py-4 max-w-[75%]">
+                        <p className="text-sm text-white font-medium leading-relaxed">{msg.content}</p>
+                      </div>
+                    </div>
+                  )
+                ))}
+                {cfoLoading && (
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-600 rounded-xl shrink-0">
+                      <BrainCircuit size={14} className="text-white" />
+                    </div>
+                    <div className="bg-slate-800 border-l-4 border-blue-500 rounded-2xl px-5 py-4">
+                      <Loader2 size={16} className="animate-spin text-blue-400" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input bar */}
+              <div className="p-4 border-t border-slate-800 flex gap-3">
+                <input
+                  type="text"
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-bold placeholder:text-slate-500 outline-none focus:border-blue-500 transition-colors"
+                  placeholder="Ask your CFO anything about your financials..."
+                  value={cfoInput}
+                  onChange={e => setCfoInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCfoMessage(); } }}
+                  disabled={cfoLoading}
+                />
+                <button
+                  onClick={sendCfoMessage}
+                  disabled={cfoLoading || !cfoInput.trim()}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest rounded-xl disabled:opacity-40 transition-colors flex items-center gap-2"
+                >
+                  {cfoLoading ? <Loader2 size={14} className="animate-spin" /> : <><Zap size={14}/> Send</>}
+                </button>
+              </div>
+            </div>
+
+            {/* Company context card (shows what the CFO knows) */}
+            {myCompany && (
+              <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2"><Database size={12}/> CFO Context — Your Company Data</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Monthly Revenue', value: fmtK(myCompany.monthly_revenue) },
+                    { label: 'Burn Rate', value: `${fmtK(myCompany.monthly_burn_rate)}/mo` },
+                    { label: 'Team Size', value: myCompany.team_size || 1 },
+                    { label: 'Stage', value: myCompany.current_round || 'pre-seed' },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="bg-slate-50 rounded-2xl p-4 text-center">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+                      <p className="font-black text-slate-800 text-sm">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

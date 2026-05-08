@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './services/supabaseClient';
 import Joyride, { STATUS } from 'react-joyride';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare, X, GraduationCap } from 'lucide-react';
 import { useTranslation } from './i18n/useTranslation';
 
 // --- EXISTING MODULAR COMPONENTS ---
@@ -33,6 +33,7 @@ import TransactionModal from './components/modals/TransactionModal';
 import StatementExportModal from './components/modals/StatementExportModal';
 import GlobalToastAlert from './components/ui/GlobalToastAlert';
 import { TOUR_CONTENT, CustomTourTooltip } from './config/AppTourConfig';
+import DEUSAcademy from './features/learning/DEUSAcademy';
 
 export default function Dashboard({ session, onSignOut }) {
   const { t, lang, setLanguage } = useTranslation();
@@ -94,6 +95,7 @@ export default function Dashboard({ session, onSignOut }) {
 
   const [runTour, setRunTour] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [showAcademy, setShowAcademy] = useState(false);
 
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'My Accounts', ORGANIZE: 'Organize',
@@ -340,6 +342,22 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
           </div>
 
+          {/* DEUS Academy FAB */}
+          <button
+            onClick={() => setShowAcademy(true)}
+            className="fixed z-[110] bg-indigo-600 text-white shadow-2xl rounded-full flex items-center gap-3 hover:-translate-y-1 transition-all active:scale-95 border-2 border-white/20"
+            style={{
+              bottom: 'calc(max(env(safe-area-inset-bottom), 6px) + 4.5rem)',
+              right: 'calc(1.25rem + 4rem + 0.75rem)',
+              padding: '0.875rem',
+            }}
+            title="DEUS Academy"
+          >
+            <GraduationCap size={22} />
+            <span className="font-black text-[10px] uppercase tracking-widest pr-1 hidden md:block">Academy</span>
+          </button>
+
+          {/* Chat FAB */}
           <button
             onClick={() => setActiveModal('ADVISOR')}
             className="fixed z-[110] bg-blue-700 text-white shadow-2xl rounded-full flex items-center gap-3 hover:-translate-y-1 transition-all active:scale-95 border-2 border-white/20"
@@ -446,6 +464,16 @@ export default function Dashboard({ session, onSignOut }) {
 
       {showPayMe && <PayMeCard profile={profile} onClose={() => setShowPayMe(false)} />}
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
+
+      {/* DEUS ACADEMY OVERLAY */}
+      {showAcademy && (
+        <DEUSAcademy
+          onClose={(tab) => {
+            setShowAcademy(false);
+            if (tab) setActiveTab(tab);
+          }}
+        />
+      )}
     </div>
   );
 }

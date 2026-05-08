@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
-import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, ScanFace, Share2, Plus } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, Share2, Plus } from 'lucide-react';
 
 import Dashboard from './Dashboard';
 import AuthCallback from './features/onboarding/AuthCallback';
@@ -14,9 +14,6 @@ import PublicEventPage from './PublicEventPage';
 
 // --- MODALS ---
 import InfoModal from './components/modals/InfoModal';
-
-// --- FACE AUTH ---
-import FaceAuthManager from './features/auth/FaceAuthManager';
 
 // ==========================================
 // REUSABLE COMPONENTS
@@ -76,14 +73,6 @@ function MainApp() {
   const [showPassword, setShowPassword] = useState(false);
   const [mobileOS, setMobileOS] = useState(null); // 'android' | 'ios' | null
 
-
-  // Face login state
-  const [showFaceLogin, setShowFaceLogin] = useState(false);
-  const [faceLoginEmail, setFaceLoginEmail] = useState('');
-  const [faceStoredDescriptor, setFaceStoredDescriptor] = useState(null);
-  const [faceLoginError, setFaceLoginError] = useState('');
-  const [isFaceLoginLoading, setIsFaceLoginLoading] = useState(false);
-  const [hasFaceLoginAvailable, setHasFaceLoginAvailable] = useState(false);
 
   const [activeModal, setActiveModal] = useState(null);
   const [networkStats, setNetworkStats] = useState({ users: 0, orgs: 0, countries: 0 });
@@ -247,97 +236,6 @@ function MainApp() {
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
-  // ── Face Login helpers ─────────────────────────────────────────────────────
-  const isNativeCapacitor = !!(window?.Capacitor?.isNativePlatform?.() || window?.Capacitor?.isNative);
-
-  // Check if native biometrics are available for the face login button
-  useEffect(() => {
-    (async () => {
-      if (isNativeCapacitor) {
-        try {
-          const { NativeBiometric } = await import('@capgo/capacitor-native-biometric');
-          const { isAvailable } = await NativeBiometric.isAvailable();
-          setHasFaceLoginAvailable(isAvailable);
-        } catch { setHasFaceLoginAvailable(false); }
-      } else {
-        // Web: show face button if camera is accessible
-        try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          setHasFaceLoginAvailable(devices.some(d => d.kind === 'videoinput'));
-        } catch { setHasFaceLoginAvailable(false); }
-      }
-    })();
-  }, []);
-
-  const handleNativeFaceLogin = async () => {
-    setIsFaceLoginLoading(true);
-    setFaceLoginError('');
-    try {
-      const { NativeBiometric } = await import('@capgo/capacitor-native-biometric');
-      await NativeBiometric.verifyIdentity({
-        reason: 'Log in to DEUS',
-        title: 'Face Login',
-        subtitle: 'Confirm your identity',
-        negativeButtonText: 'Cancel',
-      });
-      const { username: email, password: rawToken } = await NativeBiometric.getCredentials({
-        server: 'deus.infinitefuturebank.org',
-      });
-      const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawToken));
-      const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-      const { data, error } = await supabase.functions.invoke('face-auth', {
-        body: { mode: 'native', email, tokenHash },
-      });
-      if (error || !data?.token_hash) throw new Error(error?.message || 'Authentication failed.');
-      const { error: verifyErr } = await supabase.auth.verifyOtp({ token_hash: data.token_hash, type: 'magiclink' });
-      if (verifyErr) throw verifyErr;
-    } catch (err) {
-      if (err.message && !err.message.includes('cancel')) {
-        setFaceLoginError(err.message || 'Face login failed. Try your password.');
-      }
-    } finally { setIsFaceLoginLoading(false); }
-  };
-
-  const handleWebFaceLoginStart = async () => {
-    const emailToUse = emailValue.trim().toLowerCase();
-    if (!emailToUse) {
-      setFaceLoginError('Enter your email first so we can load your face profile.');
-      return;
-    }
-    setIsFaceLoginLoading(true);
-    setFaceLoginError('');
-    try {
-      const { data } = await supabase.from('profiles')
-        .select('face_login_enabled, face_descriptor')
-        .eq('email_lower', emailToUse)
-        .maybeSingle();
-      if (!data?.face_login_enabled) throw new Error('Face login is not enabled for this account.');
-      if (!data?.face_descriptor) throw new Error('No face profile found. Please set up Face Login in Settings.');
-      setFaceStoredDescriptor(data.face_descriptor);
-      setFaceLoginEmail(emailToUse);
-      setShowFaceLogin(true);
-    } catch (err) {
-      setFaceLoginError(err.message);
-    } finally { setIsFaceLoginLoading(false); }
-  };
-
-  const handleWebFaceVerified = async (matched) => {
-    setShowFaceLogin(false);
-    if (!matched) { setFaceLoginError('Face not recognised. Try again or use your password.'); return; }
-    setIsFaceLoginLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('face-auth', {
-        body: { mode: 'web', email: faceLoginEmail },
-      });
-      if (error || !data?.token_hash) throw new Error(error?.message || 'Session error.');
-      const { error: verifyErr } = await supabase.auth.verifyOtp({ token_hash: data.token_hash, type: 'magiclink' });
-      if (verifyErr) throw verifyErr;
-    } catch (err) {
-      setFaceLoginError(err.message || 'Authentication failed. Try your password.');
-    } finally { setIsFaceLoginLoading(false); }
-  };
-  // ──────────────────────────────────────────────────────────────────────────
-
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -420,42 +318,6 @@ function MainApp() {
                   </div>
                 </button>
               </form>
-
-              {/* Face Login */}
-              {hasFaceLoginAvailable && (
-                <div className="mt-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex-1 h-px bg-slate-200"></div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">or</span>
-                    <div className="flex-1 h-px bg-slate-200"></div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={isNativeCapacitor ? handleNativeFaceLogin : handleWebFaceLoginStart}
-                    disabled={isFaceLoginLoading}
-                    className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg disabled:opacity-50 group"
-                  >
-                    {isFaceLoginLoading
-                      ? <RefreshCw size={20} className="animate-spin" />
-                      : <ScanFace size={20} className="group-hover:scale-110 transition-transform" />
-                    }
-                    {isFaceLoginLoading ? 'Recognising...' : 'Sign in with Face'}
-                  </button>
-                  {faceLoginError && (
-                    <p className="mt-3 text-[11px] font-bold text-red-500 text-center">{faceLoginError}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Face camera modal (web) */}
-              {showFaceLogin && (
-                <FaceAuthManager
-                  mode="verify"
-                  storedDescriptor={faceStoredDescriptor}
-                  onVerified={handleWebFaceVerified}
-                  onCancel={() => { setShowFaceLogin(false); setFaceLoginError(''); }}
-                />
-              )}
             </div>
           )}
 
@@ -479,29 +341,8 @@ function MainApp() {
                 </button>
               </form>
               <div className="mt-6 flex flex-col gap-3">
-                {hasFaceLoginAvailable && (
-                  <button
-                    type="button"
-                    onClick={isNativeCapacitor ? handleNativeFaceLogin : () => { setFaceLoginEmail(emailValue.trim().toLowerCase()); handleWebFaceLoginStart(); }}
-                    disabled={isFaceLoginLoading}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-5 bg-slate-50 border border-slate-200 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-all disabled:opacity-50"
-                  >
-                    <ScanFace size={16} /> Use Face Login
-                  </button>
-                )}
                 <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Switch Account</button>
               </div>
-              {faceLoginError && (
-                <p className="mt-2 text-[11px] font-bold text-red-500 text-center">{faceLoginError}</p>
-              )}
-              {showFaceLogin && (
-                <FaceAuthManager
-                  mode="verify"
-                  storedDescriptor={faceStoredDescriptor}
-                  onVerified={handleWebFaceVerified}
-                  onCancel={() => { setShowFaceLogin(false); setFaceLoginError(''); }}
-                />
-              )}
             </div>
           )}
 
