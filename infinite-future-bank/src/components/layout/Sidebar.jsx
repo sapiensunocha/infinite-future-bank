@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Sparkles, X, Compass, ArrowDownUp, Target, Landmark, Folder, Briefcase,
-  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut
+  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, HandCoins
 } from 'lucide-react';
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, t }) {
@@ -17,6 +17,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
     { id: 'TRAINING',        icon: <BookOpen size={18} />,    label: t('nav.training') },
     { id: 'AGENTS',          icon: <Users size={18} />,       label: t('nav.team') },
     { id: 'INSURANCE',       icon: <ShieldCheck size={18} />, label: t('nav.insurance') },
+    { id: 'LOANS',           icon: <HandCoins size={18} />,   label: 'Loans & Credit' },
     { id: 'NETWORK',         icon: <Share2 size={18} />,      label: t('nav.network') },
     { id: 'SETTINGS',        icon: <Settings size={18} />,    label: t('nav.settings') },
   ];

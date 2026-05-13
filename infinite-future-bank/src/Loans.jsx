@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
-import { 
-  ShieldCheck, TrendingUp, HandCoins, Activity, AlertCircle, 
+import {
+  ShieldCheck, TrendingUp, HandCoins, Activity, AlertCircle,
   CheckCircle2, ChevronRight, Users, Loader2, Zap, Lock, Network, Circle, Square
 } from 'lucide-react';
+import CommunityLoanNetwork from './features/lending/CommunityLoanNetwork';
 
 const GCP_NODE_URL = 'https://afr-blockchain-node-382117221028.us-central1.run.app';
 
 export default function Loans({ session, balances, fetchAllData, profile }) {
-  const [activeTab, setActiveTab] = useState('MARKET'); // 'MARKET', 'BORROW', 'PORTFOLIO'
+  const [activeTab, setActiveTab] = useState('MARKET'); // 'MARKET', 'BORROW', 'PORTFOLIO', 'COMMUNITY'
   const [marketLoans, setMarketLoans] = useState([]);
   const [myLoans, setMyLoans] = useState([]);
   const [myInvestments, setMyInvestments] = useState([]);
@@ -177,6 +178,7 @@ export default function Loans({ session, balances, fetchAllData, profile }) {
         <button onClick={() => setActiveTab('MARKET')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'MARKET' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Marketplace (Lend)</button>
         <button onClick={() => setActiveTab('BORROW')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'BORROW' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>Issue Contract (Borrow)</button>
         <button onClick={() => setActiveTab('PORTFOLIO')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'PORTFOLIO' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>My Portfolio</button>
+        <button onClick={() => setActiveTab('COMMUNITY')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${activeTab === 'COMMUNITY' ? 'bg-indigo-600 text-white shadow-md' : 'text-indigo-600 hover:bg-indigo-50 border border-indigo-100'}`}><Users size={12}/> Community Loans</button>
       </div>
 
       {/* --- TAB 1: MARKETPLACE (LEND) --- */}
@@ -428,6 +430,11 @@ export default function Loans({ session, balances, fetchAllData, profile }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── COMMUNITY LOAN NETWORK ── */}
+      {activeTab === 'COMMUNITY' && (
+        <CommunityLoanNetwork session={session} balances={balances} fetchAllData={fetchAllData} />
       )}
 
       {/* 🟢 GLOBAL NOTIFICATION LAYER */}

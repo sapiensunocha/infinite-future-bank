@@ -12,6 +12,7 @@ import WealthInvest from './WealthInvest';
 import GlobalLifestyle from './GlobalLifestyle';
 import FinancialPlanner from './FinancialPlanner';
 import EmergencySOS from './EmergencySOS';
+import Loans from './Loans';
 import Training from './Training';
 import Agents from './Agents';
 import DepositInterface from './DepositInterface';
@@ -100,7 +101,8 @@ export default function Dashboard({ session, onSignOut }) {
     INVEST: 'Investments', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
-    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'Refer & Earn'
+    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'Refer & Earn',
+    LOANS: 'Loans & Credit'
   };
 
   const triggerGlobalActionNotification = (type, message) => {
@@ -338,6 +340,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'TRAINING' && <Training session={session} />}
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
+            {activeTab === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
           </div>
 
           {/* Chat FAB */}
