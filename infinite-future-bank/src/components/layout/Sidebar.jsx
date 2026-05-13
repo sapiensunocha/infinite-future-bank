@@ -1,10 +1,11 @@
 import React from 'react';
 import {
   Sparkles, X, Compass, ArrowDownUp, Target, Landmark, Folder, Briefcase,
-  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, HandCoins
+  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, HandCoins, TrendingUp
 } from 'lucide-react';
 
-export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, t }) {
+export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, t, commercialProfile }) {
+  const isCapitalEligible = commercialProfile?.pascaline_status === 'eligible_for_funding';
   const tabs = [
     { id: 'NET_POSITION',    icon: <Compass size={18} />,    label: t('nav.home') },
     { id: 'TRANSACTIONS',    icon: <ArrowDownUp size={18} />, label: t('nav.transactions') },
@@ -18,6 +19,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
     { id: 'AGENTS',          icon: <Users size={18} />,       label: t('nav.team') },
     { id: 'INSURANCE',       icon: <ShieldCheck size={18} />, label: t('nav.insurance') },
     { id: 'LOANS',           icon: <HandCoins size={18} />,   label: 'Loans & Credit' },
+    ...(isCapitalEligible ? [{ id: 'CAPITAL', icon: <TrendingUp size={18} />, label: 'Capital Platform' }] : []),
     { id: 'NETWORK',         icon: <Share2 size={18} />,      label: t('nav.network') },
     { id: 'SETTINGS',        icon: <Settings size={18} />,    label: t('nav.settings') },
   ];

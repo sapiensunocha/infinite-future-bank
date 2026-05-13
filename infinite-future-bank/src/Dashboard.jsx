@@ -20,6 +20,7 @@ import WithdrawalPage from './WithdrawalPage';
 import PayMeCard from './PayMeCard'; 
 import TransactionLedger from './TransactionLedger';
 import CapitalNetwork from './CapitalNetwork';
+import CapitalPlatform from './features/capital/CapitalPlatform';
 import InsuranceHub from './InsuranceHub';
 
 // --- NEWLY EXTRACTED COMPONENTS ---
@@ -102,7 +103,7 @@ export default function Dashboard({ session, onSignOut }) {
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
     COMMERCIAL_HUB: 'Business Hub', NETWORK: 'Refer & Earn',
-    LOANS: 'Loans & Credit'
+    LOANS: 'Loans & Credit', CAPITAL: 'Capital Platform'
   };
 
   const triggerGlobalActionNotification = (type, message) => {
@@ -259,7 +260,7 @@ export default function Dashboard({ session, onSignOut }) {
         <Sidebar
           isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
           activeTab={activeTab} setActiveTab={setActiveTab}
-          onSignOut={onSignOut} t={t}
+          onSignOut={onSignOut} t={t} commercialProfile={commercialProfile}
         />
         
         <main className="flex-1 flex flex-col relative overflow-hidden">
@@ -341,6 +342,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
             {activeTab === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
+            {activeTab === 'CAPITAL' && <CapitalPlatform session={session} profile={profile} />}
           </div>
 
           {/* Chat FAB */}

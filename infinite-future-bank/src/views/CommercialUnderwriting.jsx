@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building, ShieldCheck, Loader2 } from 'lucide-react';
+import { Building, ShieldCheck, Loader2, TrendingUp, Lock } from 'lucide-react';
 
 export default function CommercialUnderwriting({ 
   commercialProfile, 
@@ -31,12 +31,20 @@ export default function CommercialUnderwriting({
           <p className="text-sm text-slate-500 mb-8">
             Pascaline has audited your telemetry and underwritten your Dual-Insurance policy. You are now live in the Private Equity Vault.
           </p>
-          <button 
-            onClick={() => setActiveTab('INVEST')} 
-            className="px-8 py-4 bg-emerald-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg"
-          >
-            Manage Syndicate Parameters
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => setActiveTab('INVEST')}
+              className="px-8 py-4 bg-emerald-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg"
+            >
+              Manage Syndicate Parameters
+            </button>
+            <button
+              onClick={() => setActiveTab('CAPITAL')}
+              className="px-8 py-4 bg-blue-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg flex items-center gap-2 justify-center"
+            >
+              <TrendingUp size={16} /> Capital Platform
+            </button>
+          </div>
         </div>
       ) : commercialProfile?.pascaline_status === 'pending_review' ? (
         <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm text-center">
@@ -127,6 +135,36 @@ export default function CommercialUnderwriting({
             {isSubmittingCommercial ? 'Submitting to Pascaline...' : 'Submit Financial Telemetry for Audit'}
           </button>
         </form>
+      )}
+
+      {/* Capital Platform teaser — visible to all non-eligible users */}
+      {commercialProfile?.pascaline_status !== 'eligible_for_funding' && (
+        <div className="mt-8 bg-slate-900 border border-slate-700 p-8 rounded-[3rem] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-indigo-900/20 pointer-events-none" />
+          <div className="relative z-10 flex items-start gap-6">
+            <div className="w-14 h-14 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center shrink-0">
+              <TrendingUp size={28} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="text-lg font-black text-white">Capital Platform</h3>
+                <span className="flex items-center gap-1 px-3 py-1 bg-slate-700 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+                  <Lock size={10} /> Locked
+                </span>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed mb-4">
+                Raise structured capital — grants, debt, equity, or hybrid — with AI-powered analysis, milestone-based tranche releases, and blockchain-signed agreements. Unlock once Pascaline approves your telemetry.
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                {['AI Deal Structuring', 'Milestone Governance', 'Blockchain Signing'].map(f => (
+                  <div key={f} className="bg-slate-800/60 rounded-xl p-3 text-center">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{f}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
