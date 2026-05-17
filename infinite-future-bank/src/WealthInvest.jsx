@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
+import VentureXFeed from './features/venturex/VentureXFeed';
 import { 
   TrendingUp, Wallet, Shield, 
   BarChart3, Zap, ChevronRight,
@@ -284,7 +285,7 @@ export default function WealthInvest({ session, balances, profile }) {
     let items = [{ id: 'PORTFOLIO', label: 'Portfolio' }];
     if (wealthProfile.management_level === 'guided') items.push({ id: 'SUGGESTIONS', label: 'AI Suggestions' });
     else if (wealthProfile.management_level === 'automated') items.push({ id: 'AUTOPILOT', label: 'Autopilot Status' });
-    items.push({ id: 'PUBLIC_MARKETS', label: 'Public Markets' }, { id: 'PRIVATE_EQUITY', label: 'Private Equity' }, { id: 'RAISE_CAPITAL', label: 'Raise Capital' }, { id: 'RISK_MANAGEMENT', label: 'Risk & Insurance' }, { id: 'SETTINGS', label: 'Strategy Settings' });
+    items.push({ id: 'VENTUREX_LIVE', label: '🔴 VentureX Live' }, { id: 'PUBLIC_MARKETS', label: 'Public Markets' }, { id: 'PRIVATE_EQUITY', label: 'Private Equity' }, { id: 'RAISE_CAPITAL', label: 'Raise Capital' }, { id: 'RISK_MANAGEMENT', label: 'Risk & Insurance' }, { id: 'SETTINGS', label: 'Strategy Settings' });
     return items;
   };
 
@@ -418,6 +419,9 @@ export default function WealthInvest({ session, balances, profile }) {
           </div>
         </div>
       )}
+
+      {/* VENTUREX LIVE FEED */}
+      {activeCategory === 'VENTUREX_LIVE' && <VentureXFeed />}
 
       {/* SECTION 1: PUBLIC MARKETS (NOW 100% REAL DATA) */}
       {activeCategory === 'PUBLIC_MARKETS' && (
