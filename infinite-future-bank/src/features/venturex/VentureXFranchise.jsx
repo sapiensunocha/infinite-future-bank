@@ -6,8 +6,9 @@ import {
   CheckCircle2, Lock, Star, Layers, PieChart, Activity, Target,
   RefreshCw, AlertCircle, Plus, X, MapPin, Briefcase, Crown,
   Network, Link2, BadgeCheck, Rocket, Filter, Sparkles,
-  HandCoins, Landmark, LineChart, Leaf
+  HandCoins, Landmark, LineChart, Leaf, GraduationCap
 } from 'lucide-react';
+import EntrepreneurApplication from './EntrepreneurApplication';
 
 // ── Capital Match Panel ───────────────────────────────────────────────────────
 const TYPE_META = {
@@ -884,8 +885,8 @@ function OperatorDashboard({ franchise, session }) {
 // ─────────────────────────────────────────────────────────────────
 // ROOT COMPONENT
 // ─────────────────────────────────────────────────────────────────
-export default function VentureXFranchise({ session, profile }) {
-  const [view, setView]               = useState('directory');  // directory | apply | dashboard
+export default function VentureXFranchise({ session, profile, balances }) {
+  const [view, setView]               = useState('directory');  // directory | apply | dashboard | entrepreneur
   const [myCompany, setMyCompany]     = useState(null);
   const [myFranchise, setMyFranchise] = useState(null);
   const [bootstrapping, setBootstrapping] = useState(true);
@@ -907,8 +908,9 @@ export default function VentureXFranchise({ session, profile }) {
   if (bootstrapping) return <div className="flex justify-center py-20"><Loader2 size={28} className="animate-spin text-blue-500"/></div>;
 
   const NAV = [
-    { id: 'directory',      label: 'Franchise Directory', icon: Layers    },
-    { id: 'capital_match',  label: 'Capital Match',       icon: Zap       },
+    { id: 'entrepreneur',   label: 'Apply as Entrepreneur', icon: GraduationCap },
+    { id: 'directory',      label: 'Franchise Directory',   icon: Layers        },
+    { id: 'capital_match',  label: 'Capital Match',         icon: Zap           },
     ...(!myFranchise && myCompany ? [{ id: 'apply', label: 'Apply for Franchise', icon: Rocket }] : []),
     ...(myFranchise ? [{ id: 'dashboard', label: 'My Franchise', icon: BarChart3 }] : []),
   ];
@@ -930,6 +932,7 @@ export default function VentureXFranchise({ session, profile }) {
         ))}
       </div>
 
+      {view === 'entrepreneur'  && <EntrepreneurApplication session={session} balances={balances} />}
       {view === 'directory'     && <Directory onApply={() => setView('apply')} userFranchise={myFranchise} setView={setView}/>}
       {view === 'capital_match' && <CapitalMatchPanel session={session} myCompany={myCompany}/>}
       {view === 'apply'         && myCompany && (

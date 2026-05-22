@@ -425,7 +425,7 @@ export default function WealthInvest({ session, balances, profile }) {
       {activeCategory === 'VENTUREX_LIVE' && <VentureXFeed />}
 
       {/* VENTUREX FRANCHISE HUB */}
-      {activeCategory === 'FRANCHISE_HUB' && <VentureXFranchise session={session} profile={profile} />}
+      {activeCategory === 'FRANCHISE_HUB' && <VentureXFranchise session={session} profile={profile} balances={balances} />}
 
       {/* SECTION 1: PUBLIC MARKETS (NOW 100% REAL DATA) */}
       {activeCategory === 'PUBLIC_MARKETS' && (
