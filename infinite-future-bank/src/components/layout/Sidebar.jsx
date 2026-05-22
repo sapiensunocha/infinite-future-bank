@@ -20,7 +20,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
     { id: 'INSURANCE',       icon: <ShieldCheck size={18} />, label: t('nav.insurance') },
     { id: 'LOANS',           icon: <HandCoins size={18} />,   label: 'Loans & Credit' },
     ...(isCapitalEligible ? [{ id: 'CAPITAL', icon: <TrendingUp size={18} />, label: 'Capital Platform' }] : []),
-    { id: 'NETWORK',         icon: <Share2 size={18} />,      label: t('nav.network') },
+    { id: 'NETWORK',         icon: <Share2 size={18} />,      label: '⬡ AFR Node' },
     { id: 'SETTINGS',        icon: <Settings size={18} />,    label: t('nav.settings') },
   ];
 

@@ -5,8 +5,275 @@ import {
   ShieldCheck, Loader2, ChevronRight, ArrowUpRight, BarChart3,
   CheckCircle2, Lock, Star, Layers, PieChart, Activity, Target,
   RefreshCw, AlertCircle, Plus, X, MapPin, Briefcase, Crown,
-  Network, Link2, BadgeCheck, Rocket, Filter
+  Network, Link2, BadgeCheck, Rocket, Filter, Sparkles,
+  HandCoins, Landmark, LineChart, Leaf
 } from 'lucide-react';
+
+// ── Capital Match Panel ───────────────────────────────────────────────────────
+const TYPE_META = {
+  funding: { label: 'Grant / Funding', Icon: Sparkles,  color: 'text-emerald-400', bg: 'bg-emerald-900/30 border-emerald-800' },
+  loan:    { label: 'Loan',            Icon: HandCoins,  color: 'text-blue-400',    bg: 'bg-blue-900/30 border-blue-800'    },
+  bond:    { label: 'Bond',            Icon: Landmark,   color: 'text-yellow-400',  bg: 'bg-yellow-900/30 border-yellow-800'},
+  equity:  { label: 'Equity / ETF',   Icon: LineChart,  color: 'text-purple-400',  bg: 'bg-purple-900/30 border-purple-800'},
+};
+const TIER_COLOR = { strong: 'text-emerald-400', good: 'text-blue-400', partial: 'text-slate-400' };
+
+function ScoreRing({ score }) {
+  const r = 18, c = 2 * Math.PI * r;
+  const filled = (score / 100) * c;
+  const color = score >= 75 ? '#34d399' : score >= 50 ? '#60a5fa' : '#94a3b8';
+  return (
+    <svg width={48} height={48} viewBox="0 0 48 48">
+      <circle cx={24} cy={24} r={r} fill="none" stroke="#1e293b" strokeWidth={4}/>
+      <circle cx={24} cy={24} r={r} fill="none" stroke={color} strokeWidth={4}
+        strokeDasharray={`${filled} ${c - filled}`} strokeLinecap="round"
+        transform="rotate(-90 24 24)"/>
+      <text x={24} y={29} textAnchor="middle" fill={color} fontSize={11} fontWeight="900">{score}</text>
+    </svg>
+  );
+}
+
+function MatchCard({ match }) {
+  const [expanded, setExpanded] = useState(false);
+  const meta  = TYPE_META[match.type] || TYPE_META.loan;
+  const Icon  = meta.Icon;
+  const inst  = match.instrument || {};
+  const name  = inst.program_name || inst.product_name || inst.bond_name || inst.company_name || inst.ticker || 'Instrument';
+  const amMin = inst.amount_min_usd || inst.face_value;
+  const amMax = inst.amount_max_usd || inst.outstanding_amount_usd;
+  const fmt   = n => !n ? '' : n >= 1e9 ? `$${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n/1e6).toFixed(1)}M` : `$${(n/1e3).toFixed(0)}K`;
+
+  return (
+    <div className={`border rounded-2xl p-4 ${meta.bg} space-y-3`}>
+      <div className="flex items-start gap-3">
+        <ScoreRing score={match.score}/>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <span className={`text-[9px] font-black uppercase tracking-widest ${meta.color}`}>
+              <Icon size={9} className="inline mr-1"/>{meta.label}
+            </span>
+            <span className={`text-[9px] font-black uppercase tracking-widest ${TIER_COLOR[match.tier]}`}>
+              {match.tier}
+            </span>
+          </div>
+          <p className="text-sm font-black text-white leading-tight truncate">{name}</p>
+          <p className="text-[11px] text-slate-400">{match.provider_name}</p>
+          {(amMin || amMax) && (
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              {fmt(amMin)}{amMin && amMax ? ' – ' : ''}{fmt(amMax)}
+            </p>
+          )}
+        </div>
+        <button onClick={() => setExpanded(x => !x)}
+          className="text-slate-500 hover:text-white transition-colors shrink-0">
+          <ChevronRight size={14} className={`transition-transform ${expanded ? 'rotate-90' : ''}`}/>
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="space-y-2 border-t border-white/10 pt-3">
+          {match.reasons?.length > 0 && (
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Why it matches</p>
+              {match.reasons.map((r, i) => (
+                <p key={i} className="text-[11px] text-emerald-400 flex items-start gap-1"><CheckCircle2 size={10} className="mt-0.5 shrink-0"/>{r}</p>
+              ))}
+            </div>
+          )}
+          {match.disqualifiers?.length > 0 && (
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Caveats</p>
+              {match.disqualifiers.map((d, i) => (
+                <p key={i} className="text-[11px] text-yellow-400 flex items-start gap-1"><AlertCircle size={10} className="mt-0.5 shrink-0"/>{d}</p>
+              ))}
+            </div>
+          )}
+          {match.pathway && (
+            <div className="bg-slate-900/60 rounded-xl p-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Your Pathway</p>
+              <p className="text-[11px] text-white">{match.pathway}</p>
+            </div>
+          )}
+          {match.amount_recommended_usd > 0 && (
+            <p className="text-[10px] text-blue-400 font-bold">
+              Recommended amount: {fmt(match.amount_recommended_usd)}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CapitalMatchPanel({ session, myCompany }) {
+  const [matches, setMatches]   = useState([]);
+  const [summary, setSummary]   = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState(null);
+  const [typeFilter, setFilter] = useState('all');
+  const [refreshed, setRefreshed] = useState(false);
+
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const load = useCallback(async () => {
+    if (!session?.user?.id) return;
+    setLoading(true); setError(null);
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/capital-matchmaker`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${s?.access_token || SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({
+            user_id:   session.user.id,
+            limit:     40,
+            min_score: 30,
+            type:      typeFilter === 'all' ? undefined : typeFilter,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const json = await res.json();
+      setMatches(json.matches || []);
+      setSummary(json.summary || null);
+      setRefreshed(true);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [session?.user?.id, typeFilter, SUPABASE_URL, SUPABASE_KEY]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = typeFilter === 'all' ? matches : matches.filter(m => m.type === typeFilter);
+  const strong   = filtered.filter(m => m.tier === 'strong');
+  const good     = filtered.filter(m => m.tier === 'good');
+  const partial  = filtered.filter(m => m.tier === 'partial');
+
+  const fmt = n => !n ? '$0' : n >= 1e12 ? `$${(n/1e12).toFixed(1)}T` : n >= 1e9 ? `$${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n/1e6).toFixed(1)}M` : `$${(n/1e3).toFixed(0)}K`;
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-slate-900 border border-slate-800 rounded-[2rem] p-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-transparent pointer-events-none"/>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <Zap size={14} className="text-blue-400"/>
+            <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">AFR Capital Engine</span>
+          </div>
+          <h3 className="text-xl font-black">Your Capital Matches</h3>
+          <p className="text-sm text-slate-400 mt-1">
+            AI-scored against {summary?.total_scored || '—'} global instruments across grants, loans, bonds & equities.
+          </p>
+          {summary && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+              {[
+                { label: 'Strong Matches', value: summary.strong, color: 'text-emerald-400' },
+                { label: 'Good Matches',   value: summary.good,   color: 'text-blue-400'    },
+                { label: 'Max Accessible', value: fmt(summary.max_accessible_usd), color: 'text-yellow-400' },
+                { label: 'Top Score',      value: `${summary.top_match_score}/100`, color: 'text-purple-400' },
+              ].map(s => (
+                <div key={s.label} className="bg-slate-800/60 rounded-xl p-3">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{s.label}</p>
+                  <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Type filters */}
+      <div className="flex gap-2 overflow-x-auto no-scrollbar">
+        {[
+          { id: 'all',     label: 'All',     Icon: Zap      },
+          { id: 'funding', label: 'Grants',  Icon: Sparkles },
+          { id: 'loan',    label: 'Loans',   Icon: HandCoins },
+          { id: 'bond',    label: 'Bonds',   Icon: Landmark  },
+          { id: 'equity',  label: 'Equities',Icon: LineChart  },
+        ].map(f => (
+          <button key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              typeFilter === f.id ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'
+            }`}>
+            <f.Icon size={11}/>{f.label}
+            {summary && f.id !== 'all' && (
+              <span className="ml-1 bg-white/10 px-1.5 py-0.5 rounded-full text-[8px]">
+                {summary.by_type?.[f.id] || 0}
+              </span>
+            )}
+          </button>
+        ))}
+        <button onClick={load} disabled={loading}
+          className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-800 text-slate-400 border border-slate-700 hover:text-white ml-auto">
+          <RefreshCw size={11} className={loading ? 'animate-spin' : ''}/>Refresh
+        </button>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-900/20 border border-red-800 rounded-2xl p-4 flex items-center gap-3">
+          <AlertCircle size={16} className="text-red-400"/>
+          <p className="text-sm text-red-300">{error}</p>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <Zap size={28} className="text-blue-400 animate-pulse"/>
+          <p className="text-sm font-black text-slate-400 uppercase tracking-widest">AFR Engine Scoring...</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {!loading && filtered.length > 0 && (
+        <div className="space-y-5">
+          {strong.length > 0 && (
+            <section>
+              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-2 flex items-center gap-1">
+                <CheckCircle2 size={10}/>Strong Matches ({strong.length})
+              </p>
+              <div className="space-y-3">{strong.map(m => <MatchCard key={`${m.type}-${m.id}`} match={m}/>)}</div>
+            </section>
+          )}
+          {good.length > 0 && (
+            <section>
+              <p className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2 flex items-center gap-1">
+                <Star size={10}/>Good Matches ({good.length})
+              </p>
+              <div className="space-y-3">{good.map(m => <MatchCard key={`${m.type}-${m.id}`} match={m}/>)}</div>
+            </section>
+          )}
+          {partial.length > 0 && (
+            <section>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1">
+                <Target size={10}/>Partial Matches ({partial.length})
+              </p>
+              <div className="space-y-3">{partial.map(m => <MatchCard key={`${m.type}-${m.id}`} match={m}/>)}</div>
+            </section>
+          )}
+        </div>
+      )}
+
+      {!loading && !error && filtered.length === 0 && refreshed && (
+        <div className="text-center py-16">
+          <Zap size={32} className="text-slate-700 mx-auto mb-3"/>
+          <p className="text-sm font-black text-slate-500">No matches found</p>
+          <p className="text-xs text-slate-600 mt-1">Complete your business profile to unlock matches</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── helpers ───────────────────────────────────────────────────────
 const SECTOR_EMOJI = {
@@ -640,7 +907,8 @@ export default function VentureXFranchise({ session, profile }) {
   if (bootstrapping) return <div className="flex justify-center py-20"><Loader2 size={28} className="animate-spin text-blue-500"/></div>;
 
   const NAV = [
-    { id: 'directory',  label: 'Franchise Directory', icon: Layers   },
+    { id: 'directory',      label: 'Franchise Directory', icon: Layers    },
+    { id: 'capital_match',  label: 'Capital Match',       icon: Zap       },
     ...(!myFranchise && myCompany ? [{ id: 'apply', label: 'Apply for Franchise', icon: Rocket }] : []),
     ...(myFranchise ? [{ id: 'dashboard', label: 'My Franchise', icon: BarChart3 }] : []),
   ];
@@ -662,8 +930,9 @@ export default function VentureXFranchise({ session, profile }) {
         ))}
       </div>
 
-      {view === 'directory'  && <Directory onApply={() => setView('apply')} userFranchise={myFranchise} setView={setView}/>}
-      {view === 'apply'      && myCompany && (
+      {view === 'directory'     && <Directory onApply={() => setView('apply')} userFranchise={myFranchise} setView={setView}/>}
+      {view === 'capital_match' && <CapitalMatchPanel session={session} myCompany={myCompany}/>}
+      {view === 'apply'         && myCompany && (
         <ApplicationForm
           session={session}
           myCompany={myCompany}

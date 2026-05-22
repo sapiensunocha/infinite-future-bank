@@ -20,6 +20,7 @@ import WithdrawalPage from './WithdrawalPage';
 import PayMeCard from './PayMeCard'; 
 import TransactionLedger from './TransactionLedger';
 import CapitalNetwork from './CapitalNetwork';
+import AFRNetworkPanel from './features/network/AFRNetworkPanel';
 import CapitalPlatform from './features/capital/CapitalPlatform';
 import InsuranceHub from './InsuranceHub';
 
@@ -102,7 +103,7 @@ export default function Dashboard({ session, onSignOut }) {
     INVEST: 'Investments', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
-    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'Refer & Earn',
+    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node',
     LOANS: 'Loans & Credit', CAPITAL: 'Capital Platform'
   };
 
@@ -273,7 +274,7 @@ export default function Dashboard({ session, onSignOut }) {
             formatCurrency={formatCurrency} isNotificationMenuOpen={isNotificationMenuOpen}
             setIsNotificationMenuOpen={setIsNotificationMenuOpen} unreadCount={notifications.filter(n => !n.is_read).length}
             isProfileMenuOpen={isProfileMenuOpen} setIsProfileMenuOpen={setIsProfileMenuOpen}
-            profile={profile} userName={profile?.full_name?.split('@')[0] || 'Client'}
+            profile={profile} userName={profile?.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || 'Client'}
             visibleNotifications={notifications} setActiveTab={setActiveTab}
             markAsRead={markAsRead} handleConfirmRequest={handleConfirmRequest}
             handleDeclineRequest={handleDeclineRequest} handleAcceptP2PWithdrawal={handleAcceptP2PWithdrawal}
@@ -331,7 +332,7 @@ export default function Dashboard({ session, onSignOut }) {
             )}
             
             {activeTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
-            {activeTab === 'NETWORK' && <CapitalNetwork session={session} profile={profile} balances={balances} formatCurrency={formatCurrency} fetchAllData={fetchAllData} />}
+            {activeTab === 'NETWORK' && <AFRNetworkPanel session={session} profile={profile} />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}

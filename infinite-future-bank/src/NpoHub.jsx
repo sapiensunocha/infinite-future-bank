@@ -44,7 +44,9 @@ export default function NpoHub({ session }) {
   const showError = (msg) => { setErr(msg); setTimeout(()=>setErr(''), 5000); };
 
   // Form States
-  const [applyForm, setApplyForm] = useState({ name: '', taxId: '', mission: '', sector: '', country: '', website: '', founded_year: '', target_tier: TIERS.EMERGING });
+  const [applyForm, setApplyForm] = useState({ name: '', taxId: '', mission: '', sector: '', country: '', website: '', founded_year: '', target_tier: TIERS.EMERGING, charterFile: null, financialFile: null });
+  const charterInputRef = React.useRef(null);
+  const financialInputRef = React.useRef(null);
   const [isApplying, setIsApplying] = useState(false);
   const [liveAiStatus, setLiveAiStatus] = useState('');
   const [impactForm, setImpactReportsForm] = useState({ title: '', summary: '', metrics: {}, file: null });
@@ -171,12 +173,35 @@ export default function NpoHub({ session }) {
     if (error) showError(error.message);
   };
 
+  const uploadNpoDoc = async (file, slot) => {
+    const ext = file.name.split('.').pop();
+    const path = `npo/${session.user.id}/${slot}_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('documents').upload(path, file, { upsert: true });
+    if (error) throw new Error(`Upload failed: ${error.message}`);
+    const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(path);
+    return publicUrl;
+  };
+
   const handleApply = async (e) => {
     e.preventDefault();
     setIsApplying(true);
     setLiveAiStatus('Extracting values from NGO Charter...');
 
     try {
+      let charterUrl = null;
+      let financialUrl = null;
+
+      if (applyForm.charterFile) {
+        setLiveAiStatus('Uploading NGO Charter...');
+        charterUrl = await uploadNpoDoc(applyForm.charterFile, 'charter');
+      }
+      if (applyForm.financialFile) {
+        setLiveAiStatus('Uploading Financial Document...');
+        financialUrl = await uploadNpoDoc(applyForm.financialFile, 'financials');
+      }
+
+      setLiveAiStatus('Extracting values from NGO Charter...');
+
       const { error: dbError } = await supabase.from('npo_profiles').upsert({
         id: session.user.id,
         npo_name: applyForm.name,
@@ -188,7 +213,9 @@ export default function NpoHub({ session }) {
         founded_year: applyForm.founded_year,
         program_tier: 'Pending_AI_Review',
         verification_status: 'pending_review',
-        live_ai_status: 'IFB Sovereign Compliance Online...'
+        live_ai_status: 'IFB Sovereign Compliance Online...',
+        ...(charterUrl && { charter_url: charterUrl }),
+        ...(financialUrl && { financial_doc_url: financialUrl }),
       });
 
       if (dbError) throw dbError;
@@ -488,10 +515,43 @@ export default function NpoHub({ session }) {
                     <textarea required className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500 h-32" value={applyForm.mission} onChange={e=>setApplyForm({...applyForm, mission: e.target.value})} placeholder="Describe your community program and how it survives leadership dry spells..."/>
                   </div>
 
-                  <div className="p-6 bg-blue-50 border-2 border-dashed border-blue-200 rounded-3xl text-center group hover:bg-blue-100 transition-colors cursor-pointer">
-                    <Upload size={32} className="mx-auto text-blue-500 mb-2 group-hover:scale-110 transition-transform"/>
-                    <p className="font-black text-[10px] uppercase tracking-widest text-blue-700">Drag & Drop NGO Charter / Financials</p>
-                    <p className="text-[9px] text-blue-400 font-bold mt-1">PDF, DOCX, or Excel files accepted for AI Extraction</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Charter Upload */}
+                    <div
+                      onClick={() => charterInputRef.current?.click()}
+                      className={`p-6 border-2 border-dashed rounded-3xl text-center group cursor-pointer transition-colors ${applyForm.charterFile ? 'bg-emerald-50 border-emerald-300' : 'bg-blue-50 border-blue-200 hover:bg-blue-100'}`}
+                    >
+                      <input
+                        ref={charterInputRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.docx,.doc,.xlsx,.xls"
+                        onChange={e => { const f = e.target.files[0]; if (f) setApplyForm(p => ({ ...p, charterFile: f })); }}
+                      />
+                      <Upload size={24} className={`mx-auto mb-2 transition-transform group-hover:scale-110 ${applyForm.charterFile ? 'text-emerald-500' : 'text-blue-500'}`} />
+                      <p className="font-black text-[10px] uppercase tracking-widest text-blue-700">
+                        {applyForm.charterFile ? applyForm.charterFile.name : 'NGO Charter / Articles'}
+                      </p>
+                      <p className="text-[9px] text-blue-400 font-bold mt-1">PDF, DOCX accepted</p>
+                    </div>
+                    {/* Financial Doc Upload */}
+                    <div
+                      onClick={() => financialInputRef.current?.click()}
+                      className={`p-6 border-2 border-dashed rounded-3xl text-center group cursor-pointer transition-colors ${applyForm.financialFile ? 'bg-emerald-50 border-emerald-300' : 'bg-indigo-50 border-indigo-200 hover:bg-indigo-100'}`}
+                    >
+                      <input
+                        ref={financialInputRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.docx,.doc,.xlsx,.xls"
+                        onChange={e => { const f = e.target.files[0]; if (f) setApplyForm(p => ({ ...p, financialFile: f })); }}
+                      />
+                      <Upload size={24} className={`mx-auto mb-2 transition-transform group-hover:scale-110 ${applyForm.financialFile ? 'text-emerald-500' : 'text-indigo-500'}`} />
+                      <p className="font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                        {applyForm.financialFile ? applyForm.financialFile.name : 'Financial Statements'}
+                      </p>
+                      <p className="text-[9px] text-indigo-400 font-bold mt-1">PDF, DOCX, Excel accepted</p>
+                    </div>
                   </div>
 
                   {isApplying ? (

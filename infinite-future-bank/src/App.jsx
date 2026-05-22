@@ -170,6 +170,12 @@ function MainApp() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setCurrentView('update_password');
+      if (event === 'TOKEN_REFRESH_FAILED') {
+        // Stale or revoked token — wipe local session and return to login
+        supabase.auth.signOut({ scope: 'local' });
+        if (mounted) { setSession(null); setIsAppReady(true); }
+        return;
+      }
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') initializeUser(session);
     });
 

@@ -3,6 +3,14 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 
+// Register AFR Network Node service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .catch(() => {}); // silent — SW is enhancement, not requirement
+  });
+}
+
 const hideSplash = () => {
   const splash = document.getElementById('splash');
   if (!splash) return;
