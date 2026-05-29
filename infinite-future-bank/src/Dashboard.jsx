@@ -321,13 +321,16 @@ export default function Dashboard({ session, onSignOut }) {
             )}
             
             {activeTab === 'COMMERCIAL_HUB' && (
-              <CommercialUnderwriting 
-                commercialProfile={commercialProfile} 
+              <CommercialUnderwriting
+                commercialProfile={commercialProfile}
                 commercialForm={commercialForm}
                 setCommercialForm={setCommercialForm}
                 handleCommercialSubmit={handleCommercialSubmit}
                 isSubmittingCommercial={isSubmittingCommercial}
-                setActiveTab={setActiveTab} 
+                setActiveTab={setActiveTab}
+                session={session}
+                balances={balances}
+                profile={profile}
               />
             )}
             

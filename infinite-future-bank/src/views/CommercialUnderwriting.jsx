@@ -1,16 +1,49 @@
-import React from 'react';
-import { Building, ShieldCheck, Loader2, TrendingUp, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Rocket, Globe } from 'lucide-react';
+import CompanyFormationHub from '../features/formation/CompanyFormationHub';
 
-export default function CommercialUnderwriting({ 
-  commercialProfile, 
-  commercialForm, 
-  setCommercialForm, 
-  handleCommercialSubmit, 
-  isSubmittingCommercial, 
-  setActiveTab 
+export default function CommercialUnderwriting({
+  commercialProfile,
+  commercialForm,
+  setCommercialForm,
+  handleCommercialSubmit,
+  isSubmittingCommercial,
+  setActiveTab,
+  session,
+  balances,
+  profile,
 }) {
+  const [bizView, setBizView] = useState('underwriting');
+
   return (
     <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500">
+
+      {/* Tab selector */}
+      <div className="flex gap-2 mb-8 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl w-fit">
+        <button
+          onClick={() => setBizView('underwriting')}
+          className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+            bizView === 'underwriting' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          }`}>
+          <Building size={13}/> I Have a Company
+        </button>
+        <button
+          onClick={() => setBizView('formation')}
+          className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+            bizView === 'formation' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          }`}>
+          <Globe size={13}/> Register New Company
+        </button>
+      </div>
+
+      {/* Company Formation Hub */}
+      {bizView === 'formation' && (
+        <CompanyFormationHub session={session} balances={balances} profile={profile} />
+      )}
+
+      {/* Corporate Underwriting (existing) */}
+      {bizView === 'underwriting' && (
+      <div>
       <div className="bg-slate-900 border border-slate-800 p-10 rounded-[3rem] shadow-xl text-white mb-8 relative overflow-hidden">
         <div className="relative z-10">
           <h2 className="text-3xl font-black tracking-tight mb-2 flex items-center gap-3">
@@ -165,6 +198,8 @@ export default function CommercialUnderwriting({
             </div>
           </div>
         </div>
+      )}
+      </div>
       )}
     </div>
   );
