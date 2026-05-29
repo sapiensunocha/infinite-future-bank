@@ -4,7 +4,7 @@ import {
   ShieldCheck, TrendingUp, PieChart, BarChart2,
   Send, Download, Plus, ArrowRightLeft, QrCode,
   ArrowDownRight, ArrowUpRight, Zap, CreditCard, Building, Wallet,
-  ChevronRight
+  ChevronRight, Wifi, Shield
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
 import { useTranslation } from '../i18n/useTranslation';
@@ -24,7 +24,8 @@ export default function NetPositionHome({
   setActiveTab, activeEscrows, setIsNotificationMenuOpen,
   showBalances, setShowBalances, setActiveModal,
   setShowPayMe, setShowDepositUI, setIsWithdrawOpen,
-  showAnalytics, setShowAnalytics
+  showAnalytics, setShowAnalytics,
+  setShowVault, setShowNFC
 }) {
   const { t } = useTranslation();
   const safeTotalNetWorth = totalNetWorth || 1;
@@ -53,6 +54,8 @@ export default function NetPositionHome({
     { id: 'PAY_ME',    icon: QrCode,         label: t('actions.payMe'),    color: 'bg-blue-500',    action: () => setShowPayMe(true) },
     { id: 'DEPOSIT',   icon: Plus,           label: t('actions.add'),      color: 'bg-emerald-500', action: () => setShowDepositUI(true) },
     { id: 'WITHDRAW',  icon: Landmark,       label: t('actions.withdraw'), color: 'bg-slate-700',   action: () => setIsWithdrawOpen(true) },
+    { id: 'NFC',       icon: Wifi,           label: 'Tap & Pay',           color: 'bg-violet-600',  action: () => setShowNFC && setShowNFC(true) },
+    { id: 'VAULT',     icon: Shield,         label: 'Vault',               color: 'bg-indigo-700',  action: () => setShowVault && setShowVault(true) },
     { id: 'TRANSFER',  icon: ArrowRightLeft, label: t('actions.exchange'), color: 'bg-indigo-600',  action: () => setActiveModal('TRANSFER') },
     { id: 'ANALYTICS', icon: BarChart2,      label: t('actions.analytics'),color: showAnalytics ? 'bg-indigo-700' : 'bg-slate-500', action: () => setShowAnalytics(!showAnalytics) },
   ];

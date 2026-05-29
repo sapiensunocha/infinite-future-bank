@@ -23,6 +23,8 @@ import CapitalNetwork from './CapitalNetwork';
 import AFRNetworkPanel from './features/network/AFRNetworkPanel';
 import CapitalPlatform from './features/capital/CapitalPlatform';
 import InsuranceHub from './InsuranceHub';
+import VaultManager from './features/mysafe/VaultManager';
+import NFCTransfer from './features/nfc/NFCTransfer';
 
 // --- NEWLY EXTRACTED COMPONENTS ---
 import AppPopupModal from './components/modals/AppPopupModal';
@@ -73,9 +75,11 @@ export default function Dashboard({ session, onSignOut }) {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
   const [showDepositUI, setShowDepositUI] = useState(false);
-  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false); 
-  const [showPayMe, setShowPayMe] = useState(false); 
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [showPayMe, setShowPayMe] = useState(false);
   const [showStatementModal, setShowStatementModal] = useState(false);
+  const [showVault, setShowVault] = useState(false);
+  const [showNFC, setShowNFC] = useState(false);
 
   // Commercial Underwriting States
   const [commercialForm, setCommercialForm] = useState({ 
@@ -302,6 +306,8 @@ export default function Dashboard({ session, onSignOut }) {
                 setIsWithdrawOpen={setIsWithdrawOpen}
                 showAnalytics={showAnalytics}
                 setShowAnalytics={setShowAnalytics}
+                setShowVault={setShowVault}
+                setShowNFC={setShowNFC}
               />
             )}
             
@@ -456,6 +462,48 @@ export default function Dashboard({ session, onSignOut }) {
 
       {showPayMe && <PayMeCard profile={profile} onClose={() => setShowPayMe(false)} />}
       {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
+
+      {/* 🔒 VAULT MANAGER OVERLAY */}
+      {showVault && (
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-0 sm:p-8">
+          <div className="relative w-full sm:max-w-lg animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
+            <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
+              <div className="flex justify-end mb-2">
+                <button onClick={() => setShowVault(false)} className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors">
+                  <X size={14}/>
+                </button>
+              </div>
+              <VaultManager
+                balances={balances}
+                onSuccess={() => { fetchAllData(); }}
+                onClose={() => setShowVault(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 📶 NFC TAP & PAY OVERLAY */}
+      {showNFC && (
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-0 sm:p-8">
+          <div className="relative w-full sm:max-w-sm animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
+            <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
+              <div className="flex justify-end mb-2">
+                <button onClick={() => setShowNFC(false)} className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors">
+                  <X size={14}/>
+                </button>
+              </div>
+              <NFCTransfer
+                session={session}
+                balances={balances}
+                profile={profile}
+                onClose={() => setShowNFC(false)}
+                onSuccess={() => { fetchAllData(); }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
