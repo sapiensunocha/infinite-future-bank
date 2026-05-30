@@ -15,7 +15,7 @@ const FALLBACK_BACKGROUNDS = [
 ];
 
 const MICHAEL_BASE = 'https://michael-api-382117221028.us-central1.run.app';
-const MICHAEL_KEY  = import.meta.env.VITE_MICHAEL_API_KEY || 'michael-073ef5fe9d186dc4259e81e8d9cc928ee34f3f44';
+const MICHAEL_KEY  = import.meta.env.VITE_MICHAEL_API_KEY || 'xeltis-prod-key-2026';
 
 // ISO-2 → ISO-3 mapping for MICHAEL API country risk endpoint
 const ISO2_TO_ISO3 = {
