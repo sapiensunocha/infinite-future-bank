@@ -180,12 +180,39 @@ export default function AccountHub({ session, balances, profile, showBalances })
   const [clyrixEnabled, setClyrixEnabled] = useState(true);
   const [autoSweepEnabled, setAutoSweepEnabled] = useState(false);
 
+  // Card Recharge States
+  const [rechargeAmount, setRechargeAmount] = useState('');
+  const [isRecharging, setIsRecharging] = useState(false);
+
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
   const formatPan = (digits) => digits ? digits.match(/.{1,4}/g).join(' ') : '';
 
   const triggerGlobalActionNotification = (type, message) => {
     setNotification({ type, text: message });
     setTimeout(() => setNotification(null), 6000);
+  };
+
+  const handleRechargeCard = async () => {
+    const amount = parseFloat(rechargeAmount);
+    if (!amount || amount <= 0) return triggerGlobalActionNotification('error', 'Enter a valid amount.');
+    if (!activeCard?.id) return triggerGlobalActionNotification('error', 'No card selected.');
+    if (amount > (balances?.liquid_usd || 0)) return triggerGlobalActionNotification('error', 'Insufficient cash balance.');
+    setIsRecharging(true);
+    try {
+      const { error } = await supabase.rpc('recharge_card', {
+        p_user_id: session.user.id,
+        p_card_id: activeCard.id,
+        p_amount: amount,
+      });
+      if (error) throw error;
+      triggerGlobalActionNotification('success', `${formatCurrency(amount)} loaded onto your card.`);
+      setRechargeAmount('');
+      await fetchData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', err.message || 'Recharge failed.');
+    } finally {
+      setIsRecharging(false);
+    }
   };
 
   const handleSwap = async () => {
@@ -440,6 +467,36 @@ export default function AccountHub({ session, balances, profile, showBalances })
 
                   {cards.length > 0 && (
                     <div className="flex flex-col w-full max-w-sm gap-4 mt-10">
+                      {/* Card balance */}
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Card Balance</p>
+                          <p className="text-xl font-black text-slate-800">{formatCurrency(activeCard.balance || 0)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Available Cash</p>
+                          <p className="text-sm font-black text-emerald-600">{formatCurrency(balances?.liquid_usd)}</p>
+                        </div>
+                      </div>
+                      {/* Recharge */}
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Amount to load…"
+                          value={rechargeAmount}
+                          onChange={e => setRechargeAmount(e.target.value)}
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 font-black text-sm outline-none focus:border-blue-500"
+                        />
+                        <button
+                          onClick={handleRechargeCard}
+                          disabled={isRecharging || !rechargeAmount}
+                          className="px-5 py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center gap-2 shadow-md"
+                        >
+                          {isRecharging ? <RefreshCw size={14} className="animate-spin"/> : <PlusCircle size={14}/>}
+                          {isRecharging ? 'Loading…' : 'Recharge'}
+                        </button>
+                      </div>
                       <div className="flex gap-3">
                         <button onClick={()=>setShowCardDetails(!showCardDetails)} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">{showCardDetails ? 'Hide' : 'Reveal'} Details</button>
                         <button onClick={toggleFreezeCurrentCard} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCard.isFrozen ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white shadow-lg hover:bg-red-600'}`}>{activeCard.isFrozen ? 'Unfreeze' : 'Freeze'} Card</button>

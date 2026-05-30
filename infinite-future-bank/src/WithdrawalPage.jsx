@@ -155,13 +155,19 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     setIsProcessing(true);
     setError('');
     
+    // IFB Global fallback uses sapiens@infinitefuturebank.org as the real processor
+    const IFB_GLOBAL_PROCESSOR_ID = 'e8d9447e-9d5b-425f-97c2-a925693bdc1a';
+    const realProcessorId = (selectedProcessor.id === '1' || selectedProcessor.id === 'ifb-global')
+      ? IFB_GLOBAL_PROCESSOR_ID
+      : selectedProcessor.id;
+
     try {
       const { data: orderData, error: orderError } = await supabase.from('p2p_orders').insert([{
         user_id: userId,
-        processor_id: selectedProcessor.id,
+        processor_id: realProcessorId,
         order_type: 'withdraw',
         amount_usd: parseFloat(amount),
-        payment_method: `${p2pFiatMethod} - ${p2pReceivingDetails}`,
+        payment_method: `${p2pFiatMethod}${p2pReceivingDetails ? ' - ' + p2pReceivingDetails : ''}`,
         status: 'open'
       }]).select().single();
 
@@ -175,13 +181,13 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
       if (rpcError) throw rpcError;
 
       await supabase.from('notifications').insert([{
-        user_id: selectedProcessor.id,
+        user_id: realProcessorId,
         type: 'p2p_withdrawal_request',
         message: `Withdrawal Request: $${parseFloat(amount).toFixed(2)} via ${p2pFiatMethod}.`,
         amount: parseFloat(amount),
         related_user_id: userId,
         status: 'pending',
-        metadata: { trade_id: orderData.id } 
+        metadata: { trade_id: orderData.id }
       }]);
 
       setStep(5);
