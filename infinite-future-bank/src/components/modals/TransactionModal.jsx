@@ -76,22 +76,48 @@ export default function TransactionModal({
         triggerGlobalActionNotification('error', 'Please choose a recipient.');
         setIsLoading(false); return;
       }
+      if (amount > (balances?.liquid_usd || 0)) {
+        triggerGlobalActionNotification('error', 'Insufficient funds.');
+        setIsLoading(false); return;
+      }
+
+      const recipientRecord = recipients.find(r => r.id === sendRecipient);
+      const recipientName = recipientRecord?.name || recipientRecord?.recipient_name || 'Contact';
+      const targetUserId = recipientRecord?.target_user_id;
 
       try {
-        const msg = isScheduled
-          ? `Transfer of ${formatCurrency(amount)} scheduled for ${new Date(scheduleDate).toLocaleDateString()}.`
-          : `${formatCurrency(amount)} sent successfully.`;
-        if (!isScheduled) {
-          const { error } = await supabase.from('transactions').insert([{
+        if (isScheduled) {
+          // Just log a scheduled intent — no balance movement yet
+          await supabase.from('transactions').insert([{
             user_id: session.user.id,
             amount: -amount,
             transaction_type: 'send',
-            description: `Transfer to contact`,
+            description: `Scheduled transfer to ${recipientName}`,
+            status: 'pending',
+          }]);
+          triggerGlobalActionNotification('success', `Transfer of ${formatCurrency(amount)} scheduled for ${new Date(scheduleDate).toLocaleDateString()}.`);
+        } else if (targetUserId) {
+          // Real IFB-to-IFB transfer via RPC (updates both balances + logs both transactions)
+          const { error } = await supabase.rpc('send_usd_v2', {
+            p_sender_id: session.user.id,
+            p_recipient_user_id: targetUserId,
+            p_amount: amount,
+            p_description: `Transfer to ${recipientName}`,
+          });
+          if (error) throw error;
+          triggerGlobalActionNotification('success', `${formatCurrency(amount)} sent to ${recipientName}.`);
+        } else {
+          // Recipient not linked to an IFB account — debit sender only and log
+          await supabase.from('transactions').insert([{
+            user_id: session.user.id,
+            amount: -amount,
+            transaction_type: 'send',
+            description: `External transfer to ${recipientName}`,
             status: 'completed',
           }]);
-          if (error) throw error;
+          await supabase.from('balances').update({ liquid_usd: (balances?.liquid_usd || 0) - amount }).eq('user_id', session.user.id);
+          triggerGlobalActionNotification('success', `${formatCurrency(amount)} sent to ${recipientName}.`);
         }
-        triggerGlobalActionNotification('success', msg);
         await fetchAllData();
         setActiveModal(null);
       } catch (err) { triggerGlobalActionNotification('error', err.message); }
@@ -192,7 +218,7 @@ export default function TransactionModal({
                           <div className="flex gap-2">
                             <select value={sendRecipient} onChange={(e) => setSendRecipient(e.target.value)} className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-sm text-slate-800 outline-none focus:border-blue-500">
                               <option value="">Choose from contacts…</option>
-                              {recipients.map(r => <option key={r.id} value={r.id}>{r.recipient_name} ({r.role})</option>)}
+                              {recipients.map(r => <option key={r.id} value={r.id}>{r.name || r.recipient_name} ({r.role})</option>)}
                             </select>
                             <button type="button" onClick={() => { setActiveModal(null); setActiveTab('ORGANIZE'); }} className="px-4 bg-slate-100 text-blue-600 font-black rounded-2xl border-2 border-slate-200 hover:bg-blue-50 transition-colors">
                               <Plus size={18} />

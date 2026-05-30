@@ -188,6 +188,33 @@ export default function AccountHub({ session, balances, profile, showBalances })
     setTimeout(() => setNotification(null), 6000);
   };
 
+  const handleSwap = async () => {
+    const amount = parseFloat(swapAmount);
+    if (!amount || amount <= 0) return triggerGlobalActionNotification('error', 'Enter a valid amount.');
+    if (swapDirection === 'USD_TO_AFR' && amount > (balances?.liquid_usd || 0))
+      return triggerGlobalActionNotification('error', 'Insufficient USD balance.');
+    if (swapDirection === 'AFR_TO_USD' && amount > parseFloat(balances?.afr_balance || 0))
+      return triggerGlobalActionNotification('error', 'Insufficient AFR balance.');
+    setIsSwapping(true);
+    try {
+      const { data, error } = await supabase.rpc('exchange_usd_afr', {
+        p_user_id: session.user.id,
+        p_amount: amount,
+        p_direction: swapDirection,
+      });
+      if (error) throw error;
+      const received = parseFloat(data?.received || 0).toFixed(4);
+      const label = swapDirection === 'USD_TO_AFR' ? `${received} AFR received` : `$${received} USD received`;
+      triggerGlobalActionNotification('success', `Exchange confirmed — ${label}`);
+      setSwapAmount('');
+      await fetchData();
+    } catch (err) {
+      triggerGlobalActionNotification('error', err.message || 'Exchange failed.');
+    } finally {
+      setIsSwapping(false);
+    }
+  };
+
   const fetchData = useCallback(async () => {
     if (!profile?.id) return;
     setIsLoadingDB(true);
@@ -663,9 +690,9 @@ export default function AccountHub({ session, balances, profile, showBalances })
                 </div>
               </div>
 
-              <button 
-                onClick={fetchData} 
-                disabled={isSwapping || !swapAmount} 
+              <button
+                onClick={handleSwap}
+                disabled={isSwapping || !swapAmount}
                 className="w-full mt-6 py-4 bg-slate-800 hover:bg-slate-700 text-white font-black text-[11px] uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSwapping ? <RefreshCw className="animate-spin" size={16}/> : <Zap size={16}/>}
