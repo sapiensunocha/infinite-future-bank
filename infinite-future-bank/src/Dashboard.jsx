@@ -261,7 +261,15 @@ export default function Dashboard({ session, onSignOut }) {
         run={runTour}
         stepIndex={tourStepIndex}
         continuous={true}
-        tooltipComponent={CustomTourTooltip}
+        tooltipComponent={(props) => (
+          <CustomTourTooltip
+            {...props}
+            tourLanguage={lang === 'es' ? 'es' : 'en'}
+            setTourLanguage={() => {}}
+            tourAudioEnabled={false}
+            setTourAudioEnabled={() => {}}
+          />
+        )}
       />
 
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">

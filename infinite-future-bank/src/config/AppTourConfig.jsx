@@ -23,7 +23,9 @@ export const TOUR_CONTENT = [
 ];
 
 export const CustomTourTooltip = ({ index, backProps, closeProps, primaryProps, isLastStep, tooltipProps, tourLanguage, setTourLanguage, tourAudioEnabled, setTourAudioEnabled }) => {
-  const content = TOUR_CONTENT[index][tourLanguage];
+  const step = TOUR_CONTENT[index] || TOUR_CONTENT[0];
+  const safeLang = (tourLanguage && step[tourLanguage]) ? tourLanguage : 'en';
+  const content = step[safeLang] || { title: '', body: '' };
   
   return (
     <div {...tooltipProps} className="bg-slate-900 text-white p-6 rounded-3xl w-80 shadow-2xl border border-slate-700 font-sans">
