@@ -125,12 +125,12 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
         // Fetch all in parallel: weather + country risk + 5 category event slices
         const [weatherRes, riskRes, ...catResults] = await Promise.all([
           fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&temperature_unit=fahrenheit`)
-            .then(r => r.json()).catch(() => null),
+            .then(r => r.ok ? r.json() : null).catch(() => null),
           fetch(`${MICHAEL_BASE}/api/v1/risk/country/${ISO2_TO_ISO3[iso2] || 'USA'}`, { headers: mHeaders })
-            .then(r => r.json()).catch(() => null),
+            .then(r => r.ok ? r.json() : null).catch(() => null),
           ...CATEGORIES.map(cat =>
             fetch(`${MICHAEL_BASE}/api/v1/events?category=${cat}&limit=40`, { headers: mHeaders })
-              .then(r => r.json()).catch(() => null)
+              .then(r => r.ok ? r.json() : null).catch(() => null)
           ),
         ]);
 
@@ -227,7 +227,9 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
           body: JSON.stringify({ profile, balances, celebration, weather, localRisk })
         });
         const data = await res.json();
-        let cleanText = data.text.replace(/Good Morning, .*?\./g, '').replace(/Welcome back, .*?\./g, '').trim();
+        const rawText = data?.text || data?.insight || '';
+        if (!rawText) throw new Error('empty insight');
+        const cleanText = rawText.replace(/Good Morning, .*?\./g, '').replace(/Welcome back, .*?\./g, '').trim();
         setInsight(cleanText);
       } catch {
         setInsight(`Institutional telemetry indicates operations are nominal. Regional threat level in ${weather.city} is assessed at ${localRisk.score}/10 — ${localRisk.label}. Your assets remain secure.`);

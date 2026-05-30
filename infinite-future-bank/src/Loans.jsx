@@ -63,6 +63,7 @@ export default function Loans({ session, balances, fetchAllData, profile }) {
         body: JSON.stringify(payload)
       });
 
+      if (!response.ok) throw new Error(`Server error ${response.status}`);
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 

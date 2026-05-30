@@ -145,7 +145,7 @@ export default function WealthInvest({ session, balances, profile }) {
         body: { action: 'top_picks' }
       });
       if (error) throw error;
-      setTopMarketPicks(data);
+      setTopMarketPicks(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Market Feed Error:", err);
     } finally {
