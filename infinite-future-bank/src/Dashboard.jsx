@@ -1,33 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { supabase } from './services/supabaseClient';
 import Joyride, { STATUS } from 'react-joyride';
 import { MessageSquare, X } from 'lucide-react';
 import { useTranslation } from './i18n/useTranslation';
 
-// --- EXISTING MODULAR COMPONENTS ---
-import Chat from './Chat';
-import AccountHub from './AccountHub';
-import OrganizationSuite from './OrganizationSuite';
-import WealthInvest from './WealthInvest';
-import GlobalLifestyle from './GlobalLifestyle';
-import FinancialPlanner from './FinancialPlanner';
-import EmergencySOS from './EmergencySOS';
-import Loans from './Loans';
-import Training from './Training';
-import Agents from './Agents';
-import DepositInterface from './DepositInterface';
-import WithdrawalPage from './WithdrawalPage';
-import PayMeCard from './PayMeCard'; 
-import TransactionLedger from './TransactionLedger';
-import CapitalNetwork from './CapitalNetwork';
-import AFRNetworkPanel from './features/network/AFRNetworkPanel';
-import CapitalPlatform from './features/capital/CapitalPlatform';
-import InsuranceHub from './InsuranceHub';
-import VaultManager from './features/mysafe/VaultManager';
-import NFCTransfer from './features/nfc/NFCTransfer';
-import AdminDashboard from './AdminDashboard';
-
-// --- NEWLY EXTRACTED COMPONENTS ---
+// Layout & always-visible UI — load eagerly
 import AppPopupModal from './components/modals/AppPopupModal';
 import NetPositionHome from './views/NetPositionHome';
 import SettingsHub from './views/SettingsHub';
@@ -39,6 +16,35 @@ import TransactionModal from './components/modals/TransactionModal';
 import StatementExportModal from './components/modals/StatementExportModal';
 import GlobalToastAlert from './components/ui/GlobalToastAlert';
 import { TOUR_CONTENT, CustomTourTooltip } from './config/AppTourConfig';
+
+// Screen-level features — lazy-loaded on first navigation
+const Chat              = lazy(() => import('./Chat'));
+const AccountHub        = lazy(() => import('./AccountHub'));
+const OrganizationSuite = lazy(() => import('./OrganizationSuite'));
+const WealthInvest      = lazy(() => import('./WealthInvest'));
+const GlobalLifestyle   = lazy(() => import('./GlobalLifestyle'));
+const FinancialPlanner  = lazy(() => import('./FinancialPlanner'));
+const EmergencySOS      = lazy(() => import('./EmergencySOS'));
+const Loans             = lazy(() => import('./Loans'));
+const Training          = lazy(() => import('./Training'));
+const Agents            = lazy(() => import('./Agents'));
+const DepositInterface  = lazy(() => import('./DepositInterface'));
+const WithdrawalPage    = lazy(() => import('./WithdrawalPage'));
+const PayMeCard         = lazy(() => import('./PayMeCard'));
+const TransactionLedger = lazy(() => import('./TransactionLedger'));
+const CapitalNetwork    = lazy(() => import('./CapitalNetwork'));
+const AFRNetworkPanel   = lazy(() => import('./features/network/AFRNetworkPanel'));
+const CapitalPlatform   = lazy(() => import('./features/capital/CapitalPlatform'));
+const InsuranceHub      = lazy(() => import('./InsuranceHub'));
+const VaultManager      = lazy(() => import('./features/mysafe/VaultManager'));
+const NFCTransfer       = lazy(() => import('./features/nfc/NFCTransfer'));
+const AdminDashboard    = lazy(() => import('./AdminDashboard'));
+
+const ScreenLoader = () => (
+  <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+    <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+  </div>
+);
 
 export default function Dashboard({ session, onSignOut }) {
   const { t, lang, setLanguage } = useTranslation();
@@ -289,8 +295,9 @@ export default function Dashboard({ session, onSignOut }) {
           />
           
           <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 no-scrollbar scroll-container pb-24 md:pb-8" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 5rem), 2rem)' }} id="main-scroll">
-            
+
             {/* DYNAMIC VIEW ROUTER */}
+            <Suspense fallback={<ScreenLoader />}>
             {activeTab === 'NET_POSITION' && (
               <NetPositionHome 
                 profile={profile} 
@@ -356,6 +363,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
             {activeTab === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
             {activeTab === 'CAPITAL' && <CapitalPlatform session={session} profile={profile} />}
+            </Suspense>
           </div>
 
           {/* Chat FAB */}
@@ -429,7 +437,8 @@ export default function Dashboard({ session, onSignOut }) {
       <GlobalToastAlert notification={notification} />
       <StatementExportModal showStatementModal={showStatementModal} setShowStatementModal={setShowStatementModal} triggerGlobalActionNotification={triggerGlobalActionNotification}/>
       
-      {/* 💳 DEPOSIT OVERLAY (RESTORED) */}
+      {/* 💳 DEPOSIT / 💸 WITHDRAWAL overlays */}
+      <Suspense fallback={null}>
       {showDepositUI && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-4 sm:p-8">
            <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
@@ -446,12 +455,12 @@ export default function Dashboard({ session, onSignOut }) {
         </div>
       )}
       
-      {/* 💸 WITHDRAWAL OVERLAY (RESTORED) */}
+      {/* 💸 WITHDRAWAL OVERLAY */}
       {isWithdrawOpen && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-4 sm:p-8">
            <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
-             <button 
-                onClick={() => setIsWithdrawOpen(false)} 
+             <button
+                onClick={() => setIsWithdrawOpen(false)}
                 className="mb-8 bg-white text-slate-900 px-10 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:bg-red-50 hover:text-red-600"
              >
                 <X size={20} /> Close Terminal
@@ -462,11 +471,15 @@ export default function Dashboard({ session, onSignOut }) {
            </div>
         </div>
       )}
+      </Suspense>
 
-      {showPayMe && <PayMeCard profile={profile} onClose={() => setShowPayMe(false)} />}
-      {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
+      <Suspense fallback={null}>
+        {showPayMe && <PayMeCard profile={profile} onClose={() => setShowPayMe(false)} />}
+        {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
+      </Suspense>
 
       {/* 🔒 VAULT MANAGER OVERLAY */}
+      <Suspense fallback={null}>
       {showVault && (
         <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-0 sm:p-8">
           <div className="relative w-full sm:max-w-lg animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
@@ -507,15 +520,18 @@ export default function Dashboard({ session, onSignOut }) {
           </div>
         </div>
       )}
+      </Suspense>
 
       {/* Admin Dashboard */}
-      {showAdmin && (
-        <AdminDashboard
-          session={session}
-          profile={profile}
-          onClose={() => setShowAdmin(false)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {showAdmin && (
+          <AdminDashboard
+            session={session}
+            profile={profile}
+            onClose={() => setShowAdmin(false)}
+          />
+        )}
+      </Suspense>
 
     </div>
   );

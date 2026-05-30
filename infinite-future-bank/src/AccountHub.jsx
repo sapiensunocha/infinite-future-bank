@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+const BecomeProcessor = lazy(() => import('./features/cot/BecomeProcessor'));
 import {
   Briefcase, Users, Baby, Link as LinkIcon,
   Globe2, Building2, ShieldAlert, Plus, ArrowRight,
@@ -144,7 +145,7 @@ const InfinityLogo = ({ className }) => (
   </svg>
 );
 
-export default function AccountHub({ balances, profile }) {
+export default function AccountHub({ session, balances, profile, showBalances }) {
   const [activeTier, setActiveTier] = useState('PERSONAL'); 
   const [notification, setNotification] = useState(null);
   const [isLoadingDB, setIsLoadingDB] = useState(true);
@@ -308,7 +309,7 @@ export default function AccountHub({ balances, profile }) {
           <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">Real-Time Ledger & Asset Interface</p>
         </div>
         <div className="flex bg-slate-100 p-2 rounded-2xl border border-slate-200 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
-          {[{ id: 'PERSONAL', label: 'Balances' }, { id: 'CARDS', label: 'Infinite Card' }, { id: 'IDENTITY', label: 'Badging' }, { id: 'KYC', label: 'Compliance' }].map((tier) => (
+          {[{ id: 'PERSONAL', label: 'Balances' }, { id: 'CARDS', label: 'Infinite Card' }, { id: 'IDENTITY', label: 'Badging' }, { id: 'KYC', label: 'Compliance' }, { id: 'COT', label: '⬡ COT' }].map((tier) => (
             <button key={tier.id} onClick={() => setActiveTier(tier.id)} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTier === tier.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>
               {tier.label}
             </button>
@@ -677,6 +678,15 @@ export default function AccountHub({ balances, profile }) {
       
       {/* KYC IDENTITY VERIFICATION */}
       {activeTier === 'KYC' && <KYCSection profile={profile} />}
+
+      {/* ⬡ COMMUNITY OF TRUST */}
+      {activeTier === 'COT' && session && (
+        <div className="bg-white border border-slate-200 p-6 rounded-[2.5rem] shadow-sm">
+          <Suspense fallback={<div className="flex justify-center py-10"><div className="w-6 h-6 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"/></div>}>
+            <BecomeProcessor session={session} profile={profile} />
+          </Suspense>
+        </div>
+      )}
 
       {/* 🟢 GLOBAL NOTIFICATION LAYER */}
       {notification && (

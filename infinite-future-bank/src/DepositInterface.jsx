@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { APP_URL } from './config/constants';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from './services/supabaseClient';
-import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine, History, Clock, Activity, FileText } from 'lucide-react';
+import { useTranslation } from './i18n/useTranslation';
+import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine, History, Clock, Activity, FileText, MapPin, Navigation, Map } from 'lucide-react';
+
+const ProcessorMap = lazy(() => import('./features/cot/ProcessorMap'));
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -41,14 +52,20 @@ const CheckoutForm = ({ amount, onBack }) => {
 };
 
 export default function DepositInterface({ session, onClose }) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('NEW'); // 'NEW' or 'HISTORY'
   const [amount, setAmount] = useState('');
-  const [routingMethod, setRoutingMethod] = useState(null); 
+  const [routingMethod, setRoutingMethod] = useState(null);
   const [clientSecret, setClientSecret] = useState(null);
   const [isInitializing, setIsInitializing] = useState(false);
 
+  // Location
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationStatus, setLocationStatus] = useState('idle'); // idle | requesting | granted | denied
+  const [showMap, setShowMap] = useState(true);
+
   // P2P (CoT) States
-  const [p2pStep, setP2pStep] = useState(1); 
+  const [p2pStep, setP2pStep] = useState(1);
   const [fiatMethod, setFiatMethod] = useState('Local Bank Transfer');
   const [processors, setProcessors] = useState([]);
   const [selectedProcessor, setSelectedProcessor] = useState(null);
@@ -109,21 +126,57 @@ export default function DepositInterface({ session, onClose }) {
     } finally { setIsInitializing(false); }
   };
 
+  const requestLocation = () => {
+    setLocationStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocationStatus('granted');
+        // Save to profile so COT map shows user
+        supabase.from('profiles').update({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        }).eq('id', session.user.id).then(() => {});
+      },
+      () => setLocationStatus('denied'),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
   const handleFindProcessors = async () => {
     setIsInitializing(true);
     try {
-      const { data, error } = await supabase.from('profiles').select('id, full_name, avatar_url, cot_rating, cot_completed_tx').eq('is_cot_processor', true).limit(5);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, cot_rating, cot_completed_tx, cot_payment_methods, latitude, longitude')
+        .eq('is_cot_processor', true)
+        .limit(30);
       if (error) throw error;
-      
-      // Simulate matching delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setProcessors(data && data.length > 0 ? data : [
-        { id: '1', full_name: 'IFB Global Operations', avatar_url: null, cot_rating: 100, cot_completed_tx: 15420 },
+      let list = data || [];
+
+      // Attach distance if we have user location, then sort by proximity
+      if (userLocation) {
+        list = list
+          .map(p => ({
+            ...p,
+            distanceKm: p.latitude && p.longitude
+              ? haversineKm(userLocation.lat, userLocation.lng, p.latitude, p.longitude)
+              : 9999,
+          }))
+          .sort((a, b) => a.distanceKm - b.distanceKm);
+      }
+
+      setProcessors(list.length > 0 ? list : [
+        { id: 'ifb-global', full_name: 'IFB Global Operations', cot_rating: 100, cot_completed_tx: 15420, latitude: null, longitude: null },
       ]);
       setP2pStep(2);
-    } catch (err) { alert("Failed to query localized routing nodes."); } 
-    finally { setIsInitializing(false); }
+    } catch {
+      setProcessors([{ id: 'ifb-global', full_name: 'IFB Global Operations', cot_rating: 100, cot_completed_tx: 15420 }]);
+      setP2pStep(2);
+    } finally {
+      setIsInitializing(false);
+    }
   };
 
   // ---------------------------------------------------------
@@ -374,49 +427,118 @@ export default function DepositInterface({ session, onClose }) {
               
               {p2pStep === 1 && (
                 <div className="space-y-6">
-                  <button onClick={() => setRoutingMethod(null)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 transition-colors"><ArrowLeft size={14}/> Back</button>
+                  <button onClick={() => setRoutingMethod(null)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 transition-colors"><ArrowLeft size={14}/> {t('common.back')}</button>
                   <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center">
-                    <h3 className="font-black text-emerald-400 text-2xl">${amount} Deposit</h3>
+                    <h3 className="font-black text-emerald-400 text-2xl">${amount} {t('deposit.title')}</h3>
                     <p className="text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest mt-1 flex justify-center gap-3">
                       <span>Network: 1%</span> <span>Escrow: 2%</span>
                     </p>
                   </div>
+
+                  {/* Location request */}
+                  {locationStatus === 'idle' && (
+                    <button
+                      onClick={requestLocation}
+                      className="w-full flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl hover:bg-blue-500/20 transition-all"
+                    >
+                      <MapPin size={18} className="text-blue-400 flex-shrink-0" />
+                      <div className="text-left">
+                        <p className="text-xs font-black text-blue-300">{t('deposit.enableLocation')}</p>
+                        <p className="text-[10px] text-blue-500">{t('deposit.locationNeeded')}</p>
+                      </div>
+                    </button>
+                  )}
+                  {locationStatus === 'requesting' && (
+                    <div className="flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl">
+                      <Loader2 size={16} className="text-blue-400 animate-spin" />
+                      <span className="text-xs text-blue-300 font-bold">{t('deposit.locating')}</span>
+                    </div>
+                  )}
+                  {locationStatus === 'granted' && (
+                    <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl">
+                      <Navigation size={16} className="text-emerald-400" />
+                      <span className="text-xs text-emerald-300 font-bold">Location active — nearest processors first</span>
+                    </div>
+                  )}
+                  {locationStatus === 'denied' && (
+                    <div className="flex items-center gap-3 p-4 bg-slate-500/10 border border-slate-500/30 rounded-2xl">
+                      <MapPin size={16} className="text-slate-400" />
+                      <span className="text-xs text-slate-300 font-bold">{t('deposit.anywhere')}</span>
+                    </div>
+                  )}
+
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Select Transfer Method</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t('deposit.selectMethod') || 'Select Transfer Method'}</label>
                     <select value={fiatMethod} onChange={(e) => setFiatMethod(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm font-bold text-white outline-none focus:border-emerald-500 mb-4">
                       {fiatOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
                     </select>
-
                     {fiatMethod === 'Physical Cash Drop' && (
                       <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl animate-in zoom-in-95">
                         <h4 className="text-amber-400 text-xs font-black uppercase tracking-widest flex items-center gap-2 mb-2"><AlertTriangle size={14}/> High Risk Method</h4>
-                        <p className="text-xs text-amber-500/80 leading-relaxed font-medium">Meet in a public, well-lit place. Ensure the processor clicks "Confirm Receipt" in front of you. Verify the digital AFR is in your DEUS app before leaving.</p>
+                        <p className="text-xs text-amber-500/80 leading-relaxed font-medium">{t('deposit.safetyTip')}</p>
                       </div>
                     )}
                   </div>
-                  <button onClick={handleFindProcessors} disabled={isInitializing} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex justify-center">
-                    {isInitializing ? <Loader2 className="animate-spin" size={16}/> : 'Scan For Local Processors'}
+                  <button onClick={handleFindProcessors} disabled={isInitializing} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex justify-center gap-2">
+                    {isInitializing ? <><Loader2 className="animate-spin" size={16}/> {t('deposit.locating')}</> : <><Map size={16}/> {t('deposit.findNearby')}</>}
                   </button>
                 </div>
               )}
 
               {p2pStep === 2 && (
                 <div className="space-y-4">
-                  <button onClick={() => setP2pStep(1)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 mb-4 transition-colors"><ArrowLeft size={14}/> Change Method</button>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-2">Available Nodes Accepting {fiatMethod}</p>
-                  
-                  <div className="space-y-3 max-h-64 overflow-y-auto pr-2 no-scrollbar">
+                  <button onClick={() => setP2pStep(1)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 mb-2 transition-colors"><ArrowLeft size={14}/> {t('common.back')}</button>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">{t('deposit.mapTitle')}</p>
+                    <button
+                      onClick={() => setShowMap(v => !v)}
+                      className="text-[10px] font-black text-slate-400 hover:text-white flex items-center gap-1"
+                    >
+                      <Map size={12} /> {showMap ? 'List' : 'Map'}
+                    </button>
+                  </div>
+
+                  {/* MAP VIEW */}
+                  {showMap && (
+                    <Suspense fallback={<div className="h-[320px] rounded-2xl bg-slate-800 flex items-center justify-center"><Loader2 className="animate-spin text-slate-500" size={24}/></div>}>
+                      <ProcessorMap
+                        userLocation={userLocation}
+                        processors={processors}
+                        selectedProcessor={selectedProcessor}
+                        onSelect={(proc) => { setSelectedProcessor(proc); setP2pStep(3); }}
+                      />
+                    </Suspense>
+                  )}
+
+                  <p className="text-[10px] text-slate-500 text-center">{t('deposit.mapDesc')}</p>
+
+                  {/* LIST VIEW */}
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-2 no-scrollbar">
                     {processors.map(proc => (
-                      <button key={proc.id} onClick={() => { setSelectedProcessor(proc); setP2pStep(3); }} className="w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 p-4 rounded-2xl transition-all flex items-center justify-between group">
+                      <button
+                        key={proc.id}
+                        onClick={() => { setSelectedProcessor(proc); setP2pStep(3); }}
+                        className={`w-full text-left border p-4 rounded-2xl transition-all flex items-center justify-between group ${
+                          selectedProcessor?.id === proc.id
+                            ? 'bg-emerald-500/15 border-emerald-500/50'
+                            : 'bg-white/5 hover:bg-white/10 border-white/10'
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-white/20">
-                            {proc.avatar_url ? <img src={proc.avatar_url} className="w-full h-full rounded-full object-cover"/> : <Users size={16} className="text-slate-400"/>}
+                            {proc.avatar_url ? <img src={proc.avatar_url} className="w-full h-full rounded-full object-cover" alt="" /> : <Users size={16} className="text-slate-400"/>}
                           </div>
                           <div>
                             <p className="font-black text-white text-sm leading-tight">{proc.full_name}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="flex items-center gap-1 text-[9px] font-bold text-amber-400"><Star size={10}/> {proc.cot_rating}%</span>
-                              <span className="text-[9px] text-slate-500">• {proc.cot_completed_tx} trades</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="flex items-center gap-1 text-[9px] font-bold text-amber-400"><Star size={10}/> {proc.cot_rating}% {t('deposit.rating')}</span>
+                              <span className="text-[9px] text-slate-500">· {proc.cot_completed_tx} {t('deposit.trades')}</span>
+                              {proc.distanceKm !== undefined && proc.distanceKm < 9000 && (
+                                <span className="text-[9px] text-blue-400 flex items-center gap-0.5">
+                                  <MapPin size={8}/>
+                                  {proc.distanceKm < 1 ? `${Math.round(proc.distanceKm * 1000)}m` : `${proc.distanceKm.toFixed(1)}km`}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

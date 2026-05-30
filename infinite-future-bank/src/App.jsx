@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { TranslationProvider } from './i18n/TranslationContext';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
 import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap } from 'lucide-react';
@@ -593,6 +594,7 @@ export default function App() {
   }, []);
 
   return (
+    <TranslationProvider>
     <Router>
       <Routes>
         <Route path="/" element={<MainApp />} />
@@ -618,5 +620,6 @@ export default function App() {
         />
       </Routes>
     </Router>
+    </TranslationProvider>
   );
 }
