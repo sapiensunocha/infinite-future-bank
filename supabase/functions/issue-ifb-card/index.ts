@@ -24,12 +24,12 @@ Deno.serve(async (req: Request) => {
 
   const { cardName, theme } = await req.json();
 
-  // 1. Generate Real Card Data (Deterministic but unique for demo)
-  const bin = "442188"; // IFB Bin
-  const randomBody = Math.floor(Math.random() * 899999999 + 100000000).toString();
-  const pan = bin + randomBody;
+  // 1. Generate Real Card Data — 16-digit PAN: IFB BIN (6) + 10 random digits
+  const bin = "442188"; // IFB Bin (Visa range)
+  const randomBody = Math.floor(Math.random() * 8999999999 + 1000000000).toString(); // 10 digits
+  const pan = bin + randomBody; // 16 digits total
   const cvv = Math.floor(Math.random() * 899 + 100).toString();
-  const expiry = "05/29";
+  const expiry = "05/30";
   const network_id = `NET_${Math.random().toString(36).substring(7).toUpperCase()}`;
 
   // 2. Provision in Database

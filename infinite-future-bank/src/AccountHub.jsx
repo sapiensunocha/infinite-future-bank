@@ -6,7 +6,7 @@ import {
   Settings, Lock, ScanLine, Store, CheckCircle2, PlusCircle,
   ChevronLeft, ChevronRight, Download, Receipt, Eye, EyeOff, Unlock, Wifi,
   ShoppingBag, ArrowDownRight, MapPin, Upload, ShieldCheck, FileText, Camera, Loader2, AlertCircle,
-  Award, Globe, Flame, BadgeCheck, Activity, Star, Landmark, Rocket
+  Award, Globe, Flame, BadgeCheck, Activity, Star, Landmark, Rocket, Info
 } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
@@ -174,6 +174,10 @@ export default function AccountHub({ balances, profile }) {
   const [swapAmount, setSwapAmount] = useState('');
   const [swapDirection, setSwapDirection] = useState('USD_TO_AFR');
   const [isSwapping, setIsSwapping] = useState(false);
+
+  // Smart Liquidity States
+  const [clyrixEnabled, setClyrixEnabled] = useState(true);
+  const [autoSweepEnabled, setAutoSweepEnabled] = useState(false);
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
   const formatPan = (digits) => digits ? digits.match(/.{1,4}/g).join(' ') : '';
@@ -421,20 +425,30 @@ export default function AccountHub({ balances, profile }) {
                    <div className="bg-slate-50 border border-slate-200 p-8 rounded-[3rem] shadow-inner">
                       <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">Smart Liquidity Routing</h4>
                       <div className="space-y-4">
-                         <div className="flex items-center justify-between p-5 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                         <button onClick={() => setClyrixEnabled(v => !v)} className="w-full flex items-center justify-between p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left">
                             <div className="flex items-center gap-4">
-                               <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><ShieldCheck size={20}/></div>
-                               <div><p className="text-sm font-black text-slate-800">Clyrix Fallback</p><p className="text-[10px] font-bold text-slate-400 uppercase">Use insurance if balance is low</p></div>
+                               <div className={`p-3 rounded-2xl transition-colors ${clyrixEnabled ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'}`}><ShieldCheck size={20}/></div>
+                               <div>
+                                 <p className="text-sm font-black text-slate-800">Clyrix Fallback</p>
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase">Use insurance if balance is low</p>
+                               </div>
                             </div>
-                            <div className="w-12 h-6 bg-emerald-500 rounded-full relative shadow-inner"><div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div></div>
-                         </div>
-                         <div className="flex items-center justify-between p-5 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                            <div className={`w-12 h-6 rounded-full relative shadow-inner transition-colors ${clyrixEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${clyrixEnabled ? 'right-1' : 'left-1'}`}></div>
+                            </div>
+                         </button>
+                         <button onClick={() => setAutoSweepEnabled(v => !v)} className="w-full flex items-center justify-between p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left">
                             <div className="flex items-center gap-4">
-                               <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><Landmark size={20}/></div>
-                               <div><p className="text-sm font-black text-slate-800">Auto-Sweep AFR</p><p className="text-[10px] font-bold text-slate-400 uppercase">Liquidate tokens for payments</p></div>
+                               <div className={`p-3 rounded-2xl transition-colors ${autoSweepEnabled ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}><Landmark size={20}/></div>
+                               <div>
+                                 <p className="text-sm font-black text-slate-800">Auto-Sweep AFR</p>
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase">Liquidate tokens for payments</p>
+                               </div>
                             </div>
-                            <div className="w-12 h-6 bg-slate-200 rounded-full relative shadow-inner"><div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div></div>
-                         </div>
+                            <div className={`w-12 h-6 rounded-full relative shadow-inner transition-colors ${autoSweepEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${autoSweepEnabled ? 'right-1' : 'left-1'}`}></div>
+                            </div>
+                         </button>
                       </div>
                    </div>
 
