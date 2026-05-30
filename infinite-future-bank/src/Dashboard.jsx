@@ -25,6 +25,7 @@ import CapitalPlatform from './features/capital/CapitalPlatform';
 import InsuranceHub from './InsuranceHub';
 import VaultManager from './features/mysafe/VaultManager';
 import NFCTransfer from './features/nfc/NFCTransfer';
+import AdminDashboard from './AdminDashboard';
 
 // --- NEWLY EXTRACTED COMPONENTS ---
 import AppPopupModal from './components/modals/AppPopupModal';
@@ -80,6 +81,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [showVault, setShowVault] = useState(false);
   const [showNFC, setShowNFC] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   // Commercial Underwriting States
   const [commercialForm, setCommercialForm] = useState({ 
@@ -266,6 +268,7 @@ export default function Dashboard({ session, onSignOut }) {
           isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
           activeTab={activeTab} setActiveTab={setActiveTab}
           onSignOut={onSignOut} t={t} commercialProfile={commercialProfile}
+          onOpenAdmin={() => setShowAdmin(true)}
         />
         
         <main className="flex-1 flex flex-col relative overflow-hidden">
@@ -503,6 +506,15 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Admin Dashboard */}
+      {showAdmin && (
+        <AdminDashboard
+          session={session}
+          profile={profile}
+          onClose={() => setShowAdmin(false)}
+        />
       )}
 
     </div>

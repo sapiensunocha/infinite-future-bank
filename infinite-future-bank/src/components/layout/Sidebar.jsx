@@ -1,10 +1,10 @@
 import React from 'react';
 import {
   Sparkles, X, Compass, ArrowDownUp, Target, Landmark, Folder, Briefcase,
-  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, HandCoins, TrendingUp
+  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, HandCoins, TrendingUp, Shield
 } from 'lucide-react';
 
-export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, t, commercialProfile }) {
+export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, onOpenAdmin, t, commercialProfile }) {
   const isCapitalEligible = commercialProfile?.pascaline_status === 'eligible_for_funding';
   const tabs = [
     { id: 'NET_POSITION',    icon: <Compass size={18} />,    label: t('nav.home') },
@@ -77,8 +77,16 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
           ))}
         </nav>
 
-        {/* Sign out */}
-        <div className="p-4 border-t border-slate-200/60 shrink-0">
+        {/* Sign out + Admin */}
+        <div className="p-4 border-t border-slate-200/60 shrink-0 space-y-2">
+          {onOpenAdmin && (
+            <button
+              onClick={() => { onOpenAdmin(); setIsSidebarOpen(false); }}
+              className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-600 hover:bg-red-50 border border-red-100 hover:border-red-200 transition-all"
+            >
+              <Shield size={14}/> Admin Center
+            </button>
+          )}
           <button
             onClick={onSignOut}
             className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-200/60 hover:text-slate-800 transition-all"

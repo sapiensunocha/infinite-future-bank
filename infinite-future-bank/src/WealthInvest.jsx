@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import VentureXFeed from './features/venturex/VentureXFeed';
 import VentureXFranchise from './features/venturex/VentureXFranchise';
+import VentureXMatchmaker from './features/venturex/VentureXMatchmaker';
 import CompanyFormationHub from './features/formation/CompanyFormationHub';
 import { 
   TrendingUp, Wallet, Shield, 
@@ -287,7 +288,7 @@ export default function WealthInvest({ session, balances, profile }) {
     let items = [{ id: 'PORTFOLIO', label: 'Portfolio' }];
     if (wealthProfile.management_level === 'guided') items.push({ id: 'SUGGESTIONS', label: 'AI Suggestions' });
     else if (wealthProfile.management_level === 'automated') items.push({ id: 'AUTOPILOT', label: 'Autopilot Status' });
-    items.push({ id: 'VENTUREX_LIVE', label: '🔴 VentureX Live' }, { id: 'FRANCHISE_HUB', label: '🏗️ Franchise Hub' }, { id: 'INCORPORATE', label: '🏢 Incorporate' }, { id: 'PUBLIC_MARKETS', label: 'Public Markets' }, { id: 'PRIVATE_EQUITY', label: 'Private Equity' }, { id: 'RAISE_CAPITAL', label: 'Raise Capital' }, { id: 'RISK_MANAGEMENT', label: 'Risk & Insurance' }, { id: 'SETTINGS', label: 'Strategy Settings' });
+    items.push({ id: 'VENTUREX_LIVE', label: '🔴 VentureX Live' }, { id: 'FRANCHISE_HUB', label: '🏗️ Franchise Hub' }, { id: 'AI_MATCHMAKER', label: '🤝 AI Matchmaker' }, { id: 'INCORPORATE', label: '🏢 Incorporate' }, { id: 'PUBLIC_MARKETS', label: 'Public Markets' }, { id: 'PRIVATE_EQUITY', label: 'Private Equity' }, { id: 'RAISE_CAPITAL', label: 'Raise Capital' }, { id: 'RISK_MANAGEMENT', label: 'Risk & Insurance' }, { id: 'SETTINGS', label: 'Strategy Settings' });
     return items;
   };
 
@@ -427,6 +428,9 @@ export default function WealthInvest({ session, balances, profile }) {
 
       {/* VENTUREX FRANCHISE HUB */}
       {activeCategory === 'FRANCHISE_HUB' && <VentureXFranchise session={session} profile={profile} balances={balances} />}
+
+      {/* VENTUREX AI MATCHMAKER */}
+      {activeCategory === 'AI_MATCHMAKER' && <VentureXMatchmaker session={session} profile={profile} balances={balances} />}
 
       {/* IFB COMPANY FORMATION */}
       {activeCategory === 'INCORPORATE' && <CompanyFormationHub session={session} balances={balances} profile={profile} />}
