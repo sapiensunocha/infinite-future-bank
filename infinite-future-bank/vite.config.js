@@ -26,9 +26,9 @@ export default defineConfig({
       external: ['puppeteer'], // Node-only lib — never bundle into browser build
       output: {
         manualChunks(id) {
-          // Supabase — loads early for auth, keep separate
+          // Supabase — loads early for auth
           if (id.includes('@supabase/')) return 'vendor-supabase';
-          // Face-api is huge (~3 MB) — isolate so it doesn't block initial paint
+          // Face-api is large — isolate it
           if (id.includes('face-api')) return 'vendor-face';
           // Charts
           if (id.includes('chart.js') || id.includes('chartjs') || id.includes('react-chartjs')) return 'vendor-charts';
@@ -38,9 +38,8 @@ export default defineConfig({
           if (id.includes('jspdf')) return 'vendor-pdf';
           // Stripe
           if (id.includes('@stripe/')) return 'vendor-stripe';
-          // Core React runtime
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('react-router')) return 'vendor-react';
-          // Everything else in node_modules → shared vendor chunk
+          // All other node_modules (including React) in one shared chunk
+          // NOTE: do NOT split react separately — it creates circular dependency with vendor-misc
           if (id.includes('node_modules/')) return 'vendor-misc';
         },
       },
