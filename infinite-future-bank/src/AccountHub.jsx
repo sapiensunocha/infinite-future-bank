@@ -374,9 +374,9 @@ export default function AccountHub({ session, balances, profile, showBalances })
       {/* 💳 TIER: INFINITE CARDS */}
       {activeTier === 'CARDS' && (
         <div className="space-y-8 animate-in slide-in-from-left-4">
-          <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm relative overflow-hidden">
-            
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+          <div className="bg-white border border-slate-200 p-4 sm:p-6 md:p-10 rounded-[3rem] shadow-sm relative overflow-hidden">
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-10 gap-4">
               <div className="flex items-center gap-4">
                  <div className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg"><CreditCard size={24}/></div>
                  <div>
@@ -384,16 +384,16 @@ export default function AccountHub({ session, balances, profile, showBalances })
                     <p className="text-[9px] font-black uppercase text-blue-500 tracking-widest">Insurance-Backed Liquidity Interface</p>
                  </div>
               </div>
-              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button onClick={() => setCardTab('CARD')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${cardTab === 'CARD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Card</button>
-                <button onClick={() => setCardTab('PARTNERS')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${cardTab === 'PARTNERS' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}>Pay Partner</button>
-                <button onClick={() => setCardTab('LEDGER')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${cardTab === 'LEDGER' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Ledger</button>
+              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-full md:w-auto overflow-x-auto no-scrollbar">
+                <button onClick={() => setCardTab('CARD')} className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${cardTab === 'CARD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Card</button>
+                <button onClick={() => setCardTab('PARTNERS')} className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${cardTab === 'PARTNERS' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}>Pay Partner</button>
+                <button onClick={() => setCardTab('LEDGER')} className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${cardTab === 'LEDGER' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Ledger</button>
               </div>
             </div>
 
             {/* VIEW 1: PREMIUM CARD DISPLAY */}
             {cardTab === 'CARD' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 animate-in fade-in">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 animate-in fade-in">
                 <div className="flex flex-col items-center">
                   {cards.length === 0 ? (
                     <div className="w-full space-y-6">
@@ -466,12 +466,12 @@ export default function AccountHub({ session, balances, profile, showBalances })
                   )}
 
                   {cards.length > 0 && (
-                    <div className="flex flex-col w-full max-w-sm gap-4 mt-10">
+                    <div className="flex flex-col w-full gap-4 mt-6 md:mt-10">
                       {/* Card balance */}
-                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 grid grid-cols-2 gap-2">
                         <div>
                           <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Card Balance</p>
-                          <p className="text-xl font-black text-slate-800">{formatCurrency(activeCard.balance || 0)}</p>
+                          <p className="text-lg font-black text-slate-800">{formatCurrency(activeCard.balance || 0)}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Available Cash</p>
@@ -497,17 +497,17 @@ export default function AccountHub({ session, balances, profile, showBalances })
                           {isRecharging ? 'Loading…' : 'Recharge'}
                         </button>
                       </div>
-                      <div className="flex gap-3">
-                        <button onClick={()=>setShowCardDetails(!showCardDetails)} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">{showCardDetails ? 'Hide' : 'Reveal'} Details</button>
-                        <button onClick={toggleFreezeCurrentCard} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCard.isFrozen ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white shadow-lg hover:bg-red-600'}`}>{activeCard.isFrozen ? 'Unfreeze' : 'Freeze'} Card</button>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button onClick={()=>setShowCardDetails(!showCardDetails)} className="py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">{showCardDetails ? 'Hide' : 'Reveal'} Details</button>
+                        <button onClick={toggleFreezeCurrentCard} className={`py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${activeCard.isFrozen ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white shadow-lg hover:bg-red-600'}`}>{activeCard.isFrozen ? 'Unfreeze' : 'Freeze'}</button>
                       </div>
                       <button onClick={terminateCurrentCard} className="w-full py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all">Terminate Card</button>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-8">
-                   <div className="bg-slate-50 border border-slate-200 p-8 rounded-[3rem] shadow-inner">
+                <div className="space-y-6 md:space-y-8">
+                   <div className="bg-slate-50 border border-slate-200 p-4 sm:p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-inner">
                       <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">Smart Liquidity Routing</h4>
                       <div className="space-y-4">
                          <button onClick={() => setClyrixEnabled(v => !v)} className="w-full flex items-center justify-between p-5 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all text-left">
@@ -537,7 +537,7 @@ export default function AccountHub({ session, balances, profile, showBalances })
                       </div>
                    </div>
 
-                   <div className="p-8 bg-slate-900 rounded-[3rem] text-white relative overflow-hidden">
+                   <div className="p-4 sm:p-6 md:p-8 bg-slate-900 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden">
                       <Flame className="absolute bottom-[-10%] right-[-5%] w-32 h-32 text-emerald-500/10 pointer-events-none" />
                       <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4">Ledger Health</h4>
                       <div className="flex items-end gap-2 mb-6">
@@ -622,8 +622,8 @@ export default function AccountHub({ session, balances, profile, showBalances })
       {/* 🏅 TIER: DYNAMIC BADGING (IDENTITY) */}
       {activeTier === 'IDENTITY' && (
         <div className="animate-in slide-in-from-left-4 space-y-8">
-           <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm">
-              <div className="flex justify-between items-end mb-12">
+           <div className="bg-white border border-slate-200 p-4 sm:p-6 md:p-10 rounded-[3rem] shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 md:mb-12 gap-4">
                  <div>
                     <h3 className="text-3xl font-black text-slate-800 tracking-tighter uppercase">Verified Achievements</h3>
                     <p className="text-sm font-medium text-slate-500 mt-2">Dynamic status badges derived from your real-time activities within IFB.</p>
@@ -634,35 +634,35 @@ export default function AccountHub({ session, balances, profile, showBalances })
                  </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                  {/* Badge: Investor */}
-                 <div className={`p-10 rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_investor ? 'bg-blue-50 border-blue-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
+                 <div className={`p-5 md:p-10 rounded-[2rem] md:rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_investor ? 'bg-blue-50 border-blue-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
                     <Star className="absolute top-[-10%] right-[-10%] w-24 h-24 text-blue-500/5 group-hover:scale-110 transition-transform" />
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-lg ${achievements?.is_investor ? 'bg-blue-600 text-white' : 'bg-slate-300 text-slate-500'}`}><Zap size={32}/></div>
+                    <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-8 shadow-lg ${achievements?.is_investor ? 'bg-blue-600 text-white' : 'bg-slate-300 text-slate-500'}`}><Zap size={32}/></div>
                     <h4 className="text-2xl font-black text-slate-800 mb-1">Investor</h4>
                     <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Capital Allocator</p>
                  </div>
 
                  {/* Badge: Entrepreneur */}
-                 <div className={`p-10 rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_entrepreneur ? 'bg-indigo-50 border-indigo-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
+                 <div className={`p-5 md:p-10 rounded-[2rem] md:rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_entrepreneur ? 'bg-indigo-50 border-indigo-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
                     <Rocket className="absolute top-[-10%] right-[-10%] w-24 h-24 text-indigo-500/5 group-hover:scale-110 transition-transform" />
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-lg ${achievements?.is_entrepreneur ? 'bg-indigo-600 text-white' : 'bg-slate-300 text-slate-500'}`}><Landmark size={32}/></div>
+                    <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-8 shadow-lg ${achievements?.is_entrepreneur ? 'bg-indigo-600 text-white' : 'bg-slate-300 text-slate-500'}`}><Landmark size={32}/></div>
                     <h4 className="text-2xl font-black text-slate-800 mb-1">Founder</h4>
                     <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Innovation Agent</p>
                  </div>
 
                  {/* Badge: NPO */}
-                 <div className={`p-10 rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_npo ? 'bg-emerald-50 border-emerald-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
+                 <div className={`p-5 md:p-10 rounded-[2rem] md:rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_npo ? 'bg-emerald-50 border-emerald-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
                     <Globe className="absolute top-[-10%] right-[-10%] w-24 h-24 text-emerald-500/5 group-hover:scale-110 transition-transform" />
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-lg ${achievements?.is_npo ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-500'}`}><Users size={32}/></div>
+                    <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-8 shadow-lg ${achievements?.is_npo ? 'bg-emerald-600 text-white' : 'bg-slate-300 text-slate-500'}`}><Users size={32}/></div>
                     <h4 className="text-2xl font-black text-slate-800 mb-1">Impact</h4>
                     <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Global Partner</p>
                  </div>
 
                  {/* Badge: Insured */}
-                 <div className={`p-10 rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_insured ? 'bg-amber-50 border-amber-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
+                 <div className={`p-5 md:p-10 rounded-[2rem] md:rounded-[3.5rem] border-4 transition-all relative group overflow-hidden ${achievements?.is_insured ? 'bg-amber-50 border-amber-200 shadow-xl' : 'bg-slate-50 border-slate-100 opacity-30 grayscale'}`}>
                     <ShieldCheck className="absolute top-[-10%] right-[-10%] w-24 h-24 text-amber-500/5 group-hover:scale-110 transition-transform" />
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-lg ${achievements?.is_insured ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-400'}`}><ShieldCheck size={32}/></div>
+                    <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-8 shadow-lg ${achievements?.is_insured ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-400'}`}><ShieldCheck size={32}/></div>
                     <h4 className="text-2xl font-black text-slate-800 mb-1">Protected</h4>
                     <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Sovereign Safety</p>
                  </div>
@@ -685,7 +685,7 @@ export default function AccountHub({ session, balances, profile, showBalances })
       {/* 💳 TIER: PERSONAL & PRIVATE */}
       {activeTier === 'PERSONAL' && (
         <div className="space-y-8 animate-in slide-in-from-left-4">
-          <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm">
+          <div className="bg-white border border-slate-200 p-4 sm:p-6 md:p-10 rounded-[3rem] shadow-sm">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-lg text-blue-600 border border-blue-100"><Globe2 size={18} /></div> 
