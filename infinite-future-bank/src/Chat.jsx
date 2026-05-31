@@ -224,25 +224,35 @@ export default function Chat({ session, onClose, balances, profile }) {
       return;
     }
 
-    // Try Grok edge function
+    // Call agent-chat with NOVA support persona
     try {
       const payloadMessages = newChat
         .filter(m => m.role === 'user' || m.role === 'assistant')
-        .map(m => ({ role: m.role, content: m.content }));
+        .map(m => ({ role: m.role === 'assistant' ? 'ai' : 'user', text: m.content }));
 
-      const { data, error } = await supabase.functions.invoke('pascaline-grok-agent', {
-        body: { messages: payloadMessages, userId: session.user.id }
+      const { data, error } = await supabase.functions.invoke('agent-chat', {
+        body: {
+          agent: {
+            id: 'support',
+            name: 'NOVA',
+            title: 'Customer Intelligence Officer',
+            mission: 'Provide instant, accurate, empathetic support for IFB clients across all banking features, cards, transfers, and platform navigation.'
+          },
+          messages: payloadMessages,
+          balances: balances || {},
+          profile: profile || {},
+          task: null
+        }
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
     } catch (err) {
-      // Grok failed — give a helpful fallback instead of generic error
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `I'm unable to process that with AI right now. Here's what you can do:\n\n• Try one of the quick help buttons below\n• Tap "Talk to Specialist" to connect with a human\n• Email us at support@infinitefuturebank.org\n\nFor common issues, select a topic from the quick help buttons.`
+        content: `I was unable to reach the AI relay. Please try again in a moment, or email us at support@infinitefuturebank.org if this persists.`
       }]);
     } finally {
       setIsTyping(false);
