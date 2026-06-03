@@ -87,12 +87,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
           .eq('user_id', session.user.id)
           .eq('is_active', true)
           .maybeSingle();
-        setAdminRole(data);
+        if (data) {
+          setAdminRole(data);
+        } else {
+          // Fallback: derive from profiles.role when RLS blocks admin_roles
+          const profileRole = profile?.role;
+          if (profileRole === 'superadmin' || profileRole === 'admin_l3') {
+            setAdminRole({ role: 'super', permissions: { all: true }, is_active: true });
+          } else if (profileRole === 'admin') {
+            setAdminRole({ role: 'ops', permissions: {}, is_active: true });
+          } else {
+            setAdminRole(null);
+          }
+        }
       } catch { setAdminRole(null); }
       finally { setCheckingRole(false); }
     };
     check();
-  }, [session.user.id]);
+  }, [session.user.id, profile?.role]);
 
   const canAccess = (tab) => {
     if (!adminRole) return false;
