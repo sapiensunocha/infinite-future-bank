@@ -6,7 +6,8 @@ import {
   Eye, EyeOff, Ban, UserCheck, ChevronRight, Activity,
   TrendingUp, ArrowUpRight, FileText, Clock, Filter,
   ShieldCheck, ShieldAlert, Plus, Trash2, Edit2, Send,
-  Building2, Lock, Unlock, Database, Zap, Bell
+  Building2, Lock, Unlock, Database, Zap, Bell, Rocket,
+  Upload, Pencil, Save, UserCog, LayoutDashboard, BookOpen
 } from 'lucide-react';
 
 const ROLE_META = {
@@ -18,19 +19,34 @@ const ROLE_META = {
 };
 
 const TABS = [
-  { id: 'overview',     label: 'Overview',       icon: BarChart3,  roles: ['super','ops','finance','support','content'] },
-  { id: 'register',     label: 'Register User',  icon: UserCheck,  roles: ['super','ops'] },
-  { id: 'users',        label: 'Users',          icon: Users,      roles: ['super','ops','support'] },
-  { id: 'kyc',          label: 'KYC Review',     icon: ShieldCheck,roles: ['super','ops'] },
-  { id: 'documents',    label: 'Documents',      icon: FileText,   roles: ['super','ops'] },
-  { id: 'transactions', label: 'Transactions',   icon: Activity,   roles: ['super','finance'] },
-  { id: 'finance',      label: 'P2P Orders',     icon: DollarSign, roles: ['super','finance'] },
-  { id: 'support',      label: 'Support',        icon: Ticket,     roles: ['super','support','ops'] },
-  { id: 'venturex',     label: 'VentureX',       icon: Globe,      roles: ['super','content'] },
-  { id: 'backoffice',   label: 'Back Office',    icon: Database,   roles: ['super'] },
-  { id: 'announce',     label: 'Broadcast',      icon: Bell,       roles: ['super','content','ops'] },
-  { id: 'roles',        label: 'Admin Roles',    icon: Shield,     roles: ['super'] },
+  { id: 'overview',      label: 'Overview',        icon: BarChart3,       roles: ['super','ops','finance','support','content'] },
+  { id: 'register',      label: 'Register User',   icon: UserCheck,       roles: ['super','ops'] },
+  { id: 'users',         label: 'Users',           icon: Users,           roles: ['super','ops','support'] },
+  { id: 'kyc',           label: 'KYC Review',      icon: ShieldCheck,     roles: ['super','ops'] },
+  { id: 'documents',     label: 'Documents',       icon: FileText,        roles: ['super','ops'] },
+  { id: 'transactions',  label: 'Transactions',    icon: Activity,        roles: ['super','finance'] },
+  { id: 'finance',       label: 'P2P Orders',      icon: DollarSign,      roles: ['super','finance'] },
+  { id: 'support',       label: 'Support',         icon: Ticket,          roles: ['super','support','ops'] },
+  { id: 'applications',  label: 'IFB Applications',icon: Rocket,          roles: ['super','ops','content'] },
+  { id: 'venturex',      label: 'VentureX',        icon: Globe,           roles: ['super','content'] },
+  { id: 'backoffice',    label: 'Back Office',     icon: Database,        roles: ['super'] },
+  { id: 'announce',      label: 'Broadcast',       icon: Bell,            roles: ['super','content','ops'] },
+  { id: 'roles',         label: 'Admin Roles',     icon: Shield,          roles: ['super'] },
 ];
+
+const PACKAGES_META = {
+  access: { name: 'IFB ACCESS',  price: 650,  color: 'text-emerald-400' },
+  growth: { name: 'IFB GROWTH',  price: 2750, color: 'text-blue-400'    },
+  elite:  { name: 'IFB ELITE',   price: 6000, color: 'text-violet-400'  },
+};
+const APP_STATUS_META = {
+  under_review: { label: 'Under Review', cls: 'text-amber-400 bg-amber-900/30 border-amber-700/40' },
+  in_progress:  { label: 'In Progress',  cls: 'text-blue-400  bg-blue-900/30  border-blue-700/40'  },
+  completed:    { label: 'Completed',    cls: 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' },
+  cancelled:    { label: 'Cancelled',    cls: 'text-red-400   bg-red-900/30   border-red-700/40'   },
+};
+const VTX_SECTORS = ['Technology','Fintech','Agriculture','Healthcare','Education','Energy','Real Estate','Manufacturing','Retail','Logistics','Media','Tourism','Other'];
+const VTX_STAGES  = ['idea','pre_revenue','early','growth','scale','mvp','ipo_ready'];
 
 const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0);
 const fmtNum = n => Number(n || 0).toLocaleString();
@@ -69,11 +85,31 @@ export default function AdminDashboard({ session, profile, onClose }) {
   // VentureX
   const [vtxFilter, setVtxFilter] = useState('');
   const [vtxDetail, setVtxDetail] = useState(null);
+  const [vtxEditId, setVtxEditId] = useState(null);
+  const [vtxEdits, setVtxEdits] = useState({});
+  const [vtxUploading, setVtxUploading] = useState({});
+  // IFB Applications
+  const [applications, setApplications] = useState([]);
+  const [appFilter, setAppFilter] = useState('');
+  const [appDetail, setAppDetail] = useState(null);
+  const [appAdvisor, setAppAdvisor] = useState('');
+  const [appNotes, setAppNotes] = useState('');
+  const [showCreateApp, setShowCreateApp] = useState(false);
+  const [appForm, setAppForm] = useState({
+    user_id:'', company_name:'', sector:'', country:'', stage:'idea', team_size:1,
+    annual_revenue_usd:0, capital_ask_usd:0, problem_statement:'', solution_statement:'',
+    website:'', package_id:'access', package_name:'IFB ACCESS', package_price_usd:0,
+    payment_status:'admin_created', status:'under_review', assigned_advisor:'', notes:'',
+  });
+  const [creatingApp, setCreatingApp] = useState(false);
   // Back office
   const [boUser, setBoUser] = useState(null);
   const [boSearch, setBoSearch] = useState('');
   const [boLoading, setBoLoading] = useState(false);
   const [boEdits, setBoEdits] = useState({});
+  const [boTab, setBoTab] = useState('profile');
+  const [boOverview, setBoOverview] = useState(null);
+  const [boOverviewLoading, setBoOverviewLoading] = useState(false);
   // Tx filter
   const [txSearch, setTxSearch] = useState('');
 
@@ -209,6 +245,15 @@ export default function AdminDashboard({ session, profile, onClose }) {
     } finally { setLoading(false); }
   }, []);
 
+  // Load IFB applications
+  const loadApplications = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await supabase.rpc('admin_get_applications', { p_limit: 200, p_status: null, p_user_id: null });
+      setApplications(data || []);
+    } finally { setLoading(false); }
+  }, []);
+
   // Load admin roles
   const loadAdminRoles = useCallback(async () => {
     setLoading(true);
@@ -228,6 +273,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
     if (activeTab === 'support') loadTickets();
     if (activeTab === 'finance') loadP2p();
     if (activeTab === 'venturex') loadVentureX();
+    if (activeTab === 'applications') loadApplications();
     if (activeTab === 'roles') loadAdminRoles();
   }, [activeTab, adminRole]);
 
@@ -249,10 +295,111 @@ export default function AdminDashboard({ session, profile, onClose }) {
   // VentureX company status update
   const handleVxStatus = async (id, status) => {
     try {
-      await supabase.from('venturex_companies').update({ status }).eq('id', id);
+      const { error } = await supabase.rpc('admin_update_venturex_company', {
+        p_company_id: id, p_status: status,
+        p_financial_verified: null, p_identity_verified: null,
+        p_traction_verified: null, p_is_public: null, p_investment_readiness_score: null,
+      });
+      if (error) throw error;
       notify(`Company status updated to ${status}`);
       loadVentureX();
     } catch (e) { notify(e.message, 'error'); }
+  };
+
+  // VentureX full field save
+  const handleVtxSave = async (companyId) => {
+    if (!Object.keys(vtxEdits).length) return;
+    try {
+      const { error } = await supabase.rpc('admin_update_venturex_full', { p_company_id: companyId, p_updates: vtxEdits });
+      if (error) throw error;
+      notify('Company updated');
+      setVtxEditId(null); setVtxEdits({});
+      loadVentureX();
+    } catch (e) { notify(e.message, 'error'); }
+  };
+
+  // VentureX document upload
+  const handleVtxDocUpload = async (companyId, field, file) => {
+    if (!file) return;
+    setVtxUploading(u => ({...u, [field]: true}));
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `venturex/${companyId}/${field}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('kyc_documents').upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('kyc_documents').getPublicUrl(path);
+      const { error: updErr } = await supabase.rpc('admin_update_venturex_full', {
+        p_company_id: companyId,
+        p_updates: { [field]: publicUrl }
+      });
+      if (updErr) throw updErr;
+      notify(`${field.replace('_url','').replace(/_/g,' ')} uploaded`);
+      loadVentureX();
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setVtxUploading(u => ({...u, [field]: false})); }
+  };
+
+  // IFB Application update
+  const handleAppUpdate = async (appId, status, advisor, notes) => {
+    try {
+      const { error } = await supabase.rpc('admin_update_application', {
+        p_app_id: appId,
+        p_status: status || null,
+        p_assigned_advisor: advisor || null,
+        p_notes: notes || null,
+      });
+      if (error) throw error;
+      notify('Application updated');
+      loadApplications();
+      if (appDetail?.id === appId) setAppDetail(prev => ({...prev, status: status||prev.status, assigned_advisor: advisor||prev.assigned_advisor, notes: notes||prev.notes}));
+    } catch (e) { notify(e.message, 'error'); }
+  };
+
+  // Create application on behalf of user
+  const handleCreateApp = async () => {
+    if (!appForm.user_id || !appForm.company_name) { notify('User ID and company name required', 'error'); return; }
+    setCreatingApp(true);
+    try {
+      const pkg = PACKAGES_META[appForm.package_id];
+      const { data, error } = await supabase.rpc('admin_create_application_for_user', {
+        p_target_user_id: appForm.user_id,
+        p_company_name: appForm.company_name,
+        p_sector: appForm.sector || 'Other',
+        p_country: appForm.country || '',
+        p_stage: appForm.stage || 'idea',
+        p_team_size: parseInt(appForm.team_size) || 1,
+        p_annual_revenue_usd: parseFloat(appForm.annual_revenue_usd) || 0,
+        p_capital_ask_usd: parseFloat(appForm.capital_ask_usd) || 0,
+        p_problem_statement: appForm.problem_statement || '',
+        p_solution_statement: appForm.solution_statement || '',
+        p_website: appForm.website || null,
+        p_package_id: appForm.package_id,
+        p_package_name: pkg?.name || appForm.package_id,
+        p_package_price_usd: parseFloat(appForm.package_price_usd) || 0,
+        p_addons: '[]',
+        p_addons_total_usd: 0,
+        p_payment_status: appForm.payment_status,
+        p_status: appForm.status,
+        p_assigned_advisor: appForm.assigned_advisor || null,
+        p_notes: appForm.notes || null,
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      notify(`Application created for ${appForm.company_name}`);
+      setShowCreateApp(false);
+      setAppForm({ user_id:'', company_name:'', sector:'', country:'', stage:'idea', team_size:1, annual_revenue_usd:0, capital_ask_usd:0, problem_statement:'', solution_statement:'', website:'', package_id:'access', package_name:'IFB ACCESS', package_price_usd:0, payment_status:'admin_created', status:'under_review', assigned_advisor:'', notes:'' });
+      loadApplications();
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setCreatingApp(false); }
+  };
+
+  // Load "view as user" overview
+  const loadBoOverview = async (userId) => {
+    setBoOverviewLoading(true);
+    try {
+      const { data } = await supabase.rpc('admin_get_user_overview', { p_user_id: userId });
+      setBoOverview(data);
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setBoOverviewLoading(false); }
   };
 
   // Send ticket reply (as admin specialist)
@@ -905,6 +1052,228 @@ export default function AdminDashboard({ session, profile, onClose }) {
             </div>
           )}
 
+          {/* ─── IFB APPLICATIONS ─── */}
+          {activeTab === 'applications' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h2 className="text-2xl font-black text-white">IFB Entrepreneur Applications</h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <select value={appFilter} onChange={e => setAppFilter(e.target.value)}
+                    className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                    <option value="">All Statuses</option>
+                    {Object.entries(APP_STATUS_META).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                  <button onClick={() => setShowCreateApp(s => !s)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    <Plus size={12}/> Create for User
+                  </button>
+                  <button onClick={loadApplications} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    <RefreshCw size={12}/> Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* Create Application Panel */}
+              {showCreateApp && (
+                <div className="bg-slate-900 border border-indigo-700/40 rounded-3xl p-6 space-y-5">
+                  <h3 className="font-black text-white text-sm">Register Application on Behalf of User</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-3">
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">User ID (UUID) *</label>
+                      <input value={appForm.user_id} onChange={e => setAppForm(f=>({...f,user_id:e.target.value}))}
+                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500 font-mono" />
+                    </div>
+                    {[['company_name','Company Name *','text'],['sector','Sector','text'],['country','Country','text'],
+                      ['capital_ask_usd','Capital Ask (USD)','number'],['annual_revenue_usd','Annual Revenue (USD)','number'],
+                      ['website','Website','text']].map(([key,label,type]) => (
+                      <div key={key}>
+                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
+                        <input type={type} value={appForm[key]} onChange={e => setAppForm(f=>({...f,[key]:e.target.value}))}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500" />
+                      </div>
+                    ))}
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Stage</label>
+                      <select value={appForm.stage} onChange={e => setAppForm(f=>({...f,stage:e.target.value}))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        {['idea','pre_revenue','early','growth','scale'].map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Package</label>
+                      <select value={appForm.package_id} onChange={e => {
+                        const pkg = PACKAGES_META[e.target.value];
+                        setAppForm(f=>({...f, package_id:e.target.value, package_name:pkg?.name||e.target.value, package_price_usd:pkg?.price||0}));
+                      }} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        {Object.entries(PACKAGES_META).map(([k,v]) => <option key={k} value={k}>{v.name} (${v.price})</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Initial Status</label>
+                      <select value={appForm.status} onChange={e => setAppForm(f=>({...f,status:e.target.value}))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        {Object.entries(APP_STATUS_META).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Payment Status</label>
+                      <select value={appForm.payment_status} onChange={e => setAppForm(f=>({...f,payment_status:e.target.value}))}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        {['admin_created','paid','refunded','waived'].map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Assign Advisor</label>
+                      <input value={appForm.assigned_advisor} onChange={e => setAppForm(f=>({...f,assigned_advisor:e.target.value}))}
+                        placeholder="Advisor name or email"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Problem Statement</label>
+                    <textarea value={appForm.problem_statement} onChange={e => setAppForm(f=>({...f,problem_statement:e.target.value}))}
+                      rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Solution Statement</label>
+                    <textarea value={appForm.solution_statement} onChange={e => setAppForm(f=>({...f,solution_statement:e.target.value}))}
+                      rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Internal Notes</label>
+                    <textarea value={appForm.notes} onChange={e => setAppForm(f=>({...f,notes:e.target.value}))}
+                      rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={handleCreateApp} disabled={creatingApp || !appForm.user_id || !appForm.company_name}
+                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
+                      {creatingApp ? <Loader2 size={14} className="animate-spin"/> : <Rocket size={14}/>} Submit Application
+                    </button>
+                    <button onClick={() => setShowCreateApp(false)} className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Applications list + detail panel */}
+              {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    {applications.filter(a => !appFilter || a.status === appFilter).length === 0
+                      ? <div className="text-center py-12 text-slate-500 font-bold">No applications found.</div>
+                      : applications.filter(a => !appFilter || a.status === appFilter).map(app => {
+                          const statusMeta = APP_STATUS_META[app.status] || APP_STATUS_META.under_review;
+                          const pkgMeta = PACKAGES_META[app.package_id];
+                          return (
+                            <button key={app.id} onClick={() => { setAppDetail(app); setAppAdvisor(app.assigned_advisor||''); setAppNotes(app.notes||''); }}
+                              className={`w-full text-left p-5 rounded-2xl border transition-all hover:border-indigo-600 ${appDetail?.id===app.id?'border-indigo-600 bg-indigo-950/20':'border-slate-800 bg-slate-900'}`}>
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <div>
+                                  <p className="font-black text-white text-sm">{app.company_name}</p>
+                                  <p className="text-xs text-slate-400">{app.user_full_name} · {app.user_email}</p>
+                                </div>
+                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border shrink-0 ${statusMeta.cls}`}>{statusMeta.label}</span>
+                              </div>
+                              <div className="flex items-center gap-3 mt-2">
+                                <span className={`text-[9px] font-black ${pkgMeta?.color||'text-slate-400'}`}>{app.package_name}</span>
+                                <span className="text-[9px] text-slate-500">{app.sector} · {app.country}</span>
+                                {app.assigned_advisor && <span className="text-[9px] text-emerald-400">⚙ {app.assigned_advisor}</span>}
+                              </div>
+                              <p className="text-[9px] text-slate-600 mt-1">{new Date(app.created_at).toLocaleString()}</p>
+                            </button>
+                          );
+                        })
+                    }
+                  </div>
+
+                  {/* Detail panel */}
+                  {appDetail ? (
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                      <div className="p-5 border-b border-slate-800">
+                        <p className="font-black text-white">{appDetail.company_name}</p>
+                        <p className="text-xs text-slate-400">{appDetail.user_full_name} · {appDetail.user_email}</p>
+                      </div>
+                      <div className="p-5 space-y-4 overflow-y-auto max-h-[70vh]">
+                        {/* Info grid */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            ['Stage', appDetail.stage?.replace(/_/g,' ')],
+                            ['Sector', appDetail.sector],
+                            ['Country', appDetail.country],
+                            ['Team Size', appDetail.team_size],
+                            ['Annual Revenue', fmtUSD(appDetail.annual_revenue_usd)],
+                            ['Capital Ask', fmtUSD(appDetail.capital_ask_usd)],
+                            ['Package', appDetail.package_name],
+                            ['Total Paid', fmtUSD(appDetail.total_paid_usd)],
+                            ['Payment', appDetail.payment_status],
+                          ].map(([l,v]) => (
+                            <div key={l} className="bg-slate-800/50 rounded-xl p-2.5">
+                              <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
+                              <p className="text-xs font-bold text-white">{v||'—'}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {appDetail.problem_statement && (
+                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Problem</p><p className="text-xs text-slate-300 leading-relaxed">{appDetail.problem_statement}</p></div>
+                        )}
+                        {appDetail.solution_statement && (
+                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Solution</p><p className="text-xs text-slate-300 leading-relaxed">{appDetail.solution_statement}</p></div>
+                        )}
+                        {appDetail.website && (
+                          <a href={appDetail.website} target="_blank" rel="noreferrer" className="text-xs text-blue-400 underline">{appDetail.website}</a>
+                        )}
+
+                        {/* Status buttons */}
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Update Status</p>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(APP_STATUS_META).map(([k,v]) => (
+                              <button key={k} onClick={() => handleAppUpdate(appDetail.id, k, null, null)}
+                                className={`px-3 py-1.5 border font-black text-[9px] uppercase rounded-xl transition-colors ${appDetail.status===k?v.cls:'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'}`}>
+                                {v.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Advisor */}
+                        <div>
+                          <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Assign Advisor</label>
+                          <div className="flex gap-2">
+                            <input value={appAdvisor} onChange={e => setAppAdvisor(e.target.value)}
+                              placeholder="Name or email"
+                              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500" />
+                            <button onClick={() => handleAppUpdate(appDetail.id, null, appAdvisor, null)}
+                              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase rounded-xl">
+                              Assign
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                          <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Internal Notes</label>
+                          <textarea value={appNotes} onChange={e => setAppNotes(e.target.value)} rows={3}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none resize-none" />
+                          <button onClick={() => handleAppUpdate(appDetail.id, null, null, appNotes)}
+                            className="mt-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            <Save size={12}/> Save Notes
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl flex items-center justify-center text-slate-600 font-bold text-sm h-64">
+                      Select an application to manage
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ─── SUPPORT TICKETS ─── */}
           {activeTab === 'support' && (
             <div className="space-y-6 animate-in fade-in">
@@ -986,12 +1355,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   </button>
                 </div>
               </div>
+
               {/* Create company on behalf */}
               <details className="bg-slate-900 border border-slate-800 rounded-2xl">
                 <summary className="px-6 py-4 cursor-pointer font-black text-slate-300 text-sm flex items-center gap-2"><Plus size={14}/> Register Company on Behalf of User</summary>
                 <div className="px-6 pb-6 space-y-4 border-t border-slate-800 pt-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {[['vtx_uid','User ID (UUID)','text'],['vtx_name','Legal Company Name','text'],['vtx_sector','Sector','text'],['vtx_country','Country','text'],['vtx_goal','Funding Goal (USD)','number']].map(([id,ph,type]) => (
+                    {[['vtx_uid','User ID (UUID)','text'],['vtx_name','Legal Company Name','text'],['vtx_reg','Registration Number','text'],['vtx_sector','Sector','text'],['vtx_country','Country','text'],['vtx_goal','Funding Goal (USD)','number'],['vtx_raised','Total Raised (USD)','number'],['vtx_valuation','Valuation (USD)','number'],['vtx_teamsize','Team Size','number'],['vtx_website','Website','text'],['vtx_tagline','Tagline','text']].map(([id,ph,type]) => (
                       <div key={id}>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
                         <input id={id} type={type} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500" />
@@ -1000,98 +1370,265 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Stage</label>
                       <select id="vtx_stage" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
-                        {['idea','mvp','growth','scale','ipo_ready'].map(s => <option key={s}>{s}</option>)}
+                        {VTX_STAGES.map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Current Round</label>
+                      <select id="vtx_round" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                        {['pre-seed','seed','series-a','series-b','series-c','ipo'].map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Initial Status</label>
+                      <select id="vtx_status" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                        {['draft','active','pending_review'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[['vtx_problem','Problem Statement'],['vtx_solution','Solution Statement'],['vtx_competitive','Competitive Advantage'],['vtx_hiring','Hiring Plan']].map(([id,ph]) => (
+                      <div key={id}>
+                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
+                        <textarea id={id} rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none resize-none" />
+                      </div>
+                    ))}
+                  </div>
                   <button onClick={async () => {
-                    const uid = document.getElementById('vtx_uid')?.value;
-                    const name = document.getElementById('vtx_name')?.value;
-                    const sector = document.getElementById('vtx_sector')?.value;
-                    const country = document.getElementById('vtx_country')?.value;
-                    const goal = parseFloat(document.getElementById('vtx_goal')?.value || '0');
-                    const stage = document.getElementById('vtx_stage')?.value;
+                    const g = id => document.getElementById(id)?.value;
+                    const uid = g('vtx_uid'), name = g('vtx_name');
                     if (!uid || !name) { notify('User ID and company name required', 'error'); return; }
                     const { error } = await supabase.rpc('admin_create_venturex_company', {
-                      p_user_id: uid, p_legal_name: name, p_sector: sector||'', p_country: country||'',
-                      p_product_stage: stage||'idea', p_funding_goal: goal, p_current_round: 'pre-seed', p_status: 'draft'
+                      p_user_id: uid, p_legal_name: name, p_sector: g('vtx_sector')||'',
+                      p_country: g('vtx_country')||'', p_product_stage: g('vtx_stage')||'idea',
+                      p_funding_goal: parseFloat(g('vtx_goal')||'0'),
+                      p_current_round: g('vtx_round')||'pre-seed', p_status: g('vtx_status')||'draft'
                     });
-                    if (error) notify(error.message, 'error');
-                    else { notify('Company created successfully'); loadVentureX(); }
+                    if (error) { notify(error.message, 'error'); return; }
+                    // Apply extra fields via full update (need company ID — refresh and find it)
+                    notify('Company created — apply extra fields via Edit below');
+                    loadVentureX();
                   }} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
                     <Building2 size={12}/> Create Company
                   </button>
                 </div>
               </details>
+
               {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
-                <div className="space-y-3">
-                  {venturexCos.filter(c => !vtxFilter || c.status === vtxFilter).map(co => (
-                    <div key={co.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-                      <div className="p-5 flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-black text-white">{co.legal_name}</p>
-                              <p className="text-xs text-slate-400">{co.user_full_name} · {co.user_email}</p>
-                              <p className="text-[10px] text-slate-500">{co.sector} · {co.country}</p>
+                <div className="space-y-4">
+                  {venturexCos.filter(c => !vtxFilter || c.status === vtxFilter).map(co => {
+                    const isEditing = vtxEditId === co.id;
+                    const ev = (field) => isEditing && vtxEdits[field] !== undefined ? vtxEdits[field] : co[field];
+                    const setEv = (field, val) => setVtxEdits(e => ({...e, [field]: val}));
+                    return (
+                      <div key={co.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                        {/* Header row */}
+                        <div className="p-5 flex flex-col md:flex-row gap-4">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="font-black text-white">{co.legal_name}</p>
+                                <p className="text-xs text-slate-400">{co.user_full_name} · {co.user_email}</p>
+                                <p className="text-[10px] text-slate-500">{co.sector} · {co.country}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-900/40 text-emerald-400':co.status==='rejected'?'bg-red-900/40 text-red-400':'bg-slate-700 text-slate-400'}`}>{co.status}</span>
+                                <button onClick={() => { setVtxEditId(isEditing ? null : co.id); setVtxEdits({}); }}
+                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isEditing?'bg-blue-600 border-blue-500 text-white':'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'}`}>
+                                  <Pencil size={10}/> {isEditing ? 'Cancel' : 'Edit'}
+                                </button>
+                              </div>
                             </div>
-                            <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-900/40 text-emerald-400':co.status==='rejected'?'bg-red-900/40 text-red-400':'bg-slate-700 text-slate-400'}`}>{co.status}</span>
+                            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                              {[
+                                ['Stage', co.product_stage],['Goal', co.funding_goal?fmtUSD(co.funding_goal):'—'],
+                                ['Raised', co.total_raised?fmtUSD(co.total_raised):'—'],['Valuation', co.valuation?fmtUSD(co.valuation):'—'],
+                                ['AI Score', co.investment_readiness_score!=null?`${co.investment_readiness_score}%`:'—'],
+                                ['KYC', co.user_kyc_status||'—'],
+                              ].map(([l,v]) => <div key={l} className="bg-slate-800/50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-white">{v}</p></div>)}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {[['Financial', co.financial_verified],['Identity', co.identity_verified],['Traction', co.traction_verified],['Public', co.is_public]].map(([l,v]) => (
+                                <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-400 border-emerald-700/40':'text-slate-500 border-slate-700'}`}>{l}: {v?'✓':'✗'}</span>
+                              ))}
+                            </div>
                           </div>
-                          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                          {/* Quick action column */}
+                          <div className="flex md:flex-col gap-2 md:w-40 shrink-0">
                             {[
-                              ['Stage', co.product_stage],['Goal', co.funding_goal?fmtUSD(co.funding_goal):'—'],
-                              ['Raised', co.total_raised?fmtUSD(co.total_raised):'—'],['Valuation', co.valuation?fmtUSD(co.valuation):'—'],
-                              ['AI Score', co.investment_readiness_score!=null?`${co.investment_readiness_score}%`:'—'],
-                              ['KYC', co.user_kyc_status||'—'],
-                            ].map(([l,v]) => <div key={l} className="bg-slate-800/50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-white">{v}</p></div>)}
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {[['Financial', co.financial_verified],['Identity', co.identity_verified],['Traction', co.traction_verified],['Public', co.is_public]].map(([l,v]) => (
-                              <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-400 border-emerald-700/40':'text-slate-500 border-slate-700'}`}>{l}: {v?'✓':'✗'}</span>
+                              { label:'Activate', status:'active', cls:'bg-emerald-600/30 text-emerald-400 border-emerald-700/40' },
+                              { label:'Suspend', status:'suspended', cls:'bg-red-900/30 text-red-400 border-red-700/40' },
+                              { label:'Review', status:'pending_review', cls:'bg-amber-900/30 text-amber-400 border-amber-700/40' },
+                              { label:'Reject', status:'rejected', cls:'bg-red-900/50 text-red-400 border-red-700/40' },
+                            ].map(({ label, status, cls }) => (
+                              <button key={status} onClick={() => handleVxStatus(co.id, status)}
+                                className={`flex-1 md:flex-none py-2 px-3 border font-black text-[9px] uppercase tracking-widest rounded-xl transition-colors ${cls}`}>{label}</button>
                             ))}
+                            <div className="border-t border-slate-800 pt-2 space-y-1">
+                              {[['financial_verified','Financial'],['identity_verified','Identity'],['traction_verified','Traction'],['is_public','Public']].map(([field, label]) => (
+                                <button key={field} onClick={async () => {
+                                  const args = { p_company_id: co.id, p_status: null, p_financial_verified: null, p_identity_verified: null, p_traction_verified: null, p_is_public: null, p_investment_readiness_score: null };
+                                  args[`p_${field}`] = !co[field];
+                                  const { error } = await supabase.rpc('admin_update_venturex_company', args);
+                                  if (error) notify(error.message, 'error'); else { notify(`${label} toggled`); loadVentureX(); }
+                                }} className={`w-full py-1.5 px-2 border font-black text-[8px] uppercase rounded-lg transition-colors ${co[field]?'bg-emerald-900/20 text-emerald-400 border-emerald-700/30':'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                                  {co[field]?'✓':''} {label}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          {[['Pitch Deck', co.pitch_deck_url],['Financials', co.financial_statements_url],['Legal Docs', co.legal_docs_url]].filter(([,u])=>u).map(([l,u]) => (
-                            <a key={l} href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg mr-2 hover:bg-blue-900/40">
-                              <Eye size={10}/>{l}
-                            </a>
-                          ))}
                         </div>
-                        <div className="flex md:flex-col gap-2 md:w-40 shrink-0">
-                          {[
-                            { label:'Activate', status:'active', cls:'bg-emerald-600/30 text-emerald-400 border-emerald-700/40' },
-                            { label:'Suspend', status:'suspended', cls:'bg-red-900/30 text-red-400 border-red-700/40' },
-                            { label:'Pending Review', status:'pending_review', cls:'bg-amber-900/30 text-amber-400 border-amber-700/40' },
-                            { label:'Reject', status:'rejected', cls:'bg-red-900/50 text-red-400 border-red-700/40' },
-                          ].map(({ label, status, cls }) => (
-                            <button key={status} onClick={async () => {
-                              const { error } = await supabase.rpc('admin_update_venturex_company', {
-                                p_company_id: co.id, p_status: status,
-                                p_financial_verified: null, p_identity_verified: null,
-                                p_traction_verified: null, p_is_public: null, p_investment_readiness_score: null,
-                              });
-                              if (error) notify(error.message, 'error'); else { notify(`Company set to ${status}`); loadVentureX(); }
-                            }} className={`flex-1 md:flex-none py-2 px-3 border font-black text-[9px] uppercase tracking-widest rounded-xl transition-colors ${cls}`}>{label}</button>
-                          ))}
-                          <div className="border-t border-slate-800 pt-2 space-y-1">
-                            {[['financial_verified','Financial'],['identity_verified','Identity'],['traction_verified','Traction'],['is_public','Make Public']].map(([field, label]) => (
-                              <button key={field} onClick={async () => {
-                                const args: Record<string,unknown> = {
-                                  p_company_id: co.id, p_status: null,
-                                  p_financial_verified: null, p_identity_verified: null,
-                                  p_traction_verified: null, p_is_public: null, p_investment_readiness_score: null,
-                                  [`p_${field}`]: !co[field],
-                                };
-                                const { error } = await supabase.rpc('admin_update_venturex_company', args);
-                                if (error) notify(error.message, 'error'); else { notify(`${label} toggled`); loadVentureX(); }
-                              }} className={`w-full py-1.5 px-2 border font-black text-[8px] uppercase rounded-lg transition-colors ${co[field]?'bg-emerald-900/20 text-emerald-400 border-emerald-700/30':'bg-slate-800 text-slate-400 border-slate-700'}`}>
-                                {co[field]?'✓':''} {label}
+
+                        {/* ── FULL EDITOR (expanded when isEditing) ── */}
+                        {isEditing && (
+                          <div className="border-t border-slate-700 p-5 space-y-5 bg-slate-800/30">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Full Company Editor — editing {co.legal_name}</p>
+
+                            {/* Core identity */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              {[
+                                ['legal_name','Legal Name','text'],['registration_number','Reg Number','text'],
+                                ['sector','Sector','text'],['sub_sector','Sub-Sector','text'],
+                                ['country','Country','text'],['website','Website','text'],['tagline','Tagline','text'],
+                                ['incorporation_date','Incorporation Date','date'],
+                              ].map(([field,label,type]) => (
+                                <div key={field}>
+                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <input type={type} value={ev(field)||''} onChange={e => setEv(field, e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500" />
+                                </div>
+                              ))}
+                              <div>
+                                <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">Product Stage</label>
+                                <select value={ev('product_stage')||'idea'} onChange={e => setEv('product_stage', e.target.value)}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                                  {VTX_STAGES.map(s => <option key={s}>{s}</option>)}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">Current Round</label>
+                                <select value={ev('current_round')||'pre-seed'} onChange={e => setEv('current_round', e.target.value)}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                                  {['pre-seed','seed','series-a','series-b','series-c','ipo'].map(s => <option key={s}>{s}</option>)}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Financials */}
+                            <p className="text-[9px] font-black uppercase text-slate-500">Financials & Funding</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              {[
+                                ['funding_goal','Funding Goal'],['total_raised','Total Raised'],
+                                ['valuation','Valuation'],['equity_offered','Equity % Offered'],
+                                ['monthly_revenue','Monthly Revenue'],['monthly_burn_rate','Monthly Burn'],
+                                ['cash_on_hand','Cash on Hand'],['gross_margin','Gross Margin %'],
+                                ['net_profit','Net Profit'],['ebitda','EBITDA'],
+                              ].map(([field,label]) => (
+                                <div key={field}>
+                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <input type="number" value={ev(field)||0} onChange={e => setEv(field, parseFloat(e.target.value)||0)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500" />
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Traction */}
+                            <p className="text-[9px] font-black uppercase text-slate-500">Traction & Metrics</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              {[
+                                ['active_users','Active Users'],['team_size','Team Size'],
+                                ['user_growth_rate','User Growth %'],['retention_rate','Retention %'],
+                                ['churn_rate','Churn %'],['cac','CAC (USD)'],
+                                ['ltv','LTV (USD)'],['conversion_rate','Conversion %'],
+                                ['tam','TAM (USD)'],['sam','SAM (USD)'],['som','SOM (USD)'],
+                                ['investment_readiness_score','Readiness Score (0-100)'],
+                              ].map(([field,label]) => (
+                                <div key={field}>
+                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <input type="number" value={ev(field)||0} onChange={e => setEv(field, parseFloat(e.target.value)||0)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500" />
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Narrative */}
+                            <p className="text-[9px] font-black uppercase text-slate-500">Narrative</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {[['competitive_advantage','Competitive Advantage'],['hiring_plan','Hiring Plan']].map(([field,label]) => (
+                                <div key={field}>
+                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <textarea value={ev(field)||''} onChange={e => setEv(field, e.target.value)} rows={3}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none resize-none" />
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Risk */}
+                            <p className="text-[9px] font-black uppercase text-slate-500">Risk Levels</p>
+                            <div className="grid grid-cols-3 gap-3">
+                              {[['regulatory_risk','Regulatory'],['market_risk','Market'],['execution_risk','Execution']].map(([field,label]) => (
+                                <div key={field}>
+                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <select value={ev(field)||'medium'} onChange={e => setEv(field, e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                                    {['low','medium','high'].map(r => <option key={r}>{r}</option>)}
+                                  </select>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Documents */}
+                            <p className="text-[9px] font-black uppercase text-slate-500">Documents</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              {[
+                                ['pitch_deck_url','Pitch Deck'],
+                                ['financial_statements_url','Financial Statements'],
+                                ['legal_docs_url','Legal Documents'],
+                              ].map(([field, label]) => (
+                                <div key={field} className="space-y-2">
+                                  <label className="block text-[8px] font-black uppercase text-slate-500">{label}</label>
+                                  {co[field] && (
+                                    <a href={co[field]} target="_blank" rel="noreferrer" className="text-[9px] text-blue-400 underline block truncate">{co[field]}</a>
+                                  )}
+                                  <input type="text" placeholder="Paste URL or upload below" value={vtxEdits[field]||''} onChange={e => setEv(field, e.target.value)}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                                  <label className={`flex items-center gap-2 px-3 py-2 border border-dashed border-slate-600 rounded-xl cursor-pointer hover:border-blue-500 text-[9px] font-black uppercase text-slate-400 ${vtxUploading[field]?'opacity-50':''}`}>
+                                    {vtxUploading[field] ? <Loader2 size={10} className="animate-spin"/> : <Upload size={10}/>}
+                                    Upload File
+                                    <input type="file" className="hidden" disabled={vtxUploading[field]}
+                                      onChange={e => handleVtxDocUpload(co.id, field, e.target.files[0])} />
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Save */}
+                            <div className="flex gap-3 pt-2 border-t border-slate-700">
+                              <button onClick={() => handleVtxSave(co.id)} disabled={!Object.keys(vtxEdits).length}
+                                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
+                                <Save size={14}/> Save {Object.keys(vtxEdits).length > 0 ? `${Object.keys(vtxEdits).length} Changes` : ''}
                               </button>
+                              <button onClick={() => { setVtxEditId(null); setVtxEdits({}); }}
+                                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Document links (below edit area) */}
+                        {!isEditing && (
+                          <div className="px-5 pb-4 flex gap-2 flex-wrap">
+                            {[['Pitch Deck', co.pitch_deck_url],['Financials', co.financial_statements_url],['Legal Docs', co.legal_docs_url]].filter(([,u])=>u).map(([l,u]) => (
+                              <a key={l} href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg hover:bg-blue-900/40">
+                                <Eye size={10}/>{l}
+                              </a>
                             ))}
                           </div>
-                        </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {venturexCos.filter(c => !vtxFilter || c.status === vtxFilter).length === 0 && (
                     <div className="text-center py-12 text-slate-500 font-bold">No companies found.</div>
                   )}
@@ -1103,14 +1640,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── BACK OFFICE ─── */}
           {activeTab === 'backoffice' && (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-2xl font-black text-white">Back Office — User Editor</h2>
+              <h2 className="text-2xl font-black text-white">Back Office — Full User Control</h2>
+
+              {/* Search bar */}
               <div className="flex gap-3">
                 <input value={boSearch} onChange={e => setBoSearch(e.target.value)}
-                  placeholder="Search by email or user ID..."
+                  onKeyDown={e => e.key === 'Enter' && document.getElementById('bo-search-btn')?.click()}
+                  placeholder="Search by email or user UUID..."
                   className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-blue-500" />
-                <button disabled={boLoading} onClick={async () => {
+                <button id="bo-search-btn" disabled={boLoading} onClick={async () => {
                   if (!boSearch.trim()) return;
-                  setBoLoading(true); setBoUser(null); setBoEdits({});
+                  setBoLoading(true); setBoUser(null); setBoEdits({}); setBoOverview(null); setBoTab('profile');
                   try {
                     const isUUID = /^[0-9a-f-]{36}$/i.test(boSearch.trim());
                     let uid = boSearch.trim();
@@ -1119,102 +1659,336 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       uid = p?.id;
                     }
                     if (!uid) { notify('User not found', 'error'); return; }
-                    const { data } = await supabase.rpc('admin_get_user_full', { p_user_id: uid });
-                    setBoUser(data);
+                    const [{ data: full }] = await Promise.all([
+                      supabase.rpc('admin_get_user_full', { p_user_id: uid }),
+                    ]);
+                    setBoUser(full);
                     setBoEdits({});
+                    loadBoOverview(uid);
                   } catch(e) { notify(e.message, 'error'); }
                   finally { setBoLoading(false); }
                 }} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-2 disabled:opacity-50">
                   {boLoading ? <Loader2 size={14} className="animate-spin"/> : <Search size={14}/>} Search
                 </button>
               </div>
+
               {boUser && (() => {
                 const p = boUser.profile || {};
                 const kyc = boUser.kyc || {};
                 const bals = boUser.balances || [];
                 const editField = (key, val) => setBoEdits(e => ({...e, [key]: val}));
                 const curVal = (key) => boEdits[key] !== undefined ? boEdits[key] : (p[key] ?? '');
+                const ov = boOverview || {};
+
                 return (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-5">
+                    {/* User banner */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-2xl shrink-0">
+                        {(p.full_name||p.email||'U')[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-white text-lg">{p.full_name || '—'}</p>
+                        <p className="text-slate-400 text-sm">{p.email}</p>
+                        <p className="text-[10px] text-slate-600 font-mono mt-0.5">{p.id}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${p.kyc_status==='approved'||p.kyc_status==='verified'?'text-emerald-400 border-emerald-700/40':'text-amber-400 border-amber-700/40'}`}>{p.kyc_status||'unverified'}</span>
+                        <span className="text-[9px] text-slate-500 font-black uppercase">{p.role||'user'}</span>
+                      </div>
+                    </div>
+
+                    {/* Balances strip */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {bals.map(b => (
-                        <div key={b.currency_code} className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                        <div key={b.currency_code} className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
                           <p className="text-[9px] font-black uppercase text-slate-500">{b.currency_code} Balance</p>
-                          <p className="text-2xl font-black text-white mt-1">{Number(b.balance||0).toLocaleString()}</p>
+                          <p className="text-xl font-black text-white mt-1">{Number(b.balance||0).toLocaleString()}</p>
                         </div>
                       ))}
-                    </div>
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
-                      <div className="flex items-center justify-between">
-                        <p className="font-black text-white">Profile — {p.full_name}</p>
-                        <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${p.kyc_status==='approved'||p.kyc_status==='verified'?'text-emerald-400 border-emerald-700/40':'text-amber-400 border-amber-700/40'}`}>{p.kyc_status}</span>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[
-                          { key:'full_name', label:'Full Name' }, { key:'email', label:'Email' },
-                          { key:'phone', label:'Phone' }, { key:'country', label:'Country' },
-                          { key:'dob', label:'Date of Birth' }, { key:'employer', label:'Employer' },
-                          { key:'source_of_revenue', label:'Source of Revenue' }, { key:'residential_address', label:'Residential Address' },
-                        ].map(({ key, label }) => (
-                          <div key={key}>
-                            <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
-                            <input value={curVal(key)} onChange={e => editField(key, e.target.value)}
-                              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500" />
-                          </div>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">KYC Status</label>
-                          <select value={curVal('kyc_status')} onChange={e => editField('kyc_status', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
-                            {['unverified','pending_kyc','verified','approved','rejected'].map(s => <option key={s}>{s}</option>)}
-                          </select>
+                      {(ov.applications||[]).length > 0 && (
+                        <div className="bg-indigo-900/20 border border-indigo-700/40 rounded-2xl p-4">
+                          <p className="text-[9px] font-black uppercase text-indigo-400">IFB Applications</p>
+                          <p className="text-xl font-black text-white mt-1">{(ov.applications||[]).length}</p>
                         </div>
-                        <div>
-                          <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Role</label>
-                          <select value={curVal('role')} onChange={e => editField('role', e.target.value)}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
-                            {['user','admin','admin_l3','superadmin','is_cot_processor'].map(s => <option key={s}>{s}</option>)}
-                          </select>
+                      )}
+                      {(ov.companies||[]).length > 0 && (
+                        <div className="bg-blue-900/20 border border-blue-700/40 rounded-2xl p-4">
+                          <p className="text-[9px] font-black uppercase text-blue-400">VentureX Companies</p>
+                          <p className="text-xl font-black text-white mt-1">{(ov.companies||[]).length}</p>
                         </div>
-                      </div>
-                      {Object.keys(boEdits).length > 0 && (
-                        <button onClick={async () => {
-                          const { error } = await supabase.rpc('admin_update_any_profile', { p_user_id: p.id, p_updates: boEdits });
-                          if (error) notify(error.message, 'error');
-                          else { notify('Profile updated'); const { data } = await supabase.rpc('admin_get_user_full', { p_user_id: p.id }); setBoUser(data); setBoEdits({}); }
-                        }} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-2">
-                          <CheckCircle size={14}/> Save {Object.keys(boEdits).length} Change{Object.keys(boEdits).length > 1 ? 's' : ''}
-                        </button>
                       )}
                     </div>
-                    {kyc && Object.keys(kyc).length > 0 && (
-                      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
-                        <p className="font-black text-white mb-4">KYC Submission</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {[['Status', kyc.status],['Risk', kyc.risk_rating],['AI Score', kyc.ai_confidence_score != null ? `${kyc.ai_confidence_score}%` : '—'],['AI Rec.', kyc.ai_recommendation],
-                            ['Nationality', kyc.nationality],['ID Type', kyc.id_type],['ID Number', kyc.id_number],['PEP', kyc.politically_exposed_person ? '⚠️ YES' : 'No']
-                          ].map(([l,v]) => <div key={l} className="bg-slate-800/50 rounded-xl p-3"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-white">{v||'—'}</p></div>)}
+
+                    {/* Inner tab bar */}
+                    <div className="flex overflow-x-auto no-scrollbar border-b border-slate-800">
+                      {[
+                        { id:'profile',       label:'Profile & KYC',    icon: UserCog },
+                        { id:'applications',  label:'Applications',     icon: Rocket },
+                        { id:'companies',     label:'VentureX',         icon: Building2 },
+                        { id:'notifications', label:'Notifications',    icon: Bell },
+                        { id:'transactions',  label:'Transactions',     icon: Activity },
+                      ].map(({ id, label, icon: Icon }) => (
+                        <button key={id} onClick={() => setBoTab(id)}
+                          className={`flex items-center gap-2 px-5 py-3 whitespace-nowrap text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${boTab===id?'border-blue-500 text-blue-400':'border-transparent text-slate-500 hover:text-slate-300'}`}>
+                          <Icon size={12}/>{label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* ── Profile & KYC ── */}
+                    {boTab === 'profile' && (
+                      <div className="space-y-5">
+                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
+                          <p className="font-black text-white text-sm">Edit Profile</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[
+                              { key:'full_name', label:'Full Name' }, { key:'email', label:'Email' },
+                              { key:'phone', label:'Phone' }, { key:'country', label:'Country' },
+                              { key:'dob', label:'Date of Birth' }, { key:'employer', label:'Employer' },
+                              { key:'source_of_revenue', label:'Source of Revenue' },
+                              { key:'residential_address', label:'Residential Address' },
+                            ].map(({ key, label }) => (
+                              <div key={key}>
+                                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
+                                <input value={curVal(key)} onChange={e => editField(key, e.target.value)}
+                                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500" />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">KYC Status</label>
+                              <select value={curVal('kyc_status')} onChange={e => editField('kyc_status', e.target.value)}
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                                {['unverified','pending_kyc','verified','approved','rejected'].map(s => <option key={s}>{s}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Role</label>
+                              <select value={curVal('role')} onChange={e => editField('role', e.target.value)}
+                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                                {['user','admin','admin_l3','superadmin','is_cot_processor'].map(s => <option key={s}>{s}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          {Object.keys(boEdits).length > 0 && (
+                            <button onClick={async () => {
+                              const { error } = await supabase.rpc('admin_update_any_profile', { p_user_id: p.id, p_updates: boEdits });
+                              if (error) notify(error.message, 'error');
+                              else {
+                                notify('Profile updated');
+                                const { data } = await supabase.rpc('admin_get_user_full', { p_user_id: p.id });
+                                setBoUser(data); setBoEdits({});
+                              }
+                            }} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-2">
+                              <CheckCircle size={14}/> Save {Object.keys(boEdits).length} Change{Object.keys(boEdits).length > 1 ? 's' : ''}
+                            </button>
+                          )}
                         </div>
-                        {kyc.ai_flags?.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-3">
-                            {kyc.ai_flags.map(f => <span key={f} className="text-[9px] font-black text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
+
+                        {/* KYC Submission */}
+                        {kyc && Object.keys(kyc).length > 0 && (
+                          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                            <p className="font-black text-white text-sm">KYC Submission</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              {[['Status', kyc.status],['Risk', kyc.risk_rating],['AI Score', kyc.ai_confidence_score!=null?`${kyc.ai_confidence_score}%`:'—'],['AI Rec.', kyc.ai_recommendation],
+                                ['Nationality', kyc.nationality],['ID Type', kyc.id_type],['ID Number', kyc.id_number],['PEP', kyc.politically_exposed_person?'⚠️ YES':'No']
+                              ].map(([l,v]) => (
+                                <div key={l} className="bg-slate-800/50 rounded-xl p-3">
+                                  <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
+                                  <p className="text-xs font-bold text-white">{v||'—'}</p>
+                                </div>
+                              ))}
+                            </div>
+                            {kyc.ai_flags?.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {kyc.ai_flags.map(f => <span key={f} className="text-[9px] font-black text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
+                              </div>
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                              {[['ID Front',kyc.id_front_url],['ID Back',kyc.id_back_url],['Selfie',kyc.selfie_url],['Selfie+ID',kyc.selfie_with_id_url],
+                                ['Address Proof',kyc.proof_of_address_url],['Income',kyc.proof_of_income_url],['Bank Stmt',kyc.bank_statement_url]
+                              ].filter(([,u])=>u).map(([l,u]) => (
+                                <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg hover:bg-blue-900/40 flex items-center gap-1">
+                                  <Eye size={10}/>{l}
+                                </a>
+                              ))}
+                            </div>
+                            <div className="flex gap-3 pt-2 border-t border-slate-800">
+                              <button onClick={() => handleKycAction(p.id, 'approved', 'Admin manual approval')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><CheckCircle size={12}/> Approve KYC</button>
+                              <button onClick={() => handleKycAction(p.id, 'needs_more_info', 'Admin requested more info')} className="px-4 py-2 bg-amber-600/30 border border-amber-700/40 text-amber-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><AlertTriangle size={12}/> Request Info</button>
+                              <button onClick={() => handleKycAction(p.id, 'rejected', 'Admin rejection')} className="px-4 py-2 bg-red-900/40 border border-red-700/40 text-red-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><X size={12}/> Reject</button>
+                            </div>
                           </div>
                         )}
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {[['ID Front',kyc.id_front_url],['ID Back',kyc.id_back_url],['Selfie',kyc.selfie_url],['Selfie+ID',kyc.selfie_with_id_url],
-                            ['Address Proof',kyc.proof_of_address_url],['Income',kyc.proof_of_income_url],['Bank Stmt',kyc.bank_statement_url]
-                          ].filter(([,u])=>u).map(([l,u]) => (
-                            <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg hover:bg-blue-900/40 flex items-center gap-1">
-                              <Eye size={10}/>{l}
-                            </a>
-                          ))}
+                      </div>
+                    )}
+
+                    {/* ── Applications (view as user) ── */}
+                    {boTab === 'applications' && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p className="font-black text-white text-sm">IFB Applications for {p.full_name}</p>
+                          <button onClick={() => {
+                            setAppForm(f => ({...f, user_id: p.id}));
+                            setActiveTab('applications');
+                            setShowCreateApp(true);
+                          }} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase tracking-widest rounded-xl">
+                            <Plus size={12}/> New Application
+                          </button>
                         </div>
-                        <div className="flex gap-3 mt-4">
-                          <button onClick={() => handleKycAction(p.id, 'approved', 'Admin manual approval')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><CheckCircle size={12}/> Approve KYC</button>
-                          <button onClick={() => handleKycAction(p.id, 'rejected', 'Admin rejection')} className="px-4 py-2 bg-red-900/40 border border-red-700/40 text-red-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><X size={12}/> Reject</button>
+                        {boOverviewLoading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={24}/></div> :
+                          (ov.applications||[]).length === 0
+                            ? <div className="text-center py-12 text-slate-500 font-bold">No applications yet.</div>
+                            : (ov.applications||[]).map(app => {
+                                const sm = APP_STATUS_META[app.status] || APP_STATUS_META.under_review;
+                                const pm = PACKAGES_META[app.package_id];
+                                return (
+                                  <div key={app.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <p className="font-black text-white">{app.company_name}</p>
+                                        <p className="text-xs text-slate-400">{app.sector} · {app.country} · Stage: {app.stage?.replace(/_/g,' ')}</p>
+                                      </div>
+                                      <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border shrink-0 ${sm.cls}`}>{sm.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4 flex-wrap">
+                                      <span className={`text-[9px] font-black ${pm?.color||'text-slate-400'}`}>{app.package_name}</span>
+                                      {app.assigned_advisor && <span className="text-[9px] text-emerald-400">Advisor: {app.assigned_advisor}</span>}
+                                      <span className="text-[9px] text-slate-500">{new Date(app.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                    {app.notes && <p className="text-[10px] text-slate-500 bg-slate-800/50 rounded-lg p-2">{app.notes}</p>}
+                                    <div className="flex gap-2 flex-wrap">
+                                      {Object.entries(APP_STATUS_META).map(([k,v]) => (
+                                        <button key={k} onClick={() => handleAppUpdate(app.id, k, null, null).then(() => loadBoOverview(p.id))}
+                                          className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg transition-colors ${app.status===k?v.cls:'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600'}`}>
+                                          {v.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                        }
+                      </div>
+                    )}
+
+                    {/* ── VentureX Companies (view as user) ── */}
+                    {boTab === 'companies' && (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p className="font-black text-white text-sm">VentureX Companies for {p.full_name}</p>
+                          <button onClick={() => setActiveTab('venturex')}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest rounded-xl">
+                            <Building2 size={12}/> Manage in VentureX
+                          </button>
                         </div>
+                        {boOverviewLoading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={24}/></div> :
+                          (ov.companies||[]).length === 0
+                            ? <div className="text-center py-12 text-slate-500 font-bold">No companies yet.</div>
+                            : (ov.companies||[]).map(co => (
+                                <div key={co.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                      <p className="font-black text-white">{co.legal_name}</p>
+                                      <p className="text-xs text-slate-400">{co.sector} · {co.country}</p>
+                                    </div>
+                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-900/40 text-emerald-400':co.status==='rejected'?'bg-red-900/40 text-red-400':'bg-slate-700 text-slate-400'}`}>{co.status}</span>
+                                  </div>
+                                  <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                                    {[['Stage',co.product_stage],['Goal',co.funding_goal?fmtUSD(co.funding_goal):'—'],['Raised',co.total_raised?fmtUSD(co.total_raised):'—'],
+                                      ['Valuation',co.valuation?fmtUSD(co.valuation):'—'],['Score',co.investment_readiness_score!=null?`${co.investment_readiness_score}%`:'—'],
+                                    ].map(([l,v]) => <div key={l} className="bg-slate-800/50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-white">{v}</p></div>)}
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {[['Financial',co.financial_verified],['Identity',co.identity_verified],['Traction',co.traction_verified],['Public',co.is_public]].map(([l,v]) => (
+                                      <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-400 border-emerald-700/40':'text-slate-600 border-slate-700'}`}>{l}: {v?'✓':'✗'}</span>
+                                    ))}
+                                  </div>
+                                  <div className="flex gap-2 flex-wrap">
+                                    {[['active','Activate','text-emerald-400 border-emerald-700/40'],['suspended','Suspend','text-red-400 border-red-700/40'],['pending_review','Review','text-amber-400 border-amber-700/40'],['rejected','Reject','text-red-400 border-red-700/40']].map(([s,l,cls]) => (
+                                      <button key={s} onClick={() => handleVxStatus(co.id, s).then(() => loadBoOverview(p.id))}
+                                        className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg ${co.status===s?cls+' bg-slate-800':'bg-slate-800 border-slate-700 text-slate-500'}`}>{l}</button>
+                                    ))}
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {[['Pitch Deck',co.pitch_deck_url],['Financials',co.financial_statements_url],['Legal Docs',co.legal_docs_url]].filter(([,u])=>u).map(([l,u]) => (
+                                      <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg flex items-center gap-1">
+                                        <Eye size={10}/>{l}
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))
+                        }
+                      </div>
+                    )}
+
+                    {/* ── Notifications (view as user) ── */}
+                    {boTab === 'notifications' && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="font-black text-white text-sm">Notifications for {p.full_name}</p>
+                          <button onClick={async () => {
+                            const msg = window.prompt('Send notification message:');
+                            if (!msg) return;
+                            await supabase.from('notifications').insert([{ user_id: p.id, type: 'admin', message: msg, read: false, status: 'completed' }]);
+                            notify('Notification sent');
+                            loadBoOverview(p.id);
+                          }} className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-black text-[9px] uppercase tracking-widest rounded-xl">
+                            <Bell size={12}/> Send Notification
+                          </button>
+                        </div>
+                        {boOverviewLoading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={24}/></div> :
+                          (ov.notifications||[]).length === 0
+                            ? <div className="text-center py-12 text-slate-500 font-bold">No notifications.</div>
+                            : (ov.notifications||[]).map(n => (
+                                <div key={n.id} className={`p-4 rounded-2xl border ${n.read?'border-slate-800 bg-slate-900/50':'border-blue-800/40 bg-blue-950/20'}`}>
+                                  <div className="flex items-start justify-between gap-3">
+                                    <p className="text-sm text-white leading-relaxed">{n.message}</p>
+                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${n.read?'text-slate-600':'text-blue-400'}`}>{n.read?'Read':'Unread'}</span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-600 mt-1">{new Date(n.created_at).toLocaleString()} · {n.type}</p>
+                                </div>
+                              ))
+                        }
+                      </div>
+                    )}
+
+                    {/* ── Transactions (view as user) ── */}
+                    {boTab === 'transactions' && (
+                      <div className="space-y-4">
+                        <p className="font-black text-white text-sm">Transactions for {p.full_name}</p>
+                        {boOverviewLoading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={24}/></div> :
+                          (ov.transactions||[]).length === 0
+                            ? <div className="text-center py-12 text-slate-500 font-bold">No transactions.</div>
+                            : (
+                              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="border-b border-slate-800 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                        {['Source','Type','Amount','Currency','Status','Date'].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {(ov.transactions||[]).map((tx, i) => (
+                                        <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30">
+                                          <td className="px-4 py-3"><span className="text-[9px] font-black uppercase text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded">{tx.source}</span></td>
+                                          <td className="px-4 py-3 text-slate-300 font-bold">{tx.tx_type?.replace(/_/g,' ')}</td>
+                                          <td className="px-4 py-3 font-black text-white">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
+                                          <td className="px-4 py-3 text-slate-400">{tx.currency}</td>
+                                          <td className="px-4 py-3"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-400':'text-amber-400'}`}>{tx.status||'—'}</span></td>
+                                          <td className="px-4 py-3 text-slate-500">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '—'}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )
+                        }
                       </div>
                     )}
                   </div>
