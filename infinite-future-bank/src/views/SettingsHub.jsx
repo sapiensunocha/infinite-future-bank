@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import FaceAuthManager from '../features/auth/FaceAuthManager';
 import { useFaceAuth } from '../features/auth/useFaceAuth';
+import KYCWizard from '../features/kyc/KYCWizard';
 
 export default function SettingsHub({
   session, profile, subTab, setSubTab, setActiveTab,
@@ -382,100 +383,21 @@ export default function SettingsHub({
                 )}
               </div>
 
-              {profile?.kyc_status !== 'verified' ? (
-                <div className="space-y-8 animate-in fade-in">
-                  
-                  {/* Section 1: Sovereign Identity */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><User size={14}/> Sovereign Identity</h4>
-                    <div className="grid grid-cols-1 gap-4">
-                      <input type="text" placeholder="Full Legal Name (As it appears on ID)" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" value={kycForm.legalName} onChange={e => setKycForm({...kycForm, legalName: e.target.value})} />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input type="date" placeholder="Date of Birth" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm text-slate-500 outline-none focus:border-blue-500" value={kycForm.dob} onChange={e => setKycForm({...kycForm, dob: e.target.value})} />
-                      <input type="tel" placeholder="Mobile Phone (Include Country Code)" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" value={kycForm.phone} onChange={e => setKycForm({...kycForm, phone: e.target.value})} />
-                    </div>
+              {profile?.kyc_status === 'pending_kyc' ? (
+                <div className="py-8 text-center">
+                  <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <RefreshCw size={24} className="animate-spin"/>
                   </div>
-
-                  {/* Section 2: Global Coordinates */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><MapPin size={14}/> Global Coordinates</h4>
-                    <div className="grid grid-cols-1 gap-4">
-                      <input type="text" placeholder="Registered Residential Address" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" value={kycForm.residentialAddress} onChange={e => setKycForm({...kycForm, residentialAddress: e.target.value})} />
-                      <input type="text" placeholder="Operational Address (Where IFB transactions will be facilitated)" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" value={kycForm.operationalAddress} onChange={e => setKycForm({...kycForm, operationalAddress: e.target.value})} />
-                    </div>
-                  </div>
-
-                  {/* Section 3: AML / KYC Financials */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><DollarSign size={14}/> Financial & AML Ledger</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input type="text" placeholder="Primary Source of Revenue" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" value={kycForm.sourceOfRevenue} onChange={e => setKycForm({...kycForm, sourceOfRevenue: e.target.value})} />
-                      <input type="text" placeholder="Current Employer / Corporate Entity" className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" value={kycForm.employer} onChange={e => setKycForm({...kycForm, employer: e.target.value})} />
-                    </div>
-                    <textarea 
-                      placeholder="Transaction Methodology: Describe exactly how you intend to facilitate deposits and withdrawals on the IFB network (e.g., Bank Wire, ACH, Physical Cash, Licensed Crypto Exchange). Include your operational capacity." 
-                      className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500 h-32 resize-none" 
-                      value={kycForm.transactionMethods} 
-                      onChange={e => setKycForm({...kycForm, transactionMethods: e.target.value})}
-                    ></textarea>
-                  </div>
-
-                  {/* Section 4: Document Vault */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><FileCheck size={14}/> Encrypted Document Vault</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* ID Upload */}
-                      <div className={`group relative p-6 rounded-2xl border-2 border-dashed transition-all ${kycFiles.passport ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 hover:border-blue-300'}`}>
-                        <label className="cursor-pointer flex flex-col items-center text-center">
-                          <FileText size={28} className={kycFiles.passport ? 'text-blue-500' : 'text-slate-300'} />
-                          <span className="text-[10px] font-black uppercase tracking-widest mt-2">{kycFiles.passport ? 'ID Attached' : 'Upload Govt ID'}</span>
-                          <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => setKycFiles({...kycFiles, passport: e.target.files[0]})} />
-                        </label>
-                      </div>
-                      {/* Selfie Upload */}
-                      <div className={`group relative p-6 rounded-2xl border-2 border-dashed transition-all ${kycFiles.selfie ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 hover:border-blue-300'}`}>
-                        <label className="cursor-pointer flex flex-col items-center text-center">
-                          <Camera size={28} className={kycFiles.selfie ? 'text-blue-500' : 'text-slate-300'} />
-                          <span className="text-[10px] font-black uppercase tracking-widest mt-2">{kycFiles.selfie ? 'Biometric Secured' : 'Live Selfie'}</span>
-                          <input type="file" accept="image/*" capture="user" className="hidden" onChange={(e) => setKycFiles({...kycFiles, selfie: e.target.files[0]})} />
-                        </label>
-                      </div>
-                      {/* Proof of Address Upload */}
-                      <div className={`group relative p-6 rounded-2xl border-2 border-dashed transition-all ${kycFiles.proofOfAddress ? 'border-blue-500 bg-blue-50/30' : 'border-slate-200 hover:border-blue-300'}`}>
-                        <label className="cursor-pointer flex flex-col items-center text-center">
-                          <Building size={28} className={kycFiles.proofOfAddress ? 'text-blue-500' : 'text-slate-300'} />
-                          <span className="text-[10px] font-black uppercase tracking-widest mt-2">{kycFiles.proofOfAddress ? 'Address Proof Linked' : 'Proof of Address'}</span>
-                          <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => setKycFiles({...kycFiles, proofOfAddress: e.target.files[0]})} />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Section 5: Legal Attestation */}
-                  <div className="p-5 bg-red-50/50 border border-red-100 rounded-2xl">
-                    <label className="flex items-start gap-4 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="mt-1 w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        checked={kycForm.agreedToTerms}
-                        onChange={(e) => setKycForm({...kycForm, agreedToTerms: e.target.checked})}
-                      />
-                      <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                        <strong className="text-red-700 uppercase tracking-widest text-[10px] block mb-1">Strict Liability Acknowledgment</strong>
-                        I certify under penalty of perjury that the operational capacity, identity, and revenue sources provided are strictly accurate. I acknowledge that I am opening a sovereign node subject to IFB Global Anti-Money Laundering (AML) and Counter-Terrorism Financing (CTF) protocols. Any discrepancy, duplication, or illicit activity will result in immediate network ejection, capital freezing, and regulatory reporting.
-                      </p>
-                    </label>
-                  </div>
-
-                  <button onClick={handleDirectAiVerification} disabled={isAiProcessing} className="w-full py-5 bg-blue-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
-                    {isAiProcessing ? (
-                      <><RefreshCw size={16} className="animate-spin"/> Transmitting to Secure Vault...</>
-                    ) : (
-                      <><Shield size={16}/> Submit Institutional Documents</>
-                    )}
-                  </button>
+                  <h4 className="font-black text-slate-800 text-base mb-2">Under Review</h4>
+                  <p className="text-sm text-slate-500 max-w-sm mx-auto">Your KYC application has been submitted and is being reviewed by our compliance team. This typically takes 24–48 hours.</p>
                 </div>
+              ) : profile?.kyc_status !== 'verified' && profile?.kyc_status !== 'approved' ? (
+                <KYCWizard
+                  session={session}
+                  profile={profile}
+                  triggerNotification={triggerNotification}
+                  onComplete={fetchAllData}
+                />
               ) : (
                 <div className="text-center py-10 bg-slate-50 border border-slate-100 rounded-2xl">
                   <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">

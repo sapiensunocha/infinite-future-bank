@@ -134,9 +134,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
     try {
       const { data } = await supabase.from('kyc_submissions')
         .select('*, profiles(full_name, email, country)')
-        .eq('status', 'pending')
+        .in('status', ['pending', 'p2p_review', 'ai_reviewing', 'needs_more_info'])
         .order('created_at', { ascending: true })
-        .limit(30);
+        .limit(50);
       setKycQueue(data || []);
     } finally { setLoading(false); }
   }, []);
@@ -200,9 +200,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
   }, [activeTab, adminRole]);
 
   // KYC actions
-  const handleKycAction = async (userId, status) => {
+  const [kycNote, setKycNote] = useState('');
+  const handleKycAction = async (userId, status, note = '') => {
     try {
-      const { error } = await supabase.rpc('admin_update_kyc', { p_user_id: userId, p_status: status });
+      const { error } = await supabase.rpc('admin_update_kyc', {
+        p_user_id: userId,
+        p_status: status,
+        p_notes: note || null,
+      });
       if (error) throw error;
       notify(`KYC ${status} successfully`);
       loadKyc();
@@ -544,49 +549,98 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   {kycQueue.length === 0 ? (
                     <div className="text-center py-20 text-slate-500 font-bold">No pending KYC submissions.</div>
                   ) : kycQueue.map(sub => (
-                    <div key={sub.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
-                      <div className="flex flex-col md:flex-row gap-6">
-                        <div className="flex-1 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-black text-white">{sub.profiles?.full_name || '—'}</p>
-                              <p className="text-xs text-slate-400">{sub.profiles?.email}</p>
-                            </div>
-                            <span className="text-[9px] font-black uppercase text-amber-400 bg-amber-900/30 border border-amber-700/40 px-3 py-1 rounded-full">Pending Review</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            {[
-                              { label: 'Submission ID', val: sub.id?.slice(0,8)+'...' },
-                              { label: 'AI Confidence', val: sub.ai_confidence_score ? `${sub.ai_confidence_score}%` : 'N/A' },
-                              { label: 'Submitted', val: new Date(sub.created_at).toLocaleString() },
-                              { label: 'Country', val: sub.profiles?.country || '—' },
-                            ].map(({ label, val }) => (
-                              <div key={label} className="bg-slate-800/60 rounded-xl p-3">
-                                <p className="text-[9px] font-black uppercase text-slate-500 mb-0.5">{label}</p>
-                                <p className="text-xs font-black text-white">{val}</p>
-                              </div>
-                            ))}
-                          </div>
-                          {/* Document links */}
-                          <div className="flex flex-wrap gap-2">
-                            {['id_front_url','id_back_url','selfie_url','proof_of_address_url'].map(field => sub[field] && (
-                              <a key={field} href={sub[field]} target="_blank" rel="noreferrer"
-                                className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-3 py-1.5 rounded-lg hover:bg-blue-900/40 transition-colors flex items-center gap-1">
-                                <FileText size={10}/>{field.replace('_url','').replace(/_/g,' ')}
-                              </a>
-                            ))}
-                          </div>
+                    <div key={sub.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="font-black text-white text-base">{sub.legal_full_name || sub.profiles?.full_name || '—'}</p>
+                          <p className="text-xs text-slate-400">{sub.profiles?.email} · {sub.email_primary || ''}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{sub.id}</p>
                         </div>
-                        <div className="flex md:flex-col gap-3 md:w-48">
-                          <button onClick={() => handleKycAction(sub.user_id, 'verified')}
-                            className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2">
-                            <CheckCircle size={14}/> Approve
-                          </button>
-                          <button onClick={() => handleKycAction(sub.user_id, 'rejected')}
-                            className="flex-1 py-3 bg-red-900/50 hover:bg-red-900/80 border border-red-700/40 text-red-400 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2">
-                            <X size={14}/> Reject
-                          </button>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${
+                            sub.status === 'approved' ? 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' :
+                            sub.status === 'rejected' ? 'text-red-400 bg-red-900/30 border-red-700/40' :
+                            sub.status === 'ai_reviewing' ? 'text-blue-400 bg-blue-900/30 border-blue-700/40' :
+                            'text-amber-400 bg-amber-900/30 border-amber-700/40'
+                          }`}>{sub.status?.replace(/_/g,' ')}</span>
+                          {sub.risk_rating && (
+                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                              sub.risk_rating === 'low' ? 'text-emerald-400 border-emerald-700/40' :
+                              sub.risk_rating === 'medium' ? 'text-amber-400 border-amber-700/40' :
+                              'text-red-400 border-red-700/40'
+                            }`}>Risk: {sub.risk_rating}</span>
+                          )}
                         </div>
+                      </div>
+                      {/* Key data grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {[
+                          { label: 'AI Confidence', val: sub.ai_confidence_score != null ? `${sub.ai_confidence_score}%` : 'N/A' },
+                          { label: 'AI Recommendation', val: sub.ai_recommendation || 'N/A' },
+                          { label: 'Nationality', val: sub.nationality || sub.profiles?.country || '—' },
+                          { label: 'ID Type', val: sub.id_type?.replace(/_/g,' ') || '—' },
+                          { label: 'ID Number', val: sub.id_number || '—' },
+                          { label: 'ID Expiry', val: sub.id_expiry || '—' },
+                          { label: 'Employment', val: sub.employment_status?.replace(/_/g,' ') || '—' },
+                          { label: 'Monthly Income', val: sub.monthly_income_usd ? `$${Number(sub.monthly_income_usd).toLocaleString()}` : '—' },
+                          { label: 'Source of Funds', val: sub.source_of_funds || '—' },
+                          { label: 'PEP', val: sub.politically_exposed_person ? '⚠️ YES' : 'No' },
+                          { label: 'FATCA', val: sub.fatca_applicable ? 'Yes' : 'No' },
+                          { label: 'Submitted', val: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : new Date(sub.created_at).toLocaleDateString() },
+                        ].map(({ label, val }) => (
+                          <div key={label} className="bg-slate-800/60 rounded-xl p-3">
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-0.5">{label}</p>
+                            <p className={`text-xs font-black ${val?.toString().includes('⚠️') ? 'text-amber-400' : 'text-white'}`}>{val}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {/* AI Flags */}
+                      {sub.ai_flags?.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          <p className="text-[9px] font-black uppercase text-slate-500 w-full">AI Flags</p>
+                          {sub.ai_flags.map(flag => (
+                            <span key={flag} className="text-[9px] font-black uppercase text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-1 rounded-lg">{flag.replace(/_/g,' ')}</span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Document links */}
+                      <div className="flex flex-wrap gap-2">
+                        <p className="text-[9px] font-black uppercase text-slate-500 w-full">Documents</p>
+                        {[
+                          'id_front_url','id_back_url','selfie_url','selfie_with_id_url',
+                          'proof_of_address_url','proof_of_income_url','bank_statement_url',
+                          'tax_return_url','employment_letter_url','business_license_url',
+                          'certificate_of_incorporation_url','board_resolution_url',
+                        ].map(field => sub[field] && (
+                          <a key={field} href={sub[field]} target="_blank" rel="noreferrer"
+                            className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-3 py-1.5 rounded-lg hover:bg-blue-900/40 transition-colors flex items-center gap-1">
+                            <FileText size={10}/>{field.replace('_url','').replace(/_/g,' ')}
+                          </a>
+                        ))}
+                        {!['id_front_url','id_back_url','selfie_url','proof_of_address_url'].some(f => sub[f]) && (
+                          <span className="text-[9px] text-slate-600">No documents uploaded yet</span>
+                        )}
+                      </div>
+                      {/* Action row */}
+                      <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-800">
+                        <input
+                          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-blue-500"
+                          placeholder="Reviewer notes / rejection reason (optional)"
+                          id={`kyc-note-${sub.id}`}
+                        />
+                        <button onClick={() => handleKycAction(sub.user_id, 'approved', document.getElementById(`kyc-note-${sub.id}`)?.value)}
+                          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          <CheckCircle size={14}/> Approve
+                        </button>
+                        <button onClick={() => handleKycAction(sub.user_id, 'needs_more_info', document.getElementById(`kyc-note-${sub.id}`)?.value)}
+                          className="px-6 py-3 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-700/40 text-amber-400 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          <AlertTriangle size={14}/> Request Info
+                        </button>
+                        <button onClick={() => handleKycAction(sub.user_id, 'rejected', document.getElementById(`kyc-note-${sub.id}`)?.value)}
+                          className="px-6 py-3 bg-red-900/50 hover:bg-red-900/80 border border-red-700/40 text-red-400 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          <X size={14}/> Reject
+                        </button>
                       </div>
                     </div>
                   ))}
