@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import QRCode from 'react-qr-code';
 import {
-  Wifi, Send, QrCode, Keyboard, CheckCircle2, AlertTriangle,
-  Loader2, UserPlus, Copy, Check, ArrowLeft, Zap, RefreshCw,
+  Wifi, Send, QrCode, CheckCircle2, AlertTriangle,
+  Loader2, UserPlus, Copy, Check, ArrowLeft, RefreshCw,
   Smartphone, Signal, CreditCard, ExternalLink
 } from 'lucide-react';
 
@@ -66,9 +66,6 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
   const [contactAdded, setContactAdded] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [depositUrl, setDepositUrl] = useState(null);
-  const [depositLoading, setDepositLoading] = useState(false);
-  const [depositDone, setDepositDone] = useState(false);
 
   const nfcRef    = useRef(null);
   const pollRef   = useRef(null);
@@ -211,39 +208,10 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
     }
   };
 
-  // ── Deposit by Card (self-pay via Stripe) ────────────────────────────────────
-  const handleDeposit = async () => {
-    const amt = parseFloat(amount);
-    if (!amt || amt < 1) return;
-    setDepositLoading(true); setErr(null);
-    try {
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-nfc-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authSession.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({ amount: amt, note: note || 'IFB Deposit' }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create payment link');
-      setDepositUrl(data.url);
-      setStep(3);
-      window.open(data.url, '_blank');
-    } catch (e) {
-      setErr(e.message);
-    } finally {
-      setDepositLoading(false);
-    }
-  };
-
   const reset = () => {
     setMode(null); setStep(1); setAmount(''); setNote(''); setToken(null);
     setManualToken(''); setResult(null); setErr(null); setContactAdded(false);
     setNfcScanning(false); setNfcWriting(false); setCheckoutUrl(null);
-    setDepositUrl(null); setDepositDone(false);
     clearInterval(pollRef.current);
   };
 
@@ -308,16 +276,6 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
             <div>
               <p className="font-black text-white">Get Paid by Card</p>
               <p className="text-xs text-slate-400 mt-0.5">Visa · Mastercard · Apple Pay · Google Pay</p>
-            </div>
-          </button>
-          <button onClick={() => { setMode('deposit'); setStep(2); }}
-            className="w-full p-5 rounded-2xl border border-slate-700 bg-slate-800/40 hover:border-teal-500 hover:bg-teal-900/10 text-left flex items-center gap-4 transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-teal-900/40 border border-teal-700/40 flex items-center justify-center group-hover:bg-teal-600/30 transition-colors">
-              <Zap size={20} className="text-teal-400"/>
-            </div>
-            <div>
-              <p className="font-black text-white">Deposit by Card</p>
-              <p className="text-xs text-slate-400 mt-0.5">Scan your own card · Apple Pay · Google Pay</p>
             </div>
           </button>
         </div>
@@ -584,91 +542,6 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
           <button onClick={reset}
             className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
             <RefreshCw size={12}/> Generate New Link
-          </button>
-        </div>
-      )}
-
-      {/* ── DEPOSIT: STEP 2 — Amount ────────────────────────────────────────────── */}
-      {mode === 'deposit' && step === 2 && (
-        <div className="space-y-5 animate-in fade-in">
-          <div>
-            <h3 className="font-black text-white text-base">Deposit to your wallet</h3>
-            <p className="text-xs text-slate-400 mt-1">Enter the amount — a Stripe page will open. Pay with your card, Apple Pay, or Google Pay. Money lands in your IFB balance instantly.</p>
-          </div>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl">$</span>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
-              placeholder="0.00" min="1" step="0.01"
-              className="w-full bg-slate-800 border border-slate-700 rounded-2xl pl-10 pr-4 py-4 text-2xl font-black text-white outline-none focus:border-teal-500 transition-colors text-center"/>
-          </div>
-          <div className="flex gap-2">
-            {[20, 50, 100, 200].map(v => (
-              <button key={v} onClick={() => setAmount(String(v))}
-                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px] font-black rounded-xl transition-all">
-                ${v}
-              </button>
-            ))}
-          </div>
-          <input value={note} onChange={e => setNote(e.target.value)}
-            placeholder="Reference (optional)"
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-white outline-none focus:border-teal-500 transition-colors placeholder-slate-600"/>
-          <button onClick={handleDeposit}
-            disabled={depositLoading || !amount || parseFloat(amount) < 1}
-            className="w-full py-4 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-900/30">
-            {depositLoading
-              ? <><Loader2 size={16} className="animate-spin"/>Opening payment…</>
-              : <><Zap size={16}/>Pay Now — Open Stripe</>}
-          </button>
-          <div className="flex items-center gap-2 p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
-            <div className="flex gap-1 shrink-0">
-              {['VISA','MC','AMEX'].map(b => (
-                <span key={b} className="text-[8px] font-black px-1.5 py-0.5 bg-slate-700 rounded text-slate-300">{b}</span>
-              ))}
-            </div>
-            <p className="text-[10px] text-slate-500">Apple Pay & Google Pay also accepted</p>
-          </div>
-        </div>
-      )}
-
-      {/* ── DEPOSIT: STEP 3 — Waiting for payment ───────────────────────────────── */}
-      {mode === 'deposit' && step === 3 && depositUrl && (
-        <div className="space-y-5 animate-in fade-in">
-          <div className="text-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-teal-400 mb-1">Payment Page Opened</p>
-            <p className="text-white font-black text-lg">{fmtUSD(parseFloat(amount))}</p>
-            <p className="text-slate-500 text-xs mt-1">Complete payment in the Stripe page that opened</p>
-          </div>
-
-          <div className="p-6 bg-teal-950/30 border border-teal-800/30 rounded-2xl space-y-4 text-center">
-            {depositDone
-              ? <>
-                  <CheckCircle2 size={40} className="text-emerald-400 mx-auto"/>
-                  <p className="text-emerald-400 font-black">Payment confirmed! Your balance will update in a few seconds.</p>
-                </>
-              : <>
-                  <Loader2 size={32} className="text-teal-400 animate-spin mx-auto"/>
-                  <p className="text-teal-300 font-bold text-sm">Waiting for Stripe to confirm payment…</p>
-                  <p className="text-slate-500 text-xs">Once you complete checkout, money appears in your Liquid Wallet automatically.</p>
-                </>
-            }
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <a href={depositUrl} target="_blank" rel="noopener noreferrer"
-              className="p-4 rounded-2xl border border-teal-700/50 bg-teal-900/20 hover:bg-teal-900/30 text-teal-400 flex flex-col items-center gap-2 transition-all">
-              <ExternalLink size={20}/>
-              <span className="text-[9px] font-black uppercase tracking-widest">Reopen Page</span>
-            </a>
-            <button onClick={() => { setDepositDone(true); if (onSuccess) onSuccess(); }}
-              className="p-4 rounded-2xl border border-emerald-700/50 bg-emerald-900/20 hover:bg-emerald-900/30 text-emerald-400 flex flex-col items-center gap-2 transition-all">
-              <CheckCircle2 size={20}/>
-              <span className="text-[9px] font-black uppercase tracking-widest">I've Paid</span>
-            </button>
-          </div>
-
-          <button onClick={reset}
-            className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
-            <RefreshCw size={12}/> Start Over
           </button>
         </div>
       )}
