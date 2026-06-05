@@ -5,15 +5,33 @@ import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
 import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap } from 'lucide-react';
 
+// When a chunk 404s (stale browser cache after a new deploy), force a full reload
+// so the browser fetches the new index.html with correct chunk references.
+function lazyLoad(importFn) {
+  return lazy(() =>
+    importFn().catch((err) => {
+      const isChunkError = err?.message?.includes('Failed to fetch dynamically imported module')
+        || err?.message?.includes('Importing a module script failed')
+        || err?.name === 'ChunkLoadError';
+      if (isChunkError && !sessionStorage.getItem('ifb_chunk_reload')) {
+        sessionStorage.setItem('ifb_chunk_reload', '1');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw err;
+    })
+  );
+}
+
 // Heavy modules — only downloaded after the user logs in
-const DEUSAcademy     = lazy(() => import('./features/learning/DEUSAcademy'));
-const Dashboard       = lazy(() => import('./Dashboard'));
-const AuthCallback    = lazy(() => import('./features/onboarding/AuthCallback'));
-const PaymentPortal   = lazy(() => import('./PaymentPortal'));
-const FeedbackForm    = lazy(() => import('./FeedbackForm'));
-const AdminSupportDesk = lazy(() => import('./AdminSupportDesk'));
-const ExecutiveCrm    = lazy(() => import('./ExecutiveCrm'));
-const PublicEventPage = lazy(() => import('./PublicEventPage'));
+const DEUSAcademy      = lazyLoad(() => import('./features/learning/DEUSAcademy'));
+const Dashboard        = lazyLoad(() => import('./Dashboard'));
+const AuthCallback     = lazyLoad(() => import('./features/onboarding/AuthCallback'));
+const PaymentPortal    = lazyLoad(() => import('./PaymentPortal'));
+const FeedbackForm     = lazyLoad(() => import('./FeedbackForm'));
+const AdminSupportDesk = lazyLoad(() => import('./AdminSupportDesk'));
+const ExecutiveCrm     = lazyLoad(() => import('./ExecutiveCrm'));
+const PublicEventPage  = lazyLoad(() => import('./PublicEventPage'));
 
 // --- MODALS ---
 import InfoModal from './components/modals/InfoModal';

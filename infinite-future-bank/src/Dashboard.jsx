@@ -17,28 +17,45 @@ import StatementExportModal from './components/modals/StatementExportModal';
 import GlobalToastAlert from './components/ui/GlobalToastAlert';
 import { TOUR_CONTENT, CustomTourTooltip } from './config/AppTourConfig';
 
+// Auto-reload when a chunk 404s (stale browser cache after new deploy)
+function lazyLoad(importFn) {
+  return lazy(() =>
+    importFn().catch((err) => {
+      const isChunkError = err?.message?.includes('Failed to fetch dynamically imported module')
+        || err?.message?.includes('Importing a module script failed')
+        || err?.name === 'ChunkLoadError';
+      if (isChunkError && !sessionStorage.getItem('ifb_chunk_reload')) {
+        sessionStorage.setItem('ifb_chunk_reload', '1');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw err;
+    })
+  );
+}
+
 // Screen-level features — lazy-loaded on first navigation
-const Chat              = lazy(() => import('./Chat'));
-const AccountHub        = lazy(() => import('./AccountHub'));
-const OrganizationSuite = lazy(() => import('./OrganizationSuite'));
-const WealthInvest      = lazy(() => import('./WealthInvest'));
-const GlobalLifestyle   = lazy(() => import('./GlobalLifestyle'));
-const FinancialPlanner  = lazy(() => import('./FinancialPlanner'));
-const EmergencySOS      = lazy(() => import('./EmergencySOS'));
-const Loans             = lazy(() => import('./Loans'));
-const Training          = lazy(() => import('./Training'));
-const Agents            = lazy(() => import('./Agents'));
-const DepositInterface  = lazy(() => import('./DepositInterface'));
-const WithdrawalPage    = lazy(() => import('./WithdrawalPage'));
-const PayMeCard         = lazy(() => import('./PayMeCard'));
-const TransactionLedger = lazy(() => import('./TransactionLedger'));
-const CapitalNetwork    = lazy(() => import('./CapitalNetwork'));
-const AFRNetworkPanel   = lazy(() => import('./features/network/AFRNetworkPanel'));
-const CapitalPlatform   = lazy(() => import('./features/capital/CapitalPlatform'));
-const InsuranceHub      = lazy(() => import('./InsuranceHub'));
-const VaultManager      = lazy(() => import('./features/mysafe/VaultManager'));
-const NFCTransfer       = lazy(() => import('./features/nfc/NFCTransfer'));
-const AdminDashboard    = lazy(() => import('./AdminDashboard'));
+const Chat              = lazyLoad(() => import('./Chat'));
+const AccountHub        = lazyLoad(() => import('./AccountHub'));
+const OrganizationSuite = lazyLoad(() => import('./OrganizationSuite'));
+const WealthInvest      = lazyLoad(() => import('./WealthInvest'));
+const GlobalLifestyle   = lazyLoad(() => import('./GlobalLifestyle'));
+const FinancialPlanner  = lazyLoad(() => import('./FinancialPlanner'));
+const EmergencySOS      = lazyLoad(() => import('./EmergencySOS'));
+const Loans             = lazyLoad(() => import('./Loans'));
+const Training          = lazyLoad(() => import('./Training'));
+const Agents            = lazyLoad(() => import('./Agents'));
+const DepositInterface  = lazyLoad(() => import('./DepositInterface'));
+const WithdrawalPage    = lazyLoad(() => import('./WithdrawalPage'));
+const PayMeCard         = lazyLoad(() => import('./PayMeCard'));
+const TransactionLedger = lazyLoad(() => import('./TransactionLedger'));
+const CapitalNetwork    = lazyLoad(() => import('./CapitalNetwork'));
+const AFRNetworkPanel   = lazyLoad(() => import('./features/network/AFRNetworkPanel'));
+const CapitalPlatform   = lazyLoad(() => import('./features/capital/CapitalPlatform'));
+const InsuranceHub      = lazyLoad(() => import('./InsuranceHub'));
+const VaultManager      = lazyLoad(() => import('./features/mysafe/VaultManager'));
+const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
+const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
 
 const ScreenLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
