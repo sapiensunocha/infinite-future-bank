@@ -4,13 +4,14 @@ import AppDrawerMenu from '../menus/AppDrawerMenu';
 import NotificationDropdown from '../menus/NotificationDropdown';
 import ProfileDropdown from '../menus/ProfileDropdown';
 
-export default function TopHeader({ 
-  setIsSidebarOpen, tabTitles, activeTab, isAppDrawerOpen, setIsAppDrawerOpen, 
-  setActiveAppPopup, isSearchExpanded, setIsSearchExpanded, searchQuery, setSearchQuery, 
-  searchResults, formatCurrency, isNotificationMenuOpen, setIsNotificationMenuOpen, unreadCount, 
-  isProfileMenuOpen, setIsProfileMenuOpen, profile, userName, visibleNotifications, 
-  handleConfirmRequest, handleDeclineRequest, handleAcceptP2PWithdrawal, handleAcceptP2PDeposit, markAsRead, setActiveTab, 
-  setSubTab, onSignOut, session, balances, fetchAllData, commercialProfile, activeAppPopup
+export default function TopHeader({
+  setIsSidebarOpen, tabTitles, activeTab, isAppDrawerOpen, setIsAppDrawerOpen,
+  setActiveAppPopup, isSearchExpanded, setIsSearchExpanded, searchQuery, setSearchQuery,
+  searchResults, formatCurrency, isNotificationMenuOpen, setIsNotificationMenuOpen, unreadCount,
+  isProfileMenuOpen, setIsProfileMenuOpen, profile, userName, visibleNotifications,
+  handleConfirmRequest, handleDeclineRequest, handleAcceptP2PWithdrawal, handleAcceptP2PDeposit, markAsRead, setActiveTab,
+  setSubTab, onSignOut, session, balances, fetchAllData, commercialProfile, activeAppPopup,
+  onPayReport,
 }) {
   return (
     <header className="border-b border-slate-200/50 bg-white/80 backdrop-blur-xl flex items-center justify-between px-4 md:px-6 z-[100] sticky top-0 pt-[env(safe-area-inset-top)] min-h-[calc(4rem+env(safe-area-inset-top))]">
@@ -94,6 +95,7 @@ export default function TopHeader({
           handleAcceptP2PWithdrawal={handleAcceptP2PWithdrawal}
           handleAcceptP2PDeposit={handleAcceptP2PDeposit} 
           markAsRead={markAsRead}
+          onPayReport={onPayReport}
         />
 
         {/* PROFILE DROPDOWN */}

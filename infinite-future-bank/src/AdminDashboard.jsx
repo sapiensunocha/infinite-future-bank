@@ -408,14 +408,34 @@ export default function AdminDashboard({ session, profile, onClose }) {
       const missingLines = r.missing.map(c => `✗ ${c.label}`).join('\n');
       const wsLines = r.incomplete.map(ws => `${ws.id}. ${ws.label}\n   Estimated: ${ws.hMin}–${ws.hMax} hrs → $${ws.cMin.toLocaleString()} – $${ws.cMax.toLocaleString()}`).join('\n\n');
       const message = `Dear ${firstName},\n\nThank you for your commitment and for taking the first step with IFB. Here is your current Capital Readiness Report.\n\n━━━ LEVEL ${r.lv.n}/5 — ${r.lv.label} (${r.pct}% complete) ━━━\n\nCOMPLETED (${r.metCount}/${r.total}):\n${doneLines || 'None yet — let\'s get started!'}\n\nSTILL REQUIRED (${r.missing.length} items):\n${missingLines || 'Nothing missing — you are fully ready!'}\n\n━━━ REMAINING WORKSTREAMS & IFB SUPPORT COSTS ($30/hr) ━━━\n\n${wsLines || 'All workstreams complete!'}\n\n${r.incomplete.length > 0 ? `Estimated remaining investment: $${r.totalCostMin.toLocaleString()} – $${r.totalCostMax.toLocaleString()}\n\n` : ''}━━━ FUNDING TIMELINE ━━━\n${r.fundingPhase}\n\n━━━ NEXT STEPS ━━━\nPlease review the missing items above and contact IFB to begin resolving them. Each completed item moves you one step closer to securing your funding.\n\nYou are free to select which parts IFB will handle and which parts your team will complete independently.\n\nWarm regards,\nIFB Team`;
-      const { error } = await supabase.from('venturex_notifications').insert({
+      const notifPayload = {
         user_id: co.user_id, type: 'progress_report',
         title: `Capital Readiness Report — Level ${r.lv.n}/5 · ${r.pct}% Complete`,
         message, is_read: false,
-        metadata: { company_id: co.id, level: r.lv.n, pct: r.pct, missing_count: r.missing.length, cost_min: r.totalCostMin, cost_max: r.totalCostMax },
-      });
+        metadata: { company_id: co.id, company_name: co.legal_name, level: r.lv.n, pct: r.pct, missing_count: r.missing.length, cost_min: r.totalCostMin, cost_max: r.totalCostMax },
+      };
+      const { error } = await supabase.from('venturex_notifications').insert(notifPayload);
       if (error) throw error;
-      notify(`Progress report sent to ${co.user_full_name}`);
+
+      // Send email in parallel (non-blocking — don't fail if email errors)
+      if (co.user_email) {
+        supabase.functions.invoke('send-progress-email', {
+          body: {
+            to_email: co.user_email,
+            to_name: co.user_full_name,
+            company_name: co.legal_name,
+            level: r.lv.n,
+            pct: r.pct,
+            checklist: r.checklist,
+            workstreams: r.workstreams,
+            cost_min: r.totalCostMin,
+            cost_max: r.totalCostMax,
+            funding_phase: r.fundingPhase,
+          },
+        }).catch(() => {});
+      }
+
+      notify(`Progress report sent to ${co.user_full_name} (in-app + email)`);
     } catch (e) { notify(e.message, 'error'); }
     finally { setVtxSendingReport(s => ({...s, [co.id]: false})); }
   };

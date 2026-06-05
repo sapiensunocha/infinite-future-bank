@@ -56,6 +56,7 @@ const InsuranceHub      = lazyLoad(() => import('./InsuranceHub'));
 const VaultManager      = lazyLoad(() => import('./features/mysafe/VaultManager'));
 const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
 const TapToPay          = lazyLoad(() => import('./features/terminal/TapToPay'));
+const VentureXPayRequest = lazyLoad(() => import('./features/venturex/VentureXPayRequest'));
 const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
 
 const ScreenLoader = () => (
@@ -106,6 +107,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [showVault, setShowVault] = useState(false);
   const [showNFC, setShowNFC] = useState(false);
   const [showTapToPay, setShowTapToPay] = useState(false);
+  const [payReportNotif, setPayReportNotif] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
 
   // Commercial Underwriting States
@@ -330,6 +332,7 @@ export default function Dashboard({ session, onSignOut }) {
             markAsRead={markAsRead} handleConfirmRequest={handleConfirmRequest}
             handleDeclineRequest={handleDeclineRequest} handleAcceptP2PWithdrawal={handleAcceptP2PWithdrawal}
             setSubTab={setSubTab} onSignOut={onSignOut} session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} activeAppPopup={activeAppPopup}
+            onPayReport={setPayReportNotif}
           />
           
           <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 no-scrollbar scroll-container pb-24 md:pb-8" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 5rem), 2rem)' }} id="main-scroll">
@@ -582,6 +585,15 @@ export default function Dashboard({ session, onSignOut }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 💜 VENTUREX PAY REQUEST MODAL */}
+      {payReportNotif && (
+        <VentureXPayRequest
+          notif={payReportNotif}
+          session={session}
+          onClose={() => setPayReportNotif(null)}
+        />
       )}
       </Suspense>
 
