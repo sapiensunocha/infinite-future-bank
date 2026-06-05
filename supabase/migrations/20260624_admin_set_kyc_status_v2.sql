@@ -1,6 +1,6 @@
--- ============================================================
--- admin_set_kyc_status: direct profile kyc_status override for admin user panel
--- ============================================================
+-- Fix: also check admin_roles table (users whose admin access comes from
+-- admin_roles not profiles.role were hitting Access denied), and drop
+-- the updated_at column reference which may not exist on all profiles rows.
 
 CREATE OR REPLACE FUNCTION public.admin_set_kyc_status(
   p_user_id UUID,
@@ -12,7 +12,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Caller must be admin (checks profiles.role OR admin_roles table)
+  -- Allow if profiles.role is admin OR if they have an active admin_roles entry
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid()
@@ -24,7 +24,6 @@ BEGIN
     RAISE EXCEPTION 'Access denied: admin role required';
   END IF;
 
-  -- Validate allowed statuses
   IF p_status NOT IN ('verified','approved','unverified','pending','pending_kyc','rejected','needs_more_info','ai_reviewing','suspended') THEN
     RAISE EXCEPTION 'Invalid kyc_status: %', p_status;
   END IF;
