@@ -426,6 +426,7 @@ export default function Dashboard({ session, onSignOut }) {
         unreadCount={notifications.filter(n => !n.read).length}
         setIsSidebarOpen={setIsSidebarOpen}
         setIsNotificationMenuOpen={setIsNotificationMenuOpen}
+        setShowNFC={setShowNFC}
         t={t}
       />
 
