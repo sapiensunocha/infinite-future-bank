@@ -1,21 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { TranslationProvider } from './i18n/TranslationContext';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
 import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap } from 'lucide-react';
-import DEUSAcademy from './features/learning/DEUSAcademy';
 
-import Dashboard from './Dashboard';
-import AuthCallback from './features/onboarding/AuthCallback';
-import PaymentPortal from './PaymentPortal';
-import FeedbackForm from './FeedbackForm';
-import AdminSupportDesk from './AdminSupportDesk';
-import ExecutiveCrm from './ExecutiveCrm';
-import PublicEventPage from './PublicEventPage';
+// Heavy modules — only downloaded after the user logs in
+const DEUSAcademy     = lazy(() => import('./features/learning/DEUSAcademy'));
+const Dashboard       = lazy(() => import('./Dashboard'));
+const AuthCallback    = lazy(() => import('./features/onboarding/AuthCallback'));
+const PaymentPortal   = lazy(() => import('./PaymentPortal'));
+const FeedbackForm    = lazy(() => import('./FeedbackForm'));
+const AdminSupportDesk = lazy(() => import('./AdminSupportDesk'));
+const ExecutiveCrm    = lazy(() => import('./ExecutiveCrm'));
+const PublicEventPage = lazy(() => import('./PublicEventPage'));
 
 // --- MODALS ---
 import InfoModal from './components/modals/InfoModal';
+
+const PageLoader = () => (
+  <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+    <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"/>
+  </div>
+);
 
 // ==========================================
 // REUSABLE COMPONENTS
@@ -266,7 +273,11 @@ function MainApp() {
   }
 
   if (session && currentView !== 'update_password') {
-    return <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />
+      </Suspense>
+    );
   }
 
   return (
@@ -433,7 +444,7 @@ function MainApp() {
           </button>
         </div>
 
-        {showAcademy && <DEUSAcademy onClose={() => setShowAcademy(false)} />}
+        {showAcademy && <Suspense fallback={<PageLoader />}><DEUSAcademy onClose={() => setShowAcademy(false)} /></Suspense>}
 
         {/* ── ANDROID: APK download ── */}
         {mobileOS === 'android' && (
@@ -539,7 +550,7 @@ function AdminGateway() {
       </div>
     );
   }
-  return <AdminSupportDesk session={session} adminProfile={adminProfile} />;
+  return <Suspense fallback={<PageLoader />}><AdminSupportDesk session={session} adminProfile={adminProfile} /></Suspense>;
 }
 
 // ==========================================
@@ -578,7 +589,7 @@ function HqGateway() {
       </div>
     );
   }
-  return <ExecutiveCrm session={session} />;
+  return <Suspense fallback={<PageLoader />}><ExecutiveCrm session={session} /></Suspense>;
 }
 
 // ==========================================
@@ -596,29 +607,24 @@ export default function App() {
   return (
     <TranslationProvider>
     <Router>
+      <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<MainApp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-        
-        {/* 🔥 UPDATED: This route is now public and session-aware */}
         <Route path="/pay" element={<PaymentPortal session={session} />} />
-        
-        {/* SECURE ROUTES */}
         <Route path="/admin" element={<AdminGateway />} />
         <Route path="/hq" element={<HqGateway />} />
-        
-        {/* 🔥 NEW ROUTE: PUBLIC EVENT PAGE */}
         <Route path="/events/:id" element={<PublicEventPage />} />
-        
-        <Route 
-          path="/FeedbackForm" 
+        <Route
+          path="/FeedbackForm"
           element={
             <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
               <FeedbackForm session={session} onClose={() => window.location.href = '/'} />
             </div>
-          } 
+          }
         />
       </Routes>
+      </Suspense>
     </Router>
     </TranslationProvider>
   );
