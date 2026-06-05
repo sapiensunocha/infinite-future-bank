@@ -1095,36 +1095,112 @@ export default function AdminDashboard({ session, profile, onClose }) {
                 <div className="space-y-4">
                   {kycQueue.length === 0 ? (
                     <div className="text-center py-20 text-slate-500 font-bold">No pending KYC submissions.</div>
-                  ) : kycQueue.map(sub => (
+                  ) : kycQueue.map(sub => {
+                    const conf = sub.ai_confidence_score;
+                    const confPct = conf != null ? Math.round(conf) : null;
+                    const confColor = confPct == null ? 'slate' : confPct >= 80 ? 'emerald' : confPct >= 60 ? 'amber' : 'red';
+                    const imgFields = [
+                      { key: 'id_front_url',        label: 'ID Front' },
+                      { key: 'id_back_url',          label: 'ID Back' },
+                      { key: 'selfie_url',            label: 'Selfie' },
+                      { key: 'selfie_with_id_url',    label: 'Selfie + ID' },
+                      { key: 'proof_of_address_url',  label: 'Proof of Address' },
+                      { key: 'proof_of_income_url',   label: 'Proof of Income' },
+                    ];
+                    const fileFields = [
+                      { key: 'bank_statement_url',              label: 'Bank Statement' },
+                      { key: 'tax_return_url',                  label: 'Tax Return' },
+                      { key: 'employment_letter_url',           label: 'Employment Letter' },
+                      { key: 'business_license_url',            label: 'Business License' },
+                      { key: 'certificate_of_incorporation_url',label: 'Certificate of Inc.' },
+                      { key: 'board_resolution_url',            label: 'Board Resolution' },
+                    ];
+                    return (
                     <div key={sub.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
-                      {/* Header */}
+                      {/* ── Header ── */}
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <p className="font-black text-white text-base">{sub.legal_full_name || sub.profiles?.full_name || '—'}</p>
-                          <p className="text-xs text-slate-400">{sub.profiles?.email} · {sub.email_primary || ''}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">{sub.id}</p>
+                          <p className="text-xs text-slate-400">{sub.profiles?.email}{sub.email_primary ? ` · ${sub.email_primary}` : ''}</p>
+                          <p className="text-[9px] text-slate-600 mt-0.5 font-mono">{sub.id}</p>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end gap-1.5">
                           <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${
-                            sub.status === 'approved' ? 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' :
-                            sub.status === 'rejected' ? 'text-red-400 bg-red-900/30 border-red-700/40' :
-                            sub.status === 'ai_reviewing' ? 'text-blue-400 bg-blue-900/30 border-blue-700/40' :
-                            'text-amber-400 bg-amber-900/30 border-amber-700/40'
+                            sub.status === 'approved'      ? 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' :
+                            sub.status === 'rejected'      ? 'text-red-400 bg-red-900/30 border-red-700/40' :
+                            sub.status === 'ai_reviewing'  ? 'text-blue-400 bg-blue-900/30 border-blue-700/40' :
+                                                             'text-amber-400 bg-amber-900/30 border-amber-700/40'
                           }`}>{sub.status?.replace(/_/g,' ')}</span>
                           {sub.risk_rating && (
                             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                              sub.risk_rating === 'low' ? 'text-emerald-400 border-emerald-700/40' :
+                              sub.risk_rating === 'low'    ? 'text-emerald-400 border-emerald-700/40' :
                               sub.risk_rating === 'medium' ? 'text-amber-400 border-amber-700/40' :
-                              'text-red-400 border-red-700/40'
+                                                             'text-red-400 border-red-700/40'
                             }`}>Risk: {sub.risk_rating}</span>
                           )}
                         </div>
                       </div>
-                      {/* Key data grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+                      {/* ── AI Confidence gauge ── */}
+                      <div className={`bg-${confColor}-950/20 border border-${confColor}-700/30 rounded-2xl p-4`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">AI Confidence Score</p>
+                            <p className={`text-sm font-black text-${confColor}-400`}>
+                              {confPct != null ? `${confPct}%` : 'Not scored yet'}
+                              {sub.ai_recommendation && <span className="ml-2 text-[10px] font-bold text-slate-400 normal-case">· {sub.ai_recommendation}</span>}
+                            </p>
+                          </div>
+                          {confPct != null && (
+                            <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center text-sm font-black border-${confColor}-500 text-${confColor}-400`}>
+                              {confPct}
+                            </div>
+                          )}
+                        </div>
+                        {confPct != null && (
+                          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className={`h-full bg-${confColor}-500 rounded-full transition-all`} style={{ width: `${confPct}%` }}/>
+                          </div>
+                        )}
+                        {sub.ai_flags?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-3">
+                            {sub.ai_flags.map(flag => (
+                              <span key={flag} className="text-[8px] font-black uppercase text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-0.5 rounded-lg">{flag.replace(/_/g,' ')}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* ── Face check (ID front + selfie side-by-side) ── */}
+                      {(sub.id_front_url || sub.selfie_with_id_url || sub.selfie_url) && (
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Face Verification</p>
+                          <div className="grid grid-cols-3 gap-3">
+                            {sub.id_front_url && (
+                              <a href={sub.id_front_url} target="_blank" rel="noreferrer" className="group relative">
+                                <img src={sub.id_front_url} alt="ID Front" className="w-full h-28 object-cover rounded-xl border border-slate-700 group-hover:border-violet-500/60 transition-colors"/>
+                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-black/60 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">ID Front</span>
+                              </a>
+                            )}
+                            {(sub.selfie_with_id_url || sub.selfie_url) && (
+                              <a href={sub.selfie_with_id_url || sub.selfie_url} target="_blank" rel="noreferrer" className="group relative">
+                                <img src={sub.selfie_with_id_url || sub.selfie_url} alt="Selfie" className="w-full h-28 object-cover rounded-xl border border-slate-700 group-hover:border-violet-500/60 transition-colors"/>
+                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-black/60 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">Selfie</span>
+                              </a>
+                            )}
+                            {sub.id_back_url && (
+                              <a href={sub.id_back_url} target="_blank" rel="noreferrer" className="group relative">
+                                <img src={sub.id_back_url} alt="ID Back" className="w-full h-28 object-cover rounded-xl border border-slate-700 group-hover:border-violet-500/60 transition-colors"/>
+                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-black/60 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">ID Back</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ── Key data grid ── */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {[
-                          { label: 'AI Confidence', val: sub.ai_confidence_score != null ? `${sub.ai_confidence_score}%` : 'N/A' },
-                          { label: 'AI Recommendation', val: sub.ai_recommendation || 'N/A' },
                           { label: 'Nationality', val: sub.nationality || sub.profiles?.country || '—' },
                           { label: 'ID Type', val: sub.id_type?.replace(/_/g,' ') || '—' },
                           { label: 'ID Number', val: sub.id_number || '—' },
@@ -1134,63 +1210,67 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           { label: 'Source of Funds', val: sub.source_of_funds || '—' },
                           { label: 'PEP', val: sub.politically_exposed_person ? '⚠️ YES' : 'No' },
                           { label: 'FATCA', val: sub.fatca_applicable ? 'Yes' : 'No' },
+                          { label: 'Corporate', val: sub.is_corporate ? sub.company_legal_name || 'Yes' : 'No' },
                           { label: 'Submitted', val: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : new Date(sub.created_at).toLocaleDateString() },
+                          { label: 'Country', val: sub.residential_country || '—' },
                         ].map(({ label, val }) => (
-                          <div key={label} className="bg-slate-800/60 rounded-xl p-3">
-                            <p className="text-[9px] font-black uppercase text-slate-500 mb-0.5">{label}</p>
-                            <p className={`text-xs font-black ${val?.toString().includes('⚠️') ? 'text-amber-400' : 'text-white'}`}>{val}</p>
+                          <div key={label} className="bg-slate-800/60 rounded-xl p-2.5">
+                            <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{label}</p>
+                            <p className={`text-xs font-black truncate ${val?.toString().includes('⚠️') ? 'text-amber-400' : 'text-white'}`}>{val}</p>
                           </div>
                         ))}
                       </div>
-                      {/* AI Flags */}
-                      {sub.ai_flags?.length > 0 && (
+
+                      {/* ── Additional document thumbnails ── */}
+                      {imgFields.some(f => sub[f.key] && !['id_front_url','id_back_url','selfie_url','selfie_with_id_url'].includes(f.key)) && (
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Supporting Documents</p>
+                          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                            {imgFields.filter(f => !['id_front_url','id_back_url','selfie_url','selfie_with_id_url'].includes(f.key) && sub[f.key]).map(f => (
+                              <a key={f.key} href={sub[f.key]} target="_blank" rel="noreferrer" className="group relative">
+                                <img src={sub[f.key]} alt={f.label} className="w-full h-20 object-cover rounded-lg border border-slate-700 group-hover:border-blue-500/60 transition-colors"/>
+                                <span className="absolute bottom-1 left-1 text-[7px] font-black uppercase bg-black/60 text-white px-1 py-0.5 rounded backdrop-blur-sm leading-tight">{f.label}</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ── File links for non-image documents ── */}
+                      {fileFields.some(f => sub[f.key]) && (
                         <div className="flex flex-wrap gap-2">
-                          <p className="text-[9px] font-black uppercase text-slate-500 w-full">AI Flags</p>
-                          {sub.ai_flags.map(flag => (
-                            <span key={flag} className="text-[9px] font-black uppercase text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-1 rounded-lg">{flag.replace(/_/g,' ')}</span>
+                          <p className="text-[9px] font-black uppercase text-slate-500 w-full">Files</p>
+                          {fileFields.filter(f => sub[f.key]).map(f => (
+                            <a key={f.key} href={sub[f.key]} target="_blank" rel="noreferrer"
+                              className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-3 py-1.5 rounded-lg hover:bg-blue-900/40 transition-colors flex items-center gap-1">
+                              <FileText size={9}/>{f.label}
+                            </a>
                           ))}
                         </div>
                       )}
-                      {/* Document links */}
-                      <div className="flex flex-wrap gap-2">
-                        <p className="text-[9px] font-black uppercase text-slate-500 w-full">Documents</p>
-                        {[
-                          'id_front_url','id_back_url','selfie_url','selfie_with_id_url',
-                          'proof_of_address_url','proof_of_income_url','bank_statement_url',
-                          'tax_return_url','employment_letter_url','business_license_url',
-                          'certificate_of_incorporation_url','board_resolution_url',
-                        ].map(field => sub[field] && (
-                          <a key={field} href={sub[field]} target="_blank" rel="noreferrer"
-                            className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-3 py-1.5 rounded-lg hover:bg-blue-900/40 transition-colors flex items-center gap-1">
-                            <FileText size={10}/>{field.replace('_url','').replace(/_/g,' ')}
-                          </a>
-                        ))}
-                        {!['id_front_url','id_back_url','selfie_url','proof_of_address_url'].some(f => sub[f]) && (
-                          <span className="text-[9px] text-slate-600">No documents uploaded yet</span>
-                        )}
-                      </div>
-                      {/* Action row */}
+
+                      {/* ── Action row ── */}
                       <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-800">
                         <input
-                          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-blue-500"
+                          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-slate-500 outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10"
                           placeholder="Reviewer notes / rejection reason (optional)"
                           id={`kyc-note-${sub.id}`}
                         />
                         <button onClick={() => handleKycAction(sub.user_id, 'approved', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shrink-0">
-                          <CheckCircle size={14}/> Approve
+                          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          <CheckCircle size={13}/> Approve
                         </button>
                         <button onClick={() => handleKycAction(sub.user_id, 'needs_more_info', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-6 py-3 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-700/40 text-amber-400 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shrink-0">
-                          <AlertTriangle size={14}/> Request Info
+                          className="px-5 py-2.5 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-700/40 text-amber-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          <AlertTriangle size={13}/> Request Info
                         </button>
                         <button onClick={() => handleKycAction(sub.user_id, 'rejected', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-6 py-3 bg-red-900/50 hover:bg-red-900/80 border border-red-700/40 text-red-400 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-colors flex items-center justify-center gap-2 shrink-0">
-                          <X size={14}/> Reject
+                          className="px-5 py-2.5 bg-red-900/30 hover:bg-red-900/60 border border-red-700/40 text-red-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          <X size={13}/> Reject
                         </button>
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               )}
             </div>
