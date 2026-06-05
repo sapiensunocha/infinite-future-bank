@@ -88,6 +88,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const [vtxEditId, setVtxEditId] = useState(null);
   const [vtxEdits, setVtxEdits] = useState({});
   const [vtxUploading, setVtxUploading] = useState({});
+  const [vtxProgressOpen, setVtxProgressOpen] = useState(new Set());
+  const [vtxSendingReport, setVtxSendingReport] = useState({});
   // IFB Applications
   const [applications, setApplications] = useState([]);
   const [appFilter, setAppFilter] = useState('');
@@ -344,6 +346,78 @@ export default function AdminDashboard({ session, profile, onClose }) {
       loadVentureX();
     } catch (e) { notify(e.message, 'error'); }
     finally { setVtxUploading(u => ({...u, [field]: false})); }
+  };
+
+  const computeCapitalReadiness = (co) => {
+    const checklist = [
+      { id: 'legal_docs',   label: 'Legal documentation uploaded',       met: !!co.legal_docs_url,           ws: 'A' },
+      { id: 'id_verified',  label: 'Identity verified by IFB',           met: !!co.identity_verified,        ws: 'A' },
+      { id: 'org_profile',  label: 'Organization profile complete',      met: !!(co.sector && co.tagline),   ws: 'C' },
+      { id: 'geography',    label: 'Geographic scope defined',           met: !!co.country,                  ws: 'C' },
+      { id: 'team',         label: 'Team structure declared',            met: !!(co.team_size > 0),          ws: 'A' },
+      { id: 'pitch_deck',   label: 'Pitch deck / project doc uploaded',  met: !!co.pitch_deck_url,           ws: 'D' },
+      { id: 'financials',   label: 'Financial statements uploaded',      met: !!co.financial_statements_url, ws: 'B' },
+      { id: 'fin_verified', label: 'Financials verified by IFB',        met: !!co.financial_verified,       ws: 'B' },
+      { id: 'kpis',         label: 'KPIs & impact metrics defined',     met: !!(co.investment_readiness_score > 0 || co.active_users > 0), ws: 'E' },
+      { id: 'traction',     label: 'Traction verified by IFB',          met: !!co.traction_verified,        ws: 'E' },
+      { id: 'budget',       label: 'Budget & financial projections set', met: !!(co.monthly_revenue > 0 || co.funding_goal > 0), ws: 'F' },
+      { id: 'funding_hist', label: 'Funding history recorded',          met: !!(co.total_raised > 0),       ws: 'B' },
+      { id: 'online',       label: 'Online presence established',       met: !!co.website,                  ws: 'G' },
+      { id: 'public',       label: 'Listed on IFB marketplace',         met: !!co.is_public,                ws: 'G' },
+    ];
+    const WS_META = [
+      { id:'A', label:'Organizational Structuring & Documentation', hMin:15, hMax:25, cMin:450,  cMax:750  },
+      { id:'B', label:'Financial Review & Transparency Setup',      hMin:10, hMax:20, cMin:300,  cMax:600  },
+      { id:'C', label:'Mission Positioning & Strategic Alignment',  hMin:8,  hMax:15, cMin:240,  cMax:450  },
+      { id:'D', label:'Project Structuring & Documentation',       hMin:20, hMax:40, cMin:600,  cMax:1200 },
+      { id:'E', label:'KPI Definition & Impact Framework',         hMin:10, hMax:15, cMin:300,  cMax:450  },
+      { id:'F', label:'Budgeting & Financial Planning',            hMin:15, hMax:25, cMin:450,  cMax:750  },
+      { id:'G', label:'Funding Readiness & Strategy',              hMin:20, hMax:35, cMin:600,  cMax:1050 },
+      { id:'H', label:'Ongoing Advisory & Weekly Reviews (3mo)',   hMin:25, hMax:35, cMin:750,  cMax:1050 },
+    ];
+    const workstreams = WS_META.map(ws => {
+      const items = checklist.filter(c => c.ws === ws.id);
+      const complete = items.length === 0 ? false : items.every(c => c.met);
+      const partial  = items.some(c => c.met) && !complete;
+      return { ...ws, items, complete, partial };
+    });
+    const metCount = checklist.filter(c => c.met).length;
+    const pct = Math.round((metCount / checklist.length) * 100);
+    const LEVELS = [
+      { min:0,  max:20,  n:1, label:'Just Started',  bar:'bg-red-500',    badge:'text-red-400 bg-red-900/30 border-red-700/40' },
+      { min:21, max:40,  n:2, label:'Foundation',     bar:'bg-orange-500', badge:'text-orange-400 bg-orange-900/30 border-orange-700/40' },
+      { min:41, max:60,  n:3, label:'In Progress',    bar:'bg-amber-500',  badge:'text-amber-400 bg-amber-900/30 border-amber-700/40' },
+      { min:61, max:80,  n:4, label:'Advanced',       bar:'bg-blue-500',   badge:'text-blue-400 bg-blue-900/30 border-blue-700/40' },
+      { min:81, max:100, n:5, label:'Funding Ready',  bar:'bg-emerald-500',badge:'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' },
+    ];
+    const lv = LEVELS.find(l => pct >= l.min && pct <= l.max) || LEVELS[0];
+    const missing = checklist.filter(c => !c.met);
+    const incomplete = workstreams.filter(ws => !ws.complete);
+    const totalCostMin = incomplete.reduce((s, ws) => s + ws.cMin, 0);
+    const totalCostMax = incomplete.reduce((s, ws) => s + ws.cMax, 0);
+    const fundingPhase = pct < 30 ? 'Weeks 1–3: Structuring & documentation' : pct < 60 ? 'Weeks 4–6: Project and financial alignment' : pct < 80 ? 'Weeks 6–10: Funding outreach and positioning' : 'Ready for immediate funding outreach';
+    return { checklist, workstreams, metCount, total: checklist.length, pct, lv, missing, incomplete, totalCostMin, totalCostMax, fundingPhase };
+  };
+
+  const handleSendProgressReport = async (co) => {
+    setVtxSendingReport(s => ({...s, [co.id]: true}));
+    try {
+      const r = computeCapitalReadiness(co);
+      const firstName = (co.user_full_name || 'there').split(' ')[0];
+      const doneLines = r.checklist.filter(c => c.met).map(c => `✓ ${c.label}`).join('\n');
+      const missingLines = r.missing.map(c => `✗ ${c.label}`).join('\n');
+      const wsLines = r.incomplete.map(ws => `${ws.id}. ${ws.label}\n   Estimated: ${ws.hMin}–${ws.hMax} hrs → $${ws.cMin.toLocaleString()} – $${ws.cMax.toLocaleString()}`).join('\n\n');
+      const message = `Dear ${firstName},\n\nThank you for your commitment and for taking the first step with IFB. Here is your current Capital Readiness Report.\n\n━━━ LEVEL ${r.lv.n}/5 — ${r.lv.label} (${r.pct}% complete) ━━━\n\nCOMPLETED (${r.metCount}/${r.total}):\n${doneLines || 'None yet — let\'s get started!'}\n\nSTILL REQUIRED (${r.missing.length} items):\n${missingLines || 'Nothing missing — you are fully ready!'}\n\n━━━ REMAINING WORKSTREAMS & IFB SUPPORT COSTS ($30/hr) ━━━\n\n${wsLines || 'All workstreams complete!'}\n\n${r.incomplete.length > 0 ? `Estimated remaining investment: $${r.totalCostMin.toLocaleString()} – $${r.totalCostMax.toLocaleString()}\n\n` : ''}━━━ FUNDING TIMELINE ━━━\n${r.fundingPhase}\n\n━━━ NEXT STEPS ━━━\nPlease review the missing items above and contact IFB to begin resolving them. Each completed item moves you one step closer to securing your funding.\n\nYou are free to select which parts IFB will handle and which parts your team will complete independently.\n\nWarm regards,\nIFB Team`;
+      const { error } = await supabase.from('venturex_notifications').insert({
+        user_id: co.user_id, type: 'progress_report',
+        title: `Capital Readiness Report — Level ${r.lv.n}/5 · ${r.pct}% Complete`,
+        message, is_read: false,
+        metadata: { company_id: co.id, level: r.lv.n, pct: r.pct, missing_count: r.missing.length, cost_min: r.totalCostMin, cost_max: r.totalCostMax },
+      });
+      if (error) throw error;
+      notify(`Progress report sent to ${co.user_full_name}`);
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setVtxSendingReport(s => ({...s, [co.id]: false})); }
   };
 
   // IFB Application update
@@ -1676,6 +1750,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     const isEditing = vtxEditId === co.id;
                     const ev = (field) => isEditing && vtxEdits[field] !== undefined ? vtxEdits[field] : co[field];
                     const setEv = (field, val) => setVtxEdits(e => ({...e, [field]: val}));
+                    const isProgressOpen = vtxProgressOpen.has(co.id);
+                    const cr = computeCapitalReadiness(co);
                     return (
                       <div key={co.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
                         {/* Header row */}
@@ -1683,7 +1759,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="flex-1 space-y-2">
                             <div className="flex items-start justify-between gap-3">
                               <div>
-                                <p className="font-black text-white">{co.legal_name}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-black text-white">{co.legal_name}</p>
+                                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${cr.lv.badge}`}>Lv.{cr.lv.n} {cr.lv.label}</span>
+                                  <span className="text-[9px] font-black text-slate-500">{cr.pct}% ready · {cr.missing.length} missing</span>
+                                </div>
                                 <p className="text-xs text-slate-400">{co.user_full_name} · {co.user_email}</p>
                                 <p className="text-[10px] text-slate-500">{co.sector} · {co.country}</p>
                               </div>
@@ -1692,6 +1772,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <button onClick={() => { setVtxEditId(isEditing ? null : co.id); setVtxEdits({}); }}
                                   className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isEditing?'bg-blue-600 border-blue-500 text-white':'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'}`}>
                                   <Pencil size={10}/> {isEditing ? 'Cancel' : 'Edit'}
+                                </button>
+                                <button onClick={() => setVtxProgressOpen(s => { const n = new Set(s); isProgressOpen ? n.delete(co.id) : n.add(co.id); return n; })}
+                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isProgressOpen?'bg-violet-600 border-violet-500 text-white':'bg-slate-800 border-slate-700 text-slate-400 hover:border-violet-600'}`}>
+                                  <Activity size={10}/> {isProgressOpen ? 'Hide' : 'Readiness'}
                                 </button>
                               </div>
                             </div>
@@ -1732,8 +1816,77 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 </button>
                               ))}
                             </div>
+                            <div className="border-t border-slate-700 pt-2">
+                              <button onClick={() => handleSendProgressReport(co)} disabled={!!vtxSendingReport[co.id]}
+                                className="w-full py-2 px-2 border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 text-violet-400 font-black text-[8px] uppercase rounded-lg flex items-center justify-center gap-1 disabled:opacity-50">
+                                {vtxSendingReport[co.id] ? <Loader2 size={9} className="animate-spin"/> : <Send size={9}/>}
+                                Send Report
+                              </button>
+                            </div>
                           </div>
                         </div>
+
+                        {/* ── CAPITAL READINESS PANEL ── */}
+                        {isProgressOpen && (
+                          <div className="border-t border-violet-900/40 p-5 space-y-5 bg-violet-950/20">
+                            <div className="flex items-center justify-between flex-wrap gap-3">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-400">Capital Readiness — {co.legal_name}</p>
+                              <div className="flex items-center gap-3">
+                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border ${cr.lv.badge}`}>Level {cr.lv.n}/5 · {cr.lv.label}</span>
+                                <span className="text-[9px] text-slate-400 font-bold">{cr.metCount}/{cr.total} complete</span>
+                              </div>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="space-y-1">
+                              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full transition-all ${cr.lv.bar}`} style={{ width: `${cr.pct}%` }}/>
+                              </div>
+                              <p className="text-[9px] text-slate-500 font-bold">Next milestone: {cr.fundingPhase}</p>
+                            </div>
+                            {/* Checklist */}
+                            <div>
+                              <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Documentation & Verification Checklist</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                                {cr.checklist.map(item => (
+                                  <div key={item.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-bold ${item.met ? 'bg-emerald-900/20 border-emerald-800/40 text-emerald-300' : 'bg-slate-800/60 border-slate-700/60 text-slate-400'}`}>
+                                    <span className={`text-[11px] shrink-0 ${item.met ? 'text-emerald-400' : 'text-red-400'}`}>{item.met ? '✓' : '✗'}</span>
+                                    <span className="leading-tight">{item.label}</span>
+                                    <span className={`ml-auto text-[8px] font-black shrink-0 px-1.5 py-0.5 rounded border ${item.met ? 'text-emerald-600 border-emerald-800/40' : 'text-slate-600 border-slate-700'}`}>{item.ws}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Workstreams */}
+                            <div>
+                              <p className="text-[9px] font-black uppercase text-slate-500 mb-2">IFB Workstreams & Support Costs ($30/hr)</p>
+                              <div className="space-y-2">
+                                {cr.workstreams.map(ws => (
+                                  <div key={ws.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-[10px] ${ws.complete ? 'bg-emerald-900/15 border-emerald-800/30' : ws.partial ? 'bg-amber-900/15 border-amber-800/30' : 'bg-slate-800/60 border-slate-700/40'}`}>
+                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${ws.complete ? 'bg-emerald-500 text-white' : ws.partial ? 'bg-amber-500 text-white' : 'bg-slate-700 text-slate-300'}`}>{ws.id}</span>
+                                    <span className={`flex-1 font-bold leading-tight ${ws.complete ? 'text-emerald-300' : ws.partial ? 'text-amber-300' : 'text-slate-300'}`}>{ws.label}</span>
+                                    <span className={`text-[9px] font-black shrink-0 ${ws.complete ? 'text-emerald-500' : 'text-slate-500'}`}>{ws.complete ? '✓ Done' : `${ws.hMin}–${ws.hMax}h · $${ws.cMin.toLocaleString()}–$${ws.cMax.toLocaleString()}`}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            {/* Cost summary + send */}
+                            <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-violet-900/30">
+                              <div>
+                                {cr.incomplete.length > 0 ? (
+                                  <p className="text-xs font-black text-white">Remaining investment: <span className="text-violet-400">${cr.totalCostMin.toLocaleString()} – ${cr.totalCostMax.toLocaleString()}</span></p>
+                                ) : (
+                                  <p className="text-xs font-black text-emerald-400">All workstreams complete — ready for funding!</p>
+                                )}
+                                <p className="text-[9px] text-slate-500">{cr.incomplete.length} workstreams remaining · {cr.missing.length} checklist items missing</p>
+                              </div>
+                              <button onClick={() => handleSendProgressReport(co)} disabled={!!vtxSendingReport[co.id]}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-black text-[10px] uppercase tracking-widest rounded-xl">
+                                {vtxSendingReport[co.id] ? <Loader2 size={12} className="animate-spin"/> : <Send size={12}/>}
+                                Send Progress Report to {(co.user_full_name||'User').split(' ')[0]}
+                              </button>
+                            </div>
+                          </div>
+                        )}
 
                         {/* ── FULL EDITOR (expanded when isEditing) ── */}
                         {isEditing && (
