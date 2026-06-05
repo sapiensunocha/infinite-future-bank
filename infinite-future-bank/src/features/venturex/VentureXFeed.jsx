@@ -3,7 +3,7 @@ import { supabase } from '../../services/supabaseClient';
 import {
   Zap, TrendingUp, CheckCircle2, Building2, Users, DollarSign,
   Briefcase, Globe, RefreshCw, Filter, ChevronDown, Loader2,
-  ArrowUpRight, Handshake, Rocket, Award, Activity, Radio
+  ArrowUpRight, Handshake, Rocket, Award, Activity, Radio, Play
 } from 'lucide-react';
 
 const SECTORS = [
@@ -89,6 +89,10 @@ function EventCard({ event }) {
           )}
         </div>
 
+        {event.tagline && (
+          <p className="text-[10px] text-slate-400 mb-2 line-clamp-1 italic">{event.tagline}</p>
+        )}
+
         <div className="flex items-center gap-3 flex-wrap">
           {event.amount_range && (
             <span className="text-xs font-black text-emerald-400 flex items-center gap-1">
@@ -104,6 +108,16 @@ function EventCard({ event }) {
             <span className="text-[10px] text-purple-400 font-bold">
               ✓ {event.milestone_title}
             </span>
+          )}
+          {event.pitch_video_url && (
+            <a
+              href={event.pitch_video_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-red-900/40 text-red-300 hover:bg-red-800/60 transition-colors"
+            >
+              <Play size={8} className="fill-current" /> Watch
+            </a>
           )}
         </div>
       </div>
