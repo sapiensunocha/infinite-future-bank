@@ -468,7 +468,7 @@ function MainApp() {
         {mobileOS === 'android' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
             <a
-              href="https://github.com/sapiensunocha/infinite-future-bank/releases/download/v1.3.3/app-release.apk"
+              href="https://github.com/sapiensunocha/infinite-future-bank/releases/download/v1.3.4/app-release.apk"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
