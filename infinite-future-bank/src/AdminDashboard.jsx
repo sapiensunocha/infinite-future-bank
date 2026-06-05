@@ -555,7 +555,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
     const isSuspended = selectedUser.kyc_status === 'suspended';
     const newStatus = isSuspended ? 'unverified' : 'suspended';
     try {
-      const { error } = await supabase.rpc('admin_update_kyc', { p_user_id: selectedUser.id, p_status: newStatus, p_notes: null });
+      const { error } = await supabase.rpc('admin_set_kyc_status', { p_user_id: selectedUser.id, p_status: newStatus });
       if (error) throw error;
       setSelectedUser(u => ({ ...u, kyc_status: newStatus }));
       notify(`User ${isSuspended ? 'unsuspended' : 'suspended'}`);
@@ -941,7 +941,15 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           { status: 'rejected', label: 'Reject KYC', icon: Ban, cls: 'bg-red-900/70 hover:bg-red-800 border border-red-700/40 text-red-300' },
                         ].filter(a => a.status !== selectedUser.kyc_status).map(({ status, label, icon: Icon, cls }) => (
                           <button key={status}
-                            onClick={() => { handleKycAction(selectedUser.id, status); setSelectedUser(u => ({ ...u, kyc_status: status })); }}
+                            onClick={async () => {
+                              try {
+                                const { error } = await supabase.rpc('admin_set_kyc_status', { p_user_id: selectedUser.id, p_status: status });
+                                if (error) throw error;
+                                setSelectedUser(u => ({ ...u, kyc_status: status }));
+                                notify(`KYC set to ${status}`);
+                                loadUsers(userSearch);
+                              } catch (e) { notify(e.message, 'error'); }
+                            }}
                             className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${cls}`}>
                             <Icon size={12}/> {label}
                           </button>
