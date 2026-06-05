@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/supabaseClient';
+import QRCode from 'react-qr-code';
 import {
   Wifi, Send, QrCode, Keyboard, CheckCircle2, AlertTriangle,
   Loader2, UserPlus, Copy, Check, ArrowLeft, Zap, RefreshCw,
-  Smartphone, Signal
+  Smartphone, Signal, CreditCard, ExternalLink
 } from 'lucide-react';
 
 const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
@@ -14,6 +15,15 @@ async function writeNFCToken(token) {
   try {
     const ndef = new window.NDEFReader();
     await ndef.write({ records: [{ recordType: 'text', data: `IFB:${token}` }] });
+    return true;
+  } catch { return false; }
+}
+
+async function writeNFCUrl(url) {
+  if (!('NDEFReader' in window)) return false;
+  try {
+    const ndef = new window.NDEFReader();
+    await ndef.write({ records: [{ recordType: 'url', data: url }] });
     return true;
   } catch { return false; }
 }
@@ -54,6 +64,8 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
   const [err, setErr]             = useState(null);
   const [inputMethod, setInputMethod] = useState('nfc'); // 'nfc' | 'code' | 'qr'
   const [contactAdded, setContactAdded] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const nfcRef    = useRef(null);
   const pollRef   = useRef(null);
@@ -163,10 +175,43 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // ── Create Stripe Checkout for card receive ───────────────────────────────────
+  const handleCreateCheckout = async () => {
+    const amt = parseFloat(amount);
+    if (!amt || amt <= 0) return;
+    setCheckoutLoading(true); setErr(null);
+    try {
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-nfc-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authSession.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ amount: amt, note: note || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create payment link');
+      setCheckoutUrl(data.url);
+      setStep(3);
+      // Write the Stripe URL to NFC tag so payer can tap
+      if (nfcSupported) {
+        setNfcWriting(true);
+        await writeNFCUrl(data.url);
+        setNfcWriting(false);
+      }
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   const reset = () => {
     setMode(null); setStep(1); setAmount(''); setNote(''); setToken(null);
     setManualToken(''); setResult(null); setErr(null); setContactAdded(false);
-    setNfcScanning(false); setNfcWriting(false);
+    setNfcScanning(false); setNfcWriting(false); setCheckoutUrl(null);
     clearInterval(pollRef.current);
   };
 
@@ -210,7 +255,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
             </div>
             <div>
               <p className="font-black text-white">Send Money</p>
-              <p className="text-xs text-slate-400 mt-0.5">Generate a code · tap phones · share QR</p>
+              <p className="text-xs text-slate-400 mt-0.5">IFB-to-IFB · tap phones · share code</p>
             </div>
           </button>
           <button onClick={() => { setMode('receive'); setStep(2); }}
@@ -219,8 +264,18 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
               <Wifi size={20} className="text-emerald-400"/>
             </div>
             <div>
-              <p className="font-black text-white">Receive Money</p>
+              <p className="font-black text-white">Receive from IFB</p>
               <p className="text-xs text-slate-400 mt-0.5">Tap phones · scan QR · enter code</p>
+            </div>
+          </button>
+          <button onClick={() => { setMode('card'); setStep(2); }}
+            className="w-full p-5 rounded-2xl border border-slate-700 bg-slate-800/40 hover:border-blue-500 hover:bg-blue-900/10 text-left flex items-center gap-4 transition-all group">
+            <div className="w-12 h-12 rounded-xl bg-blue-900/40 border border-blue-700/40 flex items-center justify-center group-hover:bg-blue-600/30 transition-colors">
+              <CreditCard size={20} className="text-blue-400"/>
+            </div>
+            <div>
+              <p className="font-black text-white">Get Paid by Card</p>
+              <p className="text-xs text-slate-400 mt-0.5">Visa · Mastercard · Apple Pay · Google Pay</p>
             </div>
           </button>
         </div>
@@ -395,6 +450,99 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── CARD: STEP 2 — Amount ───────────────────────────────────────────────── */}
+      {mode === 'card' && step === 2 && (
+        <div className="space-y-5 animate-in fade-in">
+          <div>
+            <h3 className="font-black text-white text-base">How much to collect?</h3>
+            <p className="text-xs text-slate-400 mt-1">A Stripe payment link will be created. The payer pays with any card — money goes straight into your IFB balance.</p>
+          </div>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl">$</span>
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+              placeholder="0.00" min="1" step="0.01"
+              className="w-full bg-slate-800 border border-slate-700 rounded-2xl pl-10 pr-4 py-4 text-2xl font-black text-white outline-none focus:border-blue-500 transition-colors text-center"/>
+          </div>
+          <div className="flex gap-2">
+            {[10, 25, 50, 100].map(v => (
+              <button key={v} onClick={() => setAmount(String(v))}
+                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px] font-black rounded-xl transition-all">
+                ${v}
+              </button>
+            ))}
+          </div>
+          <input value={note} onChange={e => setNote(e.target.value)}
+            placeholder="What's this for? (optional)"
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-white outline-none focus:border-blue-500 transition-colors placeholder-slate-600"/>
+          <button onClick={handleCreateCheckout}
+            disabled={checkoutLoading || !amount || parseFloat(amount) < 1}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/30">
+            {checkoutLoading
+              ? <><Loader2 size={16} className="animate-spin"/>Generating link…</>
+              : <><CreditCard size={16}/>Generate Payment QR</>}
+          </button>
+          <div className="flex items-center gap-2 p-3 bg-slate-800/40 rounded-xl border border-slate-700/50">
+            <div className="flex gap-1 shrink-0">
+              {['VISA','MC','AMEX'].map(b => (
+                <span key={b} className="text-[8px] font-black px-1.5 py-0.5 bg-slate-700 rounded text-slate-300">{b}</span>
+              ))}
+            </div>
+            <p className="text-[10px] text-slate-500">Apple Pay & Google Pay also accepted</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── CARD: STEP 3 — QR + NFC ─────────────────────────────────────────────── */}
+      {mode === 'card' && step === 3 && checkoutUrl && (
+        <div className="space-y-5 animate-in fade-in">
+          <div className="text-center">
+            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Payment Link Ready</p>
+            <p className="text-white font-black text-lg">{fmtUSD(parseFloat(amount))}</p>
+            {note && <p className="text-slate-500 text-xs">"{note}"</p>}
+          </div>
+
+          {/* QR Code */}
+          <div className="bg-white rounded-2xl p-5 flex flex-col items-center gap-3">
+            <QRCode value={checkoutUrl} size={180} level="M"/>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Payer scans with any camera app</p>
+          </div>
+
+          {/* NFC write + open link buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={async () => {
+              if (!nfcSupported) { setErr('NFC not available on this device'); return; }
+              setNfcWriting(true);
+              const ok = await writeNFCUrl(checkoutUrl);
+              setNfcWriting(false);
+              if (!ok) setErr('NFC write failed — use QR instead');
+            }}
+              className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${
+                nfcSupported ? 'border-blue-700/50 bg-blue-900/20 hover:bg-blue-900/30 text-blue-400' : 'border-slate-700 bg-slate-800/30 text-slate-600 opacity-50 cursor-not-allowed'
+              }`}
+              disabled={!nfcSupported}>
+              {nfcWriting ? <Loader2 size={20} className="animate-spin"/> : <Smartphone size={20}/>}
+              <span className="text-[9px] font-black uppercase tracking-widest">{nfcWriting ? 'Writing…' : 'Write to NFC'}</span>
+            </button>
+            <a href={checkoutUrl} target="_blank" rel="noopener noreferrer"
+              className="p-4 rounded-2xl border border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-slate-400 hover:text-white flex flex-col items-center gap-2 transition-all">
+              <ExternalLink size={20}/>
+              <span className="text-[9px] font-black uppercase tracking-widest">Open Link</span>
+            </a>
+          </div>
+
+          <div className="p-4 bg-blue-950/30 border border-blue-800/30 rounded-2xl">
+            <p className="text-[10px] text-blue-300 font-bold text-center">
+              Once the payer completes checkout, the amount will appear in your IFB balance automatically — no action needed.
+            </p>
+          </div>
+
+          <button onClick={reset}
+            className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+            <RefreshCw size={12}/> Generate New Link
+          </button>
         </div>
       )}
 
