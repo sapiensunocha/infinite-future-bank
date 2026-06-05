@@ -90,6 +90,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const [vtxUploading, setVtxUploading] = useState({});
   const [vtxProgressOpen, setVtxProgressOpen] = useState(new Set());
   const [vtxSendingReport, setVtxSendingReport] = useState({});
+  const [prospectForm, setProspectForm] = useState({ full_name:'', email:'', company_name:'', sector:'', country:'', cost_min:3690, cost_max:6300 });
+  const [prospectLoading, setProspectLoading] = useState(false);
+  const [prospectResult, setProspectResult] = useState(null);
   // IFB Applications
   const [applications, setApplications] = useState([]);
   const [appFilter, setAppFilter] = useState('');
@@ -438,6 +441,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
       notify(`Progress report sent to ${co.user_full_name} (in-app + email)`);
     } catch (e) { notify(e.message, 'error'); }
     finally { setVtxSendingReport(s => ({...s, [co.id]: false})); }
+  };
+
+  const handleSendProspect = async () => {
+    const { full_name, email, company_name } = prospectForm;
+    if (!full_name || !email || !company_name) { notify('Name, email and organization name required', 'error'); return; }
+    setProspectLoading(true);
+    setProspectResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-prospect-report', { body: prospectForm });
+      if (error || data?.error) throw new Error(error?.message || data?.error);
+      setProspectResult(data);
+      notify(data.message || 'Report sent!');
+      loadVentureX();
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setProspectLoading(false); }
   };
 
   // IFB Application update
@@ -1705,6 +1723,52 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   </button>
                 </div>
               </div>
+
+              {/* ── QUICK PROSPECT SEND ── */}
+              <details className="bg-violet-950/30 border border-violet-800/40 rounded-2xl">
+                <summary className="px-6 py-4 cursor-pointer font-black text-violet-300 text-sm flex items-center gap-2">
+                  <Send size={14}/> Send Report to Prospect (account may or may not exist)
+                </summary>
+                <div className="px-6 pb-6 pt-4 border-t border-violet-800/30 space-y-4">
+                  <p className="text-[10px] text-violet-400/70 font-bold">Enter name + email + org name — IFB will automatically find or create their account, create their company profile, send an in-app notification, and email them the full readiness report with a Pay & Start link.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {[['full_name','Full Name','text'],['email','Email Address','email'],['company_name','Organization / Company Name','text'],['sector','Sector (optional)','text'],['country','Country (optional)','text']].map(([k,ph,t]) => (
+                      <div key={k}>
+                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
+                        <input type={t} value={prospectForm[k]} onChange={e => setProspectForm(f => ({...f, [k]: e.target.value}))}
+                          className="w-full bg-slate-800 border border-slate-700 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-white outline-none" />
+                      </div>
+                    ))}
+                    <div className="md:col-span-2">
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Estimated Cost Range (USD)</label>
+                      <div className="flex gap-2 items-center">
+                        <input type="number" value={prospectForm.cost_min} onChange={e => setProspectForm(f => ({...f, cost_min: parseInt(e.target.value)||0}))}
+                          className="w-full bg-slate-800 border border-slate-700 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-white outline-none" placeholder="Min" />
+                        <span className="text-slate-500 font-black">–</span>
+                        <input type="number" value={prospectForm.cost_max} onChange={e => setProspectForm(f => ({...f, cost_max: parseInt(e.target.value)||0}))}
+                          className="w-full bg-slate-800 border border-slate-700 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-white outline-none" placeholder="Max" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {prospectResult && (
+                    <div className="bg-slate-900 border border-emerald-700/40 rounded-xl px-4 py-3 space-y-1">
+                      <p className="text-emerald-400 font-black text-xs">{prospectResult.message}</p>
+                      <div className="flex flex-wrap gap-3 text-[9px] font-bold text-slate-400">
+                        <span>{prospectResult.created_user ? '🆕 New account created' : '✓ Existing account found'}</span>
+                        <span>{prospectResult.created_company ? '🆕 Company profile created' : '✓ Existing company found'}</span>
+                        <span>{prospectResult.email_sent ? '📧 Email sent' : '⚠ Email failed (check Resend key)'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <button onClick={handleSendProspect} disabled={prospectLoading}
+                    className="flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    {prospectLoading ? <Loader2 size={13} className="animate-spin"/> : <Send size={13}/>}
+                    {prospectLoading ? 'Creating & Sending...' : 'Create Everything & Send Report'}
+                  </button>
+                </div>
+              </details>
 
               {/* Create company on behalf */}
               <details className="bg-slate-900 border border-slate-800 rounded-2xl">
