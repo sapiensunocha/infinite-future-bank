@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { supabase } from './services/supabaseClient';
-import Joyride, { STATUS } from 'react-joyride';
+import Joyride, { STATUS, ACTIONS, EVENTS } from 'react-joyride';
 import { MessageSquare, X } from 'lucide-react';
 import { useTranslation } from './i18n/useTranslation';
 
@@ -261,6 +261,17 @@ export default function Dashboard({ session, onSignOut }) {
         run={runTour}
         stepIndex={tourStepIndex}
         continuous={true}
+        disableScrolling={false}
+        callback={(data) => {
+          const { action, index, status, type } = data;
+          if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+            setTourStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+          } else if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+            setRunTour(false);
+            setTourStepIndex(0);
+            supabase.from('profiles').update({ has_completed_tour: true }).eq('id', session.user.id).then(() => {});
+          }
+        }}
         tooltipComponent={(props) => (
           <CustomTourTooltip
             {...props}

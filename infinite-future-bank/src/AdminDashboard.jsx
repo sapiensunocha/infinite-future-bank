@@ -117,6 +117,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const [loading, setLoading] = useState(false);
   const [userSearch, setUserSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [userDetailTab, setUserDetailTab] = useState('profile');
+  const [userEdits, setUserEdits] = useState({});
+  const [savingUser, setSavingUser] = useState(false);
+  const [balanceAdj, setBalanceAdj] = useState({ wallet: 'liquid', type: 'credit', amount: '', reason: '' });
+  const [adjLoading, setAdjLoading] = useState(false);
+  const [userNotif, setUserNotif] = useState({ title: '', message: '' });
+  const [sendingUserNotif, setSendingUserNotif] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [ticketReply, setTicketReply] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
@@ -482,6 +489,80 @@ export default function AdminDashboard({ session, profile, onClose }) {
     } catch (e) { notify(e.message, 'error'); }
   };
 
+  const handleSaveUserProfile = async () => {
+    if (!selectedUser || !Object.keys(userEdits).length) return;
+    setSavingUser(true);
+    try {
+      const { error } = await supabase.from('profiles').update(userEdits).eq('id', selectedUser.id);
+      if (error) throw error;
+      setSelectedUser(u => ({ ...u, ...userEdits }));
+      setUserEdits({});
+      notify('Profile updated');
+      loadUsers(userSearch);
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setSavingUser(false); }
+  };
+
+  const handleAdjustBalance = async () => {
+    if (!selectedUser || !balanceAdj.amount || isNaN(Number(balanceAdj.amount))) {
+      notify('Enter a valid amount', 'error'); return;
+    }
+    setAdjLoading(true);
+    try {
+      const col = balanceAdj.wallet === 'liquid' ? 'liquid_usd' : 'mysafe_digital_usd';
+      const delta = balanceAdj.type === 'credit' ? Number(balanceAdj.amount) : -Number(balanceAdj.amount);
+      const newVal = Math.max(0, (selectedUser[col] || 0) + delta);
+      const { error } = await supabase.from('profiles').update({ [col]: newVal }).eq('id', selectedUser.id);
+      if (error) throw error;
+      await supabase.from('transactions').insert([{
+        user_id: selectedUser.id,
+        type: balanceAdj.type === 'credit' ? 'admin_credit' : 'admin_debit',
+        amount_usd: Math.abs(delta),
+        status: 'completed',
+        description: balanceAdj.reason || `Admin ${balanceAdj.type} by ${profile?.full_name || 'Admin'}`,
+        metadata: { admin_id: session.user.id, wallet: balanceAdj.wallet },
+      }]);
+      setSelectedUser(u => ({ ...u, [col]: newVal }));
+      setBalanceAdj(b => ({ ...b, amount: '', reason: '' }));
+      notify(`${balanceAdj.type === 'credit' ? '+' : '-'}$${Number(balanceAdj.amount).toFixed(2)} applied`);
+      loadUsers(userSearch);
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setAdjLoading(false); }
+  };
+
+  const handleSendUserNotif = async () => {
+    if (!selectedUser || !userNotif.title.trim() || !userNotif.message.trim()) {
+      notify('Title and message required', 'error'); return;
+    }
+    setSendingUserNotif(true);
+    try {
+      const { error } = await supabase.from('notifications').insert([{
+        user_id: selectedUser.id,
+        type: 'admin_message',
+        message: userNotif.message.trim(),
+        status: 'pending',
+        metadata: { title: userNotif.title.trim(), sent_by: profile?.full_name || 'IFB Admin' },
+      }]);
+      if (error) throw error;
+      setUserNotif({ title: '', message: '' });
+      notify('Notification sent');
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setSendingUserNotif(false); }
+  };
+
+  const handleToggleSuspend = async () => {
+    if (!selectedUser) return;
+    const isSuspended = selectedUser.kyc_status === 'suspended';
+    const newStatus = isSuspended ? 'unverified' : 'suspended';
+    try {
+      const { error } = await supabase.rpc('admin_update_kyc', { p_user_id: selectedUser.id, p_status: newStatus, p_notes: null });
+      if (error) throw error;
+      setSelectedUser(u => ({ ...u, kyc_status: newStatus }));
+      notify(`User ${isSuspended ? 'unsuspended' : 'suspended'}`);
+      loadUsers(userSearch);
+    } catch (e) { notify(e.message, 'error'); }
+  };
+
   if (checkingRole) {
     return (
       <div className="fixed inset-0 bg-slate-950 z-[600] flex items-center justify-center">
@@ -655,7 +736,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             <td className="p-4 font-black text-white text-sm">{fmtUSD(user.liquid_usd)}</td>
                             <td className="p-4 text-xs text-slate-500">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</td>
                             <td className="p-4">
-                              <button onClick={() => setSelectedUser(user)}
+                              <button onClick={() => { setSelectedUser(user); setUserDetailTab('profile'); setUserEdits({}); }}
                                 className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 font-black text-[9px] uppercase rounded-lg transition-colors">
                                 View
                               </button>
@@ -670,44 +751,211 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
               {/* User detail panel */}
               {selectedUser && (
-                <div className="fixed inset-y-0 right-0 w-full md:w-96 bg-slate-900 border-l border-slate-800 z-50 flex flex-col shadow-2xl animate-in slide-in-from-right-4">
-                  <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-                    <h3 className="font-black text-white">User Details</h3>
-                    <button onClick={() => setSelectedUser(null)} className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400"><X size={18}/></button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-2xl mx-auto">
-                      {(selectedUser.full_name || selectedUser.email || 'U')[0].toUpperCase()}
-                    </div>
-                    <div className="text-center">
-                      <p className="font-black text-white text-lg">{selectedUser.full_name || '—'}</p>
-                      <p className="text-slate-400 text-sm">{selectedUser.email}</p>
-                    </div>
-                    {[
-                      { label: 'User ID', val: selectedUser.id?.slice(0, 16) + '...' },
-                      { label: 'Country', val: selectedUser.country || '—' },
-                      { label: 'KYC Status', val: selectedUser.kyc_status || 'unverified' },
-                      { label: 'Liquid Balance', val: fmtUSD(selectedUser.liquid_usd) },
-                      { label: 'Vault Balance', val: fmtUSD(selectedUser.mysafe_digital_usd) },
-                      { label: 'Joined', val: selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleString() : '—' },
-                    ].map(({ label, val }) => (
-                      <div key={label} className="flex justify-between p-3 bg-slate-800/60 rounded-xl">
-                        <span className="text-[10px] font-black uppercase text-slate-500">{label}</span>
-                        <span className="text-xs font-black text-white text-right">{val}</span>
+                <div className="fixed inset-y-0 right-0 w-full md:w-[26rem] bg-slate-950 border-l border-slate-800 z-50 flex flex-col shadow-2xl animate-in slide-in-from-right-4">
+                  {/* Header */}
+                  <div className="p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-lg">
+                        {(selectedUser.full_name || selectedUser.email || 'U')[0].toUpperCase()}
                       </div>
+                      <div>
+                        <p className="font-black text-white text-sm leading-tight">{selectedUser.full_name || '—'}</p>
+                        <p className="text-[10px] text-slate-400">{selectedUser.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                        selectedUser.kyc_status === 'verified' ? 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' :
+                        selectedUser.kyc_status === 'suspended' ? 'text-red-400 bg-red-900/30 border-red-700/40' :
+                        selectedUser.kyc_status === 'rejected' ? 'text-red-400 bg-red-900/30 border-red-700/40' :
+                        'text-amber-400 bg-amber-900/30 border-amber-700/40'
+                      }`}>{(selectedUser.kyc_status || 'unverified').replace(/_/g,' ')}</span>
+                      <button onClick={() => { setSelectedUser(null); setUserEdits({}); }} className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400"><X size={18}/></button>
+                    </div>
+                  </div>
+
+                  {/* Sub-tabs */}
+                  <div className="flex border-b border-slate-800 shrink-0">
+                    {[
+                      { id: 'profile', label: 'Profile', icon: UserCog },
+                      { id: 'balance', label: 'Balance', icon: DollarSign },
+                      { id: 'notify', label: 'Notify', icon: Bell },
+                      { id: 'actions', label: 'Actions', icon: ShieldAlert },
+                    ].map(t => (
+                      <button key={t.id} onClick={() => setUserDetailTab(t.id)}
+                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[9px] font-black uppercase tracking-widest transition-colors border-b-2 ${userDetailTab === t.id ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
+                        <t.icon size={12}/>
+                        {t.label}
+                      </button>
                     ))}
-                    {canAccess('kyc') && selectedUser.kyc_status !== 'verified' && (
-                      <div className="space-y-2 pt-2">
-                        <button onClick={() => { handleKycAction(selectedUser.id, 'verified'); setSelectedUser(null); }}
-                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
-                          <UserCheck size={14}/> Verify KYC
-                        </button>
-                        <button onClick={() => { handleKycAction(selectedUser.id, 'rejected'); setSelectedUser(null); }}
-                          className="w-full py-3 bg-red-900/50 hover:bg-red-900/80 border border-red-700/40 text-red-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2">
-                          <Ban size={14}/> Reject KYC
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+
+                    {/* ── PROFILE TAB ── */}
+                    {userDetailTab === 'profile' && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { key: 'full_name', label: 'Full Name', type: 'text' },
+                            { key: 'phone', label: 'Phone', type: 'text' },
+                            { key: 'country', label: 'Country', type: 'text' },
+                            { key: 'employer', label: 'Employer', type: 'text' },
+                            { key: 'source_of_revenue', label: 'Revenue Source', type: 'text' },
+                            { key: 'date_of_birth', label: 'Date of Birth', type: 'date' },
+                          ].map(({ key, label, type }) => (
+                            <div key={key} className="col-span-2 space-y-1">
+                              <label className="text-[9px] font-black uppercase text-slate-500">{label}</label>
+                              <input
+                                type={type}
+                                value={userEdits[key] !== undefined ? userEdits[key] : (selectedUser[key] || '')}
+                                onChange={e => setUserEdits(u => ({ ...u, [key]: e.target.value }))}
+                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {Object.keys(userEdits).length > 0 && (
+                          <button onClick={handleSaveUserProfile} disabled={savingUser}
+                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors">
+                            {savingUser ? <Loader2 size={12} className="animate-spin"/> : <Save size={12}/>}
+                            Save Profile
+                          </button>
+                        )}
+                        <div className="p-3 bg-slate-800/40 rounded-xl space-y-1.5 mt-2">
+                          {[
+                            { label: 'User ID', val: selectedUser.id?.slice(0, 20) + '…' },
+                            { label: 'Liquid Balance', val: fmtUSD(selectedUser.liquid_usd) },
+                            { label: 'Vault Balance', val: fmtUSD(selectedUser.mysafe_digital_usd) },
+                            { label: 'Joined', val: selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '—' },
+                          ].map(({ label, val }) => (
+                            <div key={label} className="flex justify-between">
+                              <span className="text-[9px] font-black uppercase text-slate-500">{label}</span>
+                              <span className="text-[10px] font-black text-slate-300">{val}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <button onClick={() => { setBoUser(selectedUser); setActiveTab('backoffice'); setSelectedUser(null); }}
+                          className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[9px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors">
+                          <LayoutDashboard size={11}/> View in Back Office
                         </button>
                       </div>
                     )}
+
+                    {/* ── BALANCE TAB ── */}
+                    {userDetailTab === 'balance' && (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1">Liquid Wallet</p>
+                            <p className="text-base font-black text-white">{fmtUSD(selectedUser.liquid_usd)}</p>
+                          </div>
+                          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1">My Safe</p>
+                            <p className="text-base font-black text-white">{fmtUSD(selectedUser.mysafe_digital_usd)}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase text-slate-500">Wallet</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {['liquid', 'vault'].map(w => (
+                              <button key={w} onClick={() => setBalanceAdj(b => ({ ...b, wallet: w }))}
+                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.wallet === w ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                                {w === 'liquid' ? 'Liquid' : 'My Safe'}
+                              </button>
+                            ))}
+                          </div>
+                          <label className="text-[9px] font-black uppercase text-slate-500">Operation</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {['credit', 'debit'].map(t => (
+                              <button key={t} onClick={() => setBalanceAdj(b => ({ ...b, type: t }))}
+                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.type === t ? (t === 'credit' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-700 border-red-600 text-white') : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                                {t === 'credit' ? '+ Credit' : '− Debit'}
+                              </button>
+                            ))}
+                          </div>
+                          <label className="text-[9px] font-black uppercase text-slate-500">Amount (USD)</label>
+                          <input
+                            type="number" min="0" step="0.01"
+                            value={balanceAdj.amount}
+                            onChange={e => setBalanceAdj(b => ({ ...b, amount: e.target.value }))}
+                            placeholder="0.00"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                          />
+                          <label className="text-[9px] font-black uppercase text-slate-500">Reason</label>
+                          <input
+                            type="text"
+                            value={balanceAdj.reason}
+                            onChange={e => setBalanceAdj(b => ({ ...b, reason: e.target.value }))}
+                            placeholder="Bonus, correction, withdrawal…"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                          />
+                          <button onClick={handleAdjustBalance} disabled={adjLoading || !balanceAdj.amount}
+                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${balanceAdj.type === 'credit' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-700 hover:bg-red-600 text-white'} disabled:opacity-50`}>
+                            {adjLoading ? <Loader2 size={12} className="animate-spin"/> : <DollarSign size={12}/>}
+                            Apply {balanceAdj.type === 'credit' ? 'Credit' : 'Debit'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── NOTIFY TAB ── */}
+                    {userDetailTab === 'notify' && (
+                      <div className="space-y-3">
+                        <p className="text-[10px] text-slate-400">Send a direct notification to this user's app.</p>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase text-slate-500">Title</label>
+                          <input
+                            type="text"
+                            value={userNotif.title}
+                            onChange={e => setUserNotif(n => ({ ...n, title: e.target.value }))}
+                            placeholder="e.g. Account Update"
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                          />
+                          <label className="text-[9px] font-black uppercase text-slate-500">Message</label>
+                          <textarea
+                            value={userNotif.message}
+                            onChange={e => setUserNotif(n => ({ ...n, message: e.target.value }))}
+                            placeholder="Your message…"
+                            rows={4}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+                          />
+                          <button onClick={handleSendUserNotif} disabled={sendingUserNotif}
+                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
+                            {sendingUserNotif ? <Loader2 size={12} className="animate-spin"/> : <Send size={12}/>}
+                            Send Notification
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── ACTIONS TAB ── */}
+                    {userDetailTab === 'actions' && (
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-black uppercase text-slate-500 mb-2">KYC Status</p>
+                        {[
+                          { status: 'verified', label: 'Verify KYC', icon: UserCheck, cls: 'bg-emerald-600 hover:bg-emerald-500 text-white' },
+                          { status: 'pending', label: 'Mark Pending', icon: Clock, cls: 'bg-amber-700 hover:bg-amber-600 text-white' },
+                          { status: 'needs_more_info', label: 'Needs More Info', icon: AlertTriangle, cls: 'bg-orange-700 hover:bg-orange-600 text-white' },
+                          { status: 'ai_reviewing', label: 'Send to AI Review', icon: Zap, cls: 'bg-blue-700 hover:bg-blue-600 text-white' },
+                          { status: 'rejected', label: 'Reject KYC', icon: Ban, cls: 'bg-red-900/70 hover:bg-red-800 border border-red-700/40 text-red-300' },
+                        ].filter(a => a.status !== selectedUser.kyc_status).map(({ status, label, icon: Icon, cls }) => (
+                          <button key={status}
+                            onClick={() => { handleKycAction(selectedUser.id, status); setSelectedUser(u => ({ ...u, kyc_status: status })); }}
+                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${cls}`}>
+                            <Icon size={12}/> {label}
+                          </button>
+                        ))}
+                        <div className="border-t border-slate-800 pt-2 mt-2">
+                          <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Account</p>
+                          <button onClick={handleToggleSuspend}
+                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${selectedUser.kyc_status === 'suspended' ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-red-900/50 hover:bg-red-900/80 border border-red-700/40 text-red-400'}`}>
+                            {selectedUser.kyc_status === 'suspended' ? <><Unlock size={12}/> Unsuspend User</> : <><Lock size={12}/> Suspend User</>}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               )}
