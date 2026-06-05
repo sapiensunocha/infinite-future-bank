@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { supabase } from './services/supabaseClient';
 import Joyride, { STATUS, ACTIONS, EVENTS } from 'react-joyride';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare, X, CreditCard } from 'lucide-react';
 import { useTranslation } from './i18n/useTranslation';
 
 // Layout & always-visible UI — load eagerly
@@ -55,6 +55,7 @@ const CapitalPlatform   = lazyLoad(() => import('./features/capital/CapitalPlatf
 const InsuranceHub      = lazyLoad(() => import('./InsuranceHub'));
 const VaultManager      = lazyLoad(() => import('./features/mysafe/VaultManager'));
 const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
+const TapToPay          = lazyLoad(() => import('./features/terminal/TapToPay'));
 const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
 
 const ScreenLoader = () => (
@@ -104,6 +105,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [showVault, setShowVault] = useState(false);
   const [showNFC, setShowNFC] = useState(false);
+  const [showTapToPay, setShowTapToPay] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
   // Commercial Underwriting States
@@ -427,6 +429,7 @@ export default function Dashboard({ session, onSignOut }) {
         setIsSidebarOpen={setIsSidebarOpen}
         setIsNotificationMenuOpen={setIsNotificationMenuOpen}
         setShowNFC={setShowNFC}
+        setShowTapToPay={setShowTapToPay}
         t={t}
       />
 
@@ -551,6 +554,29 @@ export default function Dashboard({ session, onSignOut }) {
                 balances={balances}
                 profile={profile}
                 onClose={() => setShowNFC(false)}
+                onSuccess={() => { fetchAllData(); }}
+              />
+              {/* Tap to Pay entry point */}
+              <div className="mt-6 pt-4 border-t border-slate-800">
+                <button
+                  onClick={() => { setShowNFC(false); setShowTapToPay(true); }}
+                  className="w-full py-3 bg-gradient-to-r from-violet-700 to-indigo-700 hover:from-violet-600 hover:to-indigo-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+                  <CreditCard size={14}/> Tap a Physical Card to Phone
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 💳 TAP TO PAY OVERLAY */}
+      {showTapToPay && (
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-0 sm:p-8">
+          <div className="relative w-full sm:max-w-sm animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
+            <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
+              <TapToPay
+                balances={balances}
+                onClose={() => setShowTapToPay(false)}
                 onSuccess={() => { fetchAllData(); }}
               />
             </div>

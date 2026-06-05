@@ -1,12 +1,12 @@
 import React from 'react';
-import { Compass, ArrowDownUp, Wifi, Bell, Menu } from 'lucide-react';
+import { Compass, ArrowDownUp, CreditCard, Bell, Menu } from 'lucide-react';
 
 const PRIMARY_TABS = ['NET_POSITION', 'TRANSACTIONS'];
 
 export default function BottomNav({
   activeTab, setActiveTab, setIsAppDrawerOpen,
   unreadCount, setIsSidebarOpen, setIsNotificationMenuOpen,
-  setShowNFC, t
+  setShowNFC, setShowTapToPay, t
 }) {
   const left = [
     { id: 'NET_POSITION', Icon: Compass,     label: t('nav.home') },
@@ -65,13 +65,13 @@ export default function BottomNav({
         {/* Centre NFC button — elevated above the bar */}
         <div className="flex flex-col items-center justify-end pb-2 px-3" style={{ marginBottom: 0 }}>
           <button
-            onClick={() => setShowNFC && setShowNFC(true)}
+            onClick={() => setShowTapToPay && setShowTapToPay(true)}
             className="w-14 h-14 -mt-6 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-900/40 flex items-center justify-center active:scale-90 transition-transform border-4 border-white"
             style={{ marginTop: '-20px' }}
           >
-            <Wifi size={24} className="text-white" />
+            <CreditCard size={22} className="text-white" />
           </button>
-          <span className="text-[9px] font-black uppercase tracking-wide text-violet-500 mt-1 leading-none">Tap & Pay</span>
+          <span className="text-[9px] font-black uppercase tracking-wide text-violet-500 mt-1 leading-none">Tap Card</span>
         </div>
 
         {right.map(item => <NavBtn key={item.id} {...item} />)}
