@@ -5,9 +5,9 @@ import { Send, PhoneCall, MessageSquare, X, ShieldCheck, Loader2, BrainCircuit, 
 const QUICK_FAQS = [
   { label: "Withdrawal not working", text: "My withdrawal is failing. What should I do?" },
   { label: "Card shows wrong digits", text: "My card is showing only 8 digits instead of 16. How do I fix this?" },
-  { label: "Pay Partner issue", text: "The Pay Partner feature is not working. Can you help?" },
-  { label: "Clyrix fallback locked", text: "The Clyrix fallback option looks locked. How do I enable it?" },
+  { label: "Accept card payments", text: "How do I accept Visa or Mastercard payments from someone who doesn't have IFB?" },
   { label: "NFC Transfer help", text: "How do I use NFC Tap & Pay to send money?" },
+  { label: "Clyrix fallback locked", text: "The Clyrix fallback option looks locked. How do I enable it?" },
   { label: "Verification email", text: "I didn't receive a verification email after signing up." },
 ];
 
@@ -16,18 +16,31 @@ const FAQ_ANSWERS = {
   "card": `Your IFB Sovereign Card shows 16 digits when you tap "Reveal Details." The masked view shows only the last 4 digits for security. If you issued a card before May 2026 and still see only 8 digits, please issue a new card from Account Hub → Infinite Card → Terminate the old one → Provision a new one.`,
   "pay partner": `The Pay Partner terminal lets you test your card with our Elite Global Medical Partner. Make sure:\n• You have an active card (not frozen)\n• Clyrix Fallback is enabled in Smart Liquidity Routing\n• Your liquid balance is above $0\n\nIf it still fails, submit a ticket and we'll review your account.`,
   "clyrix": `Clyrix Fallback is a toggle in Account Hub → Infinite Card → Card tab → Smart Liquidity Routing section. Tap the toggle to enable or disable it. When enabled (green), Clyrix insurance can bridge payment shortfalls automatically. It should be ON by default.`,
-  "nfc": `To use NFC Tap & Pay:\n• SEND: Go to Home → Tap & Pay → Send mode → enter amount → hold phones together\n• RECEIVE: Go to Home → Tap & Pay → Receive mode → scan or enter the 6-digit code\n\nRequires Android with NFC enabled, or use the 6-digit code on iOS.`,
+  "nfc": `NFC Tap & Pay has 3 modes:\n\n• **Send to IFB user**: Enter amount → generates 6-digit code → tap phones together (Android) or share the code. The code expires in 10 minutes.\n\n• **Receive from IFB user**: Tap "Receive from IFB" → scan via NFC or type the 6-digit code.\n\n• **Get Paid by Card (NEW)**: Tap "Get Paid by Card" → enter amount → a QR code appears. Anyone (no IFB account needed) can scan it with their phone camera and pay with Visa, Mastercard, Apple Pay, or Google Pay. The money lands in your Liquid Wallet automatically. On Android, the payment link is also written to the NFC tag so the payer can just tap.\n\nNFC physical tap requires Android with NFC enabled. iOS users use the code or QR method.`,
+  "accept card": `Yes! Go to Home → Tap & Pay → "Get Paid by Card":\n1. Enter the amount you want to collect\n2. A QR code is generated — anyone scans it with their phone camera\n3. They pay with Visa, Mastercard, Apple Pay, or Google Pay\n4. Money arrives in your IFB Liquid Wallet automatically\n\nNo IFB account needed for the payer. On Android, the link is also written to NFC so the payer can just tap their phone.`,
+  "card payment": `To accept card payments from anyone (Visa/Mastercard/Apple Pay):\nGo to Home → Tap & Pay → Get Paid by Card → enter amount → show the QR code. The payer scans it, pays on Stripe, and the money goes into your IFB balance.`,
+  "receive card": `Go to Home → Tap & Pay → "Get Paid by Card" to generate a Stripe QR for card payments. Works with Visa, Mastercard, Apple Pay, and Google Pay.`,
   "verification": `If you didn't receive a verification email:\n1. Check your spam/junk folder\n2. Try the "Forgot Password" link on the login page — this also resends a confirmation\n3. Contact IFB support and we'll manually trigger it from our system.`,
+  "balance not updating": `After a card payment, Stripe confirmation takes 5–30 seconds. Pull down to refresh the Home screen. If it still hasn't updated after 2 minutes, contact support@infinitefuturebank.org with your payment reference.`,
+  "afr tokens": `AFR tokens are minted automatically after every USD deposit at a 100:1 ratio (e.g., $50 = 5,000 AFR). Check your AFR balance in the Home screen or the ⬡ AFR Node panel. Allow 30 seconds after deposit for the mint to complete.`,
+  "kyc": `KYC verification is required for higher transaction limits.\n\n1. Go to Account → KYC\n2. Submit your ID document and a selfie\n3. Status progresses: pending → ai_reviewing → verified\n\nIf status is "needs_more_info" — resubmit the requested documents. Full verification typically completes within a few minutes. If stuck over 24 hours, contact support.`,
+  "venturex": `VentureX is IFB's startup investment feed — access it from Home → Updates tab or the left drawer.\n\nYou can browse 80+ real African startups, watch their pitch videos, see deal flow, and track funded rounds. Scroll through the feed to explore companies by sector, stage, and country.`,
 };
 
 function getAutoAnswer(text) {
   const lower = text.toLowerCase();
   if (lower.includes('withdraw') || lower.includes('processing node') || lower.includes('failed to locate')) return FAQ_ANSWERS['withdrawal'];
-  if (lower.includes('card') && (lower.includes('digit') || lower.includes('8') || lower.includes('number'))) return FAQ_ANSWERS['card'];
+  if (lower.includes('card') && (lower.includes('digit') || lower.includes('8') && lower.includes('number'))) return FAQ_ANSWERS['card'];
   if (lower.includes('pay partner') || lower.includes('partner terminal') || lower.includes('hybrid swipe')) return FAQ_ANSWERS['pay partner'];
-  if (lower.includes('clyrix') || lower.includes('smart liquidity') || lower.includes('locked') || lower.includes('blocked')) return FAQ_ANSWERS['clyrix'];
-  if (lower.includes('nfc') || lower.includes('tap') || lower.includes('phone')) return FAQ_ANSWERS['nfc'];
-  if (lower.includes('verif') || lower.includes('email') || lower.includes('confirmation')) return FAQ_ANSWERS['verification'];
+  if (lower.includes('clyrix') || lower.includes('smart liquidity')) return FAQ_ANSWERS['clyrix'];
+  if ((lower.includes('accept') || lower.includes('collect') || lower.includes('receive')) && (lower.includes('visa') || lower.includes('mastercard') || lower.includes('card payment') || lower.includes('apple pay') || lower.includes('google pay'))) return FAQ_ANSWERS['accept card'];
+  if (lower.includes('get paid') || lower.includes('card payment') || lower.includes('receive card')) return FAQ_ANSWERS['card payment'];
+  if (lower.includes('nfc') || lower.includes('tap & pay') || lower.includes('tap and pay')) return FAQ_ANSWERS['nfc'];
+  if (lower.includes('verif') || lower.includes('confirmation email')) return FAQ_ANSWERS['verification'];
+  if (lower.includes('balance') && (lower.includes('not update') || lower.includes('not show') || lower.includes('missing'))) return FAQ_ANSWERS['balance not updating'];
+  if (lower.includes('afr') && (lower.includes('token') || lower.includes('mint') || lower.includes('missing'))) return FAQ_ANSWERS['afr tokens'];
+  if (lower.includes('kyc') || lower.includes('identity') || lower.includes('verification') && lower.includes('document')) return FAQ_ANSWERS['kyc'];
+  if (lower.includes('venturex') || lower.includes('startup') || lower.includes('invest')) return FAQ_ANSWERS['venturex'];
   return null;
 }
 
