@@ -137,6 +137,7 @@ export default function VentureXFeed() {
   const [newCount, setNewCount]     = useState(0);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
   const [showSectors, setShowSectors] = useState(false);
+  const [feedError, setFeedError]   = useState(null);
   const subRef = useRef(null);
   const LIMIT = 30;
 
@@ -148,6 +149,7 @@ export default function VentureXFeed() {
   const fetchFeed = useCallback(async (reset = false) => {
     const off = reset ? 0 : offset;
     if (reset) setLoading(true); else setLoadingMore(true);
+    setFeedError(null);
     try {
       const { data, error } = await supabase.rpc('get_venturex_feed', {
         p_limit:  LIMIT,
@@ -155,7 +157,7 @@ export default function VentureXFeed() {
         p_sector: sector   || null,
         p_type:   typeFilter || null,
       });
-      if (error) throw error;
+      if (error) { console.error('VentureX feed RPC error:', error); throw error; }
       const rows = data || [];
       if (reset) {
         setEvents(rows);
@@ -165,6 +167,8 @@ export default function VentureXFeed() {
         setOffset(off + LIMIT);
       }
       setHasMore(rows.length === LIMIT);
+    } catch (err) {
+      setFeedError(err?.message || 'Failed to load feed. Please refresh.');
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -348,10 +352,21 @@ export default function VentureXFeed() {
           <div className="flex items-center justify-center py-20">
             <Loader2 size={28} className="animate-spin text-blue-500" />
           </div>
+        ) : feedError ? (
+          <div className="text-center py-20">
+            <p className="text-red-400 font-bold mb-2">Feed error</p>
+            <p className="text-xs text-slate-500 mb-4">{feedError}</p>
+            <button onClick={() => fetchFeed(true)} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-black text-slate-300 hover:text-white transition-all">
+              Retry
+            </button>
+          </div>
         ) : events.length === 0 ? (
           <div className="text-center py-20 text-slate-500">
             <TrendingUp size={40} className="mx-auto mb-3 opacity-30" />
             <p className="font-bold">No activity found for this filter</p>
+            <button onClick={() => fetchFeed(true)} className="mt-4 px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-black text-slate-300 hover:text-white transition-all">
+              Refresh
+            </button>
           </div>
         ) : (
           <>

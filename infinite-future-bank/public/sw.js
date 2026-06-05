@@ -79,6 +79,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+  // Only handle http/https — skip chrome-extension://, data:, blob: etc.
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+
   // Supabase / API calls — network first, no caching of auth tokens
   if (url.hostname.includes('supabase.co') || url.pathname.startsWith('/functions/')) {
     event.respondWith(fetch(event.request).catch(() => new Response(JSON.stringify({ error: 'offline' }), { headers: { 'Content-Type': 'application/json' }, status: 503 })));
@@ -92,10 +95,10 @@ self.addEventListener('fetch', (event) => {
       return fetch(event.request).then((response) => {
         if (response.ok && event.request.method === 'GET') {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
         }
         return response;
-      });
+      }).catch(() => new Response('', { status: 503 }));
     })
   );
 });
