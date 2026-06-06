@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './services/supabaseClient';
 import VentureXLaunchpad from './features/venturex/VentureXLaunchpad';
+import VentureXAccelerator from './features/venturex/VentureXAccelerator';
 import {
   Rocket, Building2, Users, DollarSign, Target, TrendingUp,
   ShieldCheck, CheckCircle2, XCircle, Loader2, Plus, Edit3,
@@ -557,6 +558,7 @@ export default function VentureExchange({ session, balances, profile }) {
           {[
             { id:'HOME', label:'Dashboard' },
             { id:'LAUNCHPAD', label:'🚀 Launchpad' },
+            { id:'ACCELERATOR', label:'⚡ Accelerator' },
             { id:'UPDATES', label: 'Updates' },
             { id:'COMPANY', label: myCompany ? 'Company Profile' : '+ Startup' },
             { id:'VDR', label: myCompany ? 'VDR & Docs' : null },
@@ -605,6 +607,11 @@ export default function VentureExchange({ session, balances, profile }) {
         {/* ═════════ LAUNCHPAD ═════════ */}
         {tab === 'LAUNCHPAD' && (
           <VentureXLaunchpad session={session} myCompany={myCompany} />
+        )}
+
+        {/* ═════════ ACCELERATOR ═════════ */}
+        {tab === 'ACCELERATOR' && (
+          <VentureXAccelerator session={session} myCompany={myCompany} />
         )}
 
         {/* ═════════ SOCIAL FEED (UPDATES) ═════════ */}
