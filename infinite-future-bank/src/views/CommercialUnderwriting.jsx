@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Rocket, Globe } from 'lucide-react';
+import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Rocket, Globe, ClipboardCheck, Brain } from 'lucide-react';
 import CompanyFormationHub from '../features/formation/CompanyFormationHub';
+import IFBAudit from '../features/audit/IFBAudit';
+import MarketIntelligence from '../features/market/MarketIntelligence';
 
 export default function CommercialUnderwriting({
   commercialProfile,
@@ -15,30 +17,53 @@ export default function CommercialUnderwriting({
 }) {
   const [bizView, setBizView] = useState('underwriting');
 
+  const BIZ_TABS = [
+    { id: 'underwriting',       label: 'I Have a Company',       icon: Building,       color: 'blue'   },
+    { id: 'formation',          label: 'Register New Company',   icon: Globe,          color: 'indigo' },
+    { id: 'audit',              label: 'IFB Audit',              icon: ClipboardCheck, color: 'violet' },
+    { id: 'market_intelligence',label: 'Market Intelligence',    icon: Brain,          color: 'teal'   },
+  ];
+
+  const TAB_ACTIVE = {
+    underwriting:        'bg-blue-600 text-white shadow-md',
+    formation:           'bg-indigo-600 text-white shadow-md',
+    audit:               'bg-violet-600 text-white shadow-md',
+    market_intelligence: 'bg-teal-600 text-white shadow-md',
+  };
+
   return (
     <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500">
 
       {/* Tab selector */}
-      <div className="flex gap-2 mb-8 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl w-fit">
-        <button
-          onClick={() => setBizView('underwriting')}
-          className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-            bizView === 'underwriting' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'
-          }`}>
-          <Building size={13}/> I Have a Company
-        </button>
-        <button
-          onClick={() => setBizView('formation')}
-          className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-            bizView === 'formation' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800'
-          }`}>
-          <Globe size={13}/> Register New Company
-        </button>
+      <div className="flex flex-wrap gap-2 mb-8 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl w-fit">
+        {BIZ_TABS.map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setBizView(tab.id)}
+              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                bizView === tab.id ? TAB_ACTIVE[tab.id] : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}>
+              <Icon size={13}/> {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Company Formation Hub */}
       {bizView === 'formation' && (
         <CompanyFormationHub session={session} balances={balances} profile={profile} />
+      )}
+
+      {/* IFB Audit */}
+      {bizView === 'audit' && (
+        <IFBAudit session={session} balances={balances} />
+      )}
+
+      {/* Market Intelligence */}
+      {bizView === 'market_intelligence' && (
+        <MarketIntelligence session={session} />
       )}
 
       {/* Corporate Underwriting (existing) */}
