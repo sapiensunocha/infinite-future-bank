@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import {
   CheckCircle2, ChevronRight, Loader2, Sparkles, TrendingUp,
   Crown, Plus, X, ArrowLeft, Wallet, AlertTriangle, Rocket,
   Users, Globe, DollarSign, Lightbulb, Target, Building,
   Clock, Star, Shield, Zap, BarChart3, FileText, Phone,
-  HandCoins, BookOpen
+  HandCoins, BookOpen, Upload, Brain, Camera, File, Image
 } from 'lucide-react';
 
 // ── Package definitions ────────────────────────────────────────────────────────
@@ -125,15 +125,165 @@ function StepBar({ step }) {
   );
 }
 
+// ── AI document extraction field mapping ──────────────────────────────────────
+const VTX_MAP = {
+  company_name:        ['company_name',        'Company Name'],
+  sector:              ['sector',              'Sector'],
+  industry:            ['sector',              'Sector'],
+  country:             ['country',             'Country'],
+  team_size:           ['team_size',           'Team Size'],
+  annual_revenue:      ['annual_revenue_usd',  'Annual Revenue'],
+  revenue:             ['annual_revenue_usd',  'Annual Revenue'],
+  capital_ask:         ['capital_ask_usd',     'Capital Ask'],
+  funding_ask:         ['capital_ask_usd',     'Capital Ask'],
+  problem_statement:   ['problem_statement',   'Problem'],
+  problem:             ['problem_statement',   'Problem'],
+  solution_statement:  ['solution_statement',  'Solution'],
+  solution:            ['solution_statement',  'Solution'],
+  website:             ['website',             'Website'],
+  stage:               ['stage',               'Stage'],
+};
+
+// ── Smart Document Upload Panel ───────────────────────────────────────────────
+function SmartDocPanel({ session, setForm }) {
+  const fileRef = useRef();
+  const [docFile, setDocFile] = useState(null);
+  const [scanning, setScanning] = useState(false);
+  const [fields, setFields] = useState([]);
+  const [confidence, setConfidence] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    setDocFile(file);
+    setFields([]);
+    setConfidence(null);
+    setError(null);
+    setScanning(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${session.user.id}/vtx_${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('kyc_documents').upload(path, file);
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('kyc_documents').getPublicUrl(path);
+
+      const { data, error: aiErr } = await supabase.functions.invoke('kyc-ai-extract', {
+        body: { document_url: publicUrl, document_type: 'venturex_profile' }
+      });
+      if (aiErr) throw aiErr;
+
+      const extracted = data?.extracted_fields || data?.fields || data || {};
+      const confs = data?.field_confidences || {};
+      const filled = [];
+      Object.entries(VTX_MAP).forEach(([aiKey, [formKey, label]]) => {
+        const val = extracted[aiKey];
+        if (!val) return;
+        let parsed = val;
+        if (formKey === 'team_size') parsed = parseInt(val) || val;
+        if (formKey === 'annual_revenue_usd' || formKey === 'capital_ask_usd') parsed = parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
+        setForm(f => {
+          if (f[formKey] && String(f[formKey]).trim()) return f;
+          return { ...f, [formKey]: parsed };
+        });
+        filled.push({ label, value: String(val), confidence: confs[aiKey] ?? data?.confidence ?? 0.8 });
+      });
+      setFields(filled);
+      setConfidence(data?.confidence ?? data?.overall_confidence ?? null);
+    } catch (e) {
+      setError('AI extraction failed. You can still fill the form manually.');
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const fileIcon = docFile?.type?.startsWith('image/') ? Image : File;
+  const FileIcon = fileIcon;
+
+  return (
+    <div className="bg-indigo-950/25 border border-indigo-700/30 rounded-2xl p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <Brain size={14} className="text-indigo-400"/>
+        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Smart Doc Upload — AI Auto-Fill</span>
+      </div>
+      <p className="text-[10px] text-slate-400 leading-relaxed">
+        Upload your business plan, pitch deck, registration document, or any company file — our AI will read it and automatically fill in the form below.
+      </p>
+
+      {!docFile && !scanning ? (
+        <button type="button" onClick={() => fileRef.current?.click()}
+          className="w-full border-2 border-dashed border-indigo-700/40 hover:border-indigo-500/60 rounded-xl p-5 flex flex-col items-center gap-2 transition-all hover:bg-indigo-950/20 cursor-pointer">
+          <Upload size={18} className="text-indigo-400"/>
+          <span className="text-[10px] font-black uppercase text-indigo-300">Upload Business Document</span>
+          <span className="text-[9px] text-slate-500">PDF · Images · Word · Any format</span>
+        </button>
+      ) : scanning ? (
+        <div className="space-y-3 p-4 bg-indigo-950/20 rounded-xl border border-indigo-700/20">
+          <div className="h-1.5 bg-indigo-900/50 rounded-full overflow-hidden">
+            <div className="h-full bg-indigo-500 rounded-full w-3/5 animate-pulse"/>
+          </div>
+          <div className="flex items-center gap-2">
+            <Loader2 size={12} className="animate-spin text-indigo-400 shrink-0"/>
+            <span className="text-[10px] text-slate-400">AI reading document…</span>
+          </div>
+          {['Company name','Sector','Country','Team size','Revenue','Capital ask','Problem','Solution'].map(f => (
+            <div key={f} className="flex items-center gap-2 opacity-50">
+              <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0"/>
+              <span className="text-[9px] text-slate-400">{f}</span>
+            </div>
+          ))}
+        </div>
+      ) : fields.length > 0 ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle2 size={12} className="text-emerald-400"/>
+            <span className="text-[9px] font-black text-emerald-400 uppercase">{fields.length} fields auto-filled</span>
+            {confidence != null && (
+              <span className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded ${confidence >= 0.8 ? 'bg-emerald-900/50 text-emerald-400' : confidence >= 0.6 ? 'bg-amber-900/50 text-amber-400' : 'bg-red-900/50 text-red-400'}`}>
+                {Math.round(confidence * 100)}% confident
+              </span>
+            )}
+          </div>
+          {fields.map(f => (
+            <div key={f.label} className="flex items-center justify-between gap-2 py-1 border-b border-slate-700/20 last:border-0">
+              <span className="text-[9px] text-slate-400">{f.label}</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] text-white font-bold truncate max-w-[100px]">{f.value}</span>
+                <span className={`text-[7px] font-black px-1 py-0.5 rounded ${(f.confidence||0)>=0.8?'bg-emerald-900/60 text-emerald-400':'bg-amber-900/60 text-amber-400'}`}>
+                  {Math.round((f.confidence||0)*100)}%
+                </span>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={() => { setDocFile(null); setFields([]); fileRef.current?.click(); }}
+            className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-wider mt-2 flex items-center gap-1">
+            <Upload size={9}/> Upload different document
+          </button>
+        </div>
+      ) : error ? (
+        <div className="flex items-start gap-2 p-3 bg-red-950/30 border border-red-800/30 rounded-xl">
+          <AlertTriangle size={12} className="text-red-400 mt-0.5 shrink-0"/>
+          <span className="text-[10px] text-red-300">{error}</span>
+        </div>
+      ) : null}
+
+      <input ref={fileRef} type="file" className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.csv,.txt,.heic,.webp"
+        onChange={e => { if (e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ''; }} />
+    </div>
+  );
+}
+
 // ── Step 1: Company profile form ───────────────────────────────────────────────
-function ProfileStep({ form, setForm, onNext }) {
+function ProfileStep({ form, setForm, onNext, session }) {
   const valid = form.company_name && form.sector && form.country && form.stage && form.problem_statement && form.solution_statement;
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-black text-white mb-1">Tell us about your business</h2>
-        <p className="text-sm text-slate-400">This becomes your IFB entrepreneur file. Be precise — our team uses this to deploy work immediately.</p>
+        <p className="text-sm text-slate-400">Upload a document and AI fills this in — or type manually below.</p>
       </div>
+
+      <SmartDocPanel session={session} setForm={setForm}/>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
@@ -579,7 +729,7 @@ export default function EntrepreneurApplication({ session, balances }) {
         </div>
       )}
 
-      {step === 0 && <ProfileStep form={form} setForm={setForm} onNext={() => setStep(1)} />}
+      {step === 0 && <ProfileStep form={form} setForm={setForm} onNext={() => setStep(1)} session={session}/>}
       {step === 1 && <PackageStep selected={selected} setSelected={setSelected} addons={addons} setAddons={setAddons} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
       {step === 2 && <PaymentStep form={form} selected={selected} addons={addons} balance={balance} onConfirm={handlePay} onBack={() => setStep(1)} paying={paying} />}
       {step === 3 && <SuccessStep result={result} pkg={pkg} form={form} />}

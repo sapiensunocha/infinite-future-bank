@@ -7,7 +7,8 @@ import {
   TrendingUp, ArrowUpRight, FileText, Clock, Filter,
   ShieldCheck, ShieldAlert, Plus, Trash2, Edit2, Send,
   Building2, Lock, Unlock, Database, Zap, Bell, Rocket,
-  Upload, Pencil, Save, UserCog, LayoutDashboard, BookOpen
+  Upload, Pencil, Save, UserCog, LayoutDashboard, BookOpen,
+  Brain, BadgeCheck
 } from 'lucide-react';
 
 const ROLE_META = {
@@ -139,10 +140,73 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminRole, setNewAdminRole] = useState('support');
   const [addingAdmin, setAddingAdmin] = useState(false);
+  // AI KYC scan
+  const [kycAiScan, setKycAiScan] = useState({}); // { [submissionId]: { scanning, fields, error } }
+  const [boAiScan, setBoAiScan] = useState({ scanning: false, fields: [], error: null });
 
   const notify = (msg, type = 'success') => {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 4000);
+  };
+
+  // AI doc extraction for KYC — used in front-office and back-office
+  const handleKycAiScan = async (file, submissionUserId, submissionId) => {
+    if (!file) return;
+    const key = submissionId || submissionUserId;
+    const setS = (patch) => {
+      if (submissionId) setKycAiScan(prev => ({ ...prev, [key]: { ...(prev[key]||{}), ...patch } }));
+      else setBoAiScan(prev => ({ ...prev, ...patch }));
+    };
+    setS({ scanning: true, fields: [], error: null });
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `admin_kyc_scan/${submissionUserId}_${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('kyc_documents').upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('kyc_documents').getPublicUrl(path);
+
+      const { data, error: aiErr } = await supabase.functions.invoke('kyc-ai-extract', {
+        body: { document_url: publicUrl, document_type: 'id_front' }
+      });
+      if (aiErr) throw aiErr;
+
+      const extracted = data?.extracted_fields || data?.fields || {};
+      const confs = data?.field_confidences || {};
+      const MAP = {
+        first_name: ['legal_first_name', 'First Name'],
+        last_name: ['legal_last_name', 'Last Name'],
+        middle_name: ['legal_middle_name', 'Middle Name'],
+        date_of_birth: ['date_of_birth', 'Date of Birth'],
+        nationality: ['nationality', 'Nationality'],
+        gender: ['gender', 'Gender'],
+        id_number: ['id_number', 'ID Number'],
+        expiry_date: ['id_expiry', 'Expiry Date'],
+        issuing_country: ['id_issuing_country', 'Issuing Country'],
+        country_of_birth: ['country_of_birth', 'Country of Birth'],
+      };
+      const filled = [];
+      Object.entries(MAP).forEach(([aiKey, [dbKey, label]]) => {
+        const val = extracted[aiKey];
+        if (!val) return;
+        filled.push({ label, value: val, dbKey, confidence: confs[aiKey] ?? data?.confidence ?? 0.8 });
+      });
+
+      // Patch the KYC submission in Supabase
+      if (filled.length > 0) {
+        const updates = {};
+        filled.forEach(f => { updates[f.dbKey] = f.value; });
+        if (updates.legal_first_name || updates.legal_last_name) {
+          updates.legal_full_name = [updates.legal_first_name, updates.legal_middle_name, updates.legal_last_name].filter(Boolean).join(' ');
+        }
+        await supabase.from('kyc_submissions').update(updates).eq('user_id', submissionUserId);
+      }
+
+      setS({ scanning: false, fields: filled, error: null });
+      notify(`AI extracted ${filled.length} field${filled.length !== 1 ? 's' : ''} from document`);
+    } catch (e) {
+      setS({ scanning: false, fields: [], error: e.message || 'AI extraction failed' });
+      notify('AI extraction failed: ' + (e.message || 'unknown error'), 'error');
+    }
   };
 
   // Check admin role on mount
@@ -1248,6 +1312,39 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           ))}
                         </div>
                       )}
+
+                      {/* ── AI Doc Scan ── */}
+                      {(() => {
+                        const scan = kycAiScan[sub.id] || {};
+                        return (
+                          <div className="bg-violet-950/20 border border-violet-700/25 rounded-2xl p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Brain size={12} className="text-violet-400"/>
+                              <span className="text-[9px] font-black uppercase tracking-widest text-violet-400">AI Doc Scan — Auto-Extract KYC Data</span>
+                              {scan.scanning && <Loader2 size={10} className="animate-spin text-violet-400 ml-auto"/>}
+                            </div>
+                            {!scan.scanning && scan.fields?.length > 0 && (
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {scan.fields.map(f => (
+                                  <div key={f.label} className="bg-emerald-950/30 border border-emerald-700/30 rounded-lg p-2">
+                                    <p className="text-[7px] font-black uppercase text-emerald-500">{f.label}</p>
+                                    <p className="text-[10px] font-bold text-white truncate">{f.value}</p>
+                                    <p className="text-[7px] text-emerald-400">{Math.round((f.confidence||0)*100)}% conf.</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {scan.error && <p className="text-[10px] text-red-400">{scan.error}</p>}
+                            <label className={`flex items-center gap-2 px-4 py-2.5 border border-dashed rounded-xl cursor-pointer transition-all text-[9px] font-black uppercase tracking-widest w-fit ${scan.scanning ? 'opacity-50 cursor-default border-slate-600 text-slate-600' : 'border-violet-600/50 hover:border-violet-500 text-violet-400 hover:bg-violet-950/20'}`}>
+                              {scan.scanning ? <Loader2 size={11} className="animate-spin"/> : <Upload size={11}/>}
+                              {scan.scanning ? 'Scanning...' : scan.fields?.length > 0 ? 'Scan Another Doc' : 'Upload Doc for AI Scan'}
+                              <input type="file" className="hidden" disabled={scan.scanning}
+                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                onChange={e => { if (e.target.files[0]) handleKycAiScan(e.target.files[0], sub.user_id, sub.id); e.target.value = ''; }} />
+                            </label>
+                          </div>
+                        );
+                      })()}
 
                       {/* ── Action row ── */}
                       <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-800">
@@ -2388,6 +2485,33 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 </a>
                               ))}
                             </div>
+                            {/* Back-office AI doc scan */}
+                            <div className="bg-violet-950/20 border border-violet-700/25 rounded-2xl p-4 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Brain size={11} className="text-violet-400"/>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-violet-400">AI Doc Scan — Extract KYC Fields</span>
+                                {boAiScan.scanning && <Loader2 size={9} className="animate-spin text-violet-400 ml-auto"/>}
+                              </div>
+                              {!boAiScan.scanning && boAiScan.fields?.length > 0 && (
+                                <div className="grid grid-cols-2 gap-2">
+                                  {boAiScan.fields.map(f => (
+                                    <div key={f.label} className="bg-emerald-950/30 border border-emerald-700/30 rounded-lg p-2">
+                                      <p className="text-[7px] font-black uppercase text-emerald-500">{f.label}</p>
+                                      <p className="text-[10px] font-bold text-white truncate">{f.value}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {boAiScan.error && <p className="text-[10px] text-red-400">{boAiScan.error}</p>}
+                              <label className={`flex items-center gap-2 px-3 py-2 border border-dashed rounded-xl cursor-pointer text-[9px] font-black uppercase w-fit ${boAiScan.scanning ? 'opacity-50 border-slate-600 text-slate-600 cursor-default' : 'border-violet-600/50 hover:border-violet-500 text-violet-400'}`}>
+                                {boAiScan.scanning ? <Loader2 size={10} className="animate-spin"/> : <Upload size={10}/>}
+                                {boAiScan.scanning ? 'Scanning...' : 'Upload Doc for AI Scan'}
+                                <input type="file" className="hidden" disabled={boAiScan.scanning}
+                                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                  onChange={e => { if (e.target.files[0]) handleKycAiScan(e.target.files[0], p.id, null); e.target.value = ''; }} />
+                              </label>
+                            </div>
+
                             <div className="flex gap-3 pt-2 border-t border-slate-800">
                               <button onClick={() => handleKycAction(p.id, 'approved', 'Admin manual approval')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><CheckCircle size={12}/> Approve KYC</button>
                               <button onClick={() => handleKycAction(p.id, 'needs_more_info', 'Admin requested more info')} className="px-4 py-2 bg-amber-600/30 border border-amber-700/40 text-amber-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><AlertTriangle size={12}/> Request Info</button>

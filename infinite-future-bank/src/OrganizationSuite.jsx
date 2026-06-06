@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
-import { 
-  Folder, PieChart, ArrowDownToLine, Users, 
+import {
+  Folder, PieChart, ArrowDownToLine, Users,
   Plus, Settings2, ArrowRight, Wallet, Target,
-  Send, MoreHorizontal, ShieldCheck, X, Loader2, Search, User
+  Send, MoreHorizontal, ShieldCheck, X, Loader2, Search, User,
+  ClipboardCheck
 } from 'lucide-react';
+import IFBAudit from './features/audit/IFBAudit';
 
 export default function OrganizationSuite({ session, balances, pockets, recipients }) {
   const [activeModule, setActiveModule] = useState('POCKETS'); 
@@ -309,10 +311,11 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
         
         <div className="flex bg-slate-100 p-2 rounded-2xl border border-slate-200 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
           {[
-            { id: 'POCKETS', label: 'Pockets' },
-            { id: 'BUDGETS', label: 'Budgets' },
-            { id: 'INCOME', label: 'Auto-Income' },
-            { id: 'RECIPIENTS', label: 'Recipients' }
+            { id: 'POCKETS',    label: 'Pockets'    },
+            { id: 'BUDGETS',    label: 'Budgets'    },
+            { id: 'INCOME',     label: 'Auto-Income'},
+            { id: 'RECIPIENTS', label: 'Recipients' },
+            { id: 'AUDIT',      label: 'IFB Audit'  },
           ].map((mod) => (
             <button 
               key={mod.id}
@@ -716,6 +719,13 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* MODULE 5: IFB AUDIT */}
+      {activeModule === 'AUDIT' && (
+        <div className="animate-in slide-in-from-right-4">
+          <IFBAudit session={session} balances={balances} />
         </div>
       )}
 
