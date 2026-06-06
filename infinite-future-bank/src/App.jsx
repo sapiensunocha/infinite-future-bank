@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { TranslationProvider } from './i18n/TranslationContext';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
-import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, Monitor, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap } from 'lucide-react';
 
 // When a chunk 404s (stale browser cache after a new deploy), force a full reload
 // so the browser fetches the new index.html with correct chunk references.
@@ -150,6 +150,8 @@ function MainApp() {
     if (isNative) return;
     if (/android/i.test(ua)) setMobileOS('android');
     else if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) setMobileOS('ios');
+    else if (/Mac/.test(ua) && !/iPhone|iPad|iPod/.test(ua)) setMobileOS('mac');
+    else if (/Win/.test(ua)) setMobileOS('windows');
   }, []);
 
   useEffect(() => { setShowPassword(false); }, [currentView]);
@@ -468,7 +470,7 @@ function MainApp() {
         {mobileOS === 'android' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
             <a
-              href="https://github.com/sapiensunocha/infinite-future-bank/releases/download/v1.3.5/DEUS-v1.3.5.apk"
+              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-v${__APP_VERSION__}.apk`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
@@ -479,7 +481,7 @@ function MainApp() {
                 </div>
                 <div className="text-left">
                   <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Install Android App</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Signed · v1.1.0 · Free</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Signed · v{__APP_VERSION__} · Free</p>
                 </div>
               </div>
               <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-500/30">
@@ -489,6 +491,77 @@ function MainApp() {
             <p className="mt-2 text-center text-[10px] text-slate-400 font-medium">
               Allow <span className="font-bold text-slate-300">Install unknown apps</span> in Android settings if prompted.
             </p>
+          </div>
+        )}
+
+        {/* ── macOS: Download DMG ── */}
+        {mobileOS === 'mac' && (
+          <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200 space-y-3">
+            <a
+              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-${__APP_VERSION__}-mac-arm64.dmg`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-blue-400 group-hover:text-blue-300 transition-colors shadow-inner border border-slate-700/50">
+                  <Monitor size={24} />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Download for Mac (Apple Silicon)</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">macOS · v{__APP_VERSION__} · DMG · M1/M2/M3/M4</p>
+                </div>
+              </div>
+              <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all border border-blue-500/30">
+                <DownloadCloud size={18} />
+              </div>
+            </a>
+            <a
+              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-${__APP_VERSION__}-mac-x64.dmg`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between bg-slate-900/60 backdrop-blur-2xl border border-slate-700/30 p-4 rounded-[2rem] hover:scale-[1.02] transition-transform group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-800/60 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-300 transition-colors border border-slate-700/30">
+                  <Monitor size={24} />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Download for Mac (Intel)</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">macOS · v{__APP_VERSION__} · DMG · x64</p>
+                </div>
+              </div>
+              <div className="w-10 h-10 bg-slate-700/50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all border border-slate-600/30">
+                <DownloadCloud size={18} />
+              </div>
+            </a>
+            <p className="text-center text-[10px] text-slate-400 font-medium">Open the DMG and drag DEUS to Applications. Right-click → Open on first launch if macOS warns about the developer.</p>
+          </div>
+        )}
+
+        {/* ── Windows: Download EXE ── */}
+        {mobileOS === 'windows' && (
+          <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200 space-y-3">
+            <a
+              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-${__APP_VERSION__}-win-x64.exe`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-sky-400 group-hover:text-sky-300 transition-colors shadow-inner border border-slate-700/50">
+                  <Monitor size={24} />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Download for Windows</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Windows 10/11 · v{__APP_VERSION__} · Installer · 64-bit</p>
+                </div>
+              </div>
+              <div className="w-10 h-10 bg-sky-500/20 rounded-full flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-all border border-sky-500/30">
+                <DownloadCloud size={18} />
+              </div>
+            </a>
+            <p className="text-center text-[10px] text-slate-400 font-medium">Run the installer. If Windows SmartScreen appears, click <span className="font-bold text-slate-300">"More info" → "Run anyway"</span>.</p>
           </div>
         )}
 

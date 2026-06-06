@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './services/supabaseClient';
+import VentureXLaunchpad from './features/venturex/VentureXLaunchpad';
 import {
   Rocket, Building2, Users, DollarSign, Target, TrendingUp,
   ShieldCheck, CheckCircle2, XCircle, Loader2, Plus, Edit3,
@@ -555,6 +556,7 @@ export default function VentureExchange({ session, balances, profile }) {
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {[
             { id:'HOME', label:'Dashboard' },
+            { id:'LAUNCHPAD', label:'🚀 Launchpad' },
             { id:'UPDATES', label: 'Updates' },
             { id:'COMPANY', label: myCompany ? 'Company Profile' : '+ Startup' },
             { id:'VDR', label: myCompany ? 'VDR & Docs' : null },
@@ -599,7 +601,12 @@ export default function VentureExchange({ session, balances, profile }) {
       </div>
 
       <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
-        
+
+        {/* ═════════ LAUNCHPAD ═════════ */}
+        {tab === 'LAUNCHPAD' && (
+          <VentureXLaunchpad session={session} myCompany={myCompany} />
+        )}
+
         {/* ═════════ SOCIAL FEED (UPDATES) ═════════ */}
         {tab === 'UPDATES' && (
           <div className="space-y-8 animate-in fade-in max-w-3xl mx-auto">
