@@ -58,6 +58,7 @@ const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
 const TapToPay          = lazyLoad(() => import('./features/terminal/TapToPay'));
 const VentureXPayRequest = lazyLoad(() => import('./features/venturex/VentureXPayRequest'));
 const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
+const IFBAudit          = lazyLoad(() => import('./features/audit/IFBAudit'));
 
 const ScreenLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -132,7 +133,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [tourStepIndex, setTourStepIndex] = useState(0);
 
   const tabTitles = {
-    NET_POSITION: 'Home', ACCOUNTS: 'My Accounts', ORGANIZE: 'Organize',
+    NET_POSITION: 'Home', ACCOUNTS: 'My Accounts', ORGANIZE: 'Organize', AUDIT: 'IFB Audit',
     INVEST: 'Investments', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
@@ -404,6 +405,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
             {activeTab === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
             {activeTab === 'CAPITAL' && <CapitalPlatform session={session} profile={profile} />}
+            {activeTab === 'AUDIT' && <IFBAudit session={session} balances={balances} />}
             </Suspense>
           </div>
 
