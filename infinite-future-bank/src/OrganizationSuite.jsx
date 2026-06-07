@@ -256,41 +256,61 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
   const handleSendMoneyToContact = async (e) => {
     e.preventDefault();
     const amount = parseFloat(sendAmount);
-    
+
     if (!amount || amount <= 0) return;
-    if (amount > balances.liquid_usd) {
+    if (amount > (balances?.liquid_usd || 0)) {
       triggerGlobalActionNotification('error', 'INSUFFICIENT LIQUIDITY: Transfer Aborted.');
+      await supabase.rpc('log_failed_operation', {
+        p_user_id: session.user.id,
+        p_operation: 'transfer',
+        p_error_message: `Insufficient balance. Tried to send $${amount.toFixed(2)} but only $${(balances?.liquid_usd||0).toFixed(2)} available.`,
+        p_error_code: 'INSUFFICIENT_BALANCE',
+        p_context: { amount, recipient: sendingRecipient?.name, recipient_id: sendingRecipient?.target_user_id }
+      });
+      return;
+    }
+
+    if (!sendingRecipient?.target_user_id) {
+      triggerGlobalActionNotification('error', 'Recipient not linked to an IFB account.');
       return;
     }
 
     setIsLoading(true);
     try {
-      // 1. Attempt Secure RPC P2P Transfer (If you set up the SQL below)
-      const { error: rpcError } = await supabase.rpc('p2p_transfer', {
+      const { data: result, error: rpcError } = await supabase.rpc('p2p_transfer', {
         sender_id: session.user.id,
         receiver_id: sendingRecipient.target_user_id,
         transfer_amount: amount
       });
 
-      if (rpcError) {
-        // Fallback: If RPC doesn't exist, log the transaction locally
-        const { error: fallbackError } = await supabase.from('transactions').insert([{
-          user_id: session.user.id,
-          amount: -amount,
-          transaction_type: 'send',
-          description: `Internal Transfer to ${sendingRecipient.name}`,
-          status: 'completed'
-        }]);
-        if (fallbackError) throw fallbackError;
-      }
+      if (rpcError) throw rpcError;
+      if (result && !result.success) throw new Error(result.error || 'Transfer declined by server');
 
-      triggerGlobalActionNotification('success', `${formatCurrency(amount)} securely routed to ${sendingRecipient.name}.`);
+      triggerGlobalActionNotification('success', `$${amount.toFixed(2)} securely routed to ${sendingRecipient.name}.`);
       setSendingRecipient(null);
       setSendAmount('');
       await fetchOrganizationData();
     } catch (err) {
       console.error(err);
-      triggerGlobalActionNotification('error', 'Network routing failed. Check balance.');
+      const reason = err.message || 'Transfer failed — please try again or contact support.';
+      triggerGlobalActionNotification('error', reason);
+      // Log failure for in-app + email notification
+      await supabase.rpc('log_failed_operation', {
+        p_user_id: session.user.id,
+        p_operation: 'transfer',
+        p_error_message: reason,
+        p_error_code: err.code || 'TRANSFER_ERROR',
+        p_context: { amount, recipient: sendingRecipient?.name, recipient_id: sendingRecipient?.target_user_id }
+      }).catch(() => {});
+      // Also send email notification about the failure
+      supabase.functions.invoke('send-operation-failed-email', {
+        body: {
+          to_email: session.user.email,
+          operation: 'Transfer',
+          error_message: reason,
+          context: { amount: `$${amount.toFixed(2)}`, recipient: sendingRecipient?.name }
+        }
+      }).catch(() => {});
     } finally {
       setIsLoading(false);
     }

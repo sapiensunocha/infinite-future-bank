@@ -1155,6 +1155,134 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
+
+              {/* ── KYC STATISTICS DASHBOARD ── */}
+              {stats && (
+                <div className="space-y-4">
+                  {/* Row 1 — Key numbers */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {[
+                      { label: 'Total Submissions', value: fmtNum((stats.kyc_total)||0), color: 'text-blue-400', bg: 'bg-blue-900/20 border-blue-700/30' },
+                      { label: 'Pending Review', value: fmtNum((stats.kyc_pending)||0), color: 'text-amber-400', bg: 'bg-amber-900/20 border-amber-700/30' },
+                      { label: 'Approved', value: fmtNum((stats.kyc_approved)||0), color: 'text-emerald-400', bg: 'bg-emerald-900/20 border-emerald-700/30' },
+                      { label: 'Rejected', value: fmtNum((stats.kyc_rejected)||0), color: 'text-red-400', bg: 'bg-red-900/20 border-red-700/30' },
+                      { label: 'AI Reviewing', value: fmtNum((stats.kyc_ai_reviewing)||0), color: 'text-purple-400', bg: 'bg-purple-900/20 border-purple-700/30' },
+                      { label: 'Needs Info', value: fmtNum((stats.kyc_needs_info)||0), color: 'text-orange-400', bg: 'bg-orange-900/20 border-orange-700/30' },
+                    ].map(s => (
+                      <div key={s.label} className={`rounded-2xl border p-4 ${s.bg}`}>
+                        <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Row 2 — Visual charts */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    {/* Approval Rate donut-style */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Approval Rate</p>
+                      {(() => {
+                        const total = (stats.kyc_approved||0) + (stats.kyc_rejected||0) + (stats.kyc_pending||0) + (stats.kyc_ai_reviewing||0) + (stats.kyc_needs_info||0);
+                        const appRate = total > 0 ? Math.round(((stats.kyc_approved||0) / total) * 100) : 0;
+                        const rejRate = total > 0 ? Math.round(((stats.kyc_rejected||0) / total) * 100) : 0;
+                        const pendRate = 100 - appRate - rejRate;
+                        return (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-4xl font-black text-emerald-400">{appRate}%</span>
+                              <span className="text-xs text-slate-500">of all submissions</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden flex">
+                              <div className="bg-emerald-500 h-full transition-all" style={{width:`${appRate}%`}}/>
+                              <div className="bg-red-500 h-full transition-all" style={{width:`${rejRate}%`}}/>
+                              <div className="bg-amber-500 h-full transition-all" style={{width:`${pendRate}%`}}/>
+                            </div>
+                            <div className="flex gap-3 text-[10px] font-bold">
+                              <span className="text-emerald-400">● Approved {appRate}%</span>
+                              <span className="text-red-400">● Rejected {rejRate}%</span>
+                              <span className="text-amber-400">● Pending {pendRate}%</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* AI Confidence + Risk breakdown */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">AI Confidence & Risk</p>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-xs font-bold mb-1">
+                            <span className="text-slate-400">Avg AI Confidence</span>
+                            <span className="text-blue-400">{stats.kyc_avg_ai_confidence || '—'}%</span>
+                          </div>
+                          <div className="w-full bg-slate-800 rounded-full h-2">
+                            <div className="bg-blue-500 h-full rounded-full" style={{width:`${stats.kyc_avg_ai_confidence||0}%`}}/>
+                          </div>
+                        </div>
+                        <div className="pt-2 space-y-2">
+                          {[
+                            { label: 'Low Risk', val: stats.kyc_risk_low||0, color: 'bg-emerald-500', text: 'text-emerald-400' },
+                            { label: 'Medium Risk', val: stats.kyc_risk_medium||0, color: 'bg-amber-500', text: 'text-amber-400' },
+                            { label: 'High Risk', val: stats.kyc_risk_high||0, color: 'bg-red-500', text: 'text-red-400' },
+                          ].map(r => {
+                            const riskTotal = (stats.kyc_risk_low||0)+(stats.kyc_risk_medium||0)+(stats.kyc_risk_high||0);
+                            const pct = riskTotal > 0 ? Math.round((r.val/riskTotal)*100) : 0;
+                            return (
+                              <div key={r.label}>
+                                <div className="flex justify-between text-[10px] font-bold mb-1">
+                                  <span className={r.text}>{r.label}</span>
+                                  <span className="text-slate-400">{r.val} · {pct}%</span>
+                                </div>
+                                <div className="w-full bg-slate-800 rounded-full h-1.5">
+                                  <div className={`${r.color} h-full rounded-full`} style={{width:`${pct}%`}}/>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* User verification funnel */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Verification Funnel</p>
+                      <div className="space-y-3">
+                        {[
+                          { label: 'Total Users', val: stats.total_users||0, color: 'bg-slate-600', pct: 100 },
+                          { label: 'KYC Submitted', val: stats.kyc_total||0, color: 'bg-blue-600', pct: stats.total_users > 0 ? Math.round(((stats.kyc_total||0)/stats.total_users)*100) : 0 },
+                          { label: 'Verified', val: stats.verified_users||0, color: 'bg-emerald-600', pct: stats.total_users > 0 ? Math.round(((stats.verified_users||0)/stats.total_users)*100) : 0 },
+                        ].map(f => (
+                          <div key={f.label}>
+                            <div className="flex justify-between text-[10px] font-bold mb-1">
+                              <span className="text-slate-300">{f.label}</span>
+                              <span className="text-slate-400">{fmtNum(f.val)} ({f.pct}%)</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-2">
+                              <div className={`${f.color} h-full rounded-full`} style={{width:`${f.pct}%`}}/>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="pt-2 border-t border-slate-800">
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-slate-500 font-bold">New Users (7d)</span>
+                            <span className="text-[10px] text-blue-400 font-black">+{fmtNum(stats.new_users_7d||0)}</span>
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            <span className="text-[10px] text-slate-500 font-bold">Failed Ops (24h)</span>
+                            <span className={`text-[10px] font-black ${(stats.failed_ops_24h||0) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmtNum(stats.failed_ops_24h||0)}</span>
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            <span className="text-[10px] text-slate-500 font-bold">30d Txn Volume</span>
+                            <span className="text-[10px] text-amber-400 font-black">{fmtUSD(stats.txn_volume||0)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
                 <div className="space-y-4">
                   {kycQueue.length === 0 ? (
