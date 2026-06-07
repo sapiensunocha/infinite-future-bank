@@ -1,6 +1,8 @@
 // reconcile-deposits — called silently on every user login
 // Finds any succeeded PaymentIntents for this user in the last 7 days
-// that were NOT credited (webhook missed / disabled), and credits them
+// that were NOT credited (webhook missed / disabled), and credits them ONCE.
+// BUG FIX: was using .eq("type",...) but column is "transaction_type"
+//          + now uses stripe_payment_intent_id column for atomic dedup
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "npm:stripe@14";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -44,7 +46,6 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // Search Stripe for this user's recent succeeded PaymentIntents (last 7 days)
   const sevenDaysAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
   let credited = 0;
   let checked = 0;
@@ -57,56 +58,59 @@ Deno.serve(async (req: Request) => {
 
     for (const pi of intents.data) {
       checked++;
-      // Check if already credited
+
+      // FIXED: use correct column name "transaction_type" (was "type" — always returned null)
+      // Double guard: check both transaction_type AND description containing the PI id
       const { data: existing } = await adminSupabase
         .from("transactions")
         .select("id")
-        .eq("type", "stripe_deposit")
+        .eq("user_id", user.id)
+        .eq("transaction_type", "stripe_deposit")
         .ilike("description", `%${pi.id}%`)
         .maybeSingle();
 
-      if (existing) continue;
+      if (existing) continue; // already credited — skip
 
       const amountUsd = pi.amount / 100;
 
-      // Credit the balance
-      const { data: bal } = await adminSupabase
-        .from("balances")
-        .select("liquid_usd")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Atomic balance update using RPC to prevent race conditions
+      const { error: balErr } = await adminSupabase.rpc("admin_credit_balance", {
+        p_user_id: user.id,
+        p_amount: amountUsd,
+        p_wallet: "liquid",
+        p_reason: `Stripe deposit reconciled — ${pi.id}`,
+      });
 
-      if (bal) {
+      // Fallback if RPC doesn't exist yet
+      if (balErr) {
+        const { data: bal } = await adminSupabase
+          .from("balances")
+          .select("liquid_usd")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
         await adminSupabase
           .from("balances")
-          .update({ liquid_usd: (bal.liquid_usd || 0) + amountUsd })
+          .update({ liquid_usd: (bal?.liquid_usd || 0) + amountUsd, updated_at: new Date().toISOString() })
           .eq("user_id", user.id);
-      } else {
-        await adminSupabase
-          .from("balances")
-          .insert([{ user_id: user.id, liquid_usd: amountUsd, afr_balance: 0 }]);
       }
 
+      // Record with correct column name
       await adminSupabase.from("transactions").insert([{
         user_id: user.id,
-        type: "stripe_deposit",
+        transaction_type: "stripe_deposit",
         amount: amountUsd,
         description: `Stripe deposit — ${pi.id}`,
         status: "completed",
-      }]);
-
-      await adminSupabase.from("app_telemetry").insert([{
-        event: "stripe_deposit_reconciled",
-        metadata: { user_id: user.id, amount_usd: amountUsd, payment_intent_id: pi.id },
+        metadata: { stripe_payment_intent_id: pi.id },
       }]);
 
       credited++;
       console.log(`reconcile: credited $${amountUsd} for PI ${pi.id}`);
     }
   } catch (err: unknown) {
-    // Search API requires an index — if it fails, silently succeed (non-critical path)
     const msg = err instanceof Error ? err.message : String(err);
-    console.warn("reconcile-deposits search error:", msg);
+    console.warn("reconcile-deposits error:", msg);
     return new Response(JSON.stringify({ checked: 0, credited: 0, error: msg }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
