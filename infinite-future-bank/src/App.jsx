@@ -133,15 +133,16 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    const loadStats = async () => {
+    // Defer stats fetch — don't block login page initial render
+    const t = setTimeout(async () => {
       try {
         const { data, error } = await supabase.rpc('get_network_stats');
         if (data && !error) {
           setNetworkStats({ users: data.users || 0, orgs: data.orgs || 0, countries: data.countries || 0 });
         }
-      } catch (err) { console.error("Failed to sync network stats."); }
-    };
-    loadStats();
+      } catch (err) { /* non-critical */ }
+    }, 2000);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {

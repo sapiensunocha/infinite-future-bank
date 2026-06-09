@@ -2,10 +2,17 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { readFileSync } from 'fs';
+import viteCompression from 'vite-plugin-compression';
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Generate .gz — serve package auto-serves them: 1MB vendor-misc → ~280KB
+    viteCompression({ algorithm: 'gzip', ext: '.gz', threshold: 10240 }),
+    // Brotli is 20% smaller than gzip, supported by all modern browsers incl. Safari
+    viteCompression({ algorithm: 'brotliCompress', ext: '.br', threshold: 10240 }),
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
@@ -28,7 +35,7 @@ export default defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 800,
     rollupOptions: {
-      external: ['puppeteer'], // Node-only lib — never bundle into browser build
+      external: ['puppeteer'],
       output: {
         manualChunks(id) {
           // Supabase — loads early for auth
@@ -43,8 +50,13 @@ export default defineConfig({
           if (id.includes('jspdf')) return 'vendor-pdf';
           // Stripe
           if (id.includes('@stripe/')) return 'vendor-stripe';
-          // All other node_modules (including React) in one shared chunk
-          // NOTE: do NOT split react separately — it creates circular dependency with vendor-misc
+          // React core — isolated so Safari's JIT can cache it across deploys
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'vendor-react';
+          // Router
+          if (id.includes('node_modules/react-router')) return 'vendor-router';
+          // Icons — large but static
+          if (id.includes('node_modules/lucide-react')) return 'vendor-icons';
+          // Everything else
           if (id.includes('node_modules/')) return 'vendor-misc';
         },
       },
