@@ -41,7 +41,7 @@ function isAsset(urlPath) {
 
 function sendFile(res, filePath, encoding, urlPath) {
   const stat = (() => { try { return fs.statSync(filePath); } catch { return null; } })();
-  if (!stat) return false;
+  if (!stat || stat.isDirectory()) return false;
   const headers = {
     'Content-Type': getMime(filePath),
     'Content-Length': stat.size,
