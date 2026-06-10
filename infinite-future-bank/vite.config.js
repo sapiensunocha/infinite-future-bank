@@ -56,6 +56,12 @@ export default defineConfig({
           if (id.includes('node_modules/react-router')) return 'vendor-router';
           // Icons — large but static
           if (id.includes('node_modules/lucide-react')) return 'vendor-icons';
+          // Tour — only loaded when user has not completed tour
+          if (id.includes('node_modules/react-joyride') || id.includes('node_modules/@floating-ui')) return 'vendor-tour';
+          // AI SDK — only loaded inside AI feature screens
+          if (id.includes('node_modules/@google/generative-ai')) return 'vendor-ai';
+          // QR scanner — only loaded when scanner is opened
+          if (id.includes('node_modules/@yudiel/react-qr-scanner') || id.includes('node_modules/react-qr-code')) return 'vendor-qr';
           // Everything else
           if (id.includes('node_modules/')) return 'vendor-misc';
         },

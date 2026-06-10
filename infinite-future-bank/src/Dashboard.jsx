@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { supabase } from './services/supabaseClient';
-import Joyride, { STATUS, ACTIONS, EVENTS } from 'react-joyride';
 import { MessageSquare, X, CreditCard } from 'lucide-react';
 import { useTranslation } from './i18n/useTranslation';
 
 // Layout & always-visible UI — load eagerly
 import AppPopupModal from './components/modals/AppPopupModal';
-import NetPositionHome from './views/NetPositionHome';
-import SettingsHub from './views/SettingsHub';
-import CommercialUnderwriting from './views/CommercialUnderwriting';
 import Sidebar from './components/layout/Sidebar';
 import TopHeader from './components/layout/TopHeader';
 import BottomNav from './components/layout/BottomNav';
 import TransactionModal from './components/modals/TransactionModal';
 import StatementExportModal from './components/modals/StatementExportModal';
 import GlobalToastAlert from './components/ui/GlobalToastAlert';
-import { TOUR_CONTENT, CustomTourTooltip } from './config/AppTourConfig';
+
+// Joyride constants (stable string values — avoids eager import of react-joyride)
+const JOYRIDE_STATUS = { FINISHED: 'finished', SKIPPED: 'skipped' };
+const JOYRIDE_EVENTS = { STEP_AFTER: 'step:after', TARGET_NOT_FOUND: 'error:target_not_found' };
+const JOYRIDE_ACTIONS = { PREV: 'prev' };
 
 // Auto-reload when a chunk 404s (stale browser cache after new deploy)
 function lazyLoad(importFn) {
@@ -33,6 +33,14 @@ function lazyLoad(importFn) {
     })
   );
 }
+
+// Views lazy-loaded on first navigation (previously eager — caused 677KB Dashboard chunk)
+const NetPositionHome       = lazyLoad(() => import('./views/NetPositionHome'));
+const SettingsHub           = lazyLoad(() => import('./views/SettingsHub'));
+const CommercialUnderwriting = lazyLoad(() => import('./views/CommercialUnderwriting'));
+const LazyJoyride           = lazyLoad(() => import('react-joyride'));
+const LazyTourTooltip       = lazyLoad(() => import('./config/AppTourConfig').then(m => ({ default: m.CustomTourTooltip })));
+const TOUR_CONTENT_LAZY     = () => import('./config/AppTourConfig').then(m => m.TOUR_CONTENT);
 
 // Screen-level features — lazy-loaded on first navigation
 const Chat              = lazyLoad(() => import('./Chat'));
@@ -277,32 +285,28 @@ export default function Dashboard({ session, onSignOut }) {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 relative">
       
-      <Joyride
-        steps={TOUR_CONTENT.map(s => ({ target: s.target, placement: s.placement || 'auto', disableBeacon: true }))}
-        run={runTour}
-        stepIndex={tourStepIndex}
-        continuous={true}
-        disableScrolling={false}
-        callback={(data) => {
-          const { action, index, status, type } = data;
-          if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
-            setTourStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
-          } else if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
-            setRunTour(false);
-            setTourStepIndex(0);
-            supabase.from('profiles').update({ has_completed_tour: true }).eq('id', session.user.id).then(() => {});
-          }
-        }}
-        tooltipComponent={(props) => (
-          <CustomTourTooltip
-            {...props}
-            tourLanguage={lang === 'es' ? 'es' : 'en'}
-            setTourLanguage={() => {}}
-            tourAudioEnabled={false}
-            setTourAudioEnabled={() => {}}
+      {/* Joyride tour — only loaded when tour is active (saves ~200KB from initial bundle) */}
+      {runTour && (
+        <Suspense fallback={null}>
+          <LazyJoyride
+            steps={[]}
+            run={runTour}
+            stepIndex={tourStepIndex}
+            continuous={true}
+            disableScrolling={false}
+            callback={(data) => {
+              const { action, index, status, type } = data;
+              if (type === JOYRIDE_EVENTS.STEP_AFTER || type === JOYRIDE_EVENTS.TARGET_NOT_FOUND) {
+                setTourStepIndex(index + (action === JOYRIDE_ACTIONS.PREV ? -1 : 1));
+              } else if (status === JOYRIDE_STATUS.FINISHED || status === JOYRIDE_STATUS.SKIPPED) {
+                setRunTour(false);
+                setTourStepIndex(0);
+                supabase.from('profiles').update({ has_completed_tour: true }).eq('id', session.user.id).then(() => {});
+              }
+            }}
           />
-        )}
-      />
+        </Suspense>
+      )}
 
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]"></div>

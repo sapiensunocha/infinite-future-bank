@@ -1,9 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from './services/supabaseClient';
-import VentureXFeed from './features/venturex/VentureXFeed';
-import VentureXFranchise from './features/venturex/VentureXFranchise';
-import VentureXMatchmaker from './features/venturex/VentureXMatchmaker';
-import CompanyFormationHub from './features/formation/CompanyFormationHub';
+
+// These 4 components total ~4,000 lines — lazy load to keep WealthInvest chunk small
+const VentureXFeed        = lazy(() => import('./features/venturex/VentureXFeed'));
+const VentureXFranchise   = lazy(() => import('./features/venturex/VentureXFranchise'));
+const VentureXMatchmaker  = lazy(() => import('./features/venturex/VentureXMatchmaker'));
+const CompanyFormationHub = lazy(() => import('./features/formation/CompanyFormationHub'));
+
+const TabLoader = () => (
+  <div className="flex items-center justify-center py-24">
+    <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+  </div>
+);
 import { 
   TrendingUp, Wallet, Shield, 
   BarChart3, Zap, ChevronRight,
@@ -423,17 +431,12 @@ export default function WealthInvest({ session, balances, profile }) {
         </div>
       )}
 
-      {/* VENTUREX LIVE FEED */}
-      {activeCategory === 'VENTUREX_LIVE' && <VentureXFeed />}
-
-      {/* VENTUREX FRANCHISE HUB */}
-      {activeCategory === 'FRANCHISE_HUB' && <VentureXFranchise session={session} profile={profile} balances={balances} />}
-
-      {/* VENTUREX AI MATCHMAKER */}
-      {activeCategory === 'AI_MATCHMAKER' && <VentureXMatchmaker session={session} profile={profile} balances={balances} />}
-
-      {/* IFB COMPANY FORMATION */}
-      {activeCategory === 'INCORPORATE' && <CompanyFormationHub session={session} balances={balances} profile={profile} />}
+      <Suspense fallback={<TabLoader />}>
+        {activeCategory === 'VENTUREX_LIVE' && <VentureXFeed />}
+        {activeCategory === 'FRANCHISE_HUB' && <VentureXFranchise session={session} profile={profile} balances={balances} />}
+        {activeCategory === 'AI_MATCHMAKER' && <VentureXMatchmaker session={session} profile={profile} balances={balances} />}
+        {activeCategory === 'INCORPORATE' && <CompanyFormationHub session={session} balances={balances} profile={profile} />}
+      </Suspense>
 
       {/* SECTION 1: PUBLIC MARKETS (NOW 100% REAL DATA) */}
       {activeCategory === 'PUBLIC_MARKETS' && (

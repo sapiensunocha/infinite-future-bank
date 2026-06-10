@@ -1,17 +1,25 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { lazy, Suspense } from 'react';
+import { X, Loader2 } from 'lucide-react';
 
-import Payroll from '../../Payroll';
-import PayBills from '../../PayBills';
-import SmartContracts from '../../SmartContracts';
-import Loans from '../../Loans';
-import NpoHub from '../../NpoHub';
-import BillingTerminal from '../../features/commerce/BillingTerminal';
-import TicketGate from '../../features/commerce/TicketGate';
-import VentureExchange from '../../VentureExchange';
-import P2PExchange from '../../P2PExchange';
-import ClyrixHub from '../../features/ClyrixHub';
-import PraxciHub from '../../features/PraxciHub';
+// Lazy-load every popup screen — only one is ever visible at a time
+// Previously all were static imports bundling 11 heavy components into Dashboard
+const Payroll         = lazy(() => import('../../Payroll'));
+const PayBills        = lazy(() => import('../../PayBills'));
+const SmartContracts  = lazy(() => import('../../SmartContracts'));
+const Loans           = lazy(() => import('../../Loans'));
+const NpoHub          = lazy(() => import('../../NpoHub'));
+const BillingTerminal = lazy(() => import('../../features/commerce/BillingTerminal'));
+const TicketGate      = lazy(() => import('../../features/commerce/TicketGate'));
+const VentureExchange = lazy(() => import('../../VentureExchange'));
+const P2PExchange     = lazy(() => import('../../P2PExchange'));
+const ClyrixHub       = lazy(() => import('../../features/ClyrixHub'));
+const PraxciHub       = lazy(() => import('../../features/PraxciHub'));
+
+const ModalLoader = () => (
+  <div className="flex items-center justify-center h-48">
+    <Loader2 className="animate-spin text-blue-500" size={28} />
+  </div>
+);
 
 const TITLES = {
   PAYROLL:           'Corporate Payroll',
@@ -58,19 +66,21 @@ export default function AppPopupModal({
           </div>
         </div>
 
-        {/* Scrollable content */}
+        {/* Scrollable content — each screen loads only when first opened */}
         <div className="flex-1 overflow-y-auto no-scrollbar scroll-container bg-slate-50 p-4 md:p-8">
-          {activeAppPopup === 'PAYROLL'           && <Payroll session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} />}
-          {activeAppPopup === 'BILLS'             && <PayBills session={session} balances={balances} fetchAllData={fetchAllData} />}
-          {activeAppPopup === 'CONTRACTS'         && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
-          {activeAppPopup === 'LOANS'             && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
-          {activeAppPopup === 'NPO'               && <NpoHub session={session} />}
-          {activeAppPopup === 'MERCHANT_BILLING'  && <BillingTerminal session={session} balances={balances} fetchAllData={fetchAllData} />}
-          {activeAppPopup === 'MERCHANT_TICKETS'  && <TicketGate session={session} balances={balances} fetchAllData={fetchAllData} />}
-          {activeAppPopup === 'VENTURE_EXCHANGE'  && <VentureExchange session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
-          {activeAppPopup === 'P2P_EXCHANGE'      && <P2PExchange session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
-          {activeAppPopup === 'CLYRIX'            && <ClyrixHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
-          {activeAppPopup === 'PRAXCI'            && <PraxciHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
+          <Suspense fallback={<ModalLoader />}>
+            {activeAppPopup === 'PAYROLL'           && <Payroll session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} />}
+            {activeAppPopup === 'BILLS'             && <PayBills session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'CONTRACTS'         && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'LOANS'             && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
+            {activeAppPopup === 'NPO'               && <NpoHub session={session} />}
+            {activeAppPopup === 'MERCHANT_BILLING'  && <BillingTerminal session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'MERCHANT_TICKETS'  && <TicketGate session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'VENTURE_EXCHANGE'  && <VentureExchange session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
+            {activeAppPopup === 'P2P_EXCHANGE'      && <P2PExchange session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'CLYRIX'            && <ClyrixHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
+            {activeAppPopup === 'PRAXCI'            && <PraxciHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
+          </Suspense>
         </div>
       </div>
     </div>

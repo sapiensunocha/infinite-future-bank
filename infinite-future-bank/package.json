@@ -9,7 +9,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "start": "serve dist --config serve.json",
+        "start": "node server.cjs",
         "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview",
         "electron:dev": "NODE_ENV=development electron electron/main.cjs",
