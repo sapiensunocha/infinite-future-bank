@@ -9,3 +9,4 @@ release/
 .git/
 ifb-mcp-server/
 db_cluster-01-08-2025@02-56-14-DEUS.backup
+!dist/
