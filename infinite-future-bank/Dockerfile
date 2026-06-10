@@ -1,18 +1,36 @@
-FROM node:20-slim
+# Stage 1 — build the Vite app
+FROM node:20-slim AS builder
 WORKDIR /app
 
-# Copy manifests first for layer caching
 COPY package*.json ./
 
-# Skip large binary downloads for production-only install
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
 ENV ELECTRON_SKIP_DIST_DOWNLOAD=true
 
-RUN npm install --omit=dev --ignore-scripts=false
+# Install ALL deps (devDeps needed for vite + compression plugins)
+RUN npm install
 
-# Copy the rest of the app (dist/ is pre-built and included)
 COPY . .
+RUN npm run build
+
+# Stage 2 — lean production image
+FROM node:20-slim
+WORKDIR /app
+
+COPY package*.json ./
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
+ENV ELECTRON_SKIP_DIST_DOWNLOAD=true
+
+RUN npm install --omit=dev
+
+# Copy built assets and server from builder
+COPY --from=builder /app/dist ./dist
+COPY server.cjs ./
 
 EXPOSE 3000
 CMD ["node", "server.cjs"]
