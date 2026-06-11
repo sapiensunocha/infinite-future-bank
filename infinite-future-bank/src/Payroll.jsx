@@ -68,6 +68,7 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
 
   const executePayroll = async () => {
     if (!payrollConfirm) return;
+    if (isLoading) return;
     const { totalGross, calculatedFee, activeEmps } = payrollConfirm;
     setPayrollConfirm(null);
     setIsLoading(true);

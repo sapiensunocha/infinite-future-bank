@@ -679,7 +679,18 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           <Field label="Document Number *"><input className={inp} value={form.id_number} onChange={e => set('id_number', e.target.value)} placeholder="As printed on ID"/></Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Expiry Date"><input type="date" className={inp} value={form.id_expiry} onChange={e => set('id_expiry', e.target.value)}/></Field>
+          <Field label="Expiry Date">
+            <input type="date" className={inp} value={form.id_expiry} onChange={e => {
+              const val = e.target.value;
+              if (val && new Date(val) < new Date()) {
+                e.target.setCustomValidity('ID document is expired. Please use a valid document.');
+                e.target.reportValidity();
+              } else {
+                e.target.setCustomValidity('');
+              }
+              set('id_expiry', val);
+            }}/>
+          </Field>
           <Field label="Issuing Country"><input className={inp} value={form.id_issuing_country} onChange={e => set('id_issuing_country', e.target.value)}/></Field>
         </div>
         <Field label="Issuing Authority"><input className={inp} value={form.id_issuing_authority} onChange={e => set('id_issuing_authority', e.target.value)} placeholder="e.g. Home Affairs, DVLA, State Dept"/></Field>

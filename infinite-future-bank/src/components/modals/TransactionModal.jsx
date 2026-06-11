@@ -56,8 +56,9 @@ export default function TransactionModal({
 
       if (asset === 'AFR') {
         const receiverAddress = e.target.receiverAddress.value;
-        if (!receiverAddress) {
-          triggerGlobalActionNotification('error', 'Enter a valid wallet address.');
+        const isValidAFRAddress = (addr) => /^0x[0-9a-fA-F]{40}$/.test(addr);
+        if (!receiverAddress || !isValidAFRAddress(receiverAddress)) {
+          triggerGlobalActionNotification('error', 'Enter a valid AFR wallet address (0x followed by 40 hex characters).');
           setIsLoading(false); return;
         }
         try {
