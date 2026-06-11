@@ -8,8 +8,32 @@ import {
   ShieldCheck, ShieldAlert, Plus, Trash2, Edit2, Send,
   Building2, Lock, Unlock, Database, Zap, Bell, Rocket,
   Upload, Pencil, Save, UserCog, LayoutDashboard, BookOpen,
-  Brain, BadgeCheck
+  Brain, BadgeCheck, ShoppingBag, Truck, Package, MapPin
 } from 'lucide-react';
+
+const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
+async function sendStatusEmail(toEmail, orderShortId, status, notes, tracking) {
+  const statusLabel = {
+    sourcing: 'We are sourcing your item', processing: 'Your order is being processed',
+    shipped: 'Your order has shipped!', out_for_delivery: 'Your order is out for delivery',
+    delivered: 'Your order has been delivered!', cancelled: 'Your order has been cancelled',
+  }[status] || status;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+      body: JSON.stringify({
+        from: 'DEUS Market <noreply@infinitefuturebank.org>',
+        to: toEmail,
+        subject: `Order ${orderShortId} — ${statusLabel}`,
+        html: `<h2>Order Update</h2><p>Your order <strong>${orderShortId}</strong> status: <strong>${statusLabel}</strong></p>
+               ${tracking ? `<p>Tracking: <strong>${tracking}</strong></p>` : ''}
+               ${notes ? `<p>Note from IFB: ${notes}</p>` : ''}
+               <p>Log in to DEUS Market → My Orders to track your order in real time.</p>`,
+      }),
+    });
+  } catch (_) {}
+}
 
 const ROLE_META = {
   super:   { label: 'Super Admin',    color: 'text-red-400    bg-red-900/30    border-red-700',    desc: 'Full platform access' },
@@ -30,6 +54,7 @@ const TABS = [
   { id: 'support',       label: 'Support',         icon: Ticket,          roles: ['super','support','ops'] },
   { id: 'applications',  label: 'IFB Applications',icon: Rocket,          roles: ['super','ops','content'] },
   { id: 'venturex',      label: 'VentureX',        icon: Globe,           roles: ['super','content'] },
+  { id: 'market_orders', label: 'Market Orders',   icon: ShoppingBag,     roles: ['super','ops','finance'] },
   { id: 'backoffice',    label: 'Back Office',     icon: Database,        roles: ['super'] },
   { id: 'announce',      label: 'Broadcast',       icon: Bell,            roles: ['super','content','ops'] },
   { id: 'roles',         label: 'Admin Roles',     icon: Shield,          roles: ['super'] },
@@ -112,6 +137,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const [boUser, setBoUser] = useState(null);
   const [boSearch, setBoSearch] = useState('');
   const [boLoading, setBoLoading] = useState(false);
+  // Market Orders
+  const [mktOrders, setMktOrders] = useState([]);
+  const [mktLoading, setMktLoading] = useState(false);
+  const [mktFilter, setMktFilter] = useState('pending');
+  const [mktSelected, setMktSelected] = useState(null);
+  const [mktEdits, setMktEdits] = useState({});
+  const [mktSaving, setMktSaving] = useState(false);
   const [boEdits, setBoEdits] = useState({});
   const [boTab, setBoTab] = useState('profile');
   const [boOverview, setBoOverview] = useState(null);
@@ -351,7 +383,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
     if (activeTab === 'venturex') loadVentureX();
     if (activeTab === 'applications') loadApplications();
     if (activeTab === 'roles') loadAdminRoles();
+    if (activeTab === 'market_orders') loadMktOrders();
   }, [activeTab, adminRole]);
+
+  const loadMktOrders = useCallback(async () => {
+    setMktLoading(true);
+    try {
+      const { data } = await supabase.rpc('admin_get_market_orders');
+      setMktOrders(data || []);
+    } catch(e) { notify(e.message, 'error'); }
+    finally { setMktLoading(false); }
+  }, []);
 
   // KYC actions
   const [kycNote, setKycNote] = useState('');
@@ -2847,6 +2889,170 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black text-sm uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all">
                   {broadcasting ? <><Loader2 size={16} className="animate-spin"/>Sending...</> : <><Bell size={16}/>Broadcast to All Users</>}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* ─── MARKET ORDERS ─── */}
+          {activeTab === 'market_orders' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-white">DEUS Market Orders</h2>
+                <button onClick={loadMktOrders} disabled={mktLoading} className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 text-xs font-black uppercase rounded-xl hover:bg-slate-700 transition-colors disabled:opacity-50">
+                  <RefreshCw size={13} className={mktLoading ? 'animate-spin' : ''}/> Refresh
+                </button>
+              </div>
+
+              {/* Stats */}
+              {(() => {
+                const counts = { pending: 0, sourcing: 0, processing: 0, shipped: 0, out_for_delivery: 0, delivered: 0, cancelled: 0 };
+                mktOrders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+                return (
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                    {[['pending','Pending','text-amber-400','bg-amber-900/20'],['sourcing','Sourcing','text-blue-400','bg-blue-900/20'],['processing','Processing','text-indigo-400','bg-indigo-900/20'],['shipped','Shipped','text-violet-400','bg-violet-900/20'],['delivered','Delivered','text-emerald-400','bg-emerald-900/20'],['cancelled','Cancelled','text-red-400','bg-red-900/20']].map(([s,l,c,bg]) => (
+                      <button key={s} onClick={() => setMktFilter(s)}
+                        className={`${bg} border ${mktFilter===s?'border-white/20':'border-slate-800'} rounded-2xl p-3 text-center transition-all hover:border-white/20`}>
+                        <p className={`text-2xl font-black ${c}`}>{counts[s]||0}</p>
+                        <p className="text-[9px] font-black uppercase text-slate-500 mt-0.5">{l}</p>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* Orders list + detail panel */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* List */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase text-slate-500 mb-3">
+                    {mktFilter.toUpperCase()} ORDERS ({mktOrders.filter(o=>o.status===mktFilter).length})
+                  </p>
+                  {mktLoading ? (
+                    <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-blue-400"/></div>
+                  ) : mktOrders.filter(o => o.status === mktFilter).length === 0 ? (
+                    <div className="text-center py-12 text-slate-600">
+                      <ShoppingBag size={32} className="mx-auto mb-2 opacity-30"/>
+                      <p className="text-sm font-semibold">No {mktFilter} orders</p>
+                    </div>
+                  ) : mktOrders.filter(o => o.status === mktFilter).map(order => (
+                    <button key={order.id} onClick={() => { setMktSelected(order); setMktEdits({ status: order.status, tracking_number: order.tracking_number||'', tracking_url: order.tracking_url||'', admin_notes: order.admin_notes||'', vendor_source: order.vendor_source||'', estimated_delivery: order.estimated_delivery||'' }); }}
+                      className={`w-full text-left bg-slate-900 border rounded-2xl p-4 transition-all hover:border-slate-600 ${mktSelected?.id===order.id?'border-blue-500':'border-slate-800'}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-white font-mono">{order.id.slice(0,8).toUpperCase()}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 truncate">{order.user_name || order.user_email}</p>
+                          <p className="text-[10px] text-slate-600 mt-1">
+                            {(order.items||[]).length} item{(order.items||[]).length!==1?'s':''} · {new Date(order.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-black text-white">${Number(order.total_usd).toFixed(2)}</p>
+                          {order.vendor_source && <p className="text-[9px] text-slate-500 mt-0.5">via {order.vendor_source}</p>}
+                        </div>
+                      </div>
+                      {/* Items preview */}
+                      <div className="mt-2 space-y-0.5">
+                        {(order.items||[]).slice(0,2).map((item,i) => (
+                          <p key={i} className="text-[10px] text-slate-500">{item.quantity}× {item.product_name}</p>
+                        ))}
+                        {(order.items||[]).length > 2 && <p className="text-[10px] text-slate-600">+{(order.items||[]).length-2} more</p>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Detail / edit panel */}
+                {mktSelected ? (
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 self-start sticky top-4">
+                    <div>
+                      <p className="text-xs font-black text-white font-mono">{mktSelected.id.slice(0,8).toUpperCase()}</p>
+                      <p className="text-[10px] text-slate-400">{mktSelected.user_name} · {mktSelected.user_email}</p>
+                      <p className="text-lg font-black text-white mt-1">${Number(mktSelected.total_usd).toFixed(2)}</p>
+                    </div>
+
+                    {/* Items */}
+                    <div className="space-y-1 border-t border-slate-800 pt-3">
+                      {(mktSelected.items||[]).map((item,i) => (
+                        <div key={i} className="flex justify-between text-xs">
+                          <span className="text-slate-400">{item.quantity}× {item.product_name}</span>
+                          <span className="text-white font-bold">${Number(item.line_total).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Edit fields */}
+                    <div className="space-y-3 border-t border-slate-800 pt-3">
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Status</label>
+                        <select value={mktEdits.status||''} onChange={e=>setMktEdits(p=>({...p,status:e.target.value}))}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500">
+                          {['pending','sourcing','processing','shipped','out_for_delivery','delivered','cancelled'].map(s=>(
+                            <option key={s} value={s}>{s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Sourced From (e.g. Amazon)</label>
+                        <input value={mktEdits.vendor_source||''} onChange={e=>setMktEdits(p=>({...p,vendor_source:e.target.value}))}
+                          placeholder="Amazon, Walmart, Alibaba…"
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500"/>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Tracking Number</label>
+                        <input value={mktEdits.tracking_number||''} onChange={e=>setMktEdits(p=>({...p,tracking_number:e.target.value}))}
+                          placeholder="1Z999AA10123456784"
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500"/>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Tracking URL</label>
+                        <input value={mktEdits.tracking_url||''} onChange={e=>setMktEdits(p=>({...p,tracking_url:e.target.value}))}
+                          placeholder="https://track.ups.com/…"
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500"/>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Estimated Delivery</label>
+                        <input type="date" value={mktEdits.estimated_delivery||''} onChange={e=>setMktEdits(p=>({...p,estimated_delivery:e.target.value}))}
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500"/>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Note to Customer</label>
+                        <textarea value={mktEdits.admin_notes||''} onChange={e=>setMktEdits(p=>({...p,admin_notes:e.target.value}))}
+                          rows={3} placeholder="We've ordered this from Amazon, expect delivery in 5-7 days…"
+                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500 resize-none"/>
+                      </div>
+                    </div>
+
+                    <button disabled={mktSaving} onClick={async () => {
+                      setMktSaving(true);
+                      try {
+                        await supabase.rpc('admin_update_market_order', {
+                          p_order_id: mktSelected.id,
+                          p_status: mktEdits.status,
+                          p_tracking_number: mktEdits.tracking_number || null,
+                          p_tracking_url: mktEdits.tracking_url || null,
+                          p_admin_notes: mktEdits.admin_notes || null,
+                          p_estimated_delivery: mktEdits.estimated_delivery || null,
+                          p_vendor_source: mktEdits.vendor_source || null,
+                        });
+                        // Email user if status changed
+                        if (mktEdits.status !== mktSelected.status && mktSelected.user_email) {
+                          await sendStatusEmail(mktSelected.user_email, mktSelected.id.slice(0,8).toUpperCase(), mktEdits.status, mktEdits.admin_notes, mktEdits.tracking_number);
+                        }
+                        notify('Order updated & customer notified', 'success');
+                        setMktSelected(null);
+                        await loadMktOrders();
+                      } catch(e) { notify(e.message, 'error'); }
+                      finally { setMktSaving(false); }
+                    }} className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                      {mktSaving ? <><Loader2 size={14} className="animate-spin"/>Saving…</> : <><Send size={14}/>Save & Notify Customer</>}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16 text-slate-700">
+                    <Package size={32} className="mb-3 opacity-40"/>
+                    <p className="text-sm font-semibold">Select an order to manage</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

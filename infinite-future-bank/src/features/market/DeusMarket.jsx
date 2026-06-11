@@ -4,8 +4,32 @@ import {
   Search, ShoppingCart, Star, ChevronRight, ArrowLeft,
   Plus, Minus, Trash2, Truck, Zap, Globe, Package,
   CheckCircle, Loader2, X, ShieldCheck, Tag, Sparkles,
-  Store, Wifi
+  Store, Wifi, ClipboardList, Clock, MapPin, RotateCcw
 } from 'lucide-react';
+
+const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
+const ADMIN_EMAIL = 'sapiens@infinitefuturebank.org';
+
+async function sendEmail(to, subject, html) {
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+      body: JSON.stringify({ from: 'DEUS Market <noreply@infinitefuturebank.org>', to, subject, html }),
+    });
+  } catch (_) {}
+}
+
+const ORDER_STATUS = {
+  pending:          { label: 'Pending',          color: 'text-amber-500',  bg: 'bg-amber-50',   border: 'border-amber-200',  step: 0 },
+  sourcing:         { label: 'Sourcing',          color: 'text-blue-500',   bg: 'bg-blue-50',    border: 'border-blue-200',   step: 1 },
+  processing:       { label: 'Processing',        color: 'text-indigo-500', bg: 'bg-indigo-50',  border: 'border-indigo-200', step: 2 },
+  shipped:          { label: 'Shipped',           color: 'text-violet-500', bg: 'bg-violet-50',  border: 'border-violet-200', step: 3 },
+  out_for_delivery: { label: 'Out for Delivery',  color: 'text-cyan-600',   bg: 'bg-cyan-50',    border: 'border-cyan-200',   step: 4 },
+  delivered:        { label: 'Delivered',         color: 'text-emerald-600',bg: 'bg-emerald-50', border: 'border-emerald-200',step: 5 },
+  cancelled:        { label: 'Cancelled',         color: 'text-red-500',    bg: 'bg-red-50',     border: 'border-red-200',    step: -1 },
+};
+const STATUS_STEPS = ['pending','sourcing','processing','shipped','out_for_delivery','delivered'];
 
 const PLATFORM_FEE_RATE = 0.025; // 2.5%
 
@@ -441,9 +465,133 @@ function CartFAB({ count, total, onClick }) {
   );
 }
 
+// ── MY ORDERS SCREEN ─────────────────────────────────────────────────
+function OrdersScreen({ orders }) {
+  const [expanded, setExpanded] = useState(null);
+
+  if (orders.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <ClipboardList size={48} className="text-slate-200" />
+        <p className="font-black text-slate-400 uppercase tracking-widest text-xs">No orders yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {orders.map(order => {
+        const meta = ORDER_STATUS[order.status] || ORDER_STATUS.pending;
+        const step = meta.step;
+        const isOpen = expanded === order.id;
+        return (
+          <div key={order.id} className={`bg-white border rounded-2xl overflow-hidden shadow-sm ${meta.border}`}>
+            {/* Order header */}
+            <button
+              onClick={() => setExpanded(isOpen ? null : order.id)}
+              className="w-full flex items-center gap-4 p-4 text-left hover:bg-slate-50 transition-colors"
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${meta.bg}`}>
+                {order.status === 'delivered' ? <CheckCircle size={18} className={meta.color} /> :
+                 order.status === 'cancelled' ? <X size={18} className={meta.color} /> :
+                 order.status === 'shipped' || order.status === 'out_for_delivery' ? <Truck size={18} className={meta.color} /> :
+                 <Clock size={18} className={meta.color} />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-black text-slate-800 font-mono">{order.id.slice(0,8).toUpperCase()}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {' · '}{order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border ${meta.color} ${meta.bg} ${meta.border}`}>
+                  {meta.label}
+                </span>
+                <p className="text-sm font-black text-slate-900 mt-1">{fmt(order.total_usd)}</p>
+              </div>
+            </button>
+
+            {/* Expanded detail */}
+            {isOpen && (
+              <div className="border-t border-slate-100 px-4 pb-4 pt-3 space-y-4">
+                {/* Status timeline (skip for cancelled) */}
+                {order.status !== 'cancelled' && (
+                  <div className="flex items-center gap-1">
+                    {STATUS_STEPS.map((s, i) => {
+                      const done = step >= i;
+                      return (
+                        <React.Fragment key={s}>
+                          <div className="flex flex-col items-center gap-1">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${done ? 'bg-slate-900' : 'bg-slate-100'}`}>
+                              {done && <CheckCircle size={10} className="text-white" />}
+                            </div>
+                            <span className={`text-[7px] font-black uppercase text-center w-12 leading-tight ${done ? 'text-slate-700' : 'text-slate-300'}`}>
+                              {ORDER_STATUS[s].label}
+                            </span>
+                          </div>
+                          {i < STATUS_STEPS.length - 1 && (
+                            <div className={`flex-1 h-0.5 mb-4 transition-colors ${step > i ? 'bg-slate-900' : 'bg-slate-100'}`} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Items */}
+                <div className="space-y-2">
+                  {(order.items || []).map((item, i) => (
+                    <div key={i} className="flex justify-between text-xs">
+                      <span className="text-slate-600">{item.quantity}× {item.product_name}</span>
+                      <span className="font-bold text-slate-800">{fmt(item.line_total)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tracking */}
+                {order.tracking_number && (
+                  <div className={`flex items-center gap-3 p-3 rounded-xl ${ORDER_STATUS.shipped.bg} border ${ORDER_STATUS.shipped.border}`}>
+                    <MapPin size={14} className={ORDER_STATUS.shipped.color} />
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-500">Tracking</p>
+                      <p className="text-xs font-bold text-slate-800">{order.tracking_number}</p>
+                    </div>
+                    {order.tracking_url && (
+                      <a href={order.tracking_url} target="_blank" rel="noreferrer"
+                        className="ml-auto text-[10px] font-black text-blue-600 underline">Track</a>
+                    )}
+                  </div>
+                )}
+
+                {/* Estimated delivery */}
+                {order.estimated_delivery && order.status !== 'delivered' && (
+                  <p className="text-[10px] text-slate-500 font-semibold">
+                    Estimated delivery: <strong className="text-slate-800">
+                      {new Date(order.estimated_delivery).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </strong>
+                  </p>
+                )}
+
+                {/* Admin notes to user */}
+                {order.admin_notes && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                    <p className="text-[10px] font-black uppercase text-blue-500 mb-1">Update from IFB</p>
+                    <p className="text-xs text-slate-700">{order.admin_notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── MAIN COMPONENT ───────────────────────────────────────────────────
 export default function DeusMarket({ session, balances, fetchAllData }) {
-  const [view, setView] = useState('HOME'); // HOME | VENDOR | CART | CONFIRM
+  const [view, setView] = useState('HOME'); // HOME | VENDOR | CART | CONFIRM | ORDERS
   const [vendors, setVendors] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState(null);
@@ -454,6 +602,7 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
+  const [myOrders, setMyOrders] = useState([]);
 
   const cartItems  = Object.values(cart);
   const cartCount  = cartItems.reduce((s, { quantity }) => s + quantity, 0);
@@ -461,6 +610,27 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
   const cartTotal  = cartSubtotal * (1 + PLATFORM_FEE_RATE);
 
   useEffect(() => { loadMarket(); }, []);
+
+  // Load user's orders + subscribe to real-time status changes
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const loadOrders = async () => {
+      const { data } = await supabase
+        .from('deus_market_orders')
+        .select('*, items:deus_market_order_items(product_name, quantity, unit_price, line_total)')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+      setMyOrders(data || []);
+    };
+    loadOrders();
+    const channel = supabase.channel('my_market_orders')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'deus_market_orders',
+        filter: `user_id=eq.${session.user.id}`
+      }, () => loadOrders())
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [session?.user?.id]);
 
   const loadMarket = async () => {
     setIsLoading(true);
@@ -522,10 +692,10 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
         .eq('user_id', session.user.id);
       if (balErr) throw balErr;
 
-      // Create order record
+      // Create order record (pending = awaiting IFB processing)
       const { data: order, error: orderErr } = await supabase
         .from('deus_market_orders')
-        .insert({ user_id: session.user.id, total_usd: total, platform_fee: fee, status: 'confirmed' })
+        .insert({ user_id: session.user.id, total_usd: total, platform_fee: fee, status: 'pending' })
         .select()
         .single();
       if (orderErr) throw orderErr;
@@ -551,6 +721,17 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
         status:           'completed',
       });
 
+      // Notify back office
+      const itemList = cartItems.map(({ product, quantity }) =>
+        `<li>${quantity}× ${product.name} — ${fmt(product.price_usd * quantity)}</li>`).join('');
+      await sendEmail(ADMIN_EMAIL, `🛒 New DEUS Market Order — ${fmt(total)}`,
+        `<h2>New order received</h2><p>Order ID: <strong>${order.id}</strong></p>
+         <p>Total: <strong>${fmt(total)}</strong> (fee: ${fmt(fee)})</p>
+         <ul>${itemList}</ul>
+         <p>User ID: ${session.user.id}</p>
+         <p>Please process this order in the Admin Dashboard → Market Orders.</p>`
+      );
+
       setLastOrder(order);
       setCart({});
       await fetchAllData();
@@ -575,8 +756,8 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
   return (
     <div className="relative min-h-full">
       {/* Header bar */}
-      {view !== 'VENDOR' && (
-        <div className="flex items-center justify-between mb-6">
+      {view !== 'VENDOR' && view !== 'CONFIRM' && (
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-slate-900 rounded-2xl flex items-center justify-center">
               <Store size={18} className="text-white" />
@@ -586,7 +767,7 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
               <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">{vendors.length} brands · {allProducts.length} products</p>
             </div>
           </div>
-          {view !== 'CART' && cartCount > 0 && (
+          {(view === 'HOME' || view === 'ORDERS') && cartCount > 0 && (
             <button onClick={() => setView('CART')} className="relative flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-2xl text-xs font-black hover:bg-blue-600 transition-colors shadow-md">
               <ShoppingCart size={14} />
               <span>{cartCount}</span>
@@ -598,6 +779,25 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
               <X size={16} />
             </button>
           )}
+        </div>
+      )}
+
+      {/* Bottom nav tabs (HOME / ORDERS only) */}
+      {(view === 'HOME' || view === 'ORDERS') && (
+        <div className="flex bg-slate-100 rounded-2xl p-1 mb-5 gap-1">
+          {[
+            { id: 'HOME',   Icon: Store,         label: 'Browse' },
+            { id: 'ORDERS', Icon: ClipboardList,  label: `My Orders${myOrders.length ? ` (${myOrders.length})` : ''}` },
+          ].map(({ id, Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => setView(id)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${view === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <Icon size={13} />
+              {label}
+            </button>
+          ))}
         </div>
       )}
 
@@ -638,7 +838,10 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
         />
       )}
       {view === 'CONFIRM' && lastOrder && (
-        <OrderConfirm order={lastOrder} onDone={() => setView('HOME')} />
+        <OrderConfirm order={lastOrder} onDone={() => setView('ORDERS')} />
+      )}
+      {view === 'ORDERS' && (
+        <OrdersScreen orders={myOrders} />
       )}
 
       {/* Floating cart button (HOME and VENDOR views) */}
