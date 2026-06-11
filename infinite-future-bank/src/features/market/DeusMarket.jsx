@@ -109,9 +109,18 @@ function HomeScreen({ vendors, allProducts, search, setSearch, activeCategory, s
                 className="shrink-0 w-52 rounded-3xl overflow-hidden shadow-md active:scale-95 transition-transform group"
               >
                 <div className="h-28 flex items-center justify-center relative" style={{ backgroundColor: vendor.cover_color }}>
-                  <div className="text-center px-4">
-                    <div className="text-2xl font-black text-white tracking-tight">{vendor.name}</div>
-                    <div className="text-[10px] text-white/60 mt-1 uppercase tracking-widest">{vendor.country}</div>
+                  {vendor.logo_url ? (
+                    <img
+                      src={vendor.logo_url}
+                      alt={vendor.name}
+                      className="h-10 max-w-[150px] object-contain filter brightness-0 invert px-3"
+                      onError={e => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <div className="text-2xl font-black text-white tracking-tight px-4">{vendor.name}</div>
+                  )}
+                  <div className="absolute bottom-2.5 left-0 right-0 text-center">
+                    <span className="text-[9px] text-white/50 uppercase tracking-widest">{vendor.country}</span>
                   </div>
                   {vendor.is_verified && (
                     <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
@@ -181,7 +190,16 @@ function VendorScreen({ vendor, products, onBack, onAddToCart, onRemoveFromCart,
           <ArrowLeft size={18} />
         </button>
         <div className="px-6 pb-5 w-full">
-          <h1 className="text-3xl font-black text-white tracking-tight">{vendor.name}</h1>
+          {vendor.logo_url ? (
+            <img
+              src={vendor.logo_url}
+              alt={vendor.name}
+              className="h-11 max-w-[200px] object-contain filter brightness-0 invert mb-2"
+              onError={e => { e.currentTarget.style.display = 'none'; }}
+            />
+          ) : (
+            <h1 className="text-3xl font-black text-white tracking-tight">{vendor.name}</h1>
+          )}
           <div className="flex items-center gap-3 mt-1">
             <div className="flex items-center gap-1">
               <Star size={12} className="text-amber-400 fill-amber-400" />
