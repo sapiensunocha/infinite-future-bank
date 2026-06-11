@@ -67,21 +67,34 @@ serve(async (req: Request) => {
     // --- 2. HANDLE EMBEDDED DEUS UI (Payment Intents) ---
     else if (event.type === 'payment_intent.succeeded') {
       const intent = event.data.object as any
-      const userId = intent.metadata?.userId 
+      const userId = intent.metadata?.userId
       const depositAmount = intent.amount / 100
+      const piId = intent.id
 
       if (userId) {
+        // Idempotency: skip if already credited (webhook may fire more than once)
+        const { data: existing } = await supabaseAdmin
+          .from('transactions')
+          .select('id')
+          .eq('stripe_payment_intent_id', piId)
+          .maybeSingle()
+        if (existing) {
+          console.log(`PaymentIntent ${piId} already credited, skipping`)
+          return new Response(JSON.stringify({ received: true }), { status: 200 })
+        }
+
         const { data: currentRecord } = await supabaseAdmin.from('balances').select('liquid_usd').eq('user_id', userId).single()
         const newBalance = (currentRecord?.liquid_usd || 0) + depositAmount
 
         await supabaseAdmin.from('balances').update({ liquid_usd: newBalance }).eq('user_id', userId)
-          
+
         await supabaseAdmin.from('transactions').insert({
             user_id: userId,
             transaction_type: 'deposit',
             amount: depositAmount,
             status: 'completed',
-            description: 'Capital Injection via Secure UI'
+            description: 'Capital Injection via Secure UI',
+            stripe_payment_intent_id: piId,
         })
           
         console.log(`PaymentIntent successful: Deposited $${depositAmount} for user ${userId}`)

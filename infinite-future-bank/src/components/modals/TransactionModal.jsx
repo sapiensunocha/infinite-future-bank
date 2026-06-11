@@ -107,7 +107,14 @@ export default function TransactionModal({
           if (error) throw error;
           triggerGlobalActionNotification('success', `${formatCurrency(amount)} sent to ${recipientName}.`);
         } else {
-          // Recipient not linked to an IFB account — debit sender only and log
+          // Recipient not linked to an IFB account — debit sender first, then log
+          const { data: deducted, error: extBalErr } = await supabase
+            .from('balances')
+            .update({ liquid_usd: (balances?.liquid_usd || 0) - amount })
+            .eq('user_id', session.user.id)
+            .gte('liquid_usd', amount)
+            .select('liquid_usd');
+          if (extBalErr || !deducted?.length) throw new Error('Insufficient balance.');
           await supabase.from('transactions').insert([{
             user_id: session.user.id,
             amount: -amount,
@@ -115,7 +122,6 @@ export default function TransactionModal({
             description: `External transfer to ${recipientName}`,
             status: 'completed',
           }]);
-          await supabase.from('balances').update({ liquid_usd: (balances?.liquid_usd || 0) - amount }).eq('user_id', session.user.id);
           triggerGlobalActionNotification('success', `${formatCurrency(amount)} sent to ${recipientName}.`);
         }
         await fetchAllData();

@@ -685,14 +685,7 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
       const fee   = cartSubtotal * PLATFORM_FEE_RATE;
       const total = cartSubtotal + fee;
 
-      // Deduct from liquid balance
-      const { error: balErr } = await supabase
-        .from('balances')
-        .update({ liquid_usd: (balances.liquid_usd - total) })
-        .eq('user_id', session.user.id);
-      if (balErr) throw balErr;
-
-      // Create order record (pending = awaiting IFB processing)
+      // 1. Create order record first — so we have an ID before touching balance
       const { data: order, error: orderErr } = await supabase
         .from('deus_market_orders')
         .insert({ user_id: session.user.id, total_usd: total, platform_fee: fee, status: 'pending' })
@@ -700,7 +693,7 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
         .single();
       if (orderErr) throw orderErr;
 
-      // Insert order items
+      // 2. Insert order items
       const itemRows = cartItems.map(({ product, quantity }) => ({
         order_id:     order.id,
         vendor_id:    product.vendor_id,
@@ -710,7 +703,24 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
         unit_price:   product.price_usd,
         line_total:   product.price_usd * quantity,
       }));
-      await supabase.from('deus_market_order_items').insert(itemRows);
+      const { error: itemsErr } = await supabase.from('deus_market_order_items').insert(itemRows);
+      if (itemsErr) {
+        await supabase.from('deus_market_orders').delete().eq('id', order.id);
+        throw itemsErr;
+      }
+
+      // 3. Deduct balance — only succeeds if liquid_usd >= total (safe decrement)
+      const { data: updatedBal, error: balErr } = await supabase
+        .from('balances')
+        .update({ liquid_usd: (balances.liquid_usd - total) })
+        .eq('user_id', session.user.id)
+        .gte('liquid_usd', total)
+        .select('liquid_usd');
+      if (balErr || !updatedBal?.length) {
+        // Rollback: cancel order so IFB doesn't process it
+        await supabase.from('deus_market_orders').update({ status: 'cancelled' }).eq('id', order.id);
+        throw new Error('Insufficient balance. Your order has been cancelled.');
+      }
 
       // Record in user's transaction history
       await supabase.from('transactions').insert({
