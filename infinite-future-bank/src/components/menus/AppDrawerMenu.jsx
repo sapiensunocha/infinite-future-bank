@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X } from 'lucide-react';
+import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag } from 'lucide-react';
 
 const APPS = [
   { id: 'PAYROLL',          Icon: Users,         label: 'Payroll',            hover: 'hover:bg-blue-50 group-hover:bg-blue-100 group-hover:text-blue-600' },
@@ -19,6 +19,10 @@ const MERCHANT = [
 const NODES = [
   { id: 'CLYRIX', Icon: HeartPulse,   label: 'Clyrix Health', style: 'bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-50 text-emerald-600' },
   { id: 'PRAXCI', Icon: GraduationCap,label: 'Praxci Edu',    style: 'bg-blue-500/10 border-blue-500/20 hover:bg-blue-50 text-blue-600' },
+];
+
+const MARKETPLACE = [
+  { id: 'DEUS_MARKET', Icon: ShoppingBag, label: 'DEUS Market', style: 'bg-gradient-to-br from-slate-900 to-blue-900 text-white border-0 hover:from-blue-900 hover:to-blue-800' },
 ];
 
 export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, setActiveAppPopup }) {
@@ -101,6 +105,21 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Marketplace */}
+          <div className="border-t border-slate-100 pt-4">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Marketplace</h3>
+            {MARKETPLACE.map(({ id, Icon, label, style }) => (
+              <button
+                key={id}
+                onClick={() => open(id)}
+                className={`w-full flex items-center gap-3 p-4 rounded-3xl transition-all active:scale-95 ${style}`}
+              >
+                <Icon size={22} />
+                <span className="text-xs font-black uppercase tracking-widest">{label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

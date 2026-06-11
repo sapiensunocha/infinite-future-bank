@@ -14,6 +14,7 @@ const VentureExchange = lazy(() => import('../../VentureExchange'));
 const P2PExchange     = lazy(() => import('../../P2PExchange'));
 const ClyrixHub       = lazy(() => import('../../features/ClyrixHub'));
 const PraxciHub       = lazy(() => import('../../features/PraxciHub'));
+const DeusMarket      = lazy(() => import('../../features/market/DeusMarket'));
 
 const ModalLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -33,6 +34,7 @@ const TITLES = {
   CLYRIX:            'Clyrix Health',
   PRAXCI:            'Praxci Education',
   P2P_EXCHANGE:      'P2P Liquidity',
+  DEUS_MARKET:       'DEUS Market',
 };
 
 export default function AppPopupModal({
@@ -80,6 +82,7 @@ export default function AppPopupModal({
             {activeAppPopup === 'P2P_EXCHANGE'      && <P2PExchange session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
             {activeAppPopup === 'CLYRIX'            && <ClyrixHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
             {activeAppPopup === 'PRAXCI'            && <PraxciHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
+            {activeAppPopup === 'DEUS_MARKET'       && <DeusMarket session={session} balances={balances} fetchAllData={fetchAllData} />}
           </Suspense>
         </div>
       </div>
