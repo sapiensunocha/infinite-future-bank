@@ -4,7 +4,7 @@ import {
   ShieldCheck, TrendingUp, PieChart, BarChart2,
   Send, Download, Plus, ArrowRightLeft, QrCode,
   ArrowDownRight, ArrowUpRight, Zap, CreditCard, Building, Wallet,
-  ChevronRight, Wifi, Shield
+  ChevronRight, Wifi, Shield, Leaf, ShoppingBag
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
 import { useTranslation } from '../i18n/useTranslation';
@@ -25,7 +25,7 @@ export default function NetPositionHome({
   showBalances, setShowBalances, setActiveModal,
   setShowPayMe, setShowDepositUI, setIsWithdrawOpen,
   showAnalytics, setShowAnalytics,
-  setShowVault, setShowNFC
+  setShowVault, setShowNFC, setActiveAppPopup
 }) {
   const { t } = useTranslation();
   const safeTotalNetWorth = totalNetWorth || 1;
@@ -293,6 +293,54 @@ export default function NetPositionHome({
           </div>
         )}
       </div>
+
+      {/* ════════════════════════════════════════════ */}
+      {/* FINANCIAL PROTECTION + MARKETPLACE CARDS   */}
+      {/* ════════════════════════════════════════════ */}
+      {setActiveAppPopup && (
+        <div className="space-y-3">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Financial Protection</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setActiveAppPopup('PENSION_FUND')}
+              className="flex flex-col items-start gap-3 p-5 rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-md active:scale-95 transition-all"
+            >
+              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide">IFB Pension</p>
+                <p className="text-[10px] text-blue-200 mt-0.5">7% annual growth</p>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveAppPopup('AGRI_SHIELD')}
+              className="flex flex-col items-start gap-3 p-5 rounded-[1.5rem] bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-md active:scale-95 transition-all"
+            >
+              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+                <Leaf size={20} />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wide">AgriShield</p>
+                <p className="text-[10px] text-emerald-200 mt-0.5">Farm insurance</p>
+              </div>
+            </button>
+          </div>
+          <button
+            onClick={() => setActiveAppPopup('DEUS_MARKET')}
+            className="w-full flex items-center gap-4 p-5 rounded-[1.5rem] bg-gradient-to-r from-slate-900 to-blue-900 text-white shadow-md active:scale-95 transition-all"
+          >
+            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+              <ShoppingBag size={20} />
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-black uppercase tracking-wide">DEUS Market</p>
+              <p className="text-[10px] text-slate-300 mt-0.5">Shop & get delivered anywhere</p>
+            </div>
+            <ChevronRight size={16} className="text-slate-400 ml-auto" />
+          </button>
+        </div>
+      )}
 
       {/* ════════════════════════════════════════════ */}
       {/* MOBILE — Recent Activity feed (Revolut-style)*/}

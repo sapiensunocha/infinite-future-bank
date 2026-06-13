@@ -344,15 +344,15 @@ export default function Dashboard({ session, onSignOut }) {
             {/* DYNAMIC VIEW ROUTER */}
             <Suspense fallback={<ScreenLoader />}>
             {activeTab === 'NET_POSITION' && (
-              <NetPositionHome 
-                profile={profile} 
-                balances={balances} 
-                transactions={transactions} 
-                totalNetWorth={totalNetWorth} 
-                formatCurrency={formatCurrency} 
-                setActiveTab={setActiveTab} 
-                activeEscrows={activeEscrows} 
-                setIsNotificationMenuOpen={setIsNotificationMenuOpen} 
+              <NetPositionHome
+                profile={profile}
+                balances={balances}
+                transactions={transactions}
+                totalNetWorth={totalNetWorth}
+                formatCurrency={formatCurrency}
+                setActiveTab={setActiveTab}
+                activeEscrows={activeEscrows}
+                setIsNotificationMenuOpen={setIsNotificationMenuOpen}
                 showBalances={showBalances}
                 setShowBalances={setShowBalances}
                 setActiveModal={setActiveModal}
@@ -363,6 +363,7 @@ export default function Dashboard({ session, onSignOut }) {
                 setShowAnalytics={setShowAnalytics}
                 setShowVault={setShowVault}
                 setShowNFC={setShowNFC}
+                setActiveAppPopup={setActiveAppPopup}
               />
             )}
             
