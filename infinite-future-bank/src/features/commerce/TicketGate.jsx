@@ -187,11 +187,15 @@ export default function TicketGate({ session, balances, fetchAllData }) {
       const currentBalance = balances?.liquid_usd || 0;
       const newBalance = parseFloat((currentBalance - price).toFixed(2));
 
-      // 1. Deduct buyer balance
+      // 1. Deduct buyer balance — atomic with .gte() guard to prevent overdraft
       if (price > 0) {
-        const { data: balUpdate } = await supabase
-          .from('balances').update({ liquid_usd: newBalance }).eq('user_id', session.user.id).select();
-        if (!balUpdate || balUpdate.length === 0) throw new Error('Balance update failed.');
+        const { data: balUpdate, error: balErr } = await supabase
+          .from('balances')
+          .update({ liquid_usd: newBalance })
+          .eq('user_id', session.user.id)
+          .gte('liquid_usd', price)
+          .select('liquid_usd');
+        if (balErr || !balUpdate || balUpdate.length === 0) throw new Error('Insufficient balance or concurrent transaction detected.');
       }
 
       // 2. Create ticket with tier info
