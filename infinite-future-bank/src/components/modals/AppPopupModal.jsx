@@ -15,6 +15,8 @@ const P2PExchange     = lazy(() => import('../../P2PExchange'));
 const ClyrixHub       = lazy(() => import('../../features/ClyrixHub'));
 const PraxciHub       = lazy(() => import('../../features/PraxciHub'));
 const DeusMarket      = lazy(() => import('../../features/market/DeusMarket'));
+const PensionFund     = lazy(() => import('../../features/pension/PensionFund'));
+const AgriShield      = lazy(() => import('../../features/insurance/AgriShield'));
 
 const ModalLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -35,6 +37,8 @@ const TITLES = {
   PRAXCI:            'Praxci Education',
   P2P_EXCHANGE:      'P2P Liquidity',
   DEUS_MARKET:       'DEUS Market',
+  PENSION_FUND:      'IFB Pension Fund',
+  AGRI_SHIELD:       'AgriShield Insurance',
 };
 
 export default function AppPopupModal({
@@ -83,6 +87,8 @@ export default function AppPopupModal({
             {activeAppPopup === 'CLYRIX'            && <ClyrixHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
             {activeAppPopup === 'PRAXCI'            && <PraxciHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
             {activeAppPopup === 'DEUS_MARKET'       && <DeusMarket session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'PENSION_FUND'      && <PensionFund session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'AGRI_SHIELD'       && <AgriShield session={session} balances={balances} fetchAllData={fetchAllData} />}
           </Suspense>
         </div>
       </div>

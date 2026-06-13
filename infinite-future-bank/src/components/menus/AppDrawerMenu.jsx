@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag } from 'lucide-react';
+import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag, TrendingUp, Leaf } from 'lucide-react';
 
 const APPS = [
   { id: 'PAYROLL',          Icon: Users,         label: 'Payroll',            hover: 'hover:bg-blue-50 group-hover:bg-blue-100 group-hover:text-blue-600' },
@@ -23,6 +23,11 @@ const NODES = [
 
 const MARKETPLACE = [
   { id: 'DEUS_MARKET', Icon: ShoppingBag, label: 'DEUS Market', style: 'bg-gradient-to-br from-slate-900 to-blue-900 text-white border-0 hover:from-blue-900 hover:to-blue-800' },
+];
+
+const PROTECTION = [
+  { id: 'PENSION_FUND',  Icon: TrendingUp, label: 'IFB Pension',   style: 'bg-blue-50 border border-blue-100 text-blue-700 hover:bg-blue-100' },
+  { id: 'AGRI_SHIELD',   Icon: Leaf,       label: 'AgriShield',    style: 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100' },
 ];
 
 export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, setActiveAppPopup }) {
@@ -120,6 +125,23 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                 <span className="text-xs font-black uppercase tracking-widest">{label}</span>
               </button>
             ))}
+          </div>
+
+          {/* Financial Protection */}
+          <div className="border-t border-slate-100 pt-4">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Financial Protection</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {PROTECTION.map(({ id, Icon, label, style }) => (
+                <button
+                  key={id}
+                  onClick={() => open(id)}
+                  className={`flex flex-col items-center gap-2.5 p-4 rounded-3xl transition-all active:scale-95 ${style}`}
+                >
+                  <Icon size={22} />
+                  <span className="text-[9px] font-black uppercase tracking-wider text-center">{label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
