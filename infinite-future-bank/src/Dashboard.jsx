@@ -66,6 +66,7 @@ const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
 const TapToPay          = lazyLoad(() => import('./features/terminal/TapToPay'));
 const VentureXPayRequest = lazyLoad(() => import('./features/venturex/VentureXPayRequest'));
 const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
+const GlobalRiskMarkets = lazyLoad(() => import('./features/markets/GlobalRiskMarkets'));
 
 const ScreenLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -145,7 +146,9 @@ export default function Dashboard({ session, onSignOut }) {
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
     COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node',
-    LOANS: 'Loans & Credit', CAPITAL: 'Capital Platform'
+    LOANS: 'Loans & Credit', CAPITAL: 'Capital Platform',
+    CAPITAL_NETWORK: 'Share & Earn',
+    MARKETS: 'IFB Risk Markets'
   };
 
   const triggerGlobalActionNotification = (type, message) => {
@@ -397,7 +400,12 @@ export default function Dashboard({ session, onSignOut }) {
             )}
             
             {activeTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
-            {activeTab === 'NETWORK' && <AFRNetworkPanel session={session} profile={profile} />}
+            {activeTab === 'NETWORK' && (
+              <div className="bg-slate-950 rounded-[2rem] min-h-[400px] p-4 -mx-2">
+                <AFRNetworkPanel session={session} profile={profile} />
+              </div>
+            )}
+            {activeTab === 'CAPITAL_NETWORK' && <CapitalNetwork session={session} profile={profile} fetchAllData={fetchAllData} />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
@@ -409,6 +417,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
             {activeTab === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
             {activeTab === 'CAPITAL' && <CapitalPlatform session={session} profile={profile} />}
+            {activeTab === 'MARKETS' && <GlobalRiskMarkets session={session} balances={balances} fetchAllData={fetchAllData} />}
             </Suspense>
           </div>
 
