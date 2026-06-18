@@ -1,0 +1,20 @@
+-- Extend risk_market_contracts with oracle + sub_category fields
+ALTER TABLE public.risk_market_contracts
+  ADD COLUMN IF NOT EXISTS sub_category       TEXT,
+  ADD COLUMN IF NOT EXISTS oracle_probability NUMERIC(5,2),
+  ADD COLUMN IF NOT EXISTS oracle_confidence  NUMERIC(5,2),
+  ADD COLUMN IF NOT EXISTS oracle_reasoning   TEXT,
+  ADD COLUMN IF NOT EXISTS house_edge         NUMERIC(4,2) NOT NULL DEFAULT 3,
+  ADD COLUMN IF NOT EXISTS home_team          TEXT,
+  ADD COLUMN IF NOT EXISTS away_team          TEXT,
+  ADD COLUMN IF NOT EXISTS home_logo          TEXT,
+  ADD COLUMN IF NOT EXISTS away_logo          TEXT,
+  ADD COLUMN IF NOT EXISTS home_record        TEXT,
+  ADD COLUMN IF NOT EXISTS away_record        TEXT,
+  ADD COLUMN IF NOT EXISTS live_score         TEXT,
+  ADD COLUMN IF NOT EXISTS game_status        TEXT,
+  ADD COLUMN IF NOT EXISTS espn_game_id       TEXT,
+  ADD COLUMN IF NOT EXISTS coin_symbol        TEXT,
+  ADD COLUMN IF NOT EXISTS coin_price         NUMERIC(20,4),
+  ADD COLUMN IF NOT EXISTS coin_target        NUMERIC(20,4),
+  ADD COLUMN IF NOT EXISTS expires_label      TEXT;
