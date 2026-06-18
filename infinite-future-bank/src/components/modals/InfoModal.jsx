@@ -471,6 +471,53 @@ export default function InfoModal({ activeModal, onClose }) {
           <p><strong>AML & KYC:</strong> IFB works with local partner networks and Local Directors to ensure compliance with international Anti-Money Laundering regulations. High-value transactions may trigger AI anomaly detection and require secondary network verification.</p>
         </div>
       )
+    },
+    registration: {
+      title: "U.S. Corporate Registration",
+      icon: <ShieldCheck className="text-blue-600" size={24}/>,
+      body: (
+        <div className="space-y-6 text-slate-600 text-sm">
+          {/* Certificate header */}
+          <div className="bg-slate-900 rounded-3xl p-8 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-400 to-blue-600" />
+            <p className="text-[10px] font-black tracking-[0.25em] uppercase text-slate-400 mb-1">State of Delaware · Secretary of State</p>
+            <p className="text-[10px] text-slate-500 mb-4">Division of Corporations · Delivered 09:07 AM 06/04/2026</p>
+            <h4 className="text-xl font-black text-white mb-1">INFINITE FUTURE BANK LLC</h4>
+            <p className="text-[11px] font-bold tracking-widest uppercase text-blue-400">Certificate of Formation · Limited Liability Company</p>
+          </div>
+          {/* Fields */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              ['Legal Name', 'INFINITE FUTURE BANK LLC'],
+              ['Entity Type', 'Limited Liability Company'],
+              ['State of Formation', 'Delaware, United States of America'],
+              ['Date Filed', 'June 4, 2026 at 09:07 AM ET'],
+              ['File Number', '10649108'],
+              ['SR Number', '20263278773'],
+              ['Registered Agent', 'Northwest Registered Agent Service, Inc.'],
+              ['Duration', 'Perpetual'],
+              ['EIN', '33-1869013'],
+              ['US Headquarters', '1717 Pennsylvania Ave NW, Suite 1025, Washington, DC 20006'],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+                <p className="text-sm font-bold text-slate-800 leading-tight">{value}</p>
+              </div>
+            ))}
+          </div>
+          {/* Purpose */}
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">Corporate Purpose · Article Fourth</p>
+            <p className="text-xs text-slate-600 leading-relaxed italic">"The purpose for which the company is organized is to conduct any and all lawful business for which Limited Liability Companies can be organized pursuant to Delaware statute."</p>
+          </div>
+          {/* Verify */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Verify Independently</p>
+            <p className="text-xs text-slate-600">Delaware Division of Corporations: <span className="font-mono text-blue-600">corp.delaware.gov</span></p>
+            <p className="text-xs text-slate-500 mt-1">Search File No. <strong className="text-slate-700">10649108</strong></p>
+          </div>
+        </div>
+      )
     }
   };
 

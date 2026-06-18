@@ -825,31 +825,99 @@ export default function SettingsHub({
         =========================*/}
         {subTab === 'ABOUT' && (
           <div className="space-y-8 max-w-2xl animate-in fade-in">
-            <div className="text-center mb-10">
+            <div className="text-center mb-6">
               <div className="w-24 h-24 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm text-blue-600">
                 <Globe size={40}/>
               </div>
               <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-4">Infinite Future Bank</h2>
               <p className="text-sm text-slate-600 leading-relaxed max-w-lg mx-auto font-medium">DEUS is the primary technological interface for Infinite Future Bank (IFB), a globally regulated neo-banking institution designed to provide autonomous, highly secure capital architecture for the modern sovereign individual.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">US HQ</p>
-                <p className="text-sm font-bold text-slate-800">New York, NY</p>
-                <p className="text-xs text-slate-500 mt-1">EIN: 33-1869013</p>
+
+            {/* Delaware LLC Certificate */}
+            <div className="bg-slate-900 rounded-3xl p-6 border border-slate-700 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600" />
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400">
+                  <ShieldCheck size={20}/>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">State of Delaware · Secretary of State</p>
+                  <p className="text-sm font-black text-white">U.S. Certificate of Formation</p>
+                </div>
+                <span className="ml-auto px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-500/30">Active</span>
               </div>
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">EU Office</p>
-                <p className="text-sm font-bold text-slate-800">Vienna, Austria</p>
-                <p className="text-xs text-slate-500 mt-1">Str: 91 323/2005</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  ['Legal Name', 'INFINITE FUTURE BANK LLC'],
+                  ['Entity Type', 'Limited Liability Company'],
+                  ['State of Formation', 'Delaware, United States'],
+                  ['Date Filed', 'June 4, 2026'],
+                  ['File Number', '10649108'],
+                  ['SR Number', '20263278773'],
+                  ['Registered Agent', 'Northwest Registered Agent Service, Inc.'],
+                  ['Duration', 'Perpetual'],
+                ].map(([label, value]) => (
+                  <div key={label} className="bg-slate-800/60 rounded-2xl px-4 py-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</p>
+                    <p className="text-xs font-bold text-white leading-tight">{value}</p>
+                  </div>
+                ))}
               </div>
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">CA Office</p>
-                <p className="text-sm font-bold text-slate-800">Toronto, Canada</p>
-                <p className="text-xs text-slate-500 mt-1">CRA: 721487825 RC 0001</p>
+              <p className="text-[10px] text-slate-500 text-center mt-4">Verify at corp.delaware.gov · File No. 10649108</p>
+            </div>
+
+            {/* Tax & Regulatory IDs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/50 shadow-sm text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">United States</p>
+                <p className="text-sm font-bold text-slate-800">EIN: 33-1869013</p>
+                <p className="text-[10px] text-slate-400 mt-1">Delaware LLC</p>
+              </div>
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/50 shadow-sm text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Austria / EU</p>
+                <p className="text-sm font-bold text-slate-800">Str: 91 323/2005</p>
+                <p className="text-[10px] text-slate-400 mt-1">Vienna Office</p>
+              </div>
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/50 shadow-sm text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Canada</p>
+                <p className="text-sm font-bold text-slate-800">CRA: 721487825 RC 0001</p>
+                <p className="text-[10px] text-slate-400 mt-1">Toronto Office</p>
               </div>
             </div>
-            <button type="button" className="w-full p-6 bg-blue-600 text-white rounded-3xl shadow-lg mt-8 text-center flex flex-col items-center justify-center hover:bg-blue-700 transition-colors">
+
+            {/* Global Office Locations */}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Global Office Network</p>
+              <div className="space-y-2">
+                {[
+                  { flag: '🇺🇸', city: 'Washington, DC', label: 'US Headquarters', address: '1717 Pennsylvania Avenue NW, Suite 1025, Washington, DC 20006' },
+                  { flag: '🇺🇸', city: 'New York, NY', label: 'US East Coast', address: '1 World Trade Center, New York, NY 10007' },
+                  { flag: '🇺🇸', city: 'Los Angeles, CA', label: 'US West Coast', address: '11400 W Olympic Blvd, Suite 1500, Los Angeles, CA 90064' },
+                  { flag: '🇺🇸', city: 'Chicago, IL', label: 'US Midwest', address: '190 S LaSalle Street, Suite 1500, Chicago, IL 60603' },
+                  { flag: '🇦🇹', city: 'Vienna, Austria', label: 'EU Office', address: 'Kärntner Ring 5–7, 1010 Vienna' },
+                  { flag: '🇬🇧', city: 'London, UK', label: 'UK Office', address: '40 Bank Street, Canary Wharf, London E14 5NR' },
+                  { flag: '🇦🇪', city: 'Dubai, UAE', label: 'MENA Office', address: 'Level 5, 48 Burj Gate Tower, Sheikh Zayed Road, Dubai' },
+                  { flag: '🇸🇬', city: 'Singapore', label: 'APAC Office', address: '8 Marina Boulevard, Marina Bay Financial Centre' },
+                  { flag: '🇦🇺', city: 'Sydney, Australia', label: 'AU Office', address: 'Level 33, 264 George Street, Sydney NSW 2000' },
+                  { flag: '🇯🇵', city: 'Tokyo, Japan', label: 'JP Office', address: 'Imperial Hotel Tower, 1-1-1 Uchisaiwai-cho, Chiyoda' },
+                  { flag: '🇨🇦', city: 'Toronto, Canada', label: 'CA Office', address: '100 King Street W, Suite 5700, Toronto, ON M5X 1C7' },
+                ].map(({ flag, city, label, address }) => (
+                  <div key={city} className="flex items-start gap-3 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3">
+                    <span className="text-xl mt-0.5">{flag}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-black text-slate-800">{city}</p>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{label}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-tight">{address}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-slate-400 text-center mt-3">Physical presence via Servcorp global serviced offices network</p>
+            </div>
+
+            <button type="button" className="w-full p-6 bg-blue-600 text-white rounded-3xl shadow-lg text-center flex flex-col items-center justify-center hover:bg-blue-700 transition-colors">
               <p className="text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">Support Contact</p>
               <p className="text-lg font-bold">concierge@infinitefuturebank.org</p>
             </button>
