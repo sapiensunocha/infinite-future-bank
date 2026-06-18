@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Sun, Moon, Eye, EyeOff, ArrowRight, Wallet, RefreshCw,
   AlertTriangle, Waves, ShieldAlert, ChevronDown,
-  Globe, TrendingDown, Leaf, Stethoscope, ShieldCheck
+  Globe, TrendingDown, Leaf, Stethoscope, ShieldCheck,
+  Building2, MapPin
 } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 import { useTranslation } from './i18n/useTranslation';
@@ -37,11 +38,13 @@ const ISO2_TO_ISO3 = {
 };
 
 const CAT_META = {
-  Environmental:  { Icon: Waves,       color: 'text-blue-400',   border: 'border-blue-400/30',   bg: 'bg-blue-400/10'   },
-  Security:       { Icon: ShieldAlert,  color: 'text-red-400',    border: 'border-red-400/30',    bg: 'bg-red-400/10'    },
-  Financial:      { Icon: TrendingDown, color: 'text-amber-400',  border: 'border-amber-400/30',  bg: 'bg-amber-400/10'  },
-  'Food Security':{ Icon: Leaf,         color: 'text-orange-400', border: 'border-orange-400/30', bg: 'bg-orange-400/10' },
-  Epidemic:       { Icon: Stethoscope,  color: 'text-purple-400', border: 'border-purple-400/30', bg: 'bg-purple-400/10' },
+  Environmental:  { Icon: Waves,       color: 'text-blue-400',    border: 'border-blue-400/30',    bg: 'bg-blue-400/10'    },
+  Security:       { Icon: ShieldAlert,  color: 'text-red-400',     border: 'border-red-400/30',     bg: 'bg-red-400/10'     },
+  Financial:      { Icon: TrendingDown, color: 'text-amber-400',   border: 'border-amber-400/30',   bg: 'bg-amber-400/10'   },
+  'Food Security':{ Icon: Leaf,         color: 'text-orange-400',  border: 'border-orange-400/30',  bg: 'bg-orange-400/10'  },
+  Epidemic:       { Icon: Stethoscope,  color: 'text-purple-400',  border: 'border-purple-400/30',  bg: 'bg-purple-400/10'  },
+  Infrastructure: { Icon: Building2,    color: 'text-yellow-400',  border: 'border-yellow-400/30',  bg: 'bg-yellow-400/10'  },
+  Micro:          { Icon: MapPin,       color: 'text-slate-400',   border: 'border-slate-400/30',   bg: 'bg-slate-400/10'   },
 };
 
 function michaelScoreToColor(score) {
@@ -119,7 +122,7 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
         }
         if (!iso2) iso2 = profile?.country || 'US';
 
-        const CATEGORIES = ['environmental','security','financial','food+security','epidemic'];
+        const CATEGORIES = ['environmental','security','financial','food+security','epidemic','infrastructure','micro'];
         const mHeaders = { 'X-API-Key': MICHAEL_KEY };
 
         // Fetch all in parallel: weather + country risk + 5 category event slices
@@ -163,13 +166,15 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
 
         workingSet.forEach(e => {
           // Normalise category name (API sometimes returns lowercase)
-          const rawCat = (e.category || '').trim();
+          const rawCat = (e.category || '').trim().toLowerCase();
           const cat =
-            rawCat === 'Environmental' || rawCat.toLowerCase() === 'environmental' ? 'Environmental' :
-            rawCat === 'Security'      || rawCat.toLowerCase() === 'security'      ? 'Security' :
-            rawCat === 'Financial'     || rawCat.toLowerCase() === 'financial'     ? 'Financial' :
-            rawCat === 'Food Security' || rawCat.toLowerCase() === 'food security' ? 'Food Security' :
-            rawCat === 'Epidemic'      || rawCat.toLowerCase() === 'epidemic'      ? 'Epidemic' : null;
+            rawCat === 'environmental'  ? 'Environmental'  :
+            rawCat === 'security'       ? 'Security'       :
+            rawCat === 'financial'      ? 'Financial'      :
+            rawCat === 'food security'  ? 'Food Security'  :
+            rawCat === 'epidemic'       ? 'Epidemic'       :
+            rawCat === 'infrastructure' ? 'Infrastructure' :
+            rawCat === 'micro'          ? 'Micro'          : null;
 
           if (!cat) return;
           catCounts[cat].count++;
