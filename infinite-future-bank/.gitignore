@@ -63,3 +63,6 @@ Thumbs.db
 dist
 dist
 node_modules
+release/
+IFB_MASTER_REVENUE_TABLE.md
+IFB_REVENUE_MODEL_AND_FEATURE_AUDIT.md
