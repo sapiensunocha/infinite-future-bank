@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Sparkles, X, Compass, ArrowDownUp, Target, Landmark, Folder, Briefcase,
-  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, HandCoins, TrendingUp, Shield, Gift
+  Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, Shield
 } from 'lucide-react';
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, onOpenAdmin, t, commercialProfile }) {
@@ -18,10 +18,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
     { id: 'TRAINING',        icon: <BookOpen size={18} />,    label: t('nav.training') },
     { id: 'AGENTS',          icon: <Users size={18} />,       label: t('nav.team') },
     { id: 'INSURANCE',       icon: <ShieldCheck size={18} />, label: t('nav.insurance') },
-    { id: 'LOANS',           icon: <HandCoins size={18} />,   label: 'Loans & Credit' },
-    ...(isCapitalEligible ? [{ id: 'CAPITAL', icon: <TrendingUp size={18} />, label: 'Capital Platform' }] : []),
     { id: 'NETWORK',         icon: <Share2 size={18} />,      label: '⬡ AFR Node' },
-    { id: 'CAPITAL_NETWORK', icon: <Gift size={18} />,        label: 'Share & Earn' },
     { id: 'SETTINGS',        icon: <Settings size={18} />,    label: t('nav.settings') },
   ];
 

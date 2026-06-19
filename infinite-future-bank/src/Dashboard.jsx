@@ -50,16 +50,13 @@ const WealthInvest      = lazyLoad(() => import('./WealthInvest'));
 const GlobalLifestyle   = lazyLoad(() => import('./GlobalLifestyle'));
 const FinancialPlanner  = lazyLoad(() => import('./FinancialPlanner'));
 const EmergencySOS      = lazyLoad(() => import('./EmergencySOS'));
-const Loans             = lazyLoad(() => import('./Loans'));
 const Training          = lazyLoad(() => import('./Training'));
 const Agents            = lazyLoad(() => import('./Agents'));
 const DepositInterface  = lazyLoad(() => import('./DepositInterface'));
 const WithdrawalPage    = lazyLoad(() => import('./WithdrawalPage'));
 const PayMeCard         = lazyLoad(() => import('./PayMeCard'));
 const TransactionLedger = lazyLoad(() => import('./TransactionLedger'));
-const CapitalNetwork    = lazyLoad(() => import('./CapitalNetwork'));
 const AFRNetworkPanel   = lazyLoad(() => import('./features/network/AFRNetworkPanel'));
-const CapitalPlatform   = lazyLoad(() => import('./features/capital/CapitalPlatform'));
 const InsuranceHub      = lazyLoad(() => import('./InsuranceHub'));
 const VaultManager      = lazyLoad(() => import('./features/mysafe/VaultManager'));
 const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
@@ -144,9 +141,7 @@ export default function Dashboard({ session, onSignOut }) {
     INVEST: 'Investments', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
-    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node',
-    LOANS: 'Loans & Credit', CAPITAL: 'Capital Platform',
-    CAPITAL_NETWORK: 'Share & Earn'
+    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node'
   };
 
   const triggerGlobalActionNotification = (type, message) => {
@@ -394,6 +389,7 @@ export default function Dashboard({ session, onSignOut }) {
                 session={session}
                 balances={balances}
                 profile={profile}
+                fetchAllData={fetchAllData}
               />
             )}
             
@@ -403,7 +399,6 @@ export default function Dashboard({ session, onSignOut }) {
                 <AFRNetworkPanel session={session} profile={profile} />
               </div>
             )}
-            {activeTab === 'CAPITAL_NETWORK' && <CapitalNetwork session={session} profile={profile} fetchAllData={fetchAllData} />}
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
@@ -413,8 +408,6 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'TRAINING' && <Training session={session} />}
             {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
-            {activeTab === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
-            {activeTab === 'CAPITAL' && <CapitalPlatform session={session} profile={profile} />}
 
             </Suspense>
           </div>

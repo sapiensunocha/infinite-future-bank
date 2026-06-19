@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Rocket, Globe, ClipboardCheck, Brain, Target, BarChart3 } from 'lucide-react';
+import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Globe, ClipboardCheck, Brain, Target, BarChart3, HandCoins, Gift } from 'lucide-react';
 import CompanyFormationHub from '../features/formation/CompanyFormationHub';
 import IFBAudit from '../features/audit/IFBAudit';
 import MarketIntelligence from '../features/market/MarketIntelligence';
 import FirstCustomerEngine from '../features/gtm/FirstCustomerEngine';
 import GlobalRiskMarkets from '../features/markets/GlobalRiskMarkets';
+import Loans from '../Loans';
+import CapitalPlatform from '../features/capital/CapitalPlatform';
+import CapitalNetwork from '../CapitalNetwork';
 
 export default function CommercialUnderwriting({
   commercialProfile,
@@ -16,6 +19,7 @@ export default function CommercialUnderwriting({
   session,
   balances,
   profile,
+  fetchAllData,
 }) {
   const [bizView, setBizView] = useState('underwriting');
 
@@ -26,6 +30,9 @@ export default function CommercialUnderwriting({
     { id: 'audit',              label: 'IFB Audit',              icon: ClipboardCheck, color: 'violet' },
     { id: 'market_intelligence',label: 'Market Intelligence',    icon: Brain,          color: 'teal'   },
     { id: 'risk_markets',       label: 'Risk Markets',           icon: BarChart3,      color: 'purple' },
+    { id: 'loans',              label: 'Loans & Credit',         icon: HandCoins,      color: 'emerald'},
+    { id: 'capital',            label: 'Capital Platform',       icon: TrendingUp,     color: 'blue'   },
+    { id: 'share_earn',         label: 'Share & Earn',           icon: Gift,           color: 'amber'  },
   ];
 
   const TAB_ACTIVE = {
@@ -35,6 +42,9 @@ export default function CommercialUnderwriting({
     audit:               'bg-violet-600 text-white shadow-md',
     market_intelligence: 'bg-teal-600 text-white shadow-md',
     risk_markets:        'bg-purple-600 text-white shadow-md',
+    loans:               'bg-emerald-600 text-white shadow-md',
+    capital:             'bg-blue-600 text-white shadow-md',
+    share_earn:          'bg-amber-500 text-white shadow-md',
   };
 
   return (
@@ -79,7 +89,22 @@ export default function CommercialUnderwriting({
 
       {/* Risk Markets */}
       {bizView === 'risk_markets' && (
-        <GlobalRiskMarkets session={session} balances={balances} />
+        <GlobalRiskMarkets session={session} balances={balances} fetchAllData={fetchAllData} />
+      )}
+
+      {/* Loans & Credit */}
+      {bizView === 'loans' && (
+        <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />
+      )}
+
+      {/* Capital Platform */}
+      {bizView === 'capital' && (
+        <CapitalPlatform session={session} profile={profile} />
+      )}
+
+      {/* Share & Earn */}
+      {bizView === 'share_earn' && (
+        <CapitalNetwork session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />
       )}
 
       {/* Corporate Underwriting (existing) */}
