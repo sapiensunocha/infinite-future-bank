@@ -127,15 +127,43 @@ export default function Agents({ session, profile, balances }) {
   };
 
   // 🔥 REAL-TIME TASK EXECUTION TRACKER
+  const AGENT_TASK_FEE = 2.00; // $2 per task dispatch
+
   const handleAssignTask = async (e) => {
     e.preventDefault();
     if (!taskInput.trim() || !taskModalAgent) return;
-    
+
+    // Guard: require $2 balance
+    if ((balances?.liquid_usd || 0) < AGENT_TASK_FEE) {
+      triggerNotification('error', `Insufficient funds. Agent task requires $${AGENT_TASK_FEE.toFixed(2)}.`);
+      return;
+    }
+
     const agent = taskModalAgent;
     const directive = taskInput;
     setTaskModalAgent(null);
     setTaskInput('');
     setSelectedAgent(agent);
+
+    // Deduct $2 task fee upfront (atomic guard)
+    const { data: feeUpdate, error: feeErr } = await supabase
+      .from('balances')
+      .update({ liquid_usd: (balances?.liquid_usd || 0) - AGENT_TASK_FEE })
+      .eq('user_id', profile.id)
+      .gte('liquid_usd', AGENT_TASK_FEE)
+      .select('liquid_usd');
+    if (feeErr || !feeUpdate?.length) {
+      triggerNotification('error', 'Task fee deduction failed. Please retry.');
+      return;
+    }
+    // Log fee
+    await supabase.from('transactions').insert({
+      user_id: profile.id,
+      transaction_type: 'agent_task_fee',
+      amount: AGENT_TASK_FEE,
+      status: 'completed',
+      description: `AI Agent Task Fee — ${agent.name}: ${directive.slice(0, 80)}`,
+    });
     
     const initialChat = [{ role: 'user', text: `DIRECTIVE ASSIGNED: ${directive}` }];
     setChatHistory(initialChat);

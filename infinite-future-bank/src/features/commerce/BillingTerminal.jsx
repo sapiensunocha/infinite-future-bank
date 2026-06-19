@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Plus, CheckCircle2, Copy, Send, X, Loader2, Clock, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 
+const BILLING_FEE_PCT = 0.01; // 1% IFB platform fee on settled invoices
+
 export default function BillingTerminal({ session }) {
   const [bills, setBills] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
@@ -37,10 +39,14 @@ export default function BillingTerminal({ session }) {
     // Generate a unique, secure payment link hash
     const paymentHash = `pay.ifb.network/inv_${crypto.randomUUID().split('-')[0]}`;
 
+    const invoiceAmount = parseFloat(newBill.amount);
+    const platformFee = parseFloat((invoiceAmount * BILLING_FEE_PCT).toFixed(2));
+
     const { error } = await supabase.from('ifb_bills').insert([{
       creator_id: session.user.id,
       customer_email: newBill.email,
-      amount: parseFloat(newBill.amount),
+      amount: invoiceAmount,
+      platform_fee: platformFee,
       description: newBill.description,
       due_date: newBill.dueDate || null,
       payment_link: paymentHash,
@@ -112,6 +118,12 @@ export default function BillingTerminal({ session }) {
               <input required type="number" step="0.01" min="1" value={newBill.amount} onChange={e=>setNewBill({...newBill, amount: e.target.value})} placeholder="Amount (USD)" className="p-4 rounded-xl border border-slate-200 font-bold outline-none focus:border-blue-500 w-full" />
               <input required type="text" value={newBill.description} onChange={e=>setNewBill({...newBill, description: e.target.value})} placeholder="Service Description" className="p-4 rounded-xl border border-slate-200 font-bold outline-none focus:border-blue-500 w-full md:col-span-2" />
             </div>
+            {newBill.amount && parseFloat(newBill.amount) > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-700 font-bold flex justify-between items-center">
+                <span>IFB Platform Fee (1%) on settlement</span>
+                <span>${(parseFloat(newBill.amount) * BILLING_FEE_PCT).toFixed(2)} · You receive ${(parseFloat(newBill.amount) * (1 - BILLING_FEE_PCT)).toFixed(2)}</span>
+              </div>
+            )}
             <button type="submit" disabled={isLoading} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50">
               {isLoading ? <Loader2 className="animate-spin" size={16}/> : <><FileText size={16}/> Generate Secure Payment Link</>}
             </button>
@@ -142,7 +154,10 @@ export default function BillingTerminal({ session }) {
                 </div>
                 
                 <div className="flex items-center justify-between w-full sm:w-auto gap-6">
-                  <p className="font-black text-xl text-slate-900">${parseFloat(bill.amount).toFixed(2)}</p>
+                  <div>
+                    <p className="font-black text-xl text-slate-900">${parseFloat(bill.amount).toFixed(2)}</p>
+                    {bill.platform_fee > 0 && <p className="text-[9px] text-amber-600 font-bold">1% fee: ${parseFloat(bill.platform_fee).toFixed(2)}</p>}
+                  </div>
                   
                   {bill.status === 'pending' && (
                     <div className="flex gap-2">

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Globe, ClipboardCheck, Brain, Target, BarChart3, HandCoins, Gift } from 'lucide-react';
+import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Globe, ClipboardCheck, Brain, Target, HandCoins, Gift } from 'lucide-react';
 import CompanyFormationHub from '../features/formation/CompanyFormationHub';
 import IFBAudit from '../features/audit/IFBAudit';
 import MarketIntelligence from '../features/market/MarketIntelligence';
 import FirstCustomerEngine from '../features/gtm/FirstCustomerEngine';
-import GlobalRiskMarkets from '../features/markets/GlobalRiskMarkets';
 import Loans from '../Loans';
 import CapitalPlatform from '../features/capital/CapitalPlatform';
 import CapitalNetwork from '../CapitalNetwork';
@@ -29,7 +28,6 @@ export default function CommercialUnderwriting({
     { id: 'first_customer',     label: 'First Customer Engine',  icon: Target,         color: 'violet' },
     { id: 'audit',              label: 'IFB Audit',              icon: ClipboardCheck, color: 'violet' },
     { id: 'market_intelligence',label: 'Market Intelligence',    icon: Brain,          color: 'teal'   },
-    { id: 'risk_markets',       label: 'Risk Markets',           icon: BarChart3,      color: 'purple' },
     { id: 'loans',              label: 'Loans & Credit',         icon: HandCoins,      color: 'emerald'},
     { id: 'capital',            label: 'Capital Platform',       icon: TrendingUp,     color: 'blue'   },
     { id: 'share_earn',         label: 'Share & Earn',           icon: Gift,           color: 'amber'  },
@@ -41,7 +39,6 @@ export default function CommercialUnderwriting({
     first_customer:      'bg-violet-600 text-white shadow-md',
     audit:               'bg-violet-600 text-white shadow-md',
     market_intelligence: 'bg-teal-600 text-white shadow-md',
-    risk_markets:        'bg-purple-600 text-white shadow-md',
     loans:               'bg-emerald-600 text-white shadow-md',
     capital:             'bg-blue-600 text-white shadow-md',
     share_earn:          'bg-amber-500 text-white shadow-md',
@@ -85,11 +82,6 @@ export default function CommercialUnderwriting({
       {/* Market Intelligence */}
       {bizView === 'market_intelligence' && (
         <MarketIntelligence session={session} balances={balances} />
-      )}
-
-      {/* Risk Markets */}
-      {bizView === 'risk_markets' && (
-        <GlobalRiskMarkets session={session} balances={balances} fetchAllData={fetchAllData} />
       )}
 
       {/* Loans & Credit */}

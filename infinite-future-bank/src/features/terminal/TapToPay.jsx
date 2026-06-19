@@ -4,6 +4,7 @@ import { CreditCard, Wifi, CheckCircle2, AlertTriangle, Loader2, ArrowLeft, Refr
 import { initTerminal, connectReader, collectPayment, cancelPayment } from '../../services/stripeTerminal';
 
 const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
+const TERMINAL_FEE_PCT = 0.015; // 1.5% IFB merchant processing fee
 
 // step: 'amount' | 'connecting' | 'waiting' | 'processing' | 'success' | 'error'
 export default function TapToPay({ balances, onClose, onSuccess }) {
@@ -113,6 +114,22 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
           <input value={note} onChange={e => setNote(e.target.value)}
             placeholder="Note (optional)"
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-white outline-none focus:border-violet-500 transition-colors placeholder-slate-600"/>
+          {amount && parseFloat(amount) >= 0.5 && (
+            <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-3 text-xs space-y-1.5">
+              <div className="flex justify-between text-slate-400">
+                <span>Charged to card</span>
+                <span className="font-bold text-white">{fmtUSD(parseFloat(amount))}</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>IFB Processing (1.5%)</span>
+                <span className="font-bold text-amber-400">−{fmtUSD(parseFloat(amount) * TERMINAL_FEE_PCT)}</span>
+              </div>
+              <div className="flex justify-between text-slate-300 border-t border-slate-700 pt-1.5 font-black">
+                <span>Net to your wallet</span>
+                <span className="text-emerald-400">{fmtUSD(parseFloat(amount) * (1 - TERMINAL_FEE_PCT))}</span>
+              </div>
+            </div>
+          )}
           <button onClick={start}
             disabled={!amount || parseFloat(amount) < 0.5}
             className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-900/30">

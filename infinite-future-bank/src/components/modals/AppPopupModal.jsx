@@ -17,6 +17,7 @@ const PraxciHub       = lazy(() => import('../../features/PraxciHub'));
 const DeusMarket      = lazy(() => import('../../features/market/DeusMarket'));
 const PensionFund     = lazy(() => import('../../features/pension/PensionFund'));
 const AgriShield      = lazy(() => import('../../features/insurance/AgriShield'));
+const CapitalNetwork  = lazy(() => import('../../CapitalNetwork'));
 
 const ModalLoader = () => (
   <div className="flex items-center justify-center h-48">
@@ -39,6 +40,7 @@ const TITLES = {
   DEUS_MARKET:       'DEUS Market',
   PENSION_FUND:      'IFB Pension Fund',
   AGRI_SHIELD:       'AgriShield Insurance',
+  CAPITAL_NETWORK:   'Share with Network & Earn',
 };
 
 export default function AppPopupModal({
@@ -89,6 +91,7 @@ export default function AppPopupModal({
             {activeAppPopup === 'DEUS_MARKET'       && <DeusMarket session={session} balances={balances} fetchAllData={fetchAllData} />}
             {activeAppPopup === 'PENSION_FUND'      && <PensionFund session={session} balances={balances} fetchAllData={fetchAllData} />}
             {activeAppPopup === 'AGRI_SHIELD'       && <AgriShield session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'CAPITAL_NETWORK'   && <CapitalNetwork session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
           </Suspense>
         </div>
       </div>

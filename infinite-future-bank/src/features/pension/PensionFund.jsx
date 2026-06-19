@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { TrendingUp, Plus, Clock, ChevronRight, CheckCircle, AlertCircle, PiggyBank, Target, Calendar, DollarSign, BarChart3, ArrowDownLeft } from 'lucide-react';
 
 const ANNUAL_RETURN = 0.07; // 7% projected annual growth

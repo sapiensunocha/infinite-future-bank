@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
+const WITHDRAWAL_FEE_PCT = 0.005; // 0.5% IFB routing fee
+
 export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuccess }) {
   const [activeTab, setActiveTab] = useState('NEW'); // 'NEW' or 'HISTORY'
   const [step, setStep] = useState(1);
@@ -70,14 +72,16 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     }
   };
 
+  const withdrawalFee = amount ? parseFloat((parseFloat(amount) * WITHDRAWAL_FEE_PCT).toFixed(2)) : 0;
+  const withdrawalTotal = amount ? parseFloat((parseFloat(amount) + withdrawalFee).toFixed(2)) : 0;
+
   const handleAmountSubmit = (e) => {
     e.preventDefault();
     setError('');
-    if (parseFloat(amount) > 0 && parseFloat(amount) <= userBalance) {
-      setStep(2);
-    } else {
-      showToast("Invalid amount or insufficient liquid funds.", true);
-    }
+    const numAmount = parseFloat(amount);
+    if (!numAmount || numAmount <= 0) return showToast("Enter a valid amount.", true);
+    if (withdrawalTotal > userBalance) return showToast(`Insufficient funds. Need $${withdrawalTotal.toFixed(2)} ($${numAmount.toFixed(2)} + $${withdrawalFee.toFixed(2)} routing fee).`, true);
+    setStep(2);
   };
 
   const handleFindProcessors = async (overrideMethod = null, overrideDetails = null) => {
@@ -179,6 +183,23 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
       });
 
       if (rpcError) throw rpcError;
+
+      // Deduct 0.5% routing fee separately (atomic guard)
+      const { error: feeErr } = await supabase
+        .from('balances')
+        .update({ liquid_usd: userBalance - withdrawalFee })
+        .eq('user_id', userId)
+        .gte('liquid_usd', withdrawalFee);
+
+      if (!feeErr && withdrawalFee > 0) {
+        await supabase.from('transactions').insert({
+          user_id: userId,
+          transaction_type: 'withdrawal_fee',
+          amount: withdrawalFee,
+          status: 'completed',
+          description: `Withdrawal Routing Fee (0.5%) — $${parseFloat(amount).toFixed(2)} via ${p2pFiatMethod}`,
+        });
+      }
 
       await supabase.from('notifications').insert([{
         user_id: realProcessorId,
@@ -476,6 +497,22 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                   />
                 </div>
 
+                {amount && parseFloat(amount) > 0 && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-sm">
+                    <div className="flex justify-between font-bold text-slate-600">
+                      <span>You Receive</span>
+                      <span>${parseFloat(amount).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-slate-600">
+                      <span>IFB Routing Fee (0.5%)</span>
+                      <span className="text-amber-600">${withdrawalFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-black text-slate-800 border-t border-slate-200 pt-2">
+                      <span>Total Deducted</span>
+                      <span>${withdrawalTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
                 <button type="submit" className="w-full bg-slate-900 text-white p-5 rounded-2xl font-black text-lg tracking-wide hover:bg-blue-600 transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-1">
                   Select Routing Method <ArrowRight size={20} />
                 </button>

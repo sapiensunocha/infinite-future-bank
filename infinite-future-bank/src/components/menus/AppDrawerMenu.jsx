@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag, TrendingUp, Leaf } from 'lucide-react';
+import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag, TrendingUp, Leaf, Gift } from 'lucide-react';
 
 const APPS = [
   { id: 'PAYROLL',          Icon: Users,         label: 'Payroll',            hover: 'hover:bg-blue-50 group-hover:bg-blue-100 group-hover:text-blue-600' },
@@ -28,6 +28,10 @@ const MARKETPLACE = [
 const PROTECTION = [
   { id: 'PENSION_FUND',  Icon: TrendingUp, label: 'IFB Pension',   style: 'bg-blue-50 border border-blue-100 text-blue-700 hover:bg-blue-100' },
   { id: 'AGRI_SHIELD',   Icon: Leaf,       label: 'AgriShield',    style: 'bg-emerald-50 border border-emerald-100 text-emerald-700 hover:bg-emerald-100' },
+];
+
+const EARN = [
+  { id: 'CAPITAL_NETWORK', Icon: Gift, label: 'Share & Earn', style: 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white border-0 hover:from-violet-500 hover:to-fuchsia-500' },
 ];
 
 export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, setActiveAppPopup }) {
@@ -142,6 +146,24 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Earn */}
+          <div className="border-t border-slate-100 pt-4">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Referral Network</h3>
+            {EARN.map(({ id, Icon, label, style }) => (
+              <button
+                key={id}
+                onClick={() => open(id)}
+                className={`w-full flex items-center gap-3 p-4 rounded-3xl transition-all active:scale-95 ${style}`}
+              >
+                <Icon size={22} />
+                <div className="text-left">
+                  <p className="text-xs font-black uppercase tracking-widest">{label}</p>
+                  <p className="text-[9px] opacity-75 mt-0.5">Earn up to 10% lifetime yield on your network</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </div>

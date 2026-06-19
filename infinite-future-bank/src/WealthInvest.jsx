@@ -189,18 +189,42 @@ export default function WealthInvest({ session, balances, profile }) {
     }
   };
 
+  const TRADE_FEE = 0.99; // $0.99 flat per trade — IFB market execution fee
+
   const handlePublicTrade = async (side) => {
     const amount = parseFloat(publicInvestAmount);
-    if (!amount || amount <= 0 || (side === 'buy' && amount > balances.liquid_usd)) return triggerGlobalActionNotification('error', 'Invalid amount or insufficient funds.');
-    setIsInvesting(true); setExecutionPlan(["Verifying funds", "Routing to market", "Updating ledger"]); setCurrentStepIndex(0);
+    const totalRequired = side === 'buy' ? amount + TRADE_FEE : TRADE_FEE;
+    if (!amount || amount <= 0) return triggerGlobalActionNotification('error', 'Enter a valid amount.');
+    if (totalRequired > (balances?.liquid_usd || 0)) return triggerGlobalActionNotification('error', `Insufficient funds. Need $${totalRequired.toFixed(2)} (trade + $${TRADE_FEE} execution fee).`);
+    setIsInvesting(true); setExecutionPlan(["Verifying funds", "Routing to market", "Settling fee", "Updating ledger"]); setCurrentStepIndex(0);
     try {
       await new Promise(resolve => setTimeout(resolve, 500)); setCurrentStepIndex(1);
-      await new Promise(resolve => setTimeout(resolve, 500)); setCurrentStepIndex(2);
       const qty = (amount / marketAsset.price).toFixed(6);
       await supabase.from('market_transactions').insert({ user_id: session?.user?.id, asset: marketAsset.symbol, side: side.toUpperCase(), execution_price: marketAsset.price, quantity: qty, status: 'COMPLETED' });
-      triggerGlobalActionNotification('success', `Executed: ${side.toUpperCase()} ${qty} ${marketAsset.symbol}`);
+
+      setCurrentStepIndex(2);
+      // Deduct trade fee from balance (atomic guard)
+      const { data: feeUpdate, error: feeErr } = await supabase
+        .from('balances')
+        .update({ liquid_usd: balances.liquid_usd - (side === 'buy' ? amount : 0) - TRADE_FEE })
+        .eq('user_id', session?.user?.id)
+        .gte('liquid_usd', totalRequired)
+        .select('liquid_usd');
+      if (feeErr || !feeUpdate?.length) throw new Error('Balance update failed. Position may have been opened — contact support.');
+
+      // Log fee as IFB revenue
+      await supabase.from('transactions').insert({
+        user_id: session?.user?.id,
+        transaction_type: 'trade_fee',
+        amount: TRADE_FEE,
+        status: 'completed',
+        description: `Market Execution Fee — ${side.toUpperCase()} ${marketAsset.symbol}`,
+      });
+
+      setCurrentStepIndex(3);
+      triggerGlobalActionNotification('success', `Executed: ${side.toUpperCase()} ${qty} ${marketAsset.symbol} · $${TRADE_FEE} fee charged`);
       setPublicInvestAmount(''); setMarketAsset(null); setSearchSymbol(''); fetchInvestorPortfolio();
-    } catch (err) { triggerGlobalActionNotification('error', 'Execution failed.'); } 
+    } catch (err) { triggerGlobalActionNotification('error', err.message || 'Execution failed.'); }
     finally { setIsInvesting(false); setExecutionPlan([]); setCurrentStepIndex(-1); }
   };
 

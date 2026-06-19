@@ -76,8 +76,12 @@ function ModuleLoader({ modules, active }) {
   );
 }
 
-export default function MarketIntelligence({ session }) {
-  const [step, setStep] = useState(0); // 0=setup, 1=processing, 2=report
+const INTEL_FEE = 9.00; // $9/month subscription
+
+export default function MarketIntelligence({ session, balances }) {
+  const [step, setStep] = useState(0); // -1=paywall, 0=setup, 1=processing, 2=report
+  const [hasAccess, setHasAccess] = useState(null); // null=loading
+  const [isSubscribing, setIsSubscribing] = useState(false);
   const [form, setForm] = useState({ sector: '', region: '', keywords: '', company_stage: 'startup', report_depth: 'standard' });
   const [files, setFiles] = useState([]);
   const [progress, setProgress] = useState(0);
@@ -86,6 +90,54 @@ export default function MarketIntelligence({ session }) {
   const [error, setError] = useState(null);
   const fileRef = useRef();
   const intervalRef = useRef();
+
+  // Check for active $9/mo subscription (any payment in last 31 days)
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!session?.user?.id) return;
+      const cutoff = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('transaction_type', 'market_intel_subscription')
+        .eq('status', 'completed')
+        .gte('created_at', cutoff)
+        .limit(1);
+      setHasAccess(data && data.length > 0);
+    };
+    checkAccess();
+  }, [session?.user?.id]);
+
+  const handleSubscribe = async () => {
+    if (isSubscribing) return;
+    if ((balances?.liquid_usd || 0) < INTEL_FEE) {
+      alert(`Insufficient funds. Market Intelligence requires $${INTEL_FEE.toFixed(2)}/month.`);
+      return;
+    }
+    setIsSubscribing(true);
+    try {
+      const { data: feeUpdate, error: feeErr } = await supabase
+        .from('balances')
+        .update({ liquid_usd: (balances?.liquid_usd || 0) - INTEL_FEE })
+        .eq('user_id', session.user.id)
+        .gte('liquid_usd', INTEL_FEE)
+        .select('liquid_usd');
+      if (feeErr || !feeUpdate?.length) throw new Error('Insufficient funds.');
+      await supabase.from('transactions').insert({
+        user_id: session.user.id,
+        transaction_type: 'market_intel_subscription',
+        amount: INTEL_FEE,
+        status: 'completed',
+        description: 'Market Intelligence — Monthly Access ($9.00)',
+      });
+      setHasAccess(true);
+    } catch (err) {
+      alert(err.message || 'Subscription failed.');
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   const addFiles = (newFiles) => {
     const allowed = Array.from(newFiles).filter(f => f.size < 20 * 1024 * 1024).slice(0, 5);
@@ -204,6 +256,45 @@ export default function MarketIntelligence({ session }) {
   const reset = () => { setStep(0); setReport(null); setFiles([]); setForm({ sector: '', region: '', keywords: '', company_stage: 'startup', report_depth: 'standard' }); };
 
   const RISK_COLOR = { high: 'text-rose-400 bg-rose-900/20 border-rose-800', medium: 'text-amber-400 bg-amber-900/20 border-amber-800', low: 'text-emerald-400 bg-emerald-900/20 border-emerald-800' };
+
+  // ── Paywall / Loading ──────────────────────────────────────────────────────────
+  if (hasAccess === null) return (
+    <div className="flex items-center justify-center py-32">
+      <Loader2 size={32} className="text-blue-400 animate-spin" />
+    </div>
+  );
+
+  if (!hasAccess) return (
+    <div className="max-w-md mx-auto animate-in fade-in zoom-in-95 duration-500 text-center py-12">
+      <div className="w-20 h-20 bg-blue-600/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-blue-700/40">
+        <Brain size={36} className="text-blue-400" />
+      </div>
+      <h2 className="text-2xl font-black text-white mb-2">Market Intelligence</h2>
+      <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+        AI-powered market sizing, competitor analysis, growth trends, and strategic entry reports — updated monthly for your sector and region.
+      </p>
+      <div className="bg-slate-800 border border-slate-700 rounded-3xl p-6 mb-6 text-left space-y-3">
+        {['TAM / SAM / SOM sizing', 'Competitive landscape mapping', 'Growth trends & CAGR forecast', 'Regulatory environment summary', 'Market entry strategy playbook', 'Risk & barrier analysis'].map(f => (
+          <div key={f} className="flex items-center gap-2 text-sm text-slate-300">
+            <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+            {f}
+          </div>
+        ))}
+      </div>
+      <div className="bg-blue-900/30 border border-blue-700/40 rounded-2xl p-4 mb-6">
+        <p className="text-3xl font-black text-white">$9<span className="text-base text-slate-400 font-bold">/month</span></p>
+        <p className="text-xs text-slate-400 mt-1">Charged from your IFB Liquid balance · Renews monthly</p>
+      </div>
+      <button
+        onClick={handleSubscribe}
+        disabled={isSubscribing}
+        className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        {isSubscribing ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <><Sparkles size={16} /> Activate — $9.00</>}
+      </button>
+      <p className="text-[10px] text-slate-500 mt-3">Deducted from Liquid Balance · Cancel anytime by not renewing</p>
+    </div>
+  );
 
   // ── Step 0: Setup ─────────────────────────────────────────────────────────────
   if (step === 0) return (

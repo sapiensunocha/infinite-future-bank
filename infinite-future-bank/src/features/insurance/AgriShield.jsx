@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import {
   Leaf, ShieldCheck, CloudRain, Thermometer, Droplets, Bug, Waves,
   Plus, FileText, Clock, CheckCircle, XCircle, AlertCircle,
