@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Globe, ClipboardCheck, Brain, Target, HandCoins, Gift } from 'lucide-react';
+import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Globe, ClipboardCheck, Brain, Target, HandCoins, Gift, BarChart3 } from 'lucide-react';
 import CompanyFormationHub from '../features/formation/CompanyFormationHub';
 import IFBAudit from '../features/audit/IFBAudit';
 import MarketIntelligence from '../features/market/MarketIntelligence';
@@ -7,6 +7,7 @@ import FirstCustomerEngine from '../features/gtm/FirstCustomerEngine';
 import Loans from '../Loans';
 import CapitalPlatform from '../features/capital/CapitalPlatform';
 import CapitalNetwork from '../CapitalNetwork';
+import VentureExchange from '../features/exchange/VentureExchange';
 
 export default function CommercialUnderwriting({
   commercialProfile,
@@ -25,6 +26,7 @@ export default function CommercialUnderwriting({
   const BIZ_TABS = [
     { id: 'underwriting',       label: 'I Have a Company',       icon: Building,       color: 'blue'   },
     { id: 'formation',          label: 'Register New Company',   icon: Globe,          color: 'indigo' },
+    { id: 'venture_exchange',   label: 'Stock Exchange',         icon: BarChart3,      color: 'emerald'},
     { id: 'first_customer',     label: 'First Customer Engine',  icon: Target,         color: 'violet' },
     { id: 'audit',              label: 'IFB Audit',              icon: ClipboardCheck, color: 'violet' },
     { id: 'market_intelligence',label: 'Market Intelligence',    icon: Brain,          color: 'teal'   },
@@ -36,6 +38,7 @@ export default function CommercialUnderwriting({
   const TAB_ACTIVE = {
     underwriting:        'bg-blue-600 text-white shadow-md',
     formation:           'bg-indigo-600 text-white shadow-md',
+    venture_exchange:    'bg-emerald-600 text-white shadow-md',
     first_customer:      'bg-violet-600 text-white shadow-md',
     audit:               'bg-violet-600 text-white shadow-md',
     market_intelligence: 'bg-teal-600 text-white shadow-md',
@@ -67,6 +70,11 @@ export default function CommercialUnderwriting({
       {/* Company Formation Hub */}
       {bizView === 'formation' && (
         <CompanyFormationHub session={session} balances={balances} profile={profile} />
+      )}
+
+      {/* Venture Exchange / Stock Market */}
+      {bizView === 'venture_exchange' && (
+        <VentureExchange session={session} profile={profile} />
       )}
 
       {/* First Customer Engine */}

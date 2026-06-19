@@ -8,7 +8,8 @@ import {
   ShieldCheck, ShieldAlert, Plus, Trash2, Edit2, Send,
   Building2, Lock, Unlock, Database, Zap, Bell, Rocket,
   Upload, Pencil, Save, UserCog, LayoutDashboard, BookOpen,
-  Brain, BadgeCheck, ShoppingBag, Truck, Package, MapPin
+  Brain, BadgeCheck, ShoppingBag, Truck, Package, MapPin,
+  BarChart2, Trophy, ChevronDown
 } from 'lucide-react';
 
 const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
@@ -54,6 +55,7 @@ const TABS = [
   { id: 'support',       label: 'Support',         icon: Ticket,          roles: ['super','support','ops'] },
   { id: 'applications',  label: 'IFB Applications',icon: Rocket,          roles: ['super','ops','content'] },
   { id: 'venturex',      label: 'VentureX',        icon: Globe,           roles: ['super','content'] },
+  { id: 'vse_pipeline',  label: 'Stock Exchange',  icon: BarChart2,       roles: ['super','ops','finance','content'] },
   { id: 'market_orders', label: 'Market Orders',   icon: ShoppingBag,     roles: ['super','ops','finance'] },
   { id: 'backoffice',    label: 'Back Office',     icon: Database,        roles: ['super'] },
   { id: 'announce',      label: 'Broadcast',       icon: Bell,            roles: ['super','content','ops'] },
@@ -172,6 +174,19 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminRole, setNewAdminRole] = useState('support');
   const [addingAdmin, setAddingAdmin] = useState(false);
+  // VSE Pipeline
+  const [vseVentures, setVseVentures] = useState([]);
+  const [vseLoading, setVseLoading] = useState(false);
+  const [vseSelected, setVseSelected] = useState(null);
+  const [vseStageEdit, setVseStageEdit] = useState('');
+  const [vseAdminNote, setVseAdminNote] = useState('');
+  const [vseSaving, setVseSaving] = useState(false);
+  const [vseSectorFilter, setVseSectorFilter] = useState('');
+  const [vseStageFilter, setVseStageFilter] = useState('');
+  const [vseTickerInput, setVseTickerInput] = useState('');
+  const [vseSharePrice, setVseSharePrice] = useState('');
+  const [vseShares, setVseShares] = useState('');
+  const [vseValuation, setVseValuation] = useState('');
   // AI KYC scan
   const [kycAiScan, setKycAiScan] = useState({}); // { [submissionId]: { scanning, fields, error } }
   const [boAiScan, setBoAiScan] = useState({ scanning: false, fields: [], error: null });
@@ -371,6 +386,18 @@ export default function AdminDashboard({ session, profile, onClose }) {
     } finally { setLoading(false); }
   }, []);
 
+  // Load VSE pipeline
+  const loadVse = useCallback(async () => {
+    setVseLoading(true);
+    try {
+      const { data } = await supabase
+        .from('ifb_ventures')
+        .select('*, profiles(full_name, email)')
+        .order('created_at', { ascending: false });
+      setVseVentures(data || []);
+    } finally { setVseLoading(false); }
+  }, []);
+
   useEffect(() => {
     if (!adminRole) return;
     loadStats();
@@ -384,6 +411,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
     if (activeTab === 'applications') loadApplications();
     if (activeTab === 'roles') loadAdminRoles();
     if (activeTab === 'market_orders') loadMktOrders();
+    if (activeTab === 'vse_pipeline') loadVse();
   }, [activeTab, adminRole]);
 
   const loadMktOrders = useCallback(async () => {
@@ -3056,6 +3084,230 @@ export default function AdminDashboard({ session, profile, onClose }) {
               </div>
             </div>
           )}
+
+          {/* ─── VSE PIPELINE ─── */}
+          {activeTab === 'vse_pipeline' && (() => {
+            const VSE_STAGES = ['applied','kyc_review','audit','due_diligence','pre_ipo','listed','rejected'];
+            const VSE_STAGE_COLORS = {
+              applied:        'text-slate-400  bg-slate-800    border-slate-700',
+              kyc_review:     'text-amber-400  bg-amber-900/30  border-amber-700/50',
+              audit:          'text-blue-400   bg-blue-900/30   border-blue-700/50',
+              due_diligence:  'text-violet-400 bg-violet-900/30 border-violet-700/50',
+              pre_ipo:        'text-orange-400 bg-orange-900/30 border-orange-700/50',
+              listed:         'text-emerald-400 bg-emerald-900/30 border-emerald-700/50',
+              rejected:       'text-red-400    bg-red-900/30    border-red-700/50',
+            };
+            const fmtM = n => n >= 1e9 ? `$${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `$${(n/1e3).toFixed(0)}K` : `$${n||0}`;
+            const filtered = vseVentures.filter(v =>
+              (!vseSectorFilter || v.sector === vseSectorFilter) &&
+              (!vseStageFilter  || v.stage  === vseStageFilter)
+            );
+            const stageCounts = VSE_STAGES.reduce((acc, s) => {
+              acc[s] = vseVentures.filter(v => v.stage === s).length;
+              return acc;
+            }, {});
+
+            async function advanceStage(venture) {
+              const idx = VSE_STAGES.indexOf(venture.stage);
+              if (idx < 0 || idx >= VSE_STAGES.indexOf('listed')) return;
+              const nextStage = VSE_STAGES[idx + 1];
+              setVseSaving(true);
+              const updates = { stage: nextStage, admin_notes: vseAdminNote || venture.admin_notes };
+              if (nextStage === 'listed') {
+                updates.listed_at = new Date().toISOString();
+                updates.is_public = true;
+                if (vseTickerInput) updates.ticker_symbol = vseTickerInput.toUpperCase();
+                if (vseSharePrice)  updates.share_price = Number(vseSharePrice);
+                if (vseShares)      updates.shares_issued = Number(vseShares);
+                if (vseValuation)   updates.valuation = Number(vseValuation);
+                if (vseSharePrice && vseShares) updates.market_cap = Number(vseSharePrice) * Number(vseShares);
+              }
+              const { error } = await supabase.from('ifb_ventures').update(updates).eq('id', venture.id);
+              if (!error) { notify(`${venture.company_name} advanced to ${nextStage}`); loadVse(); setVseSelected(null); }
+              else notify(error.message, 'error');
+              setVseSaving(false);
+            }
+
+            async function rejectVenture(venture) {
+              setVseSaving(true);
+              const { error } = await supabase.from('ifb_ventures').update({ stage: 'rejected', admin_notes: vseAdminNote }).eq('id', venture.id);
+              if (!error) { notify(`${venture.company_name} rejected`); loadVse(); setVseSelected(null); }
+              else notify(error.message, 'error');
+              setVseSaving(false);
+            }
+
+            async function saveAdminNote(venture) {
+              setVseSaving(true);
+              await supabase.from('ifb_ventures').update({ admin_notes: vseAdminNote }).eq('id', venture.id);
+              notify('Notes saved');
+              setVseSaving(false);
+            }
+
+            return (
+              <div className="space-y-6 animate-in fade-in">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <h2 className="text-2xl font-black text-white">IFB Venture Exchange Pipeline</h2>
+                  <button onClick={loadVse} className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-black uppercase rounded-xl hover:bg-slate-700 transition-colors">
+                    <RefreshCw size={12}/> Refresh
+                  </button>
+                </div>
+
+                {/* Stage summary */}
+                <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
+                  {VSE_STAGES.map(s => (
+                    <button key={s} onClick={() => setVseStageFilter(vseStageFilter === s ? '' : s)}
+                      className={`p-3 rounded-2xl border text-center transition-all ${vseStageFilter === s ? 'border-blue-500 bg-blue-900/30' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`}>
+                      <p className="text-xl font-black text-white">{stageCounts[s] || 0}</p>
+                      <p className="text-[8px] text-slate-500 uppercase font-bold mt-0.5">{s.replace('_',' ')}</p>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Filters */}
+                <div className="flex gap-3 flex-wrap">
+                  <select value={vseSectorFilter} onChange={e => setVseSectorFilter(e.target.value)}
+                    className="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 outline-none">
+                    <option value="">All Sectors</option>
+                    {['Tech','Health','Mining','Agriculture','Energy','Finance','Real Estate','Manufacturing','Media','Consumer'].map(s =>
+                      <option key={s} value={s}>{s}</option>
+                    )}
+                  </select>
+                  {(vseSectorFilter || vseStageFilter) && (
+                    <button onClick={() => { setVseSectorFilter(''); setVseStageFilter(''); }}
+                      className="px-3 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-black uppercase rounded-xl hover:bg-slate-700">
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+
+                {vseLoading ? (
+                  <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div>
+                ) : (
+                  <div className="space-y-3">
+                    {filtered.length === 0 && (
+                      <div className="py-12 text-center text-slate-500">No ventures found</div>
+                    )}
+                    {filtered.map(v => {
+                      const isOpen = vseSelected?.id === v.id;
+                      return (
+                        <div key={v.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                          <button className="w-full p-5 flex items-center justify-between gap-4 text-left hover:bg-slate-800/50 transition-colors"
+                            onClick={() => {
+                              if (isOpen) { setVseSelected(null); }
+                              else { setVseSelected(v); setVseAdminNote(v.admin_notes || ''); setVseTickerInput(v.ticker_symbol || ''); setVseSharePrice(v.share_price || ''); setVseShares(v.shares_issued || ''); setVseValuation(v.valuation || ''); }
+                            }}>
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-2xl bg-slate-800 flex items-center justify-center font-black text-white text-lg">
+                                {v.company_name?.[0] || '?'}
+                              </div>
+                              <div>
+                                <p className="font-black text-white">{v.company_name}</p>
+                                <p className="text-[10px] text-slate-500">{v.sector} · {v.country} · {v.profiles?.email || 'unknown'}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${VSE_STAGE_COLORS[v.stage] || ''}`}>
+                                {v.stage.replace('_',' ')}
+                              </span>
+                              <span className="text-slate-500 text-xs">{fmtM(v.annual_revenue)}</span>
+                              <ChevronDown size={14} className={`text-slate-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}/>
+                            </div>
+                          </button>
+
+                          {isOpen && (
+                            <div className="px-5 pb-5 border-t border-slate-800 pt-5 space-y-4">
+                              {/* Metrics */}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {[
+                                  { label: 'Revenue',      value: fmtM(v.annual_revenue) },
+                                  { label: 'Funding',      value: fmtM(v.funding_raised) },
+                                  { label: 'Team',         value: `${v.team_size || '?'} ppl` },
+                                  { label: 'Founded',      value: v.founded_year || '?' },
+                                ].map(m => (
+                                  <div key={m.label} className="bg-slate-800/60 rounded-xl p-3">
+                                    <p className="text-[9px] text-slate-500 uppercase font-bold">{m.label}</p>
+                                    <p className="text-white font-black text-sm mt-0.5">{m.value}</p>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {v.description && (
+                                <p className="text-sm text-slate-400">{v.description}</p>
+                              )}
+
+                              {/* Pre-IPO fields */}
+                              {(v.stage === 'pre_ipo' || v.stage === 'listed') && (
+                                <div className="bg-slate-800/50 rounded-2xl p-4 space-y-3">
+                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IPO Details</p>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div>
+                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Ticker</label>
+                                      <input className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none uppercase"
+                                        value={vseTickerInput} onChange={e => setVseTickerInput(e.target.value)} placeholder="e.g. AFRS"/>
+                                    </div>
+                                    <div>
+                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Share Price $</label>
+                                      <input type="number" className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none"
+                                        value={vseSharePrice} onChange={e => setVseSharePrice(e.target.value)} placeholder="e.g. 10.00"/>
+                                    </div>
+                                    <div>
+                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Shares Issued</label>
+                                      <input type="number" className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none"
+                                        value={vseShares} onChange={e => setVseShares(e.target.value)} placeholder="e.g. 1000000"/>
+                                    </div>
+                                    <div>
+                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Valuation $</label>
+                                      <input type="number" className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none"
+                                        value={vseValuation} onChange={e => setVseValuation(e.target.value)} placeholder="e.g. 10000000"/>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Admin notes */}
+                              <div>
+                                <label className="text-[9px] text-slate-500 uppercase font-bold">Admin Notes / Feedback to Company</label>
+                                <textarea rows={3} className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                                  value={vseAdminNote} onChange={e => setVseAdminNote(e.target.value)}
+                                  placeholder="Internal notes or guidance for the company..."/>
+                              </div>
+
+                              {/* Actions */}
+                              <div className="flex gap-3 flex-wrap">
+                                {v.stage !== 'listed' && v.stage !== 'rejected' && (
+                                  <button onClick={() => advanceStage(v)} disabled={vseSaving}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-[10px] uppercase rounded-xl transition-colors">
+                                    {vseSaving ? <Loader2 size={12} className="animate-spin"/> : <ArrowUpRight size={12}/>}
+                                    Advance Stage
+                                  </button>
+                                )}
+                                <button onClick={() => saveAdminNote(v)} disabled={vseSaving}
+                                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-[10px] uppercase rounded-xl transition-colors">
+                                  {vseSaving ? <Loader2 size={12} className="animate-spin"/> : <Send size={12}/>}
+                                  Save Notes
+                                </button>
+                                {v.stage !== 'rejected' && v.stage !== 'listed' && (
+                                  <button onClick={() => rejectVenture(v)} disabled={vseSaving}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-red-900/40 border border-red-700/50 hover:bg-red-900/60 disabled:opacity-50 text-red-400 font-black text-[10px] uppercase rounded-xl transition-colors">
+                                    <X size={12}/> Reject
+                                  </button>
+                                )}
+                                {v.stage === 'listed' && (
+                                  <span className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/20 border border-emerald-700/40 text-emerald-400 font-black text-[10px] uppercase rounded-xl">
+                                    <Trophy size={12}/> Listed — ${v.ticker_symbol || '?'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* ─── ADMIN ROLES ─── */}
           {activeTab === 'roles' && (
