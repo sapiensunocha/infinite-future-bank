@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Rocket, Globe, ClipboardCheck, Brain } from 'lucide-react';
+import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Rocket, Globe, ClipboardCheck, Brain, Target, BarChart3 } from 'lucide-react';
 import CompanyFormationHub from '../features/formation/CompanyFormationHub';
 import IFBAudit from '../features/audit/IFBAudit';
 import MarketIntelligence from '../features/market/MarketIntelligence';
+import FirstCustomerEngine from '../features/gtm/FirstCustomerEngine';
+import GlobalRiskMarkets from '../features/markets/GlobalRiskMarkets';
 
 export default function CommercialUnderwriting({
   commercialProfile,
@@ -20,15 +22,19 @@ export default function CommercialUnderwriting({
   const BIZ_TABS = [
     { id: 'underwriting',       label: 'I Have a Company',       icon: Building,       color: 'blue'   },
     { id: 'formation',          label: 'Register New Company',   icon: Globe,          color: 'indigo' },
+    { id: 'first_customer',     label: 'First Customer Engine',  icon: Target,         color: 'violet' },
     { id: 'audit',              label: 'IFB Audit',              icon: ClipboardCheck, color: 'violet' },
     { id: 'market_intelligence',label: 'Market Intelligence',    icon: Brain,          color: 'teal'   },
+    { id: 'risk_markets',       label: 'Risk Markets',           icon: BarChart3,      color: 'purple' },
   ];
 
   const TAB_ACTIVE = {
     underwriting:        'bg-blue-600 text-white shadow-md',
     formation:           'bg-indigo-600 text-white shadow-md',
+    first_customer:      'bg-violet-600 text-white shadow-md',
     audit:               'bg-violet-600 text-white shadow-md',
     market_intelligence: 'bg-teal-600 text-white shadow-md',
+    risk_markets:        'bg-purple-600 text-white shadow-md',
   };
 
   return (
@@ -56,6 +62,11 @@ export default function CommercialUnderwriting({
         <CompanyFormationHub session={session} balances={balances} profile={profile} />
       )}
 
+      {/* First Customer Engine */}
+      {bizView === 'first_customer' && (
+        <FirstCustomerEngine session={session} balances={balances} profile={profile} />
+      )}
+
       {/* IFB Audit */}
       {bizView === 'audit' && (
         <IFBAudit session={session} balances={balances} />
@@ -63,7 +74,12 @@ export default function CommercialUnderwriting({
 
       {/* Market Intelligence */}
       {bizView === 'market_intelligence' && (
-        <MarketIntelligence session={session} />
+        <MarketIntelligence session={session} balances={balances} />
+      )}
+
+      {/* Risk Markets */}
+      {bizView === 'risk_markets' && (
+        <GlobalRiskMarkets session={session} balances={balances} />
       )}
 
       {/* Corporate Underwriting (existing) */}

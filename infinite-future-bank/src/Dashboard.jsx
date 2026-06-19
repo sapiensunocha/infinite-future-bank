@@ -66,7 +66,6 @@ const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
 const TapToPay          = lazyLoad(() => import('./features/terminal/TapToPay'));
 const VentureXPayRequest = lazyLoad(() => import('./features/venturex/VentureXPayRequest'));
 const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
-const GlobalRiskMarkets = lazyLoad(() => import('./features/markets/GlobalRiskMarkets'));
 
 const ScreenLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -147,8 +146,7 @@ export default function Dashboard({ session, onSignOut }) {
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
     COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node',
     LOANS: 'Loans & Credit', CAPITAL: 'Capital Platform',
-    CAPITAL_NETWORK: 'Share & Earn',
-    MARKETS: 'IFB Risk Markets'
+    CAPITAL_NETWORK: 'Share & Earn'
   };
 
   const triggerGlobalActionNotification = (type, message) => {
@@ -417,7 +415,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
             {activeTab === 'LOANS' && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
             {activeTab === 'CAPITAL' && <CapitalPlatform session={session} profile={profile} />}
-            {activeTab === 'MARKETS' && <GlobalRiskMarkets session={session} balances={balances} fetchAllData={fetchAllData} />}
+
             </Suspense>
           </div>
 
