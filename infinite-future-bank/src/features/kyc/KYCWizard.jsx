@@ -62,6 +62,7 @@ function CameraCapture({ onCapture, onClose }) {
   const streamRef = useRef(null);
   const [ready, setReady] = useState(false);
 
+  const [camErr, setCamErr] = useState('');
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } } })
@@ -72,7 +73,9 @@ function CameraCapture({ onCapture, onClose }) {
           videoRef.current.play().then(() => setReady(true));
         }
       })
-      .catch(() => onClose());
+      .catch(() => {
+        setCamErr('Camera access denied. Please allow camera permission in your browser settings, then try again. Or use "Upload" to select a photo from your device.');
+      });
     return () => streamRef.current?.getTracks().forEach(t => t.stop());
   }, []);
 
@@ -95,7 +98,18 @@ function CameraCapture({ onCapture, onClose }) {
         <span className="text-white font-black text-sm tracking-tight">IFB Secure Camera</span>
         <button onClick={close} className="text-white/70 hover:text-white transition-colors"><X size={22}/></button>
       </div>
-      <video ref={videoRef} playsInline muted className="flex-1 w-full object-cover" />
+      {camErr ? (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="bg-slate-900 rounded-2xl p-6 max-w-sm text-center space-y-4">
+            <AlertTriangle size={32} className="text-amber-400 mx-auto"/>
+            <p className="text-white font-bold text-sm">{camErr}</p>
+            <button onClick={close} className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-colors">
+              Use Upload Instead
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <video ref={videoRef} playsInline muted className={`flex-1 w-full object-cover ${camErr ? 'hidden' : ''}`} />
       <canvas ref={canvasRef} className="hidden" />
       {/* guide overlay */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">

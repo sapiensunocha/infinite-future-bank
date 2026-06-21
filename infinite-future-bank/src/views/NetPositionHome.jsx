@@ -66,7 +66,20 @@ export default function NetPositionHome({
     <div className="space-y-4 md:space-y-6 animate-in fade-in zoom-in-95 duration-500">
 
       {/* KYC Alert */}
-      {profile && profile.kyc_status !== 'verified' && (
+      {profile && profile.kyc_status === 'pending_kyc' && (
+        <div className="bg-blue-50 border border-blue-200 p-4 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-sm">
+          <div>
+            <h3 className="text-blue-700 font-black uppercase tracking-widest text-xs flex items-center gap-2">
+              <Loader2 size={16} className="animate-spin"/> KYC Under Review
+            </h3>
+            <p className="text-slate-600 text-sm mt-1 font-medium">Your identity documents have been submitted. Our compliance team will verify your account within 24–48 hours.</p>
+          </div>
+          <div className="w-full md:w-auto px-5 py-3 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-xl whitespace-nowrap text-center">
+            Verification Pending
+          </div>
+        </div>
+      )}
+      {profile && profile.kyc_status !== 'verified' && profile.kyc_status !== 'pending_kyc' && (
         <div className="bg-red-50 border border-red-200 p-4 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-sm">
           <div>
             <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16} /> {t('kyc.required')}</h3>

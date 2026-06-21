@@ -53,7 +53,7 @@ export default function PayMeCard({ profile, onClose }) {
 
   if (!profile) return null;
 
-  const payLink = `${APP_URL}/pay/${profile.id}`;
+  const payLink = `${APP_URL}/pay?to=${profile.id}`;
   const userName = profile.full_name || 'IFB Member';
   const tier = profile.active_tier || 'Personal';
 
@@ -61,15 +61,21 @@ export default function PayMeCard({ profile, onClose }) {
   const currentShape = SHAPES[activeShape];
 
   const handleScan = (text) => {
-    if (text) {
-      if (text.includes('/pay/') || text.includes(APP_URL)) {
-        // Open the pay link in the device browser so the recipient can pay
-        window.open(text, '_blank');
-        onClose();
-      } else {
-        setScanError('Not a valid DEUS payment code');
-        setTimeout(() => setScanError(''), 3000);
+    if (!text) return;
+    // Support both formats: /pay?to=UUID and legacy /pay/UUID
+    if (text.includes('/pay')) {
+      let url = text;
+      // Convert legacy /pay/UUID format to /pay?to=UUID
+      const legacyMatch = text.match(/\/pay\/([a-f0-9-]{36})/i);
+      if (legacyMatch) {
+        url = `${APP_URL}/pay?to=${legacyMatch[1]}`;
       }
+      // Navigate within app so session is preserved
+      window.location.href = url;
+      onClose();
+    } else {
+      setScanError('Not a valid DEUS payment code');
+      setTimeout(() => setScanError(''), 3000);
     }
   };
 
