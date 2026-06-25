@@ -6,6 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from './services/supabaseClient';
 import VentureXLaunchpad from './features/venturex/VentureXLaunchpad';
 import VentureXAccelerator from './features/venturex/VentureXAccelerator';
+import VentureXListings from './features/venturex/VentureXListings';
 import {
   Rocket, Building2, Users, DollarSign, Target, TrendingUp,
   ShieldCheck, CheckCircle2, XCircle, Loader2, Plus, Edit3,
@@ -566,6 +567,7 @@ export default function VentureExchange({ session, balances, profile }) {
             { id:'MARKETPLACE', label:'Marketplace' },
             { id:'DEALS', label:`Contracts${deals.length ? ` (${deals.length})` : ''}` },
             { id:'CFO', label:'CFO' },
+            { id:'EXCHANGE', label:'Venture Exchange' },
           ].filter(t => t.label).map(t => (
             <button key={t.id} onClick={() => { setTab(t.id); setSelectedDeal(null); }}
               className={`shrink-0 px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-2xl border-b-4 transition-all ${tab === t.id ? 'border-blue-600 text-blue-700 bg-white shadow-[0_-5px_15px_-10px_rgba(0,0,0,0.1)]' : 'border-transparent text-slate-400 hover:text-slate-700 hover:bg-white/50'}`}>
@@ -1269,6 +1271,11 @@ export default function VentureExchange({ session, balances, profile }) {
               </div>
             )}
           </div>
+        )}
+
+        {/* ═════════ VENTURE EXCHANGE ═════════ */}
+        {tab === 'EXCHANGE' && (
+          <VentureXListings session={session} profile={profile} />
         )}
 
       </div>

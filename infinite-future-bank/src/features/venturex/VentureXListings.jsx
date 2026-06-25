@@ -1,545 +1,618 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import {
-  Search, X, Info, CheckCircle, Star, Globe, MapPin, Users,
-  DollarSign, TrendingUp, Building2, Loader2, Filter,
-  ChevronDown, ArrowRight, Pickaxe, Zap, Leaf, Landmark,
-  Heart, Home, AlertCircle, RefreshCw, Eye, Send,
-  ShieldCheck, Clock, BarChart3, FileText, Cpu
+  Search, X, Info, CheckCircle, Globe, MapPin, Users, TrendingUp,
+  Building2, Loader2, Filter, ArrowUpDown, ArrowRight, Send,
+  ShieldCheck, BarChart3, FileText, Eye, Star, RefreshCw,
+  AlertCircle, ChevronDown, List, LayoutGrid, SlidersHorizontal,
+  ArrowUp, ArrowDown, Minus, Activity, DollarSign, Pickaxe
 } from 'lucide-react';
 
-// ─── Sector metadata ────────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────
 const SECTOR_META = {
-  'Mining':         { emoji: '⛏️', bg: 'bg-amber-50',   border: 'border-amber-300',  text: 'text-amber-700',  badge: 'bg-amber-100 text-amber-800',  accent: 'bg-amber-400' },
-  'Energy':         { emoji: '⚡', bg: 'bg-emerald-50', border: 'border-emerald-300',text: 'text-emerald-700',badge: 'bg-emerald-100 text-emerald-800',accent: 'bg-emerald-400' },
-  'Agriculture':    { emoji: '🌱', bg: 'bg-lime-50',    border: 'border-lime-300',   text: 'text-lime-700',   badge: 'bg-lime-100 text-lime-800',    accent: 'bg-lime-400' },
-  'FinTech':        { emoji: '💳', bg: 'bg-blue-50',    border: 'border-blue-300',   text: 'text-blue-700',   badge: 'bg-blue-100 text-blue-800',    accent: 'bg-blue-400' },
-  'Infrastructure': { emoji: '🏗️', bg: 'bg-slate-50',   border: 'border-slate-300',  text: 'text-slate-700',  badge: 'bg-slate-100 text-slate-800',  accent: 'bg-slate-400' },
-  'Healthcare':     { emoji: '🏥', bg: 'bg-rose-50',    border: 'border-rose-300',   text: 'text-rose-700',   badge: 'bg-rose-100 text-rose-800',    accent: 'bg-rose-400' },
-  'Real Estate':    { emoji: '🏢', bg: 'bg-violet-50',  border: 'border-violet-300', text: 'text-violet-700', badge: 'bg-violet-100 text-violet-800', accent: 'bg-violet-400' },
+  'Mining':         { emoji: '⛏️', color: '#f59e0b', light: '#fef3c7', dark: '#92400e', border: '#fcd34d' },
+  'Energy':         { emoji: '⚡', color: '#10b981', light: '#d1fae5', dark: '#065f46', border: '#6ee7b7' },
+  'Agriculture':    { emoji: '🌱', color: '#84cc16', light: '#f7fee7', dark: '#3f6212', border: '#bef264' },
+  'FinTech':        { emoji: '💳', color: '#3b82f6', light: '#eff6ff', dark: '#1e3a8a', border: '#93c5fd' },
+  'Infrastructure': { emoji: '🏗️', color: '#64748b', light: '#f1f5f9', dark: '#1e293b', border: '#94a3b8' },
+  'Healthcare':     { emoji: '🏥', color: '#f43f5e', light: '#fff1f2', dark: '#881337', border: '#fda4af' },
+  'Real Estate':    { emoji: '🏢', color: '#8b5cf6', light: '#f5f3ff', dark: '#4c1d95', border: '#c4b5fd' },
 };
 
-const STAGE_BADGE = {
-  'Exploration':    'bg-yellow-100 text-yellow-800',
-  'Development':    'bg-blue-100 text-blue-800',
-  'Production':     'bg-emerald-100 text-emerald-800',
-  'Pre-Revenue':    'bg-orange-100 text-orange-800',
-  'Revenue-Stage':  'bg-green-100 text-green-800',
+const STAGE_META = {
+  'Exploration':   { label: 'Exploration',   bg: '#fef9c3', text: '#713f12', dot: '#eab308' },
+  'Development':   { label: 'Development',   bg: '#dbeafe', text: '#1e3a8a', dot: '#3b82f6' },
+  'Production':    { label: 'Production',    bg: '#dcfce7', text: '#14532d', dot: '#22c55e' },
+  'Pre-Revenue':   { label: 'Pre-Revenue',   bg: '#ffedd5', text: '#7c2d12', dot: '#f97316' },
+  'Revenue-Stage': { label: 'Revenue Stage', bg: '#d1fae5', text: '#064e3b', dot: '#10b981' },
 };
 
 const FLAGS = {
   'Guinea':'🇬🇳','Tanzania':'🇹🇿','Ghana':'🇬🇭','Mali':'🇲🇱','Burkina Faso':'🇧🇫',
   'Ivory Coast':'🇨🇮','DR Congo':'🇨🇩','Zambia':'🇿🇲','Zimbabwe':'🇿🇼','Morocco':'🇲🇦',
   'Uganda':'🇺🇬','Lesotho':'🇱🇸','Sierra Leone':'🇸🇱','Botswana':'🇧🇼','South Africa':'🇿🇦',
-  'Guinea-Bissau':'🇬🇼','Niger':'🇳🇪','Namibia':'🇳🇦','Mozambique':'🇲🇿','Madagascar':'🇲🇬',
-  'Nigeria':'🇳🇬','Kenya':'🇰🇪','Ethiopia':'🇪🇹','Senegal':'🇸🇳','Gabon':'🇬🇦',
-  'Rwanda':'🇷🇼','Egypt':'🇪🇬','Peru':'🇵🇪','Brazil':'🇧🇷','Chile':'🇨🇱',
-  'Australia':'🇦🇺','Venezuela':'🇻🇪','Mauritania':'🇲🇷',
+  'Niger':'🇳🇪','Namibia':'🇳🇦','Mozambique':'🇲🇿','Madagascar':'🇲🇬','Nigeria':'🇳🇬',
+  'Kenya':'🇰🇪','Ethiopia':'🇪🇹','Senegal':'🇸🇳','Gabon':'🇬🇦','Rwanda':'🇷🇼',
+  'Egypt':'🇪🇬','Peru':'🇵🇪','Brazil':'🇧🇷','Chile':'🇨🇱','Australia':'🇦🇺',
+  'Venezuela':'🇻🇪','Mauritania':'🇲🇷',
 };
 
+const SECTORS = ['All','Mining','Energy','Agriculture','FinTech','Infrastructure','Healthcare','Real Estate'];
+const STAGES  = ['All','Exploration','Development','Production','Pre-Revenue','Revenue-Stage'];
+const RAISES  = ['All','< $10M','$10M – $30M','$30M – $75M','$75M+'];
+const SORT_OPTIONS = [
+  { id: 'raise_desc',    label: 'Raise ↓' },
+  { id: 'raise_asc',     label: 'Raise ↑' },
+  { id: 'name_asc',      label: 'Name A–Z' },
+  { id: 'verified_first',label: 'Verified First' },
+  { id: 'featured_first',label: 'Featured' },
+];
+const RANGES = ['$25K – $100K','$100K – $500K','$500K – $2M','$2M+'];
+
+const HOW_IT_WORKS = [
+  { n:'1', icon:'📋', title:'Company Applies & Pays Listing Fee', body:'Company submits KYC documents, financial statements and a capital raise brief. A one-time listing fee of $500–$2,000 is charged to publish the profile on IFB Venture Exchange.' },
+  { n:'2', icon:'🔍', title:'IFB Verifies & Approves',            body:'Our compliance team verifies registration, director identity and core financial claims. Approved companies receive the IFB Verified badge. We do not guarantee financial projections.' },
+  { n:'3', icon:'👁️', title:'Investors Browse the Directory',      body:'Authenticated IFB users browse active listings, filter by sector/country/stage/raise size, and read full company profiles.' },
+  { n:'4', icon:'🤝', title:'Express Interest',                    body:'Investors select an investment range and submit a message. IFB connects both parties by email within 3 business days and provides access to the company\'s secure data room.' },
+  { n:'5', icon:'✅', title:'Deal Closes — IFB Earns Success Fee', body:'If capital is successfully raised, IFB invoices a success fee of 3–6% of the amount closed. Capital flows directly between investor and company — IFB does not hold or transmit funds.' },
+];
+
 const fmt = (n) => {
-  if (!n) return 'N/A';
-  if (n >= 1000000000) return `$${(n / 1000000000).toFixed(1)}B`;
-  if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `$${(n / 1000).toFixed(0)}K`;
+  if (n == null) return '—';
+  if (n >= 1e9) return `$${(n/1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `$${(n/1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `$${(n/1e3).toFixed(0)}K`;
   return `$${n}`;
 };
 
-const SECTORS = ['All', 'Mining', 'Energy', 'Agriculture', 'FinTech', 'Infrastructure', 'Healthcare', 'Real Estate'];
-const STAGES  = ['All', 'Exploration', 'Development', 'Production', 'Pre-Revenue', 'Revenue-Stage'];
-const RAISES  = ['All', 'Under $15M', '$15M – $50M', '$50M+'];
-const RANGES  = ['$25K – $100K', '$100K – $500K', '$500K – $2M', '$2M+'];
-
-// ─── Info modal content ─────────────────────────────────────
-const HOW_IT_WORKS_STEPS = [
-  { icon: '📋', title: 'Company Applies & Pays Listing Fee', body: 'A company completes our online application — submitting KYC documents, financial statements and a capital raise brief. A one-time listing fee of $500–$2,000 is charged to publish the profile on VentureX Listings.' },
-  { icon: '🔍', title: 'IFB Verifies & Approves', body: 'Our compliance team verifies the company\'s registration, director identity and core financial claims. Approved companies receive the IFB Verified badge. We do not guarantee financial projections or investment outcomes.' },
-  { icon: '👁️', title: 'Investors Browse the Directory', body: 'Authenticated IFB users can browse all active listings, filter by sector/country/stage/raise size, and read full company profiles including assets, financials, management and ESG data.' },
-  { icon: '🤝', title: 'Express Interest', body: 'Interested investors click "Express Interest," select an investment range and submit a message. IFB connects both parties by email within 3 business days and provides access to the company\'s secure data room.' },
-  { icon: '✅', title: 'Deal Closes — IFB Earns Success Fee', body: 'If capital is successfully raised, IFB invoices a success fee of 3–6% of the amount closed. Capital flows directly between investor and company — IFB does not hold or transmit funds.' },
-];
+const ticker = (name) => name.replace(/[^A-Z]/g,'').slice(0,4) || name.slice(0,4).toUpperCase();
 
 // ════════════════════════════════════════════════════════════
 export default function VentureXListings({ session }) {
-  const [companies, setCompanies]       = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [search, setSearch]             = useState('');
-  const [sector, setSector]             = useState('All');
-  const [stage, setStage]               = useState('All');
-  const [raise, setRaise]               = useState('All');
-  const [selected, setSelected]         = useState(null);
-  const [activeTab, setActiveTab]       = useState('overview');
-  const [showInfo, setShowInfo]         = useState(false);
-  const [myInterests, setMyInterests]   = useState(new Set());
-  const [interestForm, setInterestForm] = useState({ range: '', message: '' });
-  const [submitting, setSubmitting]     = useState(false);
-  const [toast, setToast]               = useState(null);
+  const [companies, setCompanies]     = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState('');
+  const [sector, setSector]           = useState('All');
+  const [stage, setStage]             = useState('All');
+  const [raise, setRaise]             = useState('All');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [sortBy, setSortBy]           = useState('featured_first');
+  const [viewMode, setViewMode]       = useState('grid');  // 'grid' | 'table'
+  const [showFilters, setShowFilters] = useState(false);
+  const [selected, setSelected]       = useState(null);
+  const [activeTab, setActiveTab]     = useState('overview');
+  const [showInfo, setShowInfo]       = useState(false);
+  const [myInterests, setMyInterests] = useState(new Set());
+  const [interestForm, setInterestForm] = useState({ range:'', message:'' });
+  const [submitting, setSubmitting]   = useState(false);
+  const [toast, setToast]             = useState(null);
+  const tickerRef = useRef(null);
 
   useEffect(() => { fetchAll(); }, []);
+
+  // Ticker scroll animation
+  useEffect(() => {
+    if (!tickerRef.current || companies.length === 0) return;
+    let x = 0;
+    const el = tickerRef.current;
+    const speed = 0.4;
+    let raf;
+    const step = () => {
+      x -= speed;
+      if (Math.abs(x) > el.scrollWidth / 2) x = 0;
+      el.style.transform = `translateX(${x}px)`;
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [companies]);
 
   const fetchAll = async () => {
     setLoading(true);
     const [{ data: co }, { data: my }] = await Promise.all([
-      supabase.from('venturex_listed_companies').select('*').eq('status', 'active')
-        .order('is_featured', { ascending: false })
-        .order('ifb_verified', { ascending: false })
-        .order('raise_amount_usd', { ascending: false }),
+      supabase.from('venturex_listed_companies').select('*').eq('status','active'),
       supabase.from('venturex_interest').select('company_id').eq('user_id', session.user.id),
     ]);
     setCompanies(co || []);
-    setMyInterests(new Set((my || []).map(r => r.company_id)));
+    setMyInterests(new Set((my||[]).map(r => r.company_id)));
     setLoading(false);
   };
 
-  const notify = (type, text) => {
-    setToast({ type, text });
-    setTimeout(() => setToast(null), 5000);
-  };
+  const notify = (type, text) => { setToast({type,text}); setTimeout(()=>setToast(null),5000); };
 
   const handleExpressInterest = async () => {
-    if (!interestForm.range) return notify('error', 'Please select an investment range.');
+    if (!interestForm.range) return notify('error','Please select an investment range.');
     setSubmitting(true);
     const { error } = await supabase.from('venturex_interest').upsert({
-      user_id: session.user.id,
-      company_id: selected.id,
-      message: interestForm.message || null,
-      investment_range: interestForm.range,
-    }, { onConflict: 'user_id,company_id' });
+      user_id: session.user.id, company_id: selected.id,
+      message: interestForm.message||null, investment_range: interestForm.range,
+    }, { onConflict:'user_id,company_id' });
     setSubmitting(false);
-    if (error) {
-      notify('error', 'Could not register interest. Please try again.');
-    } else {
+    if (error) notify('error','Could not register interest. Please try again.');
+    else {
       setMyInterests(prev => new Set([...prev, selected.id]));
-      setInterestForm({ range: '', message: '' });
-      notify('success', `Interest registered! IFB will connect you with ${selected.name} within 3 business days.`);
+      setInterestForm({range:'',message:''});
+      notify('success',`Interest registered! IFB will connect you with ${selected.name} within 3 business days.`);
     }
   };
 
-  // ── Filtering ───────────────────────────────────────────
+  // ── Filter + Sort ─────────────────────────────────────────
   const filtered = useMemo(() => {
-    return companies.filter(c => {
+    let list = companies.filter(c => {
       const q = search.toLowerCase();
-      const matchQ = !q || c.name.toLowerCase().includes(q) || c.country.toLowerCase().includes(q)
-        || c.sub_sector?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q);
-      const matchS = sector === 'All' || c.sector === sector;
-      const matchSt = stage === 'All' || c.stage === stage;
-      const matchR = raise === 'All'
-        || (raise === 'Under $15M'    && c.raise_amount_usd <  15000000)
-        || (raise === '$15M – $50M'   && c.raise_amount_usd >= 15000000 && c.raise_amount_usd <= 50000000)
-        || (raise === '$50M+'         && c.raise_amount_usd >  50000000);
-      return matchQ && matchS && matchSt && matchR;
+      const mQ = !q || c.name.toLowerCase().includes(q) || c.country.toLowerCase().includes(q)
+        || c.sub_sector?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q)
+        || ticker(c.name).toLowerCase().includes(q);
+      const mS  = sector === 'All' || c.sector === sector;
+      const mSt = stage  === 'All' || c.stage  === stage;
+      const mR  = raise  === 'All'
+        || (raise === '< $10M'      && c.raise_amount_usd < 10e6)
+        || (raise === '$10M – $30M' && c.raise_amount_usd >= 10e6 && c.raise_amount_usd <= 30e6)
+        || (raise === '$30M – $75M' && c.raise_amount_usd > 30e6  && c.raise_amount_usd <= 75e6)
+        || (raise === '$75M+'       && c.raise_amount_usd > 75e6);
+      const mV = !verifiedOnly || c.ifb_verified;
+      return mQ && mS && mSt && mR && mV;
     });
-  }, [companies, search, sector, stage, raise]);
+    list.sort((a,b) => {
+      if (sortBy === 'raise_desc')     return b.raise_amount_usd - a.raise_amount_usd;
+      if (sortBy === 'raise_asc')      return a.raise_amount_usd - b.raise_amount_usd;
+      if (sortBy === 'name_asc')       return a.name.localeCompare(b.name);
+      if (sortBy === 'verified_first') return (b.ifb_verified?1:0) - (a.ifb_verified?1:0);
+      // featured_first
+      if (b.is_featured !== a.is_featured) return (b.is_featured?1:0)-(a.is_featured?1:0);
+      if (b.ifb_verified !== a.ifb_verified) return (b.ifb_verified?1:0)-(a.ifb_verified?1:0);
+      return b.raise_amount_usd - a.raise_amount_usd;
+    });
+    return list;
+  }, [companies, search, sector, stage, raise, verifiedOnly, sortBy]);
 
-  const totalRaise  = filtered.reduce((s, c) => s + (c.raise_amount_usd || 0), 0);
-  const countries   = new Set(filtered.map(c => c.country)).size;
-  const sm          = selected ? (SECTOR_META[selected.sector] || SECTOR_META['Mining']) : null;
+  const totalRaise  = filtered.reduce((s,c) => s+(c.raise_amount_usd||0),0);
+  const miningCount = companies.filter(c=>c.sector==='Mining').length;
+  const verifiedCount = companies.filter(c=>c.ifb_verified).length;
+  const countryCount  = new Set(companies.map(c=>c.country)).size;
 
-  // ─── Skeleton loader ────────────────────────────────────
+  // ── Ticker items ──────────────────────────────────────────
+  const tickerItems = [...companies, ...companies]; // doubled for seamless loop
+
   if (loading) return (
-    <div className="space-y-6 animate-in fade-in">
-      <div className="bg-slate-900 rounded-[2.5rem] p-8 h-36 animate-pulse" />
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-[2rem] border border-slate-100 h-72 animate-pulse" />
+    <div className="space-y-4 animate-in fade-in">
+      <div className="h-16 bg-slate-900 rounded-2xl animate-pulse"/>
+      <div className="h-12 bg-slate-200 rounded-2xl animate-pulse"/>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {[...Array(6)].map((_,i)=>(
+          <div key={i} className="h-56 bg-white rounded-[2rem] border border-slate-100 animate-pulse"/>
         ))}
       </div>
     </div>
   );
 
-  return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-20">
+  const sm = selected ? (SECTOR_META[selected.sector]||SECTOR_META['Mining']) : null;
+  const stm = selected?.stage ? (STAGE_META[selected.stage]||{}) : {};
 
-      {/* ── HEADER ─────────────────────────────────────── */}
-      <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5" style={{backgroundImage:'radial-gradient(circle at 80% 50%, #f59e0b 0%, transparent 60%)'}} />
-        <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Globe className="text-amber-400" size={28} />
-              <h2 className="text-2xl font-black tracking-tight">Global Company Listings</h2>
+  return (
+    <div className="space-y-0 animate-in fade-in duration-400 pb-24">
+
+      {/* ══ EXCHANGE HEADER ══════════════════════════════════ */}
+      <div className="bg-[#0a0f1e] rounded-t-[2rem] overflow-hidden">
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+              <Pickaxe size={16} className="text-amber-400"/>
             </div>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-              Capital Raise Directory — Africa & World · Mining Focus
-            </p>
-            <div className="flex flex-wrap gap-3 mt-4">
-              <span className="bg-white/10 border border-white/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                {companies.length} Companies
-              </span>
-              <span className="bg-white/10 border border-white/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                {new Set(companies.map(c => c.country)).size} Countries
-              </span>
-              <span className="bg-white/10 border border-white/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                {fmt(companies.reduce((s, c) => s + (c.raise_amount_usd || 0), 0))} Sought
-              </span>
-              <span className="bg-amber-500/20 border border-amber-500/30 text-amber-300 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                ⛏️ {companies.filter(c => c.sector === 'Mining').length} Mining Companies
-              </span>
+            <div>
+              <h2 className="text-white font-black text-base tracking-tight leading-none">IFB Venture Exchange</h2>
+              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Capital Raise Directory · Africa & World</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowInfo(true)}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0"
-          >
-            <Info size={16} className="text-amber-400" /> How This Works
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={()=>setShowInfo(true)}
+              className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 transition-all">
+              <Info size={12} className="text-amber-400"/> How It Works
+            </button>
+            <button onClick={fetchAll} className="p-2 bg-white/5 border border-white/10 rounded-xl text-slate-400 hover:text-white transition-all">
+              <RefreshCw size={14}/>
+            </button>
+          </div>
+        </div>
+
+        {/* Stats strip */}
+        <div className="grid grid-cols-4 border-t border-white/5 divide-x divide-white/5">
+          {[
+            { label:'Listed Companies', value: companies.length, sub:'Active listings' },
+            { label:'Total Capital Sought', value: fmt(companies.reduce((s,c)=>s+(c.raise_amount_usd||0),0)), sub:'Across all sectors' },
+            { label:'Mining Companies', value: miningCount, sub:`${Math.round(miningCount/companies.length*100)}% of listings` },
+            { label:'Countries', value: countryCount, sub:`${verifiedCount} IFB Verified` },
+          ].map(s => (
+            <div key={s.label} className="px-4 py-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{s.label}</p>
+              <p className="text-white font-black text-lg leading-none">{s.value}</p>
+              <p className="text-slate-600 text-[9px] font-bold mt-0.5">{s.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Live ticker */}
+        <div className="border-t border-white/5 py-2 overflow-hidden bg-black/20">
+          <div ref={tickerRef} className="flex gap-6 whitespace-nowrap will-change-transform">
+            {tickerItems.map((c, i) => {
+              const meta = SECTOR_META[c.sector]||SECTOR_META['Mining'];
+              return (
+                <span key={i} className="inline-flex items-center gap-2 text-[10px] font-black shrink-0">
+                  <span className="text-slate-400 font-mono">{ticker(c.name)}</span>
+                  <span style={{color: meta.color}}>{FLAGS[c.country]||'🌍'}</span>
+                  <span className="text-white/60">{fmt(c.raise_amount_usd)}</span>
+                  <span className="text-slate-700">·</span>
+                </span>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* ── FILTERS ────────────────────────────────────── */}
-      <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-        <div className="flex flex-col gap-4">
+      {/* ══ FILTER BAR ═══════════════════════════════════════ */}
+      <div className="bg-white border-x border-b border-slate-200 shadow-sm">
+        {/* Main filter row */}
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100">
           {/* Search */}
-          <div className="relative">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search company name, country, mineral…"
-              className="w-full pl-11 pr-10 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-400 transition-all"
-            />
-            {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
-                <X size={16} />
-              </button>
-            )}
+          <div className="relative flex-1 min-w-0">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"/>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder="Search company, country, mineral…"
+              className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-400 transition-all"/>
+            {search && <button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"><X size={13}/></button>}
           </div>
-          {/* Filter pills row */}
-          <div className="flex flex-wrap gap-3 items-center">
-            <Filter size={14} className="text-slate-400 shrink-0" />
+          {/* Sort */}
+          <div className="relative shrink-0">
+            <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
+              className="appearance-none bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 outline-none focus:border-blue-400 cursor-pointer">
+              {SORT_OPTIONS.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"/>
+          </div>
+          {/* Verified toggle */}
+          <button onClick={()=>setVerifiedOnly(!verifiedOnly)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${verifiedOnly ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300'}`}>
+            <ShieldCheck size={12}/> Verified
+          </button>
+          {/* Filter toggle */}
+          <button onClick={()=>setShowFilters(!showFilters)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-400'}`}>
+            <SlidersHorizontal size={12}/> Filters
+          </button>
+          {/* View toggle */}
+          <div className="flex border border-slate-200 rounded-xl overflow-hidden shrink-0">
+            <button onClick={()=>setViewMode('grid')} className={`p-2.5 transition-all ${viewMode==='grid'?'bg-slate-900 text-white':'text-slate-400 hover:text-slate-700'}`}><LayoutGrid size={14}/></button>
+            <button onClick={()=>setViewMode('table')} className={`p-2.5 transition-all ${viewMode==='table'?'bg-slate-900 text-white':'text-slate-400 hover:text-slate-700'}`}><List size={14}/></button>
+          </div>
+        </div>
+
+        {/* Expandable advanced filters */}
+        {showFilters && (
+          <div className="px-5 py-4 space-y-3 bg-slate-50/60 border-b border-slate-100 animate-in slide-in-from-top-2 duration-200">
             {/* Sector */}
-            <div className="flex gap-1 flex-wrap">
-              {SECTORS.map(s => (
-                <button key={s} onClick={() => setSector(s)}
-                  className={`px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sector === s ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                  {s === 'All' ? 'All Sectors' : `${SECTOR_META[s]?.emoji} ${s}`}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 w-14 shrink-0">Sector</span>
+              {SECTORS.map(s=>(
+                <button key={s} onClick={()=>setSector(s)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${sector===s?'bg-slate-900 text-white':'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'}`}>
+                  {s==='All'?'All':`${SECTOR_META[s]?.emoji||''} ${s}`}
                 </button>
               ))}
             </div>
-          </div>
-          <div className="flex flex-wrap gap-3 items-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">Stage</span>
-            {STAGES.map(s => (
-              <button key={s} onClick={() => setStage(s)}
-                className={`px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${stage === s ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                {s}
+            {/* Stage */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 w-14 shrink-0">Stage</span>
+              {STAGES.map(s=>(
+                <button key={s} onClick={()=>setStage(s)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${stage===s?'bg-slate-900 text-white':'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'}`}>
+                  {s}
+                </button>
+              ))}
+            </div>
+            {/* Raise */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 w-14 shrink-0">Raise</span>
+              {RAISES.map(r=>(
+                <button key={r} onClick={()=>setRaise(r)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${raise===r?'bg-slate-900 text-white':'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'}`}>
+                  {r}
+                </button>
+              ))}
+            </div>
+            {/* Reset */}
+            {(sector!=='All'||stage!=='All'||raise!=='All'||verifiedOnly||search) && (
+              <button onClick={()=>{setSector('All');setStage('All');setRaise('All');setVerifiedOnly(false);setSearch('');}}
+                className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-all">
+                ✕ Reset all filters
               </button>
-            ))}
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 shrink-0">Raise</span>
-            {RAISES.map(r => (
-              <button key={r} onClick={() => setRaise(r)}
-                className={`px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${raise === r ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                {r}
-              </button>
-            ))}
+            )}
           </div>
+        )}
+
+        {/* Results count */}
+        <div className="flex items-center justify-between px-5 py-2.5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+            {filtered.length} listings · {new Set(filtered.map(c=>c.country)).size} countries · {fmt(totalRaise)} total capital
+          </p>
+          {(sector!=='All'||stage!=='All'||raise!=='All'||verifiedOnly) && (
+            <div className="flex items-center gap-1.5">
+              {sector!=='All' && <Chip label={sector} onRemove={()=>setSector('All')}/>}
+              {stage!=='All'  && <Chip label={stage}  onRemove={()=>setStage('All')}/>}
+              {raise!=='All'  && <Chip label={raise}  onRemove={()=>setRaise('All')}/>}
+              {verifiedOnly   && <Chip label="Verified" onRemove={()=>setVerifiedOnly(false)}/>}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── RESULTS BAR ─────────────────────────────────── */}
-      <div className="flex justify-between items-center px-1">
-        <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-          {filtered.length} companies · {countries} countries · {fmt(totalRaise)} total capital sought
-        </p>
-        <button onClick={fetchAll} className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all">
-          <RefreshCw size={14} />
-        </button>
+      {/* ══ LISTINGS ════════════════════════════════════════ */}
+      <div className="bg-slate-50 border-x border-b border-slate-200 rounded-b-[2rem] min-h-[400px]">
+        {filtered.length === 0 ? (
+          <div className="py-20 text-center">
+            <AlertCircle size={36} className="mx-auto mb-3 text-slate-300"/>
+            <p className="font-black text-slate-700 text-base">No listings match your filters</p>
+            <p className="text-slate-400 text-xs font-medium mt-1">Adjust sector, stage or raise size filters</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          /* ── GRID VIEW ── */
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filtered.map(c => <ExchangeCard key={c.id} c={c} myInterests={myInterests} onOpen={co=>{setSelected(co);setActiveTab('overview');setInterestForm({range:'',message:''});}}/>)}
+          </div>
+        ) : (
+          /* ── TABLE VIEW ── */
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-100">
+                  {['Ticker','Company','Country','Sector','Stage','Raise Target','Equity %','Min Ticket','Status',''].map(h=>(
+                    <th key={h} className="px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filtered.map(c => {
+                  const meta = SECTOR_META[c.sector]||SECTOR_META['Mining'];
+                  const stg  = STAGE_META[c.stage]||{};
+                  const alreadyExpressed = myInterests.has(c.id);
+                  return (
+                    <tr key={c.id} onClick={()=>{setSelected(c);setActiveTab('overview');setInterestForm({range:'',message:''});}}
+                      className="hover:bg-blue-50/50 cursor-pointer transition-colors group">
+                      <td className="px-4 py-3 font-mono font-black text-slate-800 text-[10px]">{ticker(c.name)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black shrink-0" style={{backgroundColor:c.logo_color||'#3b82f6'}}>
+                            {c.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-black text-slate-900 text-xs leading-none whitespace-nowrap">{c.name}</p>
+                            {c.ifb_verified && <span className="text-[8px] font-black text-blue-600">✓ Verified</span>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-slate-600 font-bold">{FLAGS[c.country]||'🌍'} {c.country}</td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest whitespace-nowrap"
+                          style={{backgroundColor:meta.light,color:meta.dark}}>{meta.emoji} {c.sub_sector||c.sector}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {c.stage && <span className="px-2 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap"
+                          style={{backgroundColor:stg.bg,color:stg.text}}>{c.stage}</span>}
+                      </td>
+                      <td className="px-4 py-3 font-black text-slate-900 whitespace-nowrap">{fmt(c.raise_amount_usd)}</td>
+                      <td className="px-4 py-3 text-slate-600 font-bold">{c.equity_offered_pct ? `${c.equity_offered_pct}%` : '—'}</td>
+                      <td className="px-4 py-3 text-slate-600 font-bold whitespace-nowrap">{fmt(c.min_ticket_usd)}</td>
+                      <td className="px-4 py-3">
+                        {c.is_featured
+                          ? <span className="text-amber-600 font-black text-[9px] uppercase">⭐ Featured</span>
+                          : c.ifb_verified
+                          ? <span className="text-blue-600 font-black text-[9px] uppercase">✓ Active</span>
+                          : <span className="text-slate-400 font-black text-[9px] uppercase">Active</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button className="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap">
+                          {alreadyExpressed ? '✓ Interested' : 'View →'}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-
-      {/* ── CARDS GRID ──────────────────────────────────── */}
-      {filtered.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-[2.5rem] p-16 text-center shadow-sm">
-          <AlertCircle size={40} className="mx-auto mb-4 text-slate-300" />
-          <h4 className="font-black text-slate-800 text-lg mb-2">No companies match your filters</h4>
-          <p className="text-slate-400 text-sm font-medium">Try adjusting the sector, stage or raise size filters.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filtered.map(c => {
-            const meta = SECTOR_META[c.sector] || SECTOR_META['Mining'];
-            const alreadyExpressed = myInterests.has(c.id);
-            return (
-              <div key={c.id}
-                className={`group bg-white border border-slate-200 rounded-[2rem] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col ${c.is_featured ? 'ring-2 ring-amber-300 shadow-lg' : ''}`}>
-                {/* Accent bar */}
-                <div className={`h-1.5 w-full ${meta.accent}`} />
-                <div className="p-6 flex flex-col gap-4 flex-1">
-                  {/* Top row */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-black text-white shrink-0`}
-                        style={{ backgroundColor: c.logo_color || '#3b82f6' }}>
-                        {c.name.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-black text-slate-900 text-sm leading-tight line-clamp-1">{c.name}</h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                          {FLAGS[c.country] || '🌍'} {c.country}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      {c.ifb_verified && (
-                        <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                          <ShieldCheck size={10} /> Verified
-                        </span>
-                      )}
-                      {c.is_featured && (
-                        <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          <Star size={9} /> Featured
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Badges row */}
-                  <div className="flex flex-wrap gap-1.5">
-                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${meta.badge}`}>
-                      {meta.emoji} {c.sub_sector || c.sector}
-                    </span>
-                    {c.stage && (
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${STAGE_BADGE[c.stage] || 'bg-slate-100 text-slate-700'}`}>
-                        {c.stage}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-3 flex-1">
-                    {c.description}
-                  </p>
-
-                  {/* Stats row */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Capital Raise</p>
-                      <p className="text-base font-black text-slate-900">{fmt(c.raise_amount_usd)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Type</p>
-                      <p className="text-sm font-black text-slate-700 capitalize">{c.capital_type || 'Equity'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Min Ticket</p>
-                      <p className="text-sm font-black text-slate-700">{fmt(c.min_ticket_usd)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Target</p>
-                      <p className="text-[11px] font-black text-slate-700 line-clamp-1">{c.target_exchange || 'IFB VentureX'}</p>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      onClick={() => { setSelected(c); setActiveTab('overview'); setInterestForm({ range: '', message: '' }); }}
-                      className="flex-1 py-2.5 border-2 border-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all flex items-center justify-center gap-1.5"
-                    >
-                      <Eye size={12} /> View Details
-                    </button>
-                    <button
-                      onClick={() => { setSelected(c); setActiveTab('overview'); setInterestForm({ range: '', message: '' }); }}
-                      className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${alreadyExpressed ? 'bg-emerald-50 text-emerald-700 border-2 border-emerald-200' : 'bg-amber-500 hover:bg-amber-600 text-white shadow-md'}`}
-                    >
-                      {alreadyExpressed ? <><CheckCircle size={12} /> Interested</> : <><Send size={12} /> Express Interest</>}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* ══ DETAIL MODAL ════════════════════════════════════ */}
       {selected && (() => {
-        const meta = SECTOR_META[selected.sector] || SECTOR_META['Mining'];
         const alreadyExpressed = myInterests.has(selected.id);
-        const TABS = [
-          { id: 'overview',    label: 'Overview' },
-          { id: 'assets',      label: selected.sector === 'Mining' ? 'Mine Assets' : 'Assets' },
-          { id: 'financials',  label: 'Financials' },
-          { id: 'management',  label: 'Management' },
-          { id: 'esg',         label: 'ESG' },
-        ];
+        const TABS = ['overview','assets','financials','management','esg'];
         return (
-          <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-slate-900/70 backdrop-blur-xl animate-in fade-in duration-300">
-            <div className="bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col">
-              {/* Modal header */}
-              <div className={`${meta.bg} border-b ${meta.border} p-6 sticky top-0 z-10 rounded-t-[2.5rem] md:rounded-t-[2.5rem]`}>
-                <div className="flex items-start justify-between gap-4">
+          <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-2xl max-h-[94vh] overflow-y-auto rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col">
+
+              {/* Modal top: exchange-style header */}
+              <div className="bg-[#0a0f1e] rounded-t-[2.5rem] p-6">
+                <div className="flex items-start justify-between gap-4 mb-5">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white shrink-0 shadow-lg"
-                      style={{ backgroundColor: selected.logo_color || '#3b82f6' }}>
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-lg shrink-0"
+                      style={{backgroundColor:selected.logo_color||'#3b82f6'}}>
                       {selected.name.charAt(0)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-xl font-black text-slate-900 leading-tight">{selected.name}</h3>
+                        <span className="font-mono text-slate-500 text-xs">{ticker(selected.name)}</span>
+                        <h3 className="text-white font-black text-lg leading-tight">{selected.name}</h3>
                         {selected.ifb_verified && (
-                          <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full">
-                            <ShieldCheck size={9} /> IFB Verified
+                          <span className="flex items-center gap-1 text-[9px] font-black text-blue-300 bg-blue-900/40 border border-blue-700/40 px-2 py-0.5 rounded-full">
+                            <ShieldCheck size={9}/> IFB Verified
                           </span>
                         )}
+                        {selected.is_featured && (
+                          <span className="text-[9px] font-black text-amber-300 bg-amber-900/40 border border-amber-700/40 px-2 py-0.5 rounded-full">⭐ Featured</span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs font-bold text-slate-500">{FLAGS[selected.country] || '🌍'} {selected.country}</span>
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${meta.badge}`}>{meta.emoji} {selected.sector}</span>
-                        {selected.stage && <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${STAGE_BADGE[selected.stage] || 'bg-slate-100 text-slate-700'}`}>{selected.stage}</span>}
-                      </div>
+                      <p className="text-slate-500 text-xs font-bold mt-1">
+                        {FLAGS[selected.country]||'🌍'} {selected.country}
+                        {selected.headquarters && ` · ${selected.headquarters}`}
+                      </p>
                     </div>
                   </div>
-                  <button onClick={() => setSelected(null)} className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-800 shadow-sm shrink-0">
-                    <X size={18} />
+                  <button onClick={()=>setSelected(null)} className="p-2 bg-white/10 border border-white/10 rounded-xl text-slate-400 hover:text-white shrink-0">
+                    <X size={16}/>
                   </button>
                 </div>
-                {/* Capital raise hero */}
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Capital Sought</p>
-                    <p className="text-lg font-black text-slate-900">{fmt(selected.raise_amount_usd)}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Type</p>
-                    <p className="text-sm font-black text-slate-900 capitalize">{selected.capital_type || 'Equity'}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Min Ticket</p>
-                    <p className="text-sm font-black text-slate-900">{fmt(selected.min_ticket_usd)}</p>
-                  </div>
+
+                {/* Key metrics row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    {label:'Capital Raise',   value: fmt(selected.raise_amount_usd), accent:'#f59e0b'},
+                    {label:'Type',            value: selected.capital_type?.toUpperCase()||'EQUITY', accent:'#3b82f6'},
+                    {label:'Min Ticket',      value: fmt(selected.min_ticket_usd),    accent:'#10b981'},
+                    {label:'Equity Offered',  value: selected.equity_offered_pct ? `${selected.equity_offered_pct}%` : '—', accent:'#8b5cf6'},
+                  ].map(m => (
+                    <div key={m.label} className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                      <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{color:m.accent}}>{m.label}</p>
+                      <p className="text-white font-black text-base leading-none">{m.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Sector + Stage badges */}
+                <div className="flex gap-2 mt-4 flex-wrap">
+                  {sm && (
+                    <span className="px-3 py-1 rounded-full text-xs font-black"
+                      style={{backgroundColor:sm.light,color:sm.dark,border:`1px solid ${sm.border}`}}>
+                      {sm.emoji} {selected.sector} · {selected.sub_sector}
+                    </span>
+                  )}
+                  {selected.stage && stm.bg && (
+                    <span className="px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5"
+                      style={{backgroundColor:'rgba(255,255,255,0.08)',color:'#94a3b8',border:'1px solid rgba(255,255,255,0.1)'}}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:stm.dot}}/>
+                      {selected.stage}
+                    </span>
+                  )}
+                  {selected.target_exchange && (
+                    <span className="px-3 py-1 rounded-full text-xs font-black text-slate-400 border border-white/10 bg-white/5">
+                      🏛 {selected.target_exchange}
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Tabs */}
-              <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar bg-white sticky top-[200px] z-10">
-                {TABS.map(t => (
-                  <button key={t.id} onClick={() => setActiveTab(t.id)}
-                    className={`px-5 py-3.5 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 ${activeTab === t.id ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-700'}`}>
-                    {t.label}
+              <div className="flex border-b border-slate-200 overflow-x-auto no-scrollbar bg-slate-50">
+                {TABS.map(t=>(
+                  <button key={t} onClick={()=>setActiveTab(t)}
+                    className={`px-5 py-3.5 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all capitalize ${activeTab===t?'border-slate-900 text-slate-900 bg-white':'border-transparent text-slate-400 hover:text-slate-600'}`}>
+                    {t === 'assets' && selected.sector === 'Mining' ? 'Mine Assets' : t}
                   </button>
                 ))}
               </div>
 
               {/* Tab content */}
-              <div className="p-6 space-y-5 flex-1">
-
-                {activeTab === 'overview' && (
+              <div className="p-6 flex-1 space-y-4">
+                {activeTab==='overview' && (
                   <div className="space-y-5">
                     {selected.description && (
-                      <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">About the Company</p>
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">About</p>
                         <p className="text-sm text-slate-700 leading-relaxed font-medium">{selected.description}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-3">
-                      {selected.year_founded && <Stat label="Founded" value={selected.year_founded} />}
-                      {selected.headquarters && <Stat label="Headquarters" value={selected.headquarters} />}
-                      {selected.target_exchange && <Stat label="Target Exchange" value={selected.target_exchange} />}
-                      {selected.listing_type && <Stat label="Listing Type" value={selected.listing_type} />}
-                      {selected.listing_timeline && <Stat label="Target Timeline" value={selected.listing_timeline} />}
-                      {selected.equity_offered_pct && <Stat label="Equity Offered" value={`${selected.equity_offered_pct}%`} />}
-                      {selected.pre_money_valuation_usd && <Stat label="Pre-Money Valuation" value={fmt(selected.pre_money_valuation_usd)} />}
+                      {selected.year_founded && <DCell label="Founded"          value={selected.year_founded}/>}
+                      {selected.listing_timeline && <DCell label="Target Timeline"  value={selected.listing_timeline}/>}
+                      {selected.listing_type && <DCell label="Listing Type"     value={selected.listing_type}/>}
+                      {selected.pre_money_valuation_usd && <DCell label="Pre-Money Val." value={fmt(selected.pre_money_valuation_usd)} accent/>}
                     </div>
                     {selected.use_of_proceeds && (
-                      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Use of Proceeds</p>
-                        <p className="text-sm text-slate-700 font-medium leading-relaxed">{selected.use_of_proceeds}</p>
+                      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-2">Use of Proceeds</p>
+                        <p className="text-sm text-blue-800 font-medium leading-relaxed">{selected.use_of_proceeds}</p>
                       </div>
                     )}
                   </div>
                 )}
 
-                {activeTab === 'assets' && (
+                {activeTab==='assets' && (
                   <div className="space-y-4">
-                    {selected.sector === 'Mining' ? (
+                    {selected.sector==='Mining' ? (
                       <>
-                        {selected.deposit_location && <Stat label="Deposit Location" value={selected.deposit_location} wide />}
-                        {selected.hectares && <Stat label="Concession Area" value={`${selected.hectares.toLocaleString()} ha`} />}
-                        {selected.resource_estimate && <Stat label="Resource Estimate" value={selected.resource_estimate} wide />}
-                        {selected.license_numbers && <Stat label="License Numbers" value={selected.license_numbers} />}
-                        {selected.env_permit_status && <Stat label="Environmental Permit" value={selected.env_permit_status} />}
-                        {selected.sub_sector && <Stat label="Primary Commodity" value={selected.sub_sector} />}
-                        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mt-2">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-amber-700 mb-1">Note on Resource Estimates</p>
+                        {selected.deposit_location && <DCell label="Deposit Location"   value={selected.deposit_location} wide/>}
+                        {selected.hectares && <DCell label="Concession Area"   value={`${selected.hectares.toLocaleString()} ha`}/>}
+                        {selected.resource_estimate && <DCell label="Resource Estimate"  value={selected.resource_estimate} wide/>}
+                        {selected.env_permit_status && <DCell label="Environmental Permit" value={selected.env_permit_status}/>}
+                        {selected.sub_sector && <DCell label="Primary Commodity"  value={selected.sub_sector}/>}
+                        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-amber-700 mb-1">Resource Estimate Disclaimer</p>
                           <p className="text-xs text-amber-700 font-medium">Resources are reported under JORC 2012 or NI 43-101 unless stated as historical. IFB has not independently verified these figures. Always review the original technical report before investing.</p>
                         </div>
                       </>
                     ) : (
                       <div className="text-center py-10 text-slate-400">
-                        <Building2 size={32} className="mx-auto mb-3 opacity-40" />
-                        <p className="text-sm font-bold">Detailed asset schedule available in the data room.</p>
+                        <Building2 size={32} className="mx-auto mb-3 opacity-30"/>
+                        <p className="text-sm font-bold">Detailed asset schedule available in the secure data room.</p>
                         <p className="text-xs mt-1">Express interest below to request access.</p>
                       </div>
                     )}
                   </div>
                 )}
 
-                {activeTab === 'financials' && (
+                {activeTab==='financials' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                      <Stat label="Annual Revenue" value={selected.annual_revenue_usd ? fmt(selected.annual_revenue_usd) : 'Pre-Revenue'} highlight={!!selected.annual_revenue_usd} />
-                      {selected.ebitda_usd !== null && <Stat label="EBITDA" value={fmt(selected.ebitda_usd)} />}
-                      {selected.total_assets_usd !== null && <Stat label="Total Assets" value={fmt(selected.total_assets_usd)} />}
-                      {selected.existing_debt_usd !== null && <Stat label="Existing Debt" value={fmt(selected.existing_debt_usd)} />}
-                      <Stat label="Financials Type" value={selected.financials_type || 'Management Accounts'} />
+                      <DCell label="Annual Revenue"   value={selected.annual_revenue_usd ? fmt(selected.annual_revenue_usd) : 'Pre-Revenue'} accent={!!selected.annual_revenue_usd}/>
+                      {selected.ebitda_usd!=null      && <DCell label="EBITDA"        value={fmt(selected.ebitda_usd)}/>}
+                      {selected.total_assets_usd!=null && <DCell label="Total Assets"  value={fmt(selected.total_assets_usd)}/>}
+                      {selected.existing_debt_usd!=null && <DCell label="Existing Debt" value={fmt(selected.existing_debt_usd)}/>}
+                      <DCell label="Financials Type"  value={selected.financials_type||'Management Accounts'}/>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-blue-700 mb-1">Disclaimer</p>
-                      <p className="text-xs text-blue-700 font-medium">Financial figures are provided by the company and have not been independently audited by IFB. Full financial statements are available in the data room upon expression of interest.</p>
+                    <div className="bg-slate-800 rounded-2xl p-4">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Disclaimer</p>
+                      <p className="text-xs text-slate-400 font-medium">Financial figures are self-reported and have not been independently audited by IFB. Full statements available in the data room upon expression of interest.</p>
                     </div>
                   </div>
                 )}
 
-                {activeTab === 'management' && (
+                {activeTab==='management' && (
                   <div className="space-y-4">
                     {selected.ceo_name && (
                       <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center font-black text-slate-600">
-                          {selected.ceo_name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-900">{selected.ceo_name}</p>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Chief Executive Officer</p>
-                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center font-black text-slate-600">{selected.ceo_name.charAt(0)}</div>
+                        <div><p className="font-black text-slate-900">{selected.ceo_name}</p><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CEO</p></div>
                       </div>
                     )}
                     {selected.cfo_name && (
                       <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center font-black text-slate-600">
-                          {selected.cfo_name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-900">{selected.cfo_name}</p>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Chief Financial Officer</p>
-                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center font-black text-slate-600">{selected.cfo_name.charAt(0)}</div>
+                        <div><p className="font-black text-slate-900">{selected.cfo_name}</p><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CFO</p></div>
                       </div>
                     )}
                     {selected.ownership_structure && (
-                      <div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Ownership Structure</p>
                         <p className="text-sm text-slate-700 font-medium">{selected.ownership_structure}</p>
                       </div>
                     )}
-                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center text-slate-400">
-                      <p className="text-xs font-bold">Full management CVs and board composition available in the secure data room.</p>
-                    </div>
+                    <div className="text-center text-xs text-slate-400 font-bold py-2">Full CVs and board composition available in the secure data room.</div>
                   </div>
                 )}
 
-                {activeTab === 'esg' && (
+                {activeTab==='esg' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                      {selected.current_employees && <Stat label="Current Employees" value={selected.current_employees.toLocaleString()} />}
-                      {selected.projected_employees && <Stat label="Projected Employees" value={selected.projected_employees.toLocaleString()} />}
-                      {selected.local_ownership_pct && <Stat label="Local Ownership" value={`${selected.local_ownership_pct}%`} highlight />}
-                      {selected.esg_rating && <Stat label="ESG Rating" value={selected.esg_rating} highlight />}
+                      {selected.current_employees   && <DCell label="Current Employees"   value={selected.current_employees.toLocaleString()}/>}
+                      {selected.projected_employees  && <DCell label="Post-Raise Employees" value={selected.projected_employees.toLocaleString()}/>}
+                      {selected.local_ownership_pct  && <DCell label="Local Ownership"     value={`${selected.local_ownership_pct}%`} accent/>}
+                      {selected.esg_rating           && <DCell label="ESG Rating"          value={selected.esg_rating} accent/>}
                     </div>
                     {selected.current_employees && selected.projected_employees && (
                       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 mb-2">Job Creation Impact</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 mb-2">Job Creation</p>
                         <p className="text-sm text-emerald-800 font-medium">
-                          This capital raise is projected to create <strong>{(selected.projected_employees - selected.current_employees).toLocaleString()}</strong> additional local jobs, growing the workforce from {selected.current_employees.toLocaleString()} to {selected.projected_employees.toLocaleString()}.
+                          This raise is projected to create <strong>{(selected.projected_employees - selected.current_employees).toLocaleString()}</strong> additional local jobs — growing workforce from {selected.current_employees.toLocaleString()} to {selected.projected_employees.toLocaleString()}.
                         </p>
                       </div>
                     )}
@@ -547,40 +620,30 @@ export default function VentureXListings({ session }) {
                 )}
               </div>
 
-              {/* ── Express Interest ────────────────────────── */}
-              <div className="border-t border-slate-200 p-6 bg-slate-50 rounded-b-[2.5rem]">
+              {/* Express Interest footer */}
+              <div className="border-t border-slate-200 p-5 bg-slate-50 rounded-b-[2.5rem]">
                 {alreadyExpressed ? (
                   <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                    <CheckCircle className="text-emerald-600 shrink-0" size={20} />
+                    <CheckCircle className="text-emerald-600 shrink-0" size={20}/>
                     <div>
                       <p className="font-black text-emerald-800 text-sm">Interest Registered</p>
-                      <p className="text-xs text-emerald-600 font-medium">IFB will connect you with this company within 3 business days.</p>
+                      <p className="text-xs text-emerald-600 font-medium">IFB will connect you with {selected.name} within 3 business days.</p>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Express Investment Interest</p>
-                    <select
-                      value={interestForm.range}
-                      onChange={e => setInterestForm(p => ({ ...p, range: e.target.value }))}
-                      className="w-full bg-white border border-slate-200 rounded-2xl p-3.5 font-bold text-sm text-slate-800 outline-none focus:border-blue-400"
-                    >
+                    <select value={interestForm.range} onChange={e=>setInterestForm(p=>({...p,range:e.target.value}))}
+                      className="w-full bg-white border border-slate-200 rounded-2xl p-3.5 font-bold text-sm text-slate-800 outline-none focus:border-blue-400">
                       <option value="">Select investment range…</option>
-                      {RANGES.map(r => <option key={r} value={r}>{r}</option>)}
+                      {RANGES.map(r=><option key={r} value={r}>{r}</option>)}
                     </select>
-                    <textarea
-                      value={interestForm.message}
-                      onChange={e => setInterestForm(p => ({ ...p, message: e.target.value }))}
-                      rows={2}
-                      placeholder="Optional: brief message to the company…"
-                      className="w-full bg-white border border-slate-200 rounded-2xl p-3.5 font-medium text-sm text-slate-800 outline-none focus:border-blue-400 resize-none"
-                    />
-                    <button
-                      onClick={handleExpressInterest}
-                      disabled={submitting || !interestForm.range}
-                      className="w-full py-4 bg-slate-900 hover:bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all disabled:opacity-50 shadow-xl flex items-center justify-center gap-2"
-                    >
-                      {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={14} />}
+                    <textarea value={interestForm.message} onChange={e=>setInterestForm(p=>({...p,message:e.target.value}))}
+                      rows={2} placeholder="Optional message to the company…"
+                      className="w-full bg-white border border-slate-200 rounded-2xl p-3.5 font-medium text-sm text-slate-800 outline-none focus:border-blue-400 resize-none"/>
+                    <button onClick={handleExpressInterest} disabled={submitting||!interestForm.range}
+                      className="w-full py-4 bg-[#0a0f1e] hover:bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all disabled:opacity-50 shadow-xl flex items-center justify-center gap-2">
+                      {submitting ? <Loader2 size={14} className="animate-spin"/> : <Send size={14}/>}
                       {submitting ? 'Registering…' : 'Register Interest — IFB Will Connect You'}
                     </button>
                     <p className="text-[9px] text-slate-400 font-medium text-center">IFB is a marketplace. Expressing interest does not constitute a binding commitment. Capital flows directly between you and the company.</p>
@@ -594,59 +657,56 @@ export default function VentureXListings({ session }) {
 
       {/* ══ INFO MODAL ════════════════════════════════════ */}
       {showInfo && (
-        <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-slate-900/70 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="bg-white rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="bg-slate-900 rounded-t-[2.5rem] p-8 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-10" style={{backgroundImage:'radial-gradient(circle at 20% 50%, #f59e0b, transparent 60%)'}} />
-              <div className="relative z-10 flex justify-between items-start">
+        <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl">
+            <div className="bg-[#0a0f1e] rounded-t-[2.5rem] p-7">
+              <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Globe className="text-amber-400" size={22} />
-                    <h3 className="text-xl font-black text-white">How VentureX Listings Works</h3>
+                    <Pickaxe size={20} className="text-amber-400"/>
+                    <h3 className="text-xl font-black text-white">How IFB Venture Exchange Works</h3>
                   </div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">IFB as Capital Marketplace — Not a Broker-Dealer</p>
+                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Marketplace · Not a Broker-Dealer</p>
                 </div>
-                <button onClick={() => setShowInfo(false)} className="p-2 bg-white/10 border border-white/20 rounded-xl text-white">
-                  <X size={16} />
-                </button>
+                <button onClick={()=>setShowInfo(false)} className="p-2 bg-white/10 border border-white/10 rounded-xl text-white"><X size={16}/></button>
               </div>
             </div>
             <div className="p-6 space-y-1">
-              {HOW_IT_WORKS_STEPS.map((step, i) => (
-                <div key={i} className="flex gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-all">
-                  <div className="text-2xl shrink-0 mt-0.5">{step.icon}</div>
+              {HOW_IT_WORKS.map(s=>(
+                <div key={s.n} className="flex gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-all">
+                  <div className="text-2xl shrink-0 mt-0.5">{s.icon}</div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="w-5 h-5 bg-slate-900 text-white rounded-full text-[10px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
-                      <p className="font-black text-slate-900 text-sm">{step.title}</p>
+                      <span className="w-5 h-5 bg-slate-900 text-white rounded-full text-[10px] font-black flex items-center justify-center shrink-0">{s.n}</span>
+                      <p className="font-black text-slate-900 text-sm">{s.title}</p>
                     </div>
-                    <p className="text-xs text-slate-500 font-medium leading-relaxed">{step.body}</p>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed">{s.body}</p>
                   </div>
                 </div>
               ))}
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mt-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mt-2">
                 <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-2">IFB Fee Structure</p>
-                <div className="space-y-1.5 text-xs text-amber-800 font-medium">
-                  <p>• <strong>Listing fee:</strong> $500 – $2,000 one-time (paid by company)</p>
+                <div className="space-y-1 text-xs text-amber-800 font-medium">
+                  <p>• <strong>Listing fee:</strong> $500–$2,000 one-time (paid by company)</p>
                   <p>• <strong>Success fee:</strong> 3–6% of capital raised at closing</p>
-                  <p>• <strong>Annual renewal:</strong> $300 – $1,000/yr to keep listing active</p>
-                  <p>• <strong>Premium investor access:</strong> $50–$200/month for early deal flow</p>
+                  <p>• <strong>Annual renewal:</strong> $300–$1,000/yr to keep listing active</p>
+                  <p>• <strong>Investor premium access:</strong> $50–$200/month early deal flow</p>
                 </div>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-700 mb-2">Legal Disclaimer</p>
-                <p className="text-xs text-blue-700 font-medium leading-relaxed">IFB operates as a capital marketplace and matchmaking platform. We are not a licensed broker-dealer, investment adviser or securities exchange. Nothing on this platform constitutes investment advice or a solicitation to buy or sell securities. All investments carry risk including total loss of capital. IFB does not hold, transmit or manage investor funds. Investors are responsible for their own due diligence.</p>
+              <div className="bg-slate-900 rounded-2xl p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Legal Disclaimer</p>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">IFB operates as a capital marketplace and matchmaking platform. We are not a licensed broker-dealer, investment adviser or securities exchange. Nothing on this platform constitutes investment advice or a solicitation to buy or sell securities. All investments carry risk including total loss of capital. IFB does not hold, transmit or manage investor funds.</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── TOAST ────────────────────────────────────────── */}
+      {/* ── TOAST ─────────────────────────────────────────── */}
       {toast && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[600] animate-in slide-in-from-top-10 duration-500">
-          <div className={`px-8 py-4 rounded-3xl shadow-2xl border-2 backdrop-blur-2xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-400/30 text-emerald-400' : 'bg-red-500/10 border-red-400/30 text-red-400'}`}>
-            <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${toast.type === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`} />
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[600] animate-in slide-in-from-top-8 duration-400">
+          <div className={`px-7 py-4 rounded-3xl shadow-2xl border-2 backdrop-blur-2xl flex items-center gap-3 ${toast.type==='success'?'bg-emerald-500/10 border-emerald-400/30 text-emerald-400':'bg-red-500/10 border-red-400/30 text-red-400'}`}>
+            <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${toast.type==='success'?'bg-emerald-400':'bg-red-400'}`}/>
             <p className="font-black text-[11px] uppercase tracking-widest">{toast.text}</p>
           </div>
         </div>
@@ -655,12 +715,107 @@ export default function VentureXListings({ session }) {
   );
 }
 
-// ─── Helper stat tile ────────────────────────────────────────
-function Stat({ label, value, wide = false, highlight = false }) {
+// ─── Sub-components ──────────────────────────────────────────
+function ExchangeCard({ c, myInterests, onOpen }) {
+  const meta = SECTOR_META[c.sector]||SECTOR_META['Mining'];
+  const stg  = c.stage ? (STAGE_META[c.stage]||{}) : {};
+  const alreadyExpressed = myInterests.has(c.id);
+
   return (
-    <div className={`bg-slate-50 border border-slate-200 rounded-2xl p-3.5 ${wide ? 'col-span-2' : ''}`}>
-      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-      <p className={`text-sm font-black ${highlight ? 'text-blue-700' : 'text-slate-900'}`}>{value || '—'}</p>
+    <div onClick={()=>onOpen(c)}
+      className={`group bg-white rounded-[1.75rem] border border-slate-200 overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col ${c.is_featured?'ring-2 ring-amber-300':''}`}>
+      {/* Sector accent top bar */}
+      <div className="h-1" style={{backgroundColor:meta.color}}/>
+
+      <div className="p-5 flex flex-col gap-3.5 flex-1">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-base shrink-0 shadow-sm"
+              style={{backgroundColor:c.logo_color||'#3b82f6'}}>
+              {c.name.charAt(0)}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-mono text-[9px] text-slate-400 font-bold">{ticker(c.name)}</span>
+                {c.is_featured && <Star size={10} className="text-amber-500 fill-amber-500"/>}
+              </div>
+              <h3 className="font-black text-slate-900 text-sm leading-tight line-clamp-1">{c.name}</h3>
+              <p className="text-[10px] text-slate-400 font-bold mt-0.5">{FLAGS[c.country]||'🌍'} {c.country}</p>
+            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            {c.ifb_verified && (
+              <div className="flex items-center gap-1 text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full mb-1">
+                <ShieldCheck size={9}/> Verified
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sector + Stage badges */}
+        <div className="flex gap-1.5 flex-wrap">
+          <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest"
+            style={{backgroundColor:meta.light,color:meta.dark}}>
+            {meta.emoji} {c.sub_sector||c.sector}
+          </span>
+          {c.stage && stg.bg && (
+            <span className="px-2.5 py-1 rounded-lg text-[9px] font-black flex items-center gap-1"
+              style={{backgroundColor:stg.bg,color:stg.text}}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{backgroundColor:stg.dot}}/>
+              {stg.label||c.stage}
+            </span>
+          )}
+        </div>
+
+        {/* Description */}
+        <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 font-medium flex-1">
+          {c.description}
+        </p>
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Capital Raise</p>
+            <p className="text-base font-black text-slate-900 leading-none">{fmt(c.raise_amount_usd)}</p>
+          </div>
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Equity Offered</p>
+            <p className="text-sm font-black text-slate-700">{c.equity_offered_pct ? `${c.equity_offered_pct}%` : 'TBD'}</p>
+          </div>
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Min Ticket</p>
+            <p className="text-sm font-black text-slate-700">{fmt(c.min_ticket_usd)}</p>
+          </div>
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Exchange</p>
+            <p className="text-[10px] font-black text-slate-600 line-clamp-1">{c.target_exchange||'IFB VentureX'}</p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-center transition-all flex items-center justify-center gap-1.5 ${alreadyExpressed?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-slate-900 text-white group-hover:bg-blue-700'}`}>
+          {alreadyExpressed ? <><CheckCircle size={11}/> Interest Registered</> : <>View Full Profile <ArrowRight size={11}/></>}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function DCell({ label, value, wide=false, accent=false }) {
+  return (
+    <div className={`bg-slate-50 border border-slate-200 rounded-2xl p-3.5 ${wide?'col-span-2':''}`}>
+      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+      <p className={`text-sm font-black ${accent?'text-blue-700':'text-slate-900'}`}>{value||'—'}</p>
+    </div>
+  );
+}
+
+function Chip({ label, onRemove }) {
+  return (
+    <span className="flex items-center gap-1 bg-slate-900 text-white px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
+      {label}
+      <button onClick={e=>{e.stopPropagation();onRemove();}} className="hover:text-red-300 transition-colors"><X size={9}/></button>
+    </span>
   );
 }
