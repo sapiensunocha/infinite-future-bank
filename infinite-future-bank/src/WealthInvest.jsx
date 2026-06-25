@@ -1,10 +1,11 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from './services/supabaseClient';
 
-// These 4 components total ~4,000 lines — lazy load to keep WealthInvest chunk small
+// These components are lazy-loaded to keep WealthInvest chunk small
 const VentureXFeed        = lazy(() => import('./features/venturex/VentureXFeed'));
 const VentureXFranchise   = lazy(() => import('./features/venturex/VentureXFranchise'));
 const VentureXMatchmaker  = lazy(() => import('./features/venturex/VentureXMatchmaker'));
+const VentureXListings    = lazy(() => import('./features/venturex/VentureXListings'));
 const CompanyFormationHub = lazy(() => import('./features/formation/CompanyFormationHub'));
 
 const TabLoader = () => (
@@ -320,7 +321,7 @@ export default function WealthInvest({ session, balances, profile }) {
     let items = [{ id: 'PORTFOLIO', label: 'Portfolio' }];
     if (wealthProfile.management_level === 'guided') items.push({ id: 'SUGGESTIONS', label: 'AI Suggestions' });
     else if (wealthProfile.management_level === 'automated') items.push({ id: 'AUTOPILOT', label: 'Autopilot Status' });
-    items.push({ id: 'VENTUREX_LIVE', label: '🔴 VentureX Live' }, { id: 'FRANCHISE_HUB', label: '🏗️ Franchise Hub' }, { id: 'AI_MATCHMAKER', label: '🤝 AI Matchmaker' }, { id: 'INCORPORATE', label: '🏢 Incorporate' }, { id: 'PUBLIC_MARKETS', label: 'Public Markets' }, { id: 'PRIVATE_EQUITY', label: 'Private Equity' }, { id: 'RAISE_CAPITAL', label: 'Raise Capital' }, { id: 'RISK_MANAGEMENT', label: 'Risk & Insurance' }, { id: 'SETTINGS', label: 'Strategy Settings' });
+    items.push({ id: 'VENTUREX_LIVE', label: '🔴 VentureX Live' }, { id: 'LISTINGS', label: '🌍 Company Listings' }, { id: 'FRANCHISE_HUB', label: '🏗️ Franchise Hub' }, { id: 'AI_MATCHMAKER', label: '🤝 AI Matchmaker' }, { id: 'INCORPORATE', label: '🏢 Incorporate' }, { id: 'PUBLIC_MARKETS', label: 'Public Markets' }, { id: 'PRIVATE_EQUITY', label: 'Private Equity' }, { id: 'RAISE_CAPITAL', label: 'Raise Capital' }, { id: 'RISK_MANAGEMENT', label: 'Risk & Insurance' }, { id: 'SETTINGS', label: 'Strategy Settings' });
     return items;
   };
 
@@ -457,6 +458,7 @@ export default function WealthInvest({ session, balances, profile }) {
 
       <Suspense fallback={<TabLoader />}>
         {activeCategory === 'VENTUREX_LIVE' && <VentureXFeed />}
+        {activeCategory === 'LISTINGS' && <VentureXListings session={session} profile={profile} />}
         {activeCategory === 'FRANCHISE_HUB' && <VentureXFranchise session={session} profile={profile} balances={balances} />}
         {activeCategory === 'AI_MATCHMAKER' && <VentureXMatchmaker session={session} profile={profile} balances={balances} />}
         {activeCategory === 'INCORPORATE' && <CompanyFormationHub session={session} balances={balances} profile={profile} />}
