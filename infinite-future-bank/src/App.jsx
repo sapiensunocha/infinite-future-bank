@@ -172,7 +172,7 @@ function MainApp() {
       setSession(currentSession);
 
       try {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentSession.user.id).maybeSingle(); 
+        const { data: profile } = await supabase.from('profiles').select('id,theme_preference,kyc_status,role,full_name').eq('id', currentSession.user.id).maybeSingle();
           
         if (profile) {
           document.documentElement.setAttribute('data-theme', profile.theme_preference || 'system');
