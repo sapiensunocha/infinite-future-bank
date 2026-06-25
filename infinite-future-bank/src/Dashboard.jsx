@@ -62,6 +62,7 @@ const VaultManager      = lazyLoad(() => import('./features/mysafe/VaultManager'
 const NFCTransfer       = lazyLoad(() => import('./features/nfc/NFCTransfer'));
 const TapToPay          = lazyLoad(() => import('./features/terminal/TapToPay'));
 const VentureXPayRequest = lazyLoad(() => import('./features/venturex/VentureXPayRequest'));
+const VentureXListings   = lazyLoad(() => import('./features/venturex/VentureXListings'));
 const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
 
 const ScreenLoader = () => (
@@ -138,7 +139,7 @@ export default function Dashboard({ session, onSignOut }) {
 
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'My Accounts', ORGANIZE: 'Organize',
-    INVEST: 'Investments', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
+    INVEST: 'Investments', LISTINGS: '🌍 Company Listings', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
     COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node'
@@ -403,6 +404,7 @@ export default function Dashboard({ session, onSignOut }) {
             {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
             {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
             {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
+            {activeTab === 'LISTINGS' && <VentureXListings session={session} profile={profile} />}
             {activeTab === 'PLANNER' && <FinancialPlanner balances={balances} />}
             {activeTab === 'LIFESTYLE' && <GlobalLifestyle session={session} profile={profile} balances={balances} />}
             {activeTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} />}
