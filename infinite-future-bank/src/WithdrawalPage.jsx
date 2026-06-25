@@ -182,7 +182,11 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
         p_action: 'lock_withdraw'
       });
 
-      if (rpcError) throw rpcError;
+      if (rpcError) {
+        // Clean up orphaned order so it doesn't show as stuck OPEN
+        await supabase.from('p2p_orders').update({ status: 'cancelled' }).eq('id', orderData.id);
+        throw rpcError;
+      }
 
       // Deduct 0.5% routing fee separately (atomic guard)
       const { error: feeErr } = await supabase
@@ -225,7 +229,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
   const confirmReceipt = async (orderId) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase.rpc('finalize_p2p_trade', { p_trade_id: orderId });
+      const { error } = await supabase.rpc('finalize_p2p_trade', { p_order_id: orderId });
       if (error) throw error;
       showToast('Escrow released successfully. Transaction Complete.');
       setSelectedOrderProof(null);

@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ShieldAlert, Lock, Loader2, Landmark, Briefcase,
   ShieldCheck, TrendingUp, PieChart, BarChart2,
   Send, Download, Plus, ArrowRightLeft, QrCode,
   ArrowDownRight, ArrowUpRight, Zap, CreditCard, Building, Wallet,
-  ChevronRight, Wifi, Shield, Leaf, ShoppingBag
+  ChevronRight, Wifi, Shield, Leaf, ShoppingBag, RefreshCw
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
 import { useTranslation } from '../i18n/useTranslation';
@@ -21,13 +21,27 @@ const txIcon = (tx) => {
 
 export default function NetPositionHome({
   profile, balances, transactions, totalNetWorth, formatCurrency,
-  setActiveTab, activeEscrows, setIsNotificationMenuOpen,
+  setActiveTab, activeEscrows, setIsNotificationMenuOpen, onRefreshEscrows,
   showBalances, setShowBalances, setActiveModal,
   setShowPayMe, setShowDepositUI, setIsWithdrawOpen,
   showAnalytics, setShowAnalytics,
   setShowVault, setShowNFC, setActiveAppPopup
 }) {
   const { t } = useTranslation();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Auto-poll every 30 seconds while there are active escrows
+  useEffect(() => {
+    if (!activeEscrows?.length || !onRefreshEscrows) return;
+    const interval = setInterval(() => onRefreshEscrows(), 30000);
+    return () => clearInterval(interval);
+  }, [activeEscrows?.length, onRefreshEscrows]);
+
+  const handleCheckUpdates = async () => {
+    if (!onRefreshEscrows || isRefreshing) return;
+    setIsRefreshing(true);
+    try { await onRefreshEscrows(); } finally { setIsRefreshing(false); }
+  };
   const safeTotalNetWorth = totalNetWorth || 1;
   const liquidPct  = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
   const alphaPct   = ((balances.alpha_equity_usd || 0) / safeTotalNetWorth) * 100;
@@ -110,8 +124,13 @@ export default function NetPositionHome({
                   </p>
                 </div>
               </div>
-              <button onClick={() => setIsNotificationMenuOpen(true)} className="w-full sm:w-auto px-5 py-3 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-colors shadow-sm">
-                Check Updates
+              <button
+                onClick={handleCheckUpdates}
+                disabled={isRefreshing}
+                className="w-full sm:w-auto px-5 py-3 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
+                {isRefreshing ? 'Refreshing...' : 'Check Updates'}
               </button>
             </div>
           ))}

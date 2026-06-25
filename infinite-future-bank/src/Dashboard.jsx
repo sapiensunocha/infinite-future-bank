@@ -348,6 +348,7 @@ export default function Dashboard({ session, onSignOut }) {
                 formatCurrency={formatCurrency}
                 setActiveTab={setActiveTab}
                 activeEscrows={activeEscrows}
+                onRefreshEscrows={fetchAllData}
                 setIsNotificationMenuOpen={setIsNotificationMenuOpen}
                 showBalances={showBalances}
                 setShowBalances={setShowBalances}
