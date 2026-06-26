@@ -14,8 +14,8 @@ android {
         applicationId "org.infinitefuturebank.deus"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 15
-        versionName "1.4.4"
+        versionCode 16
+        versionName "1.4.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             // Exclude compressed variants — Android WebView serves assets directly, doesn't need .gz/.br

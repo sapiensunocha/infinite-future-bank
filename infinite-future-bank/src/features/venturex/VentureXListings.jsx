@@ -5,7 +5,9 @@ import {
   Building2, Loader2, Filter, ArrowUpDown, ArrowRight, Send,
   ShieldCheck, BarChart3, FileText, Eye, Star, RefreshCw,
   AlertCircle, ChevronDown, List, LayoutGrid, SlidersHorizontal,
-  ArrowUp, ArrowDown, Minus, Activity, DollarSign, Pickaxe
+  ArrowUp, ArrowDown, Minus, Activity, DollarSign, Pickaxe,
+  AlertTriangle, Leaf, Award, Droplets, Wind, TreePine,
+  UserCheck, Briefcase, TrendingDown, Zap
 } from 'lucide-react';
 
 // ─── Constants ───────────────────────────────────────────────
@@ -427,6 +429,7 @@ export default function VentureXListings({ session }) {
       {selected && (() => {
         const alreadyExpressed = myInterests.has(selected.id);
         const TABS = ['overview','assets','financials','management','esg'];
+        const ei = selected.extended_info || {};
         return (
           <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-2xl max-h-[94vh] overflow-y-auto rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col">
@@ -511,8 +514,10 @@ export default function VentureXListings({ session }) {
                 ))}
               </div>
 
-              {/* Tab content */}
+              {/* ── TAB CONTENT ─────────────────────────────── */}
               <div className="p-6 flex-1 space-y-4">
+
+                {/* ══ OVERVIEW TAB ══════════════════════════ */}
                 {activeTab==='overview' && (
                   <div className="space-y-5">
                     {selected.description && (
@@ -533,23 +538,150 @@ export default function VentureXListings({ session }) {
                         <p className="text-sm text-blue-800 font-medium leading-relaxed">{selected.use_of_proceeds}</p>
                       </div>
                     )}
+
+                    {/* Investment Highlights */}
+                    {ei.highlights && ei.highlights.length > 0 && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 mb-3 flex items-center gap-1.5">
+                          <TrendingUp size={11}/> Investment Highlights
+                        </p>
+                        <div className="space-y-2">
+                          {ei.highlights.map((h, i) => (
+                            <div key={i} className="flex items-start gap-2.5">
+                              <CheckCircle size={13} className="text-emerald-600 shrink-0 mt-0.5"/>
+                              <p className="text-xs text-emerald-900 font-medium leading-relaxed">{h}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Key Risks */}
+                    {ei.risks && ei.risks.length > 0 && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-amber-700 mb-3 flex items-center gap-1.5">
+                          <AlertTriangle size={11}/> Key Risk Factors
+                        </p>
+                        <div className="space-y-2">
+                          {ei.risks.map((r, i) => (
+                            <div key={i} className="flex items-start gap-2.5">
+                              <AlertTriangle size={12} className="text-amber-500 shrink-0 mt-0.5"/>
+                              <p className="text-xs text-amber-900 font-medium leading-relaxed">{r}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
+                {/* ══ ASSETS TAB ════════════════════════════ */}
                 {activeTab==='assets' && (
                   <div className="space-y-4">
                     {selected.sector==='Mining' ? (
                       <>
+                        {/* Core deposit data */}
                         {selected.deposit_location && <DCell label="Deposit Location"   value={selected.deposit_location} wide/>}
                         {selected.hectares && <DCell label="Concession Area"   value={`${selected.hectares.toLocaleString()} ha`}/>}
                         {selected.resource_estimate && <DCell label="Resource Estimate"  value={selected.resource_estimate} wide/>}
                         {selected.env_permit_status && <DCell label="Environmental Permit" value={selected.env_permit_status}/>}
                         {selected.sub_sector && <DCell label="Primary Commodity"  value={selected.sub_sector}/>}
+
+                        {/* Extended mining data */}
+                        {ei.mining && (
+                          <>
+                            {/* 2-col grid for method/processing/compliance/royalty */}
+                            <div className="grid grid-cols-2 gap-3">
+                              {ei.mining.method && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Mining Method</p>
+                                  <p className="text-sm font-black text-slate-900">{ei.mining.method}</p>
+                                </div>
+                              )}
+                              {ei.mining.processing && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Processing Method</p>
+                                  <p className="text-xs font-medium text-slate-700 leading-relaxed">{ei.mining.processing}</p>
+                                </div>
+                              )}
+                              {ei.mining.compliance && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">JORC Compliance</p>
+                                  <p className="text-sm font-black text-blue-700">{ei.mining.compliance}</p>
+                                </div>
+                              )}
+                              {ei.mining.royalty_rate && (
+                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Royalty Rate</p>
+                                  <p className="text-xs font-medium text-slate-700 leading-relaxed">{ei.mining.royalty_rate}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Offtake Status */}
+                            {ei.mining.offtake_status && (
+                              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-amber-700 mb-2 flex items-center gap-1.5">
+                                  <Briefcase size={10}/> Offtake Status
+                                </p>
+                                <p className="text-sm text-amber-900 font-medium leading-relaxed">{ei.mining.offtake_status}</p>
+                              </div>
+                            )}
+
+                            {/* Infrastructure */}
+                            {ei.mining.infrastructure && (
+                              <div className="space-y-3">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                                  <Building2 size={10}/> Infrastructure & Logistics
+                                </p>
+                                <div className="space-y-2">
+                                  {ei.mining.infrastructure.port && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Port Access</p>
+                                      <p className="text-xs text-slate-700 font-medium leading-relaxed">{ei.mining.infrastructure.port}</p>
+                                    </div>
+                                  )}
+                                  {ei.mining.infrastructure.rail && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Rail Corridor</p>
+                                      <p className="text-xs text-slate-700 font-medium leading-relaxed">{ei.mining.infrastructure.rail}</p>
+                                    </div>
+                                  )}
+                                  {ei.mining.infrastructure.road_access && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Road Access</p>
+                                      <p className="text-xs text-slate-700 font-medium leading-relaxed">{ei.mining.infrastructure.road_access}</p>
+                                    </div>
+                                  )}
+                                  {ei.mining.infrastructure.power && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Power Supply</p>
+                                      <p className="text-xs text-slate-700 font-medium leading-relaxed">{ei.mining.infrastructure.power}</p>
+                                    </div>
+                                  )}
+                                  {ei.mining.infrastructure.water && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Water Management</p>
+                                      <p className="text-xs text-slate-700 font-medium leading-relaxed">{ei.mining.infrastructure.water}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {/* Disclaimer */}
                         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
                           <p className="text-[9px] font-black uppercase tracking-widest text-amber-700 mb-1">Resource Estimate Disclaimer</p>
                           <p className="text-xs text-amber-700 font-medium">Resources are reported under JORC 2012 or NI 43-101 unless stated as historical. IFB has not independently verified these figures. Always review the original technical report before investing.</p>
                         </div>
                       </>
+                    ) : ei.assets?.overview ? (
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Asset Overview</p>
+                        <p className="text-sm text-slate-700 font-medium leading-relaxed">{ei.assets.overview}</p>
+                      </div>
                     ) : (
                       <div className="text-center py-10 text-slate-400">
                         <Building2 size={32} className="mx-auto mb-3 opacity-30"/>
@@ -560,8 +692,85 @@ export default function VentureXListings({ session }) {
                   </div>
                 )}
 
+                {/* ══ FINANCIALS TAB ════════════════════════ */}
                 {activeTab==='financials' && (
                   <div className="space-y-4">
+
+                    {/* Extended financial KPIs */}
+                    {ei.financials && (
+                      <>
+                        <div className="grid grid-cols-2 gap-3">
+                          {ei.financials.irr_pct != null && (
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-1">Project IRR</p>
+                              <p className="text-xl font-black text-emerald-800">{Number(ei.financials.irr_pct).toFixed(1)}%</p>
+                            </div>
+                          )}
+                          {ei.financials.payback_years != null && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3.5">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-1">Payback Period</p>
+                              <p className="text-xl font-black text-blue-800">{Number(ei.financials.payback_years).toFixed(1)} yrs</p>
+                            </div>
+                          )}
+                          {ei.financials.capex_total_usd != null && (
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Total CapEx</p>
+                              <p className="text-base font-black text-slate-900">{fmt(ei.financials.capex_total_usd)}</p>
+                            </div>
+                          )}
+                          {ei.financials.opex_unit && (
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">OpEx / Unit</p>
+                              <p className="text-xs font-black text-slate-800 leading-tight">{ei.financials.opex_unit}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* NPV if present */}
+                        {ei.financials.npv_usd != null && (
+                          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Net Present Value (NPV)</p>
+                            <p className="text-base font-black text-slate-900">
+                              {typeof ei.financials.npv_usd === 'number' ? fmt(ei.financials.npv_usd) : ei.financials.npv_usd}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Existing capital raised */}
+                        {(ei.financials.existing_raised_usd != null || (ei.financials.existing_investors && ei.financials.existing_investors.length > 0)) && (
+                          <div className="bg-slate-900 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5">
+                              <DollarSign size={10}/> Existing Capital Raised
+                            </p>
+                            {ei.financials.existing_raised_usd != null && (
+                              <p className="text-xl font-black text-white mb-3">{fmt(ei.financials.existing_raised_usd)}</p>
+                            )}
+                            {ei.financials.existing_investors && ei.financials.existing_investors.length > 0 && (
+                              <div className="space-y-1.5">
+                                {ei.financials.existing_investors.map((inv, i) => (
+                                  <div key={i} className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"/>
+                                    <p className="text-xs text-slate-300 font-medium">{inv}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Revenue note */}
+                        {ei.financials.revenue_note && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1.5">
+                              <TrendingUp size={10}/> Revenue Outlook
+                            </p>
+                            <p className="text-sm text-blue-800 font-medium leading-relaxed">{ei.financials.revenue_note}</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Core financial data cells */}
                     <div className="grid grid-cols-2 gap-3">
                       <DCell label="Annual Revenue"   value={selected.annual_revenue_usd ? fmt(selected.annual_revenue_usd) : 'Pre-Revenue'} accent={!!selected.annual_revenue_usd}/>
                       {selected.ebitda_usd!=null      && <DCell label="EBITDA"        value={fmt(selected.ebitda_usd)}/>}
@@ -569,52 +778,238 @@ export default function VentureXListings({ session }) {
                       {selected.existing_debt_usd!=null && <DCell label="Existing Debt" value={fmt(selected.existing_debt_usd)}/>}
                       <DCell label="Financials Type"  value={selected.financials_type||'Management Accounts'}/>
                     </div>
+
                     <div className="bg-slate-800 rounded-2xl p-4">
                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Disclaimer</p>
-                      <p className="text-xs text-slate-400 font-medium">Financial figures are self-reported and have not been independently audited by IFB. Full statements available in the data room upon expression of interest.</p>
+                      <p className="text-xs text-slate-400 font-medium">Financial figures are self-reported and have not been independently audited by IFB. IRR, payback and NPV figures are project-level estimates from management; they are indicative only. Full financial model and audited statements available in the data room upon expression of interest.</p>
                     </div>
                   </div>
                 )}
 
+                {/* ══ MANAGEMENT TAB ════════════════════════ */}
                 {activeTab==='management' && (
                   <div className="space-y-4">
+
+                    {/* CEO */}
                     {selected.ceo_name && (
                       <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center font-black text-slate-600">{selected.ceo_name.charAt(0)}</div>
-                        <div><p className="font-black text-slate-900">{selected.ceo_name}</p><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CEO</p></div>
+                        <div className="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center font-black text-white text-lg shrink-0">
+                          {selected.ceo_name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-900">{selected.ceo_name}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Chief Executive Officer</p>
+                        </div>
                       </div>
                     )}
-                    {selected.cfo_name && (
-                      <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center font-black text-slate-600">{selected.cfo_name.charAt(0)}</div>
-                        <div><p className="font-black text-slate-900">{selected.cfo_name}</p><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CFO</p></div>
+
+                    {/* CFO — from extended_info or cfo_name fallback */}
+                    {(ei.team?.cfo || selected.cfo_name) && (
+                      <div className="flex items-start gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <div className="w-11 h-11 rounded-xl bg-blue-700 flex items-center justify-center font-black text-white text-lg shrink-0">
+                          {(ei.team?.cfo || selected.cfo_name || 'C').charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-900">
+                            {ei.team?.cfo ? ei.team.cfo.split('—')[0].trim() : selected.cfo_name}
+                          </p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Chief Financial Officer</p>
+                          {ei.team?.cfo && ei.team.cfo.includes('—') && (
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                              {ei.team.cfo.split('—').slice(1).join('—').trim()}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     )}
+
+                    {/* Technical Director */}
+                    {ei.team?.technical_director && (
+                      <div className="flex items-start gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <div className="w-11 h-11 rounded-xl bg-amber-600 flex items-center justify-center font-black text-white text-lg shrink-0">
+                          T
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-900">
+                            {ei.team.technical_director.includes('—') ? ei.team.technical_director.split('—')[0].trim() : 'Technical Director'}
+                          </p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                            {selected.sector === 'Mining' ? 'JORC Competent Person / Technical Director' : 'Chief Technical Officer'}
+                          </p>
+                          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                            {ei.team.technical_director.includes('—') ? ei.team.technical_director.split('—').slice(1).join('—').trim() : ei.team.technical_director}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ownership Structure */}
                     {selected.ownership_structure && (
                       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Ownership Structure</p>
                         <p className="text-sm text-slate-700 font-medium">{selected.ownership_structure}</p>
                       </div>
                     )}
+
+                    {/* Board of Directors */}
+                    {ei.team?.board && ei.team.board.length > 0 && (
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5">
+                          <Users size={10}/> Board of Directors
+                        </p>
+                        <div className="space-y-3">
+                          {ei.team.board.map((member, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-black text-slate-600 shrink-0 mt-0.5">
+                                {i + 1}
+                              </div>
+                              <p className="text-xs text-slate-700 font-medium leading-relaxed">{member}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Advisors */}
+                    {ei.team?.advisors && ei.team.advisors.length > 0 && (
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5">
+                          <Briefcase size={10}/> Professional Advisors
+                        </p>
+                        <div className="space-y-2.5">
+                          {ei.team.advisors.map((adv, i) => {
+                            const icons = ['🏦','⚖️','🔬'];
+                            return (
+                              <div key={i} className="flex items-start gap-3">
+                                <span className="text-base shrink-0 mt-0.5">{icons[i] || '📋'}</span>
+                                <p className="text-xs text-slate-700 font-medium leading-relaxed">{adv}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="text-center text-xs text-slate-400 font-bold py-2">Full CVs and board composition available in the secure data room.</div>
                   </div>
                 )}
 
+                {/* ══ ESG TAB ═══════════════════════════════ */}
                 {activeTab==='esg' && (
                   <div className="space-y-4">
+
+                    {/* Core ESG grid */}
                     <div className="grid grid-cols-2 gap-3">
                       {selected.current_employees   && <DCell label="Current Employees"   value={selected.current_employees.toLocaleString()}/>}
                       {selected.projected_employees  && <DCell label="Post-Raise Employees" value={selected.projected_employees.toLocaleString()}/>}
                       {selected.local_ownership_pct  && <DCell label="Local Ownership"     value={`${selected.local_ownership_pct}%`} accent/>}
                       {selected.esg_rating           && <DCell label="ESG Rating"          value={selected.esg_rating} accent/>}
                     </div>
+
+                    {/* Job creation callout */}
                     {selected.current_employees && selected.projected_employees && (
                       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 mb-2">Job Creation</p>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 mb-2 flex items-center gap-1.5">
+                          <Users size={10}/> Job Creation Impact
+                        </p>
                         <p className="text-sm text-emerald-800 font-medium">
                           This raise is projected to create <strong>{(selected.projected_employees - selected.current_employees).toLocaleString()}</strong> additional local jobs — growing workforce from {selected.current_employees.toLocaleString()} to {selected.projected_employees.toLocaleString()}.
                         </p>
                       </div>
+                    )}
+
+                    {/* Extended ESG metrics */}
+                    {ei.esg && (
+                      <>
+                        {/* Community Fund + Local Procurement */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {ei.esg.community_fund_usd_annual != null && (
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-1">Community Fund</p>
+                              <p className="text-base font-black text-emerald-800">{fmt(ei.esg.community_fund_usd_annual)}<span className="text-xs font-bold">/yr</span></p>
+                            </div>
+                          )}
+                          {ei.esg.local_procurement_pct != null && (
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-1">Local Procurement</p>
+                              <p className="text-base font-black text-emerald-800">{ei.esg.local_procurement_pct}%</p>
+                            </div>
+                          )}
+                          {ei.esg.local_jobs_target != null && (
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Local Jobs Target</p>
+                              <p className="text-base font-black text-slate-900">{Number(ei.esg.local_jobs_target).toLocaleString()}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Water Plan */}
+                        {ei.esg.water_plan && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1.5">
+                              <Droplets size={10}/> Water Management Plan
+                            </p>
+                            <p className="text-xs text-blue-800 font-medium leading-relaxed">{ei.esg.water_plan}</p>
+                          </div>
+                        )}
+
+                        {/* Biodiversity */}
+                        {ei.esg.biodiversity && (
+                          <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-green-700 mb-2 flex items-center gap-1.5">
+                              <TreePine size={10}/> Biodiversity & Rehabilitation
+                            </p>
+                            <p className="text-xs text-green-800 font-medium leading-relaxed">{ei.esg.biodiversity}</p>
+                          </div>
+                        )}
+
+                        {/* Certifications */}
+                        {ei.esg.certifications && ei.esg.certifications.length > 0 && (
+                          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1.5">
+                              <Award size={10}/> Certifications & Standards
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {ei.esg.certifications.map((cert, i) => (
+                                <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 text-white text-[10px] font-black">
+                                  <ShieldCheck size={9} className="text-emerald-400"/>
+                                  {cert}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Social License */}
+                        {ei.esg.social_license && (
+                          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
+                              <UserCheck size={10}/> Social Licence to Operate
+                            </p>
+                            <p className="text-xs text-slate-700 font-medium leading-relaxed">{ei.esg.social_license}</p>
+                          </div>
+                        )}
+
+                        {/* Carbon Plan */}
+                        {ei.esg.carbon_plan && (
+                          <div className="bg-slate-900 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5">
+                              <Wind size={10}/> Carbon & Climate Plan
+                            </p>
+                            <p className="text-xs text-slate-300 font-medium leading-relaxed">{ei.esg.carbon_plan}</p>
+                          </div>
+                        )}
+
+                        {/* Gender Policy */}
+                        {ei.esg.gender_policy && (
+                          <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-purple-600 mb-2 flex items-center gap-1.5">
+                              <Users size={10}/> Gender & Diversity Policy
+                            </p>
+                            <p className="text-xs text-purple-900 font-medium leading-relaxed">{ei.esg.gender_policy}</p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
