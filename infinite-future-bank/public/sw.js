@@ -1,7 +1,7 @@
 // DEUS AFR Network Node — Service Worker
 // Turns every installed device into a sovereign light node on the AFR chain.
 
-const CACHE_NAME = 'deus-afr-v1';
+const CACHE_NAME = 'deus-afr-v2';
 const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/favicon.svg'];
 const IDB_NAME = 'deus-afr-node';
 const IDB_VERSION = 1;
