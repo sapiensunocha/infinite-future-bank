@@ -1396,10 +1396,175 @@ function SlideMockup({ index, lang }) {
   }
 }
 
+// ─── ASSESSMENT QUESTIONS ────────────────────────────────────────────────────
+
+const QUESTIONS = {
+  en: [
+    {
+      q: 'A startup wants to officially register their company and receive a digital incorporation certificate. Which DEUS stage handles this?',
+      options: ['KYC Verification', 'Company Formation', 'Capital Raising', 'Banking Setup'],
+      answer: 1,
+      explanation: 'Stage 1 — Company Formation — lets you register your business digitally in minutes, generating articles of incorporation and a digital certificate recognised across jurisdictions.'
+    },
+    {
+      q: 'Before a company can open a bank account or access financial services on DEUS, what must be completed first?',
+      options: ['Payroll setup', 'KYC & Compliance verification', 'Insurance enrollment', 'Network profile creation'],
+      answer: 1,
+      explanation: 'KYC (Know Your Customer) verification is mandatory before any financial services are unlocked. DEUS verifies identity via ID documents, facial recognition, and director checks.'
+    },
+    {
+      q: 'A company with 80 employees across 5 countries needs to pay salaries, generate payslips, and schedule deductions automatically each month. Which feature is used?',
+      options: ['Organization Suite', 'Lending Module', 'Payroll Manager', 'Payment Links'],
+      answer: 2,
+      explanation: 'The Payroll Manager handles multi-country salary disbursement, automatic deductions, payslip generation, and scheduled payments — all compliant with local regulations.'
+    },
+    {
+      q: 'An SME wants to raise $1.5 million privately from accredited investors without listing on a public exchange. Which DEUS option is most appropriate?',
+      options: ['Capital Raising – Private Placement', 'VentureX Public Listing', 'NPO Hub Grant', 'Lending Credit Line'],
+      answer: 0,
+      explanation: 'Capital Raising – Private Placement lets companies raise funds from verified accredited investors through a secure due-diligence portal, without the requirements of a public listing.'
+    },
+    {
+      q: 'A growth-stage company wants retail investors — including ordinary individuals — to buy shares publicly through IFB\'s marketplace. Which feature enables this?',
+      options: ['Private Placement', 'Organization Suite', 'Clyrix Insurance', 'VentureX Public Listing'],
+      answer: 3,
+      explanation: 'VentureX is IFB\'s Venture Stock Exchange. Companies that graduate from private capital raising can list publicly, allowing retail and institutional investors to trade their shares.'
+    },
+    {
+      q: 'A logistics company needs to protect its fleet, warehouse, and operations against theft, accidents, and natural disasters. Which IFB service covers this?',
+      options: ['Lending Module', 'Clyrix Insurance Protocol', 'NPO Hub', 'Banking Sub-Accounts'],
+      answer: 1,
+      explanation: 'Clyrix is IFB\'s integrated insurance protocol. It provides asset protection, operational risk cover, employee health plans, and custom business policies — all managed inside DEUS.'
+    },
+    {
+      q: 'A registered nonprofit organisation wants to receive and track donations, manage projects, and report impact metrics to its donors transparently. Which feature is purpose-built for this?',
+      options: ['VentureX Listing', 'NPO Hub', 'Investment Portfolio', 'PayMe Card'],
+      answer: 1,
+      explanation: 'NPO Hub is designed specifically for nonprofits and NGOs — it manages donations, grant tracking, project reporting, and donor portals with full transparency and audit trails.'
+    },
+    {
+      q: 'A company has successfully completed all 12 stages on IFB DEUS — from Formation through Network & Academy. What does this represent?',
+      options: ['Eligibility to close the company', 'A pending KYC review', 'Access to one additional loan product', 'A complete digital business operating system — banking, capital, payments, insurance, and more'],
+      answer: 3,
+      explanation: 'Completing all 12 stages means the company has its full financial infrastructure in place: legal entity, verified identity, banking, payments, payroll, capital, insurance, investments, and global network access.'
+    },
+  ],
+  fr: [
+    {
+      q: 'Une startup veut enregistrer officiellement sa société et recevoir un certificat d\'incorporation numérique. Quelle étape DEUS gère cela?',
+      options: ['Vérification KYC', 'Formation de Société', 'Levée de Capitaux', 'Configuration Bancaire'],
+      answer: 1,
+      explanation: 'L\'étape 1 — Formation de Société — permet d\'enregistrer une entreprise numériquement en quelques minutes, générant statuts et certificat reconnus dans plusieurs juridictions.'
+    },
+    {
+      q: 'Avant qu\'une entreprise puisse ouvrir un compte bancaire ou accéder aux services financiers sur DEUS, que doit-elle compléter en premier?',
+      options: ['Configuration de la paie', 'Vérification KYC & Conformité', 'Souscription d\'assurance', 'Création de profil réseau'],
+      answer: 1,
+      explanation: 'La vérification KYC est obligatoire avant de débloquer tout service financier. DEUS vérifie l\'identité via documents, reconnaissance faciale et vérification des dirigeants.'
+    },
+    {
+      q: 'Une entreprise de 80 employés dans 5 pays doit verser les salaires, générer les bulletins de paie et planifier les déductions automatiquement chaque mois. Quelle fonctionnalité est utilisée?',
+      options: ['Suite Organisation', 'Module de Prêt', 'Gestionnaire de Paie', 'Liens de Paiement'],
+      answer: 2,
+      explanation: 'Le Gestionnaire de Paie gère les versements de salaires multi-pays, les déductions automatiques, la génération des bulletins de paie et les paiements planifiés.'
+    },
+    {
+      q: 'Une PME veut lever 1,5 million $ en privé auprès d\'investisseurs accrédités sans s\'inscrire en bourse. Quelle option DEUS est la plus appropriée?',
+      options: ['Levée de Capitaux – Placement Privé', 'Cotation Publique VentureX', 'Subvention NPO Hub', 'Ligne de Crédit'],
+      answer: 0,
+      explanation: 'Le Placement Privé permet de lever des fonds auprès d\'investisseurs accrédités vérifiés via un portail de due diligence sécurisé, sans les exigences d\'une cotation publique.'
+    },
+    {
+      q: 'Une entreprise en croissance veut que des investisseurs particuliers puissent acheter ses actions publiquement via la place de marché d\'IFB. Quelle fonctionnalité permet cela?',
+      options: ['Placement Privé', 'Suite Organisation', 'Assurance Clyrix', 'Cotation Publique VentureX'],
+      answer: 3,
+      explanation: 'VentureX est la Bourse de Valeurs d\'IFB. Les entreprises peuvent y coter leurs actions et permettre à des investisseurs particuliers et institutionnels d\'y accéder.'
+    },
+    {
+      q: 'Une société de logistique veut protéger sa flotte, son entrepôt et ses opérations contre le vol, les accidents et les catastrophes naturelles. Quel service IFB couvre cela?',
+      options: ['Module de Prêt', 'Protocole d\'Assurance Clyrix', 'NPO Hub', 'Sous-Comptes Bancaires'],
+      answer: 1,
+      explanation: 'Clyrix est le protocole d\'assurance intégré d\'IFB. Il offre la protection des actifs, la couverture des risques opérationnels, les plans de santé des employés et des polices sur mesure.'
+    },
+    {
+      q: 'Une ONG enregistrée veut recevoir et suivre les dons, gérer ses projets et rapporter ses indicateurs d\'impact à ses donateurs de manière transparente. Quelle fonctionnalité est conçue pour cela?',
+      options: ['Cotation VentureX', 'NPO Hub', 'Portefeuille d\'Investissement', 'Carte PayMe'],
+      answer: 1,
+      explanation: 'NPO Hub est conçu spécifiquement pour les ONG — il gère les dons, le suivi des subventions, les rapports de projets et les portails donateurs avec une transparence totale.'
+    },
+    {
+      q: 'Une entreprise a complété avec succès les 12 étapes sur IFB DEUS — de la Formation au Réseau & Académie. Qu\'est-ce que cela représente?',
+      options: ['L\'éligibilité à fermer l\'entreprise', 'Un examen KYC en attente', 'L\'accès à un prêt supplémentaire', 'Un système d\'exploitation d\'entreprise numérique complet'],
+      answer: 3,
+      explanation: 'Compléter les 12 étapes signifie que l\'entreprise dispose d\'une infrastructure financière complète: entité légale, identité vérifiée, banque, paiements, paie, capital, assurance, investissements et réseau mondial.'
+    },
+  ],
+  es: [
+    {
+      q: 'Una startup quiere registrar oficialmente su empresa y recibir un certificado de incorporación digital. ¿Qué etapa de DEUS maneja esto?',
+      options: ['Verificación KYC', 'Formación de Empresa', 'Captación de Capital', 'Configuración Bancaria'],
+      answer: 1,
+      explanation: 'La Etapa 1 — Formación de Empresa — permite registrar un negocio digitalmente en minutos, generando estatutos y un certificado reconocido en múltiples jurisdicciones.'
+    },
+    {
+      q: 'Antes de que una empresa pueda abrir una cuenta bancaria o acceder a servicios financieros en DEUS, ¿qué debe completar primero?',
+      options: ['Configuración de nómina', 'Verificación KYC & Cumplimiento', 'Inscripción en seguros', 'Creación de perfil de red'],
+      answer: 1,
+      explanation: 'La verificación KYC es obligatoria antes de desbloquear cualquier servicio financiero. DEUS verifica la identidad mediante documentos, reconocimiento facial y verificación de directores.'
+    },
+    {
+      q: 'Una empresa con 80 empleados en 5 países necesita pagar salarios, generar recibos de sueldo y programar deducciones automáticamente cada mes. ¿Qué función se usa?',
+      options: ['Suite de Organización', 'Módulo de Préstamos', 'Gestor de Nómina', 'Enlaces de Pago'],
+      answer: 2,
+      explanation: 'El Gestor de Nómina maneja el pago de salarios multinacional, deducciones automáticas, generación de recibos de sueldo y pagos programados, todo conforme a regulaciones locales.'
+    },
+    {
+      q: 'Una PYME quiere recaudar $1.5 millones de forma privada de inversores acreditados sin cotizar en bolsa pública. ¿Qué opción de DEUS es más apropiada?',
+      options: ['Captación de Capital – Colocación Privada', 'Cotización Pública VentureX', 'Subvención NPO Hub', 'Línea de Crédito'],
+      answer: 0,
+      explanation: 'La Colocación Privada permite recaudar fondos de inversores acreditados verificados a través de un portal de due diligence seguro, sin los requisitos de una cotización pública.'
+    },
+    {
+      q: 'Una empresa en crecimiento quiere que inversores minoristas — incluyendo particulares — compren acciones públicamente a través del mercado de IFB. ¿Qué función lo permite?',
+      options: ['Colocación Privada', 'Suite de Organización', 'Seguro Clyrix', 'Cotización Pública VentureX'],
+      answer: 3,
+      explanation: 'VentureX es la Bolsa de Valores de IFB. Las empresas pueden cotizar allí y permitir que inversores minoristas e institucionales negocien sus acciones públicamente.'
+    },
+    {
+      q: 'Una empresa de logística necesita proteger su flota, almacén y operaciones contra robo, accidentes y desastres naturales. ¿Qué servicio de IFB cubre esto?',
+      options: ['Módulo de Préstamos', 'Protocolo de Seguro Clyrix', 'NPO Hub', 'Subcuentas Bancarias'],
+      answer: 1,
+      explanation: 'Clyrix es el protocolo de seguros integrado de IFB. Ofrece protección de activos, cobertura de riesgos operativos, planes de salud para empleados y pólizas personalizadas.'
+    },
+    {
+      q: 'Una ONG registrada quiere recibir y rastrear donaciones, gestionar proyectos e informar métricas de impacto a sus donantes de forma transparente. ¿Qué función está diseñada para esto?',
+      options: ['Cotización VentureX', 'NPO Hub', 'Portafolio de Inversión', 'Tarjeta PayMe'],
+      answer: 1,
+      explanation: 'NPO Hub está diseñado específicamente para ONG — gestiona donaciones, seguimiento de subvenciones, reportes de proyectos y portales de donantes con total transparencia.'
+    },
+    {
+      q: 'Una empresa ha completado con éxito las 12 etapas en IFB DEUS — desde Formación hasta Red & Academia. ¿Qué representa esto?',
+      options: ['Elegibilidad para cerrar la empresa', 'Una revisión KYC pendiente', 'Acceso a un préstamo adicional', 'Un sistema operativo empresarial digital completo — banca, capital, pagos, seguros y más'],
+      answer: 3,
+      explanation: 'Completar las 12 etapas significa que la empresa tiene toda su infraestructura financiera: entidad legal, identidad verificada, banca, pagos, nómina, capital, seguros, inversiones y red global.'
+    },
+  ],
+};
+
+const CERT_LABELS = {
+  en: { title: 'Certificate of Completion', program: 'Business Operations Program', issuer: 'Issued by Infinite Future Bank LLC · Washington DC', nameLabel: 'Enter your name', score: 'Assessment Score', retake: 'Retake Assessment', returnGuide: 'Return to Guide', perfect: 'Outstanding — Perfect Score!', great: 'Excellent Result', pass: 'Assessment Passed', retry: 'Keep Practising', date: 'Completion Date' },
+  fr: { title: 'Certificat de Réussite', program: 'Programme des Opérations d\'Entreprise', issuer: 'Délivré par Infinite Future Bank LLC · Washington DC', nameLabel: 'Entrez votre nom', score: 'Score d\'Évaluation', retake: 'Reprendre l\'Évaluation', returnGuide: 'Retour au Guide', perfect: 'Excellent — Score Parfait!', great: 'Excellent Résultat', pass: 'Évaluation Réussie', retry: 'Continuez à Pratiquer', date: 'Date de Réussite' },
+  es: { title: 'Certificado de Finalización', program: 'Programa de Operaciones Empresariales', issuer: 'Emitido por Infinite Future Bank LLC · Washington DC', nameLabel: 'Ingrese su nombre', score: 'Puntuación de Evaluación', retake: 'Repetir Evaluación', returnGuide: 'Volver a la Guía', perfect: '¡Sobresaliente — Puntuación Perfecta!', great: 'Excelente Resultado', pass: 'Evaluación Aprobada', retry: 'Sigue Practicando', date: 'Fecha de Finalización' },
+};
+
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
 export default function CompanyGuide({ onClose } = {}) {
   const [slide, setSlide] = useState(0);
+  const [mode, setMode] = useState('course'); // 'course' | 'assessment' | 'certificate'
+  const [qIndex, setQIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [certName, setCertName] = useState('');
   const [lang, setLang] = useState('en');
   const [touchStart, setTouchStart] = useState(null);
 
@@ -1432,8 +1597,39 @@ export default function CompanyGuide({ onClose } = {}) {
 
   const content = CONTENT[lang];
   const currentSlide = content.slides[slide];
+  const questions = QUESTIONS[lang];
+  const certLabels = CERT_LABELS[lang];
+  const currentQ = questions[qIndex];
+  const selectedAnswer = answers[qIndex];
+  const isAnswered = selectedAnswer !== undefined;
+  const totalQ = questions.length;
 
-  const stageIconMap = [Building2, ShieldCheck, Landmark, Wallet, CreditCard, TrendingUp, Users, BarChart3, ShieldCheck, PieChart, Leaf, Network, GraduationCap, Star];
+  const score = Object.values(answers).reduce((acc, a, i) => acc + (a === questions[i]?.answer ? 1 : 0), 0);
+
+  const startAssessment = () => { setMode('assessment'); setQIndex(0); setAnswers({}); };
+  const selectAnswer = (idx) => { if (!isAnswered) setAnswers(prev => ({ ...prev, [qIndex]: idx })); };
+  const nextQuestion = () => {
+    if (qIndex < totalQ - 1) setQIndex(q => q + 1);
+    else setMode('certificate');
+  };
+  const retakeAssessment = () => { setMode('assessment'); setQIndex(0); setAnswers({}); };
+  const returnToGuide = () => { setMode('course'); setSlide(0); setQIndex(0); setAnswers({}); };
+
+  const counterLabel =
+    mode === 'assessment' ? `Q${qIndex + 1} / ${totalQ}`
+    : mode === 'certificate' ? (certLabels.title)
+    : `${slide + 1} / ${TOTAL}`;
+
+  const topLangToggle = (
+    <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1 flex-shrink-0">
+      {(['en', 'fr', 'es']).map((l) => (
+        <button key={l} onClick={() => setLang(l)}
+          className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}>
+          {l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div
@@ -1442,151 +1638,255 @@ export default function CompanyGuide({ onClose } = {}) {
       onTouchEnd={handleTouchEnd}
     >
       {/* ── TOP BAR ── */}
-      <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
-        {/* Brand */}
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-black">
+      <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xl font-black flex-shrink-0">
             <span className="text-[#4285F4]">D</span>
             <span className="text-[#EA4335]">E</span>
             <span className="text-[#FBBC04]">U</span>
             <span className="text-[#34A853]">S</span>
           </span>
-          <span className="hidden sm:inline text-slate-500 text-xs font-medium">Company Guide</span>
+          <span className="hidden sm:inline text-slate-500 text-xs font-medium truncate">
+            {mode === 'certificate' ? 'Certificate' : mode === 'assessment' ? 'Assessment' : 'Business Guide'}
+          </span>
         </div>
-
-        {/* Center: slide counter */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-          <span className="text-slate-400 text-xs font-black">{slide + 1} / {TOTAL}</span>
-        </div>
-
-        {/* Right: language toggle + close */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
-            {(['en', 'fr', 'es']).map((l) => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}
-              >
-                {l.toUpperCase()}
-              </button>
-            ))}
-          </div>
+        <span className="text-slate-400 text-xs font-black flex-shrink-0">{counterLabel}</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {topLangToggle}
           {onClose && (
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
-            >
+            <button onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
               <X size={16} />
             </button>
           )}
         </div>
       </div>
 
-      {/* ── MAIN CONTENT ── */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-
-        {/* Left panel — text */}
-        <div className="flex-1 flex flex-col justify-center px-6 py-8 lg:px-12 lg:py-12 order-2 lg:order-1">
-          <div className="max-w-xl">
-            {/* Stage label */}
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{currentSlide.stage}</span>
-              {slide > 0 && slide < 13 && (
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">· Stage {slide} of 12</span>
-              )}
+      {/* ══════════ CERTIFICATE MODE ══════════ */}
+      {mode === 'certificate' && (() => {
+        const passed = score >= 6;
+        const perfect = score === totalQ;
+        const badge = perfect ? 'bg-yellow-500 text-slate-900' : passed ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-900';
+        const verdict = perfect ? certLabels.perfect : passed ? certLabels.great : score >= 5 ? certLabels.pass : certLabels.retry;
+        const today = new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        return (
+          <div className="flex-1 overflow-y-auto flex items-center justify-center p-4 sm:p-8">
+            <div className="w-full max-w-xl">
+              {/* Certificate card */}
+              <div className="relative bg-slate-900 rounded-3xl p-6 sm:p-10 border-2 border-amber-500/40 shadow-[0_0_60px_rgba(245,158,11,0.15)]">
+                <div className="absolute inset-0 rounded-3xl border border-amber-400/10 m-1 pointer-events-none" />
+                {/* Header */}
+                <div className="text-center mb-6">
+                  <div className="text-3xl font-black mb-1">
+                    <span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span>
+                  </div>
+                  <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]">Infinite Future Bank</p>
+                </div>
+                <div className="text-center mb-6">
+                  <Award size={40} className="text-amber-400 mx-auto mb-3" />
+                  <h2 className="text-xl sm:text-2xl font-black text-white mb-1">{certLabels.title}</h2>
+                  <p className="text-slate-400 text-sm font-medium">{certLabels.program}</p>
+                </div>
+                {/* Name input */}
+                <div className="mb-6">
+                  <input
+                    type="text"
+                    value={certName}
+                    onChange={(e) => setCertName(e.target.value)}
+                    placeholder={certLabels.nameLabel}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-center text-white font-black text-lg placeholder:text-slate-500 outline-none focus:border-amber-400 transition-colors"
+                  />
+                  {certName && (
+                    <p className="text-center text-amber-300 font-black text-sm mt-2">{certName}</p>
+                  )}
+                </div>
+                {/* Score */}
+                <div className={`${badge} rounded-2xl py-3 px-5 text-center mb-4`}>
+                  <p className="text-sm font-black">{certLabels.score}: {score} / {totalQ}</p>
+                  <p className="text-xs font-bold mt-0.5 opacity-80">{verdict}</p>
+                </div>
+                {/* Date & issuer */}
+                <div className="text-center text-slate-500 text-[11px] font-medium mb-6">
+                  <p>{certLabels.date}: {today}</p>
+                  <p className="mt-1">{certLabels.issuer}</p>
+                </div>
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button onClick={retakeAssessment}
+                    className="flex-1 py-3 rounded-2xl border border-slate-600 text-slate-300 text-sm font-black hover:bg-slate-800 transition-colors">
+                    {certLabels.retake}
+                  </button>
+                  <button onClick={returnToGuide}
+                    className="flex-1 py-3 rounded-2xl bg-blue-600 text-white text-sm font-black hover:bg-blue-700 transition-colors">
+                    {certLabels.returnGuide}
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
+        );
+      })()}
 
-            {/* Title */}
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight mb-4">
-              {currentSlide.title}
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-slate-300 text-base lg:text-lg font-medium mb-6 leading-relaxed">
-              {currentSlide.subtitle}
-            </p>
-
-            {/* Body (slides 0 and 13) */}
-            {currentSlide.body && (
-              <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                {currentSlide.body}
-              </p>
-            )}
-
-            {/* Features */}
-            {currentSlide.features && (
-              <ul className="flex flex-col gap-3 mb-6">
-                {currentSlide.features.map((f) => (
-                  <li key={f} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <CheckCircle2 size={11} className="text-white" />
-                    </div>
-                    <span className="text-slate-300 text-sm leading-relaxed">{f}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* CTA (slide 13) */}
-            {currentSlide.cta && (
-              <div className="flex flex-wrap gap-3 mt-2">
-                {(currentSlide.buttons || ['Download APK', 'Open Web App', 'Contact Us']).map((btn, i) => (
-                  <a
-                    key={btn}
-                    href={i === 0 ? '#' : i === 1 ? 'https://deus.infinitefuturebank.org' : 'mailto:support@infinitefuturebank.org'}
-                    className={`px-5 py-2.5 rounded-xl text-sm font-black transition-opacity hover:opacity-90 ${i === 0 ? 'bg-blue-600 text-white' : i === 1 ? 'bg-white text-slate-900' : 'border border-slate-600 text-white'}`}
-                  >
-                    {btn}
-                  </a>
-                ))}
+      {/* ══════════ ASSESSMENT MODE ══════════ */}
+      {mode === 'assessment' && (
+        <div className="flex-1 overflow-y-auto flex items-center justify-center p-4 sm:p-8">
+          <div className="w-full max-w-xl">
+            {/* Progress dots */}
+            <div className="flex gap-1.5 mb-6 justify-center">
+              {questions.map((_, i) => (
+                <div key={i}
+                  className={`h-1.5 rounded-full transition-all ${i < qIndex ? 'bg-blue-500 w-6' : i === qIndex ? 'bg-blue-400 w-8' : 'bg-slate-700 w-4'}`} />
+              ))}
+            </div>
+            {/* Question */}
+            <h2 className="text-white font-black text-lg sm:text-xl mb-6 leading-snug">{currentQ.q}</h2>
+            {/* Options */}
+            <div className="flex flex-col gap-3 mb-6">
+              {currentQ.options.map((opt, i) => {
+                let cls = 'border-slate-700 text-slate-300 hover:border-blue-500 hover:bg-slate-800';
+                if (isAnswered) {
+                  if (i === currentQ.answer) cls = 'border-emerald-500 bg-emerald-500/10 text-emerald-300';
+                  else if (i === selectedAnswer) cls = 'border-red-500 bg-red-500/10 text-red-300';
+                  else cls = 'border-slate-800 text-slate-600';
+                }
+                return (
+                  <button key={i} onClick={() => selectAnswer(i)}
+                    className={`text-left border rounded-2xl px-5 py-4 text-sm font-bold transition-all flex items-center gap-3 ${cls}`}>
+                    <span className="w-6 h-6 rounded-full border border-current flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Explanation */}
+            {isAnswered && (
+              <div className={`rounded-2xl p-4 mb-6 text-sm font-medium leading-relaxed ${selectedAnswer === currentQ.answer ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'}`}>
+                {currentQ.explanation}
               </div>
             )}
+            {/* Next */}
+            {isAnswered && (
+              <button onClick={nextQuestion}
+                className="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                {qIndex < totalQ - 1 ? (<><span>{content.next}</span><ChevronRight size={16} /></>) : (<><Award size={16} /><span>{lang === 'fr' ? 'Voir le Certificat' : lang === 'es' ? 'Ver Certificado' : 'View Certificate'}</span></>)}
+              </button>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Right panel — mockup */}
-        <div className="lg:w-[480px] xl:w-[520px] flex items-center justify-center px-6 py-8 order-1 lg:order-2 bg-slate-900 lg:bg-transparent">
-          <div className="w-full">
-            <SlideMockup index={slide} lang={lang} />
+      {/* ══════════ COURSE MODE ══════════ */}
+      {mode === 'course' && (
+        <>
+          <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+            {/* Left panel */}
+            <div className="flex-1 flex flex-col justify-center px-5 py-6 lg:px-12 lg:py-12 order-2 lg:order-1">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{currentSlide.stage}</span>
+                  {slide > 0 && slide < 13 && (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-500">· Stage {slide} of 12</span>
+                  )}
+                </div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-tight mb-3">
+                  {currentSlide.title}
+                </h1>
+                <p className="text-slate-300 text-sm lg:text-base font-medium mb-4 leading-relaxed">
+                  {currentSlide.subtitle}
+                </p>
+                {currentSlide.body && (
+                  <p className="text-slate-400 text-sm mb-4 leading-relaxed">{currentSlide.body}</p>
+                )}
+                {currentSlide.features && (
+                  <ul className="flex flex-col gap-2 mb-4">
+                    {currentSlide.features.map((f) => (
+                      <li key={f} className="flex items-start gap-3">
+                        <div className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <CheckCircle2 size={9} className="text-white" />
+                        </div>
+                        <span className="text-slate-300 text-sm leading-relaxed">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {currentSlide.details && (
+                  <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 border border-slate-700/50">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">How it works</p>
+                    <ul className="flex flex-col gap-1.5">
+                      {currentSlide.details.map((d, i) => (
+                        <li key={i} className="flex items-start gap-2 text-slate-300 text-xs leading-relaxed">
+                          <span className="text-blue-400 font-black flex-shrink-0">{i + 1}.</span>
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {currentSlide.scenario && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-4 py-3 mb-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-1">Real-world example</p>
+                    <p className="text-amber-100 text-xs leading-relaxed">{currentSlide.scenario}</p>
+                  </div>
+                )}
+                {currentSlide.tip && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3 mb-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">Pro tip</p>
+                    <p className="text-emerald-100 text-xs leading-relaxed">{currentSlide.tip}</p>
+                  </div>
+                )}
+                {currentSlide.cta && (
+                  <div className="flex flex-wrap gap-3 mt-2">
+                    {(currentSlide.buttons || ['Download APK', 'Open Web App', 'Contact Us']).map((btn, i) => (
+                      <a key={btn}
+                        href={i === 0 ? '#' : i === 1 ? 'https://deus.infinitefuturebank.org' : 'mailto:support@infinitefuturebank.org'}
+                        className={`px-5 py-2.5 rounded-xl text-sm font-black transition-opacity hover:opacity-90 ${i === 0 ? 'bg-blue-600 text-white' : i === 1 ? 'bg-white text-slate-900' : 'border border-slate-600 text-white'}`}>
+                        {btn}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Right panel — hidden on mobile */}
+            <div className="hidden lg:flex lg:w-[440px] xl:w-[500px] items-center justify-center px-6 py-8 order-1 lg:order-2 bg-slate-900 lg:bg-transparent flex-shrink-0">
+              <div className="w-full">
+                <SlideMockup index={slide} lang={lang} />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── BOTTOM NAV ── */}
-      <div className="bg-[#0a0f1e] border-t border-slate-800 px-6 py-4 flex items-center justify-between flex-shrink-0">
-        {/* Prev */}
-        <button
-          onClick={goPrev}
-          disabled={slide === 0}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-black hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft size={16} />
-          <span className="hidden sm:inline">{content.prev}</span>
-        </button>
-
-        {/* Dots */}
-        <div className="flex items-center gap-1.5">
-          {Array.from({ length: TOTAL }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setSlide(i)}
-              className={`rounded-full transition-all ${i === slide ? 'w-5 h-2 bg-blue-500' : 'w-2 h-2 bg-slate-600 hover:bg-slate-500'}`}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Next */}
-        <button
-          onClick={goNext}
-          disabled={slide === TOTAL - 1}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-black hover:bg-blue-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <span className="hidden sm:inline">{content.next}</span>
-          <ChevronRight size={16} />
-        </button>
-      </div>
+          {/* ── BOTTOM NAV ── */}
+          <div className="bg-[#0a0f1e] border-t border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
+            <button onClick={goPrev} disabled={slide === 0}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-black hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0">
+              <ChevronLeft size={15} />
+              <span className="hidden sm:inline">{content.prev}</span>
+            </button>
+            <div className="flex items-center gap-1 flex-wrap justify-center">
+              {Array.from({ length: TOTAL }).map((_, i) => (
+                <button key={i} onClick={() => setSlide(i)}
+                  className={`rounded-full transition-all ${i === slide ? 'w-4 h-2 bg-blue-500' : 'w-2 h-2 bg-slate-600 hover:bg-slate-500'}`}
+                  aria-label={`Slide ${i + 1}`} />
+              ))}
+            </div>
+            {slide < TOTAL - 1 ? (
+              <button onClick={goNext}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-black hover:bg-blue-700 transition-colors flex-shrink-0">
+                <span className="hidden sm:inline">{content.next}</span>
+                <ChevronRight size={15} />
+              </button>
+            ) : (
+              <button onClick={startAssessment}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 text-slate-900 text-sm font-black hover:bg-amber-400 transition-colors flex-shrink-0">
+                <Award size={14} />
+                <span className="hidden xs:inline sm:inline">{lang === 'fr' ? 'Évaluation' : lang === 'es' ? 'Evaluación' : 'Assessment'}</span>
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

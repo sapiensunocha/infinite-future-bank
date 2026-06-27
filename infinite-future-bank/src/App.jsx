@@ -453,7 +453,7 @@ function MainApp() {
 
         {/* CLEAN, UNIFIED FOOTER WITH NEW TRUST LINK */}
         <div className="mt-8 text-center text-[11px] font-medium text-slate-500 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
-          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. <span onClick={() => setActiveModal('registration')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Infinite Future Bank LLC</span> is incorporated in the State of Delaware, United States (File No. 10649108), headquartered at 1717 Pennsylvania Ave NW, Washington DC. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Trust Framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>.
+          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. <span onClick={() => setActiveModal('registration')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Infinite Future Bank LLC</span> is incorporated in the State of Delaware, United States (File No. 10649108), headquartered at 1717 Pennsylvania Ave NW, Washington DC. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Trust Framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>. Explore our <span onClick={() => setShowGuide(true)} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Business Guide</span>.
         </div>
 
         {/* DEUS ACADEMY LINK */}
@@ -470,16 +470,6 @@ function MainApp() {
         {showAcademy && <Suspense fallback={<PageLoader />}><DEUSAcademy onClose={() => setShowAcademy(false)} /></Suspense>}
         {showGuide && <Suspense fallback={<PageLoader />}><CompanyGuide onClose={() => setShowGuide(false)} /></Suspense>}
 
-        {/* COMPANY PLATFORM TOUR */}
-        <div className="mt-3 flex justify-center animate-in fade-in duration-700 delay-300">
-          <button
-            onClick={() => setShowGuide(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors text-amber-700 font-bold text-[11px] uppercase tracking-widest shadow-sm hover:shadow-amber-100"
-          >
-            <Building2 size={14} />
-            Company Platform Tour — EN · FR · ES
-          </button>
-        </div>
 
         {/* ── ANDROID: APK download ── */}
         {mobileOS === 'android' && (
