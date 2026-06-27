@@ -32,6 +32,7 @@ const FeedbackForm     = lazyLoad(() => import('./FeedbackForm'));
 const AdminSupportDesk = lazyLoad(() => import('./AdminSupportDesk'));
 const ExecutiveCrm     = lazyLoad(() => import('./ExecutiveCrm'));
 const PublicEventPage  = lazyLoad(() => import('./PublicEventPage'));
+const CompanyGuide     = lazyLoad(() => import('./features/guide/CompanyGuide'));
 
 // --- MODALS ---
 import InfoModal from './components/modals/InfoModal';
@@ -467,6 +468,17 @@ function MainApp() {
 
         {showAcademy && <Suspense fallback={<PageLoader />}><DEUSAcademy onClose={() => setShowAcademy(false)} /></Suspense>}
 
+        {/* COMPANY PLATFORM TOUR */}
+        <div className="mt-3 flex justify-center animate-in fade-in duration-700 delay-300">
+          <a
+            href="/guide"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors text-amber-700 font-bold text-[11px] uppercase tracking-widest shadow-sm hover:shadow-amber-100"
+          >
+            <Building2 size={14} />
+            Company Platform Tour — EN · FR · ES
+          </a>
+        </div>
+
         {/* ── ANDROID: APK download ── */}
         {mobileOS === 'android' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
@@ -707,6 +719,7 @@ export default function App() {
         <Route path="/admin" element={<AdminGateway />} />
         <Route path="/hq" element={<HqGateway />} />
         <Route path="/events/:id" element={<PublicEventPage />} />
+        <Route path="/guide" element={<CompanyGuide />} />
         <Route
           path="/FeedbackForm"
           element={
