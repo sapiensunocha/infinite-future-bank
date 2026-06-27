@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { TranslationProvider } from './i18n/TranslationContext';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
-import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, Monitor, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap } from 'lucide-react';
+import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, Monitor, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap, Building2 } from 'lucide-react';
 
 // When a chunk 404s (stale browser cache after a new deploy), force a full reload
 // so the browser fetches the new index.html with correct chunk references.
