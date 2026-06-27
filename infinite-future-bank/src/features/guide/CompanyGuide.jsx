@@ -1398,7 +1398,7 @@ function SlideMockup({ index, lang }) {
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
-export default function CompanyGuide() {
+export default function CompanyGuide({ onClose } = {}) {
   const [slide, setSlide] = useState(0);
   const [lang, setLang] = useState('en');
   const [touchStart, setTouchStart] = useState(null);
@@ -1437,7 +1437,7 @@ export default function CompanyGuide() {
 
   return (
     <div
-      className="min-h-screen bg-[#0a0f1e] flex flex-col select-none"
+      className={`bg-[#0a0f1e] flex flex-col select-none ${onClose ? 'fixed inset-0 z-[9999]' : 'min-h-screen'}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -1459,17 +1459,27 @@ export default function CompanyGuide() {
           <span className="text-slate-400 text-xs font-black">{slide + 1} / {TOTAL}</span>
         </div>
 
-        {/* Language toggle */}
-        <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
-          {(['en', 'fr', 'es'] ).map((l) => (
+        {/* Right: language toggle + close */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+            {(['en', 'fr', 'es']).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          {onClose && (
             <button
-              key={l}
-              onClick={() => setLang(l)}
-              className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
             >
-              {l.toUpperCase()}
+              <X size={16} />
             </button>
-          ))}
+          )}
         </div>
       </div>
 

@@ -101,6 +101,7 @@ function MainApp() {
   const [showPassword, setShowPassword] = useState(false);
   const [mobileOS, setMobileOS] = useState(null); // 'android' | 'ios' | null
   const [showAcademy, setShowAcademy] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
 
   const [activeModal, setActiveModal] = useState(null);
@@ -467,16 +468,17 @@ function MainApp() {
         </div>
 
         {showAcademy && <Suspense fallback={<PageLoader />}><DEUSAcademy onClose={() => setShowAcademy(false)} /></Suspense>}
+        {showGuide && <Suspense fallback={<PageLoader />}><CompanyGuide onClose={() => setShowGuide(false)} /></Suspense>}
 
         {/* COMPANY PLATFORM TOUR */}
         <div className="mt-3 flex justify-center animate-in fade-in duration-700 delay-300">
-          <a
-            href="/guide"
+          <button
+            onClick={() => setShowGuide(true)}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-amber-200 bg-amber-50 hover:bg-amber-100 transition-colors text-amber-700 font-bold text-[11px] uppercase tracking-widest shadow-sm hover:shadow-amber-100"
           >
             <Building2 size={14} />
             Company Platform Tour — EN · FR · ES
-          </a>
+          </button>
         </div>
 
         {/* ── ANDROID: APK download ── */}
