@@ -1,1239 +1,696 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import {
   ChevronLeft, ChevronRight, X, Award, CheckCircle2,
-  ArrowDownCircle, ArrowUpCircle, Send, QrCode, Link as LinkIcon,
-  CreditCard, Smartphone, Globe, FileText, History, ShieldCheck,
-  Star, Banknote, Wifi, Receipt, Search, Download, RefreshCw,
-  AlertCircle, ArrowRight, Lock, Zap
+  Send, QrCode, Download, Plus, Landmark, Wifi, Shield,
+  ArrowRightLeft, BarChart2, Compass, Bell, Menu, CreditCard,
+  Copy, FileText, Lock, Globe, Users, MapPin, Check, Zap,
+  ArrowLeft, MoreHorizontal
 } from 'lucide-react';
 
-// ─── CONTENT (14 slides × 3 languages) ───────────────────────────────────────
-
-const CONTENT = {
-  en: {
-    prev: 'Previous', next: 'Next',
-    slides: [
-      {
-        stage: 'Overview', icon: 'star',
-        title: 'The Complete DEUS Transaction Guide',
-        subtitle: 'From your first deposit to international withdrawals — every transaction type explained in full detail.',
-        body: 'DEUS gives you a complete financial toolkit: receive money, pay anyone, issue invoices, accept card payments, send internationally, and manage your full transaction history — all from one platform.',
-        features: [
-          'Deposit via bank transfer, card, or mobile money',
-          'Send instantly to any DEUS account, or externally via SWIFT',
-          'Receive via IBAN, QR code, or payment link',
-          'Accept payments with Tap to Pay or virtual terminal',
-          'Withdraw to any bank account worldwide',
-          'Full transaction history with PDF/CSV export',
-        ],
-      },
-      {
-        stage: 'Stage 1 · Deposit', icon: 'deposit',
-        title: 'Depositing Funds Into Your DEUS Account',
-        subtitle: 'Add money to your account via bank transfer, debit/credit card, or mobile money.',
-        features: [
-          'Bank transfer (SWIFT / local rails) — free, 1–3 business days',
-          'Card deposit (Visa / Mastercard) — instant, 1.5% fee',
-          'Mobile money integration in supported markets',
-          'Minimum deposit: $10 USD equivalent',
-        ],
-        details: [
-          'Open DEUS → Banking → tap "Deposit"',
-          'Choose your funding method: Bank Transfer, Card, or Mobile Money',
-          'Enter the amount and currency you wish to deposit',
-          'For bank transfer: use your dedicated DEUS IBAN as the destination',
-          'For card: enter card details securely — funds appear instantly',
-          'Confirmation email and in-app notification sent on receipt',
-        ],
-        scenario: 'Aminata wired $2,000 from her Citibank account to her DEUS IBAN on Monday morning — the funds appeared in DEUS by Tuesday afternoon.',
-        tip: 'Bank transfers are always free. Save your DEUS IBAN in your external bank as a frequent payee to make future deposits in seconds.',
-      },
-      {
-        stage: 'Stage 2 · Send (IFB to IFB)', icon: 'send',
-        title: 'Sending Money Between DEUS Accounts',
-        subtitle: 'Instant, fee-free transfers to any other IFB account holder — 24/7, including weekends.',
-        features: [
-          'Instant settlement — recipient sees funds in real-time',
-          'Zero fees for IFB-to-IFB transfers',
-          'Search by name, email address, or IFB ID',
-          'Optional reference note and receipt generation',
-        ],
-        details: [
-          'Go to Payments → Send Money',
-          'Search the recipient by name, email, or their IFB ID',
-          'Enter the amount and an optional note (e.g. "Invoice #045")',
-          'Review the transfer summary — check name and amount carefully',
-          'Confirm with your PIN or biometric (Face ID / fingerprint)',
-          'Transfer completes instantly — both parties receive a notification',
-        ],
-        scenario: 'Kofi needed to pay his Lagos-based supplier Jean-Pierre $850 at 11pm on a Sunday. Jean-Pierre\'s DEUS account was credited within 3 seconds.',
-        tip: 'Always verify the recipient\'s name displayed before confirming. Once sent, instant transfers cannot be reversed.',
-      },
-      {
-        stage: 'Stage 3 · Send (External Bank)', icon: 'external',
-        title: 'Sending to Any External Bank Account',
-        subtitle: 'Transfer funds from DEUS to any bank account worldwide using SWIFT or local payment rails.',
-        features: [
-          'SWIFT wire transfers to 180+ countries',
-          'Local rails for faster domestic transfers in supported markets',
-          'Multi-currency: send in 30+ currencies',
-          'Transparent fee and exchange rate shown before you confirm',
-        ],
-        details: [
-          'Go to Payments → Bank Transfer',
-          'Enter recipient bank details: name, IBAN or account number, SWIFT/BIC code',
-          'Select the destination currency and amount',
-          'DEUS shows the exact exchange rate and total fee upfront',
-          'Review and confirm — processing takes 1–3 business days',
-          'Save the recipient as a "Beneficiary" for faster future transfers',
-        ],
-        scenario: 'A Dakar-based trading company sent €12,000 to their German supplier via SWIFT — the transfer was confirmed within 2 business days with a full receipt in DEUS.',
-        tip: 'Save frequently-used external accounts as Beneficiaries. For large or recurring FX transfers, contact support to negotiate a fixed exchange rate.',
-      },
-      {
-        stage: 'Stage 4 · Receive Money', icon: 'receive',
-        title: 'Receiving Money From Anyone, Anywhere',
-        subtitle: 'Your DEUS account has a unique IBAN, QR code, and shareable payment link — share whichever is most convenient.',
-        features: [
-          'Dedicated IBAN accepted by all banks worldwide (SWIFT)',
-          'Personal QR code for instant in-person payments',
-          'Shareable payment link — payer does not need a DEUS account',
-          'Real-time notification when funds arrive',
-        ],
-        details: [
-          'Find your IBAN: Banking → Account Details → copy or share IBAN',
-          'For QR payments: Payments → Receive → Show QR Code',
-          'For payment links: Payments → Payment Links → Create Link (set amount + expiry)',
-          'Share your link via WhatsApp, email, or any channel',
-          'All incoming transfers appear instantly in your transaction history',
-          'Download a PDF receipt for any incoming payment',
-        ],
-        scenario: 'Maria attended a trade fair in Abidjan. She displayed her DEUS QR code on her phone — 12 buyers paid her a total of $4,800 during the day without any cash exchanged.',
-        tip: 'Your DEUS IBAN works exactly like any regular bank account. Anyone with a bank account — regardless of country — can wire money to it.',
-      },
-      {
-        stage: 'Stage 5 · QR Code Payments', icon: 'qr',
-        title: 'Pay and Get Paid with One Scan',
-        subtitle: 'Generate a QR code to request payment, or scan any DEUS QR to pay instantly — no cash, no card required.',
-        features: [
-          'Static QR (no amount set) — payer enters amount',
-          'Dynamic QR (pre-set amount) — one scan confirms exact payment',
-          'Works between any two DEUS accounts in seconds',
-          'Automatic receipt generated after each QR payment',
-        ],
-        details: [
-          'To receive: Payments → Receive → QR Code → optionally set a fixed amount',
-          'Display QR on screen or print it for your counter/stall',
-          'To pay: Payments → Scan QR → point camera at the merchant\'s QR code',
-          'Amount and recipient name are confirmed on screen before payment',
-          'Tap "Pay" — confirmed with PIN or biometric',
-          'Both parties receive an instant receipt notification',
-        ],
-        scenario: 'A market vendor in Dakar printed her QR code and taped it to her stall. Customers scan and pay for produce in seconds — she ends each day with zero cash handling.',
-        tip: 'Use dynamic QR codes (with a pre-set amount) for fixed-price products — it eliminates errors and speeds up checkout to under 5 seconds.',
-      },
-      {
-        stage: 'Stage 6 · Payment Links', icon: 'link',
-        title: 'Request Money with a Shareable Link',
-        subtitle: 'Create a secure payment link and share it anywhere. Your client pays with their own card — no DEUS account needed.',
-        features: [
-          'Payer uses any Visa / Mastercard — no DEUS account required',
-          'Set a specific amount, description, and expiry date',
-          'Share via WhatsApp, email, SMS, or social media',
-          'Funds credited to your DEUS account instantly on payment',
-        ],
-        details: [
-          'Go to Payments → Payment Links → New Link',
-          'Enter the amount, a description (e.g. "Web design — Invoice 12"), and expiry date',
-          'Tap "Generate Link" — a unique secure URL is created',
-          'Copy and share the link via any channel you prefer',
-          'Payer opens the link in any browser, enters their card details, and pays',
-          'You receive instant notification and the funds appear in your balance',
-        ],
-        scenario: 'A Lagos-based freelancer sent a $3,500 payment link via WhatsApp to a UK client. The client paid with their Barclays card in 2 minutes — no bank details shared, no waiting.',
-        tip: 'Always set an expiry date on payment links for security. Create a new link for each transaction rather than reusing old ones.',
-      },
-      {
-        stage: 'Stage 7 · PayMe Card', icon: 'card',
-        title: 'Your DEUS Debit Card — Virtual & Physical',
-        subtitle: 'Spend your DEUS balance anywhere Visa/Mastercard is accepted — online or in-store, anywhere in the world.',
-        features: [
-          'Virtual card: available instantly after KYC — use for online purchases',
-          'Physical card: delivered in 5–7 business days',
-          'Freeze / unfreeze instantly from the app',
-          'Set daily spending limits and merchant-category controls',
-        ],
-        details: [
-          'Request your card: Banking → Cards → Request Card',
-          'Virtual card details (number, expiry, CVV) appear immediately after approval',
-          'Use virtual card on any website — copy details or add to Apple/Google Pay',
-          'Physical card arrives by post — activate it in the app on arrival',
-          'To freeze: Banking → Cards → select card → Freeze',
-          'View all card transactions separately under Banking → Cards → History',
-        ],
-        scenario: 'An entrepreneur used her virtual DEUS card to pay for AWS cloud hosting, a Canva subscription, and a hotel booking in Dubai — all charged in their local currencies, converted automatically.',
-        tip: 'Freeze your card immediately in the app if you suspect it has been compromised. This takes 2 seconds and blocks all new transactions instantly.',
-      },
-      {
-        stage: 'Stage 8 · Tap to Pay', icon: 'nfc',
-        title: 'Accept Card Payments — Phone as Terminal',
-        subtitle: 'Turn your smartphone into a professional payment terminal. Accept any contactless card or mobile wallet — no hardware needed.',
-        features: [
-          'Accepts Visa, Mastercard, Apple Pay, Google Pay',
-          'No external hardware — uses your phone\'s NFC chip',
-          'Available on NFC-enabled Android phones and iPhone (iOS 17+)',
-          'Funds settled to your DEUS account next business day',
-        ],
-        details: [
-          'Enable Tap to Pay: Payments → Terminal → Enable Tap to Pay',
-          'Enter the charge amount and tap "Ready to Accept Payment"',
-          'Ask the customer to tap their card, phone, or watch on the back of your device',
-          'DEUS confirms the payment — a receipt is sent to both parties',
-          'Transaction appears in your history under Payments → Terminal History',
-          'Funds batch-settle to your DEUS account each business day',
-        ],
-        scenario: 'A food truck operator in Nairobi disabled his cash-only policy. He now accepts all card payments on his Android phone — turnover increased 40% in the first month.',
-        tip: 'Tap to Pay works best when the customer holds their card flat and still against the back of your phone for 1–2 seconds. Encourage them to keep the card in place until they hear the confirmation sound.',
-      },
-      {
-        stage: 'Stage 9 · International Transfers', icon: 'globe',
-        title: 'Send and Receive in 30+ Currencies',
-        subtitle: 'Cross-border payments with transparent exchange rates, low fees, and real-time tracking — to 180+ countries.',
-        features: [
-          'Send in the recipient\'s local currency — DEUS handles conversion',
-          'Mid-market exchange rate shown before you confirm',
-          'SWIFT and local network routing for fastest delivery',
-          'Track transfer status in real-time from your history',
-        ],
-        details: [
-          'Go to Payments → International Transfer',
-          'Select the destination country and recipient currency',
-          'Enter amount — DEUS instantly shows converted amount, exchange rate, and fee',
-          'Add recipient bank details or select a saved Beneficiary',
-          'Confirm — DEUS routes via SWIFT or local rail for fastest settlement',
-          'Receive status updates: Initiated → Processing → Delivered',
-        ],
-        scenario: 'A Kenyan importer paid a Chinese supplier CNY 280,000. DEUS converted from KES at the mid-market rate with a 0.5% fee — saving $800 compared to their previous bank\'s spread.',
-        tip: 'For recurring international payments (e.g. monthly supplier payments), save the beneficiary and the recurring amount — each future transfer takes under 30 seconds.',
-      },
-      {
-        stage: 'Stage 10 · Invoicing', icon: 'invoice',
-        title: 'Create and Send Professional Invoices',
-        subtitle: 'Generate branded invoices inside DEUS, send to clients by email or link, and track payment status in real-time.',
-        features: [
-          'Branded invoices with your company logo and details',
-          'Add line items, quantities, taxes, and discount codes',
-          'Send by email or shareable link — client pays online',
-          'Track status: Draft → Sent → Viewed → Paid → Overdue',
-        ],
-        details: [
-          'Go to Payments → Invoices → New Invoice',
-          'Add your client\'s name, email, and billing address',
-          'Add line items: description, quantity, unit price, tax rate',
-          'Set payment due date and optional late fee',
-          'Send directly by email — DEUS attaches a PDF and a "Pay Now" button',
-          'Client pays online with card — funds deposited to your DEUS balance instantly',
-        ],
-        scenario: 'A consulting firm in Lagos sends 60 invoices per month through DEUS. Clients click "Pay Now" and settle online — the team receives payment 3x faster than with traditional bank invoicing.',
-        tip: 'Set up recurring invoices for monthly retainer clients — DEUS automatically sends and tracks them every billing cycle without any manual action.',
-      },
-      {
-        stage: 'Stage 11 · Withdrawal', icon: 'withdraw',
-        title: 'Withdraw Your Balance to Any Bank Account',
-        subtitle: 'Move your DEUS funds to any external bank account — locally or internationally — quickly and securely.',
-        features: [
-          'Withdraw to any saved or new bank account',
-          'Free for most local withdrawals; small fee for international',
-          'Processing time: 1–2 business days (local), 2–3 (international)',
-          'Minimum withdrawal: $10 USD equivalent',
-        ],
-        details: [
-          'Go to Banking → Withdraw',
-          'Select a saved bank account or add a new one (IBAN, sort code, or account number)',
-          'Enter the withdrawal amount in your preferred currency',
-          'DEUS shows the exact fee and estimated arrival date',
-          'Confirm with your PIN or biometric — withdrawal is submitted',
-          'Track status under Banking → History — you\'ll receive an alert on completion',
-        ],
-        scenario: 'After receiving a $9,000 client payment, David withdrew $7,500 to his Standard Chartered account in Accra. Funds arrived in 2 business days with a $4 flat fee.',
-        tip: 'Save your primary bank account as a "Default Withdrawal Account" — future withdrawals pre-fill the details and are confirmed in one tap.',
-      },
-      {
-        stage: 'Stage 12 · Transaction History', icon: 'history',
-        title: 'Track, Search, and Export Every Transaction',
-        subtitle: 'Your complete financial record — filter by date, type, amount, or currency, and export for accounting in seconds.',
-        features: [
-          'Full history: deposits, sends, receives, card payments, withdrawals',
-          'Filter by date range, transaction type, currency, or amount',
-          'Click any transaction for full details, receipt, and reference number',
-          'Export as PDF (statement) or CSV (for accounting software)',
-        ],
-        details: [
-          'Go to Banking → Transaction History',
-          'Use filters: Date Range, Type (deposit/send/receive/withdrawal), Currency, Amount',
-          'Search by recipient name, reference number, or amount',
-          'Click any entry to view full details — amount, exchange rate, fees, timestamp, status',
-          'Tap "Download Receipt" to save a PDF receipt for a specific transaction',
-          'Tap "Export Statement" to download the full period as PDF or CSV',
-        ],
-        scenario: 'An auditor asked for 12 months of transaction records. The CFO opened DEUS History, set the date range, and downloaded a complete CSV in 45 seconds — no bank branch visit required.',
-        tip: 'Tag transactions with internal categories (Payroll, Supplier, Marketing, Tax) as they happen — monthly reconciliation becomes 10× faster.',
-      },
-      {
-        stage: 'Summary', icon: 'check',
-        title: 'You Now Know Every Transaction on DEUS',
-        subtitle: 'From your first deposit to cross-border withdrawals — you have the complete picture.',
-        body: 'Take the assessment below to test your knowledge across all 12 transaction modules. Earn your IFB Transaction Guide certificate on completion.',
-        features: [
-          'Deposit: bank transfer (free), card (instant), mobile money',
-          'Send: IFB-to-IFB (instant, free) · External bank (SWIFT, 1–3 days)',
-          'Receive: IBAN · QR code · payment link',
-          'Pay: QR code · card · Tap to Pay NFC terminal',
-          'International: 30+ currencies, transparent rates, 180+ countries',
-          'Invoicing: branded, trackable, online payment button',
-          'Withdrawal: any bank, 1–3 days, low fees',
-          'History: full records, filters, PDF/CSV export',
-        ],
-        cta: true,
-        buttons: ['Download App', 'Open DEUS', 'Contact Support'],
-      },
-    ],
+// ─── SLIDE DATA ───────────────────────────────────────────────────────────────
+const SLIDES = [
+  {
+    id: 'dashboard', noTap: true,
+    title:   { en: 'Your DEUS Dashboard', fr: 'Votre Tableau de Bord DEUS', es: 'Tu Panel DEUS' },
+    path:    { en: 'Home → Dashboard', fr: 'Accueil → Tableau de bord', es: 'Inicio → Panel' },
+    prompt:  { en: '', fr: '', es: '' },
+    explain: {
+      en: 'This is the heart of DEUS OS. Your live balance sits at the top. Below it are 9 Quick Action buttons — each opens a dedicated flow. The bottom nav lets you jump between Home, Transactions, Tap to Pay (center), Alerts, and More.',
+      fr: 'C\'est le cœur de DEUS OS. Votre solde en direct est en haut. En dessous se trouvent 9 boutons d\'action rapide — chacun ouvre un flux dédié. La barre de navigation inférieure vous permet de naviguer entre Accueil, Transactions, Tap to Pay (centre), Alertes et Plus.',
+      es: 'Este es el corazón de DEUS OS. Tu saldo en vivo está en la parte superior. Debajo hay 9 botones de Acción Rápida — cada uno abre un flujo dedicado. La barra de navegación inferior te permite saltar entre Inicio, Transacciones, Tap to Pay (centro), Alertas y Más.',
+    },
+    tip: { en: 'Swipe down on the balance to refresh.', fr: 'Glissez vers le bas sur le solde pour rafraîchir.', es: 'Desliza hacia abajo en el saldo para actualizar.' },
   },
-
-  fr: {
-    prev: 'Précédent', next: 'Suivant',
-    slides: [
-      {
-        stage: 'Aperçu', icon: 'star',
-        title: 'Le Guide Complet des Transactions DEUS',
-        subtitle: 'Du premier dépôt aux virements internationaux — chaque type de transaction expliqué en détail.',
-        body: 'DEUS vous offre une boîte à outils financière complète : recevoir de l\'argent, payer n\'importe qui, émettre des factures, accepter les paiements par carte, envoyer à l\'international et gérer votre historique — tout depuis une seule plateforme.',
-        features: [
-          'Dépôt par virement bancaire, carte ou mobile money',
-          'Envoi instantané vers tout compte DEUS ou via SWIFT',
-          'Réception via IBAN, QR code ou lien de paiement',
-          'Accepter les paiements par Tap to Pay ou terminal virtuel',
-          'Retrait vers tout compte bancaire mondial',
-          'Historique complet avec export PDF/CSV',
-        ],
-      },
-      {
-        stage: 'Étape 1 · Dépôt', icon: 'deposit',
-        title: 'Déposer des Fonds sur Votre Compte DEUS',
-        subtitle: 'Ajoutez de l\'argent via virement bancaire, carte ou mobile money.',
-        features: [
-          'Virement bancaire (SWIFT / rails locaux) — gratuit, 1–3 jours ouvrés',
-          'Dépôt par carte (Visa / Mastercard) — instantané, frais de 1,5 %',
-          'Intégration mobile money dans les marchés pris en charge',
-          'Dépôt minimum : 10 USD équivalent',
-        ],
-        details: [
-          'Ouvrez DEUS → Banque → appuyez sur "Déposer"',
-          'Choisissez la méthode : Virement bancaire, Carte ou Mobile Money',
-          'Entrez le montant et la devise souhaitée',
-          'Pour virement : utilisez votre IBAN DEUS comme destination',
-          'Pour carte : saisissez les informations de façon sécurisée — fonds immédiats',
-          'Confirmation par email et notification in-app à la réception',
-        ],
-        scenario: 'Aminata a viré 2 000 $ depuis son compte Citibank vers son IBAN DEUS un lundi matin — les fonds sont apparus dans DEUS le mardi après-midi.',
-        tip: 'Les virements bancaires sont toujours gratuits. Enregistrez votre IBAN DEUS dans votre banque externe comme bénéficiaire fréquent pour des dépôts futurs en quelques secondes.',
-      },
-      {
-        stage: 'Étape 2 · Envoi (IFB à IFB)', icon: 'send',
-        title: 'Envoyer de l\'Argent entre Comptes DEUS',
-        subtitle: 'Transferts instantanés et sans frais vers tout titulaire de compte IFB — 24h/24, 7j/7.',
-        features: [
-          'Règlement instantané — le destinataire voit les fonds en temps réel',
-          'Zéro frais pour les transferts IFB-à-IFB',
-          'Recherche par nom, adresse email ou identifiant IFB',
-          'Note de référence optionnelle et génération de reçu',
-        ],
-        details: [
-          'Allez dans Paiements → Envoyer de l\'argent',
-          'Recherchez le destinataire par nom, email ou identifiant IFB',
-          'Entrez le montant et une note optionnelle (ex. : "Facture #045")',
-          'Vérifiez le récapitulatif — vérifiez le nom et le montant attentivement',
-          'Confirmez avec votre code PIN ou biométrique (Face ID / empreinte)',
-          'Le transfert s\'effectue instantanément — les deux parties reçoivent une notification',
-        ],
-        scenario: 'Kofi a dû payer son fournisseur basé à Lagos, Jean-Pierre, 850 $ à 23h un dimanche. Le compte DEUS de Jean-Pierre a été crédité en 3 secondes.',
-        tip: 'Vérifiez toujours le nom du destinataire affiché avant de confirmer. Une fois envoyés, les transferts instantanés ne peuvent pas être annulés.',
-      },
-      {
-        stage: 'Étape 3 · Envoi (Banque Externe)', icon: 'external',
-        title: 'Envoyer vers Tout Compte Bancaire Externe',
-        subtitle: 'Transférez des fonds depuis DEUS vers n\'importe quel compte bancaire mondial via SWIFT ou rails locaux.',
-        features: [
-          'Virements SWIFT vers plus de 180 pays',
-          'Rails locaux pour des transferts domestiques plus rapides',
-          'Multi-devises : envoi dans plus de 30 devises',
-          'Frais et taux de change affichés avant confirmation',
-        ],
-        details: [
-          'Allez dans Paiements → Virement Bancaire',
-          'Saisissez les coordonnées bancaires : nom, IBAN ou numéro de compte, code SWIFT/BIC',
-          'Sélectionnez la devise de destination et le montant',
-          'DEUS affiche le taux de change exact et les frais totaux à l\'avance',
-          'Vérifiez et confirmez — traitement sous 1 à 3 jours ouvrés',
-          'Enregistrez le destinataire comme "Bénéficiaire" pour les prochains transferts',
-        ],
-        scenario: 'Une société commerciale de Dakar a envoyé 12 000 € à son fournisseur allemand via SWIFT — le transfert a été confirmé en 2 jours ouvrés avec un reçu complet dans DEUS.',
-        tip: 'Enregistrez les comptes externes fréquents comme Bénéficiaires. Pour des virements FX importants ou récurrents, contactez le support pour négocier un taux fixe.',
-      },
-      {
-        stage: 'Étape 4 · Recevoir de l\'Argent', icon: 'receive',
-        title: 'Recevoir de l\'Argent de N\'importe Où',
-        subtitle: 'Votre compte DEUS possède un IBAN unique, un QR code et un lien de paiement partageable.',
-        features: [
-          'IBAN dédié accepté par toutes les banques mondiales (SWIFT)',
-          'QR code personnel pour les paiements instantanés en personne',
-          'Lien de paiement partageable — le payeur n\'a pas besoin de compte DEUS',
-          'Notification en temps réel à l\'arrivée des fonds',
-        ],
-        details: [
-          'Trouvez votre IBAN : Banque → Détails du Compte → copier ou partager',
-          'Pour paiements QR : Paiements → Recevoir → Afficher QR Code',
-          'Pour liens de paiement : Paiements → Liens de Paiement → Créer un lien',
-          'Partagez via WhatsApp, email ou tout canal',
-          'Tous les transferts entrants apparaissent instantanément dans votre historique',
-          'Téléchargez un reçu PDF pour tout paiement entrant',
-        ],
-        scenario: 'Maria participait à un salon commercial à Abidjan. Elle affichait son QR code DEUS — 12 acheteurs lui ont payé un total de 4 800 $ dans la journée sans aucun échange d\'espèces.',
-        tip: 'Votre IBAN DEUS fonctionne exactement comme un compte bancaire ordinaire. Quiconque possède un compte bancaire peut vous virer de l\'argent, quel que soit le pays.',
-      },
-      {
-        stage: 'Étape 5 · Paiements QR', icon: 'qr',
-        title: 'Payer et Être Payé d\'un Simple Scan',
-        subtitle: 'Générez un QR code pour demander un paiement, ou scannez celui d\'un autre compte DEUS pour payer instantanément.',
-        features: [
-          'QR statique (sans montant) — le payeur saisit le montant',
-          'QR dynamique (montant prédéfini) — un scan confirme le paiement exact',
-          'Fonctionne entre deux comptes DEUS en quelques secondes',
-          'Reçu automatique généré après chaque paiement QR',
-        ],
-        details: [
-          'Pour recevoir : Paiements → Recevoir → QR Code → définir un montant fixe (optionnel)',
-          'Affichez le QR sur écran ou imprimez-le pour votre comptoir/stand',
-          'Pour payer : Paiements → Scanner QR → pointez l\'appareil photo sur le QR du marchand',
-          'Le montant et le nom du destinataire sont confirmés à l\'écran avant le paiement',
-          'Appuyez sur "Payer" — confirmé avec PIN ou biométrique',
-          'Les deux parties reçoivent une notification de reçu instantanée',
-        ],
-        scenario: 'Une vendeuse à Dakar a imprimé son QR code et l\'a affiché sur son stand. Les clients scannent et paient en quelques secondes — elle termine chaque journée sans manipulation d\'espèces.',
-        tip: 'Utilisez des QR dynamiques (avec montant prédéfini) pour les produits à prix fixe — cela élimine les erreurs et réduit le temps de caisse à moins de 5 secondes.',
-      },
-      {
-        stage: 'Étape 6 · Liens de Paiement', icon: 'link',
-        title: 'Demander de l\'Argent via un Lien Partageable',
-        subtitle: 'Créez un lien de paiement sécurisé et partagez-le n\'importe où. Votre client paie avec sa propre carte — sans compte DEUS requis.',
-        features: [
-          'Le payeur utilise n\'importe quelle Visa / Mastercard — sans compte DEUS',
-          'Définissez un montant précis, une description et une date d\'expiration',
-          'Partagez via WhatsApp, email, SMS ou réseaux sociaux',
-          'Fonds crédités instantanément sur votre compte DEUS',
-        ],
-        details: [
-          'Allez dans Paiements → Liens de Paiement → Nouveau Lien',
-          'Entrez le montant, une description (ex. : "Design Web — Facture 12") et la date d\'expiration',
-          'Appuyez sur "Générer le Lien" — une URL sécurisée unique est créée',
-          'Copiez et partagez le lien via le canal de votre choix',
-          'Le payeur ouvre le lien dans n\'importe quel navigateur, saisit ses coordonnées de carte et paie',
-          'Vous recevez une notification instantanée et les fonds apparaissent dans votre solde',
-        ],
-        scenario: 'Une freelance de Lagos a envoyé un lien de paiement de 3 500 $ via WhatsApp à un client anglais. Le client a payé avec sa carte Barclays en 2 minutes — aucune coordonnée bancaire partagée.',
-        tip: 'Définissez toujours une date d\'expiration sur les liens de paiement pour la sécurité. Créez un nouveau lien pour chaque transaction plutôt que de réutiliser les anciens.',
-      },
-      {
-        stage: 'Étape 7 · Carte PayMe', icon: 'card',
-        title: 'Votre Carte de Débit DEUS — Virtuelle et Physique',
-        subtitle: 'Utilisez votre solde DEUS partout où Visa/Mastercard est accepté — en ligne ou en magasin, dans le monde entier.',
-        features: [
-          'Carte virtuelle : disponible immédiatement après le KYC',
-          'Carte physique : livrée en 5 à 7 jours ouvrés',
-          'Gel / dégel instantané depuis l\'application',
-          'Définissez des plafonds de dépenses et des contrôles par catégorie de marchand',
-        ],
-        details: [
-          'Demandez votre carte : Banque → Cartes → Demander une Carte',
-          'Les détails de la carte virtuelle (numéro, expiration, CVV) apparaissent immédiatement',
-          'Utilisez la carte virtuelle sur tout site web — copiez les détails ou ajoutez à Apple/Google Pay',
-          'La carte physique arrive par courrier — activez-la dans l\'application à réception',
-          'Pour geler : Banque → Cartes → sélectionnez la carte → Geler',
-          'Consultez toutes les transactions par carte sous Banque → Cartes → Historique',
-        ],
-        scenario: 'Une entrepreneuse a utilisé sa carte DEUS virtuelle pour payer l\'hébergement AWS, un abonnement Canva et une réservation d\'hôtel à Dubaï — tout facturé en devises locales, converti automatiquement.',
-        tip: 'Gelez votre carte immédiatement dans l\'application si vous pensez qu\'elle a été compromise. Cela prend 2 secondes et bloque instantanément toutes les nouvelles transactions.',
-      },
-      {
-        stage: 'Étape 8 · Tap to Pay', icon: 'nfc',
-        title: 'Accepter les Paiements — Votre Téléphone comme Terminal',
-        subtitle: 'Transformez votre smartphone en terminal de paiement professionnel. Acceptez toute carte ou portefeuille mobile sans matériel supplémentaire.',
-        features: [
-          'Accepte Visa, Mastercard, Apple Pay, Google Pay',
-          'Aucun matériel externe — utilise la puce NFC de votre téléphone',
-          'Disponible sur Android NFC et iPhone (iOS 17+)',
-          'Fonds réglés sur votre compte DEUS le prochain jour ouvré',
-        ],
-        details: [
-          'Activez Tap to Pay : Paiements → Terminal → Activer Tap to Pay',
-          'Saisissez le montant à facturer et appuyez sur "Prêt à accepter le paiement"',
-          'Demandez au client de toucher sa carte, son téléphone ou sa montre au dos de votre appareil',
-          'DEUS confirme le paiement — un reçu est envoyé aux deux parties',
-          'La transaction apparaît dans votre historique sous Paiements → Historique Terminal',
-          'Les fonds sont réglés par lot sur votre compte DEUS chaque jour ouvré',
-        ],
-        scenario: 'Un gérant de food truck à Nairobi a abandonné sa politique espèces uniquement. Il accepte désormais tous les paiements par carte sur son Android — son chiffre d\'affaires a augmenté de 40 % le premier mois.',
-        tip: 'Tap to Pay fonctionne mieux quand le client tient sa carte à plat et immobile contre le dos de votre téléphone pendant 1 à 2 secondes jusqu\'au son de confirmation.',
-      },
-      {
-        stage: 'Étape 9 · Transferts Internationaux', icon: 'globe',
-        title: 'Envoyer et Recevoir dans Plus de 30 Devises',
-        subtitle: 'Paiements transfrontaliers avec taux de change transparents, faibles frais et suivi en temps réel — vers plus de 180 pays.',
-        features: [
-          'Envoyez dans la devise locale du destinataire — DEUS gère la conversion',
-          'Taux de change affiché avant confirmation',
-          'Routage SWIFT et réseau local pour livraison la plus rapide',
-          'Suivi du statut du transfert en temps réel',
-        ],
-        details: [
-          'Allez dans Paiements → Transfert International',
-          'Sélectionnez le pays de destination et la devise du destinataire',
-          'Entrez le montant — DEUS affiche instantanément le montant converti, le taux et les frais',
-          'Ajoutez les coordonnées bancaires ou sélectionnez un Bénéficiaire enregistré',
-          'Confirmez — DEUS route via SWIFT ou rail local pour un règlement optimal',
-          'Recevez des mises à jour de statut : Initié → En cours → Livré',
-        ],
-        scenario: 'Un importateur kényan a payé 280 000 CNY à un fournisseur chinois. DEUS a converti depuis KES au taux mid-market avec 0,5 % de frais — économisant 800 $ par rapport aux frais de sa banque précédente.',
-        tip: 'Pour les paiements internationaux récurrents (ex. : fournisseur mensuel), enregistrez le bénéficiaire et le montant récurrent — chaque futur transfert prend moins de 30 secondes.',
-      },
-      {
-        stage: 'Étape 10 · Facturation', icon: 'invoice',
-        title: 'Créer et Envoyer des Factures Professionnelles',
-        subtitle: 'Générez des factures avec votre marque dans DEUS, envoyez-les par email ou lien, et suivez le statut de paiement en temps réel.',
-        features: [
-          'Factures à votre image avec logo et coordonnées',
-          'Ajoutez des lignes, quantités, taxes et remises',
-          'Envoyez par email ou lien partageable — le client paie en ligne',
-          'Suivez : Brouillon → Envoyée → Vue → Payée → En retard',
-        ],
-        details: [
-          'Allez dans Paiements → Factures → Nouvelle Facture',
-          'Ajoutez le nom du client, email et adresse de facturation',
-          'Ajoutez des lignes : description, quantité, prix unitaire, taux de TVA',
-          'Définissez la date d\'échéance et les pénalités de retard optionnelles',
-          'Envoyez par email — DEUS joint un PDF et un bouton "Payer maintenant"',
-          'Le client paie en ligne par carte — fonds déposés sur votre solde DEUS instantanément',
-        ],
-        scenario: 'Un cabinet de conseil à Lagos envoie 60 factures par mois via DEUS. Les clients cliquent sur "Payer maintenant" — le cabinet reçoit les paiements 3× plus vite qu\'avec la facturation bancaire classique.',
-        tip: 'Mettez en place des factures récurrentes pour vos clients sous contrat de retainer — DEUS les envoie et les suit automatiquement à chaque cycle de facturation.',
-      },
-      {
-        stage: 'Étape 11 · Retrait', icon: 'withdraw',
-        title: 'Retirer Votre Solde vers Tout Compte Bancaire',
-        subtitle: 'Transférez vos fonds DEUS vers tout compte bancaire externe — localement ou internationalement.',
-        features: [
-          'Retrait vers tout compte bancaire enregistré ou nouveau',
-          'Gratuit pour la plupart des retraits locaux ; petits frais à l\'international',
-          'Délai : 1 à 2 jours ouvrés (local), 2 à 3 (international)',
-          'Retrait minimum : 10 USD équivalent',
-        ],
-        details: [
-          'Allez dans Banque → Retirer',
-          'Sélectionnez un compte bancaire enregistré ou ajoutez-en un nouveau',
-          'Entrez le montant du retrait dans la devise de votre choix',
-          'DEUS affiche les frais exacts et la date d\'arrivée estimée',
-          'Confirmez avec votre PIN ou biométrique — le retrait est soumis',
-          'Suivez le statut sous Banque → Historique — alerte à la réception',
-        ],
-        scenario: 'Après avoir reçu 9 000 $ d\'un client, David a retiré 7 500 $ sur son compte Standard Chartered à Accra. Les fonds sont arrivés en 2 jours ouvrés avec des frais fixes de 4 $.',
-        tip: 'Enregistrez votre compte bancaire principal comme "Compte de Retrait par Défaut" — les futurs retraits sont préremplis et confirmés en un seul appui.',
-      },
-      {
-        stage: 'Étape 12 · Historique', icon: 'history',
-        title: 'Suivre, Rechercher et Exporter Chaque Transaction',
-        subtitle: 'Votre dossier financier complet — filtrez par date, type, montant ou devise, et exportez pour la comptabilité en quelques secondes.',
-        features: [
-          'Historique complet : dépôts, envois, réceptions, paiements, retraits',
-          'Filtrez par plage de dates, type, devise ou montant',
-          'Cliquez sur n\'importe quelle transaction pour les détails et le reçu',
-          'Exportez en PDF (relevé) ou CSV (pour logiciel comptable)',
-        ],
-        details: [
-          'Allez dans Banque → Historique des Transactions',
-          'Utilisez les filtres : Plage de Dates, Type, Devise, Montant',
-          'Recherchez par nom du destinataire, numéro de référence ou montant',
-          'Cliquez sur une entrée pour voir tous les détails — montant, taux, frais, horodatage, statut',
-          'Appuyez sur "Télécharger le Reçu" pour un reçu PDF d\'une transaction spécifique',
-          'Appuyez sur "Exporter le Relevé" pour télécharger la période complète en PDF ou CSV',
-        ],
-        scenario: 'Un auditeur a demandé 12 mois de transactions. La DG a ouvert l\'Historique DEUS, défini la plage de dates et téléchargé un CSV complet en 45 secondes — sans visite en agence bancaire.',
-        tip: 'Étiquetez les transactions avec des catégories internes (Salaires, Fournisseur, Marketing, Taxe) au fur et à mesure — le rapprochement mensuel devient 10 fois plus rapide.',
-      },
-      {
-        stage: 'Résumé', icon: 'check',
-        title: 'Vous Maîtrisez Désormais Toutes les Transactions DEUS',
-        subtitle: 'Du premier dépôt aux retraits transfrontaliers — vous avez une vision complète.',
-        body: 'Passez l\'évaluation ci-dessous pour tester vos connaissances sur les 12 modules de transaction. Obtenez votre certificat IFB à la fin.',
-        features: [
-          'Dépôt : virement bancaire (gratuit), carte (instantané), mobile money',
-          'Envoi : IFB-à-IFB (instantané, gratuit) · Banque externe (SWIFT, 1–3 jours)',
-          'Réception : IBAN · QR code · lien de paiement',
-          'Paiement : QR code · carte · Terminal Tap to Pay NFC',
-          'International : 30+ devises, taux transparents, 180+ pays',
-          'Facturation : à votre image, traçable, bouton de paiement en ligne',
-          'Retrait : toute banque, 1–3 jours, faibles frais',
-          'Historique : records complets, filtres, export PDF/CSV',
-        ],
-        cta: true,
-        buttons: ['Télécharger l\'App', 'Ouvrir DEUS', 'Contacter le Support'],
-      },
-    ],
+  {
+    id: 'deposit', hl: 'cot',
+    title:   { en: 'Add Funds — Community of Trust', fr: 'Ajouter des Fonds — Communauté de Confiance', es: 'Agregar Fondos — Comunidad de Confianza' },
+    path:    { en: 'Home → Add', fr: 'Accueil → Ajouter', es: 'Inicio → Agregar' },
+    prompt:  { en: 'Tap the Community of Trust card to select it', fr: 'Appuyez sur la carte Communauté de Confiance pour la sélectionner', es: 'Toca la tarjeta Comunidad de Confianza para seleccionarla' },
+    explain: {
+      en: 'DEUS offers two deposit methods. Community of Trust charges just 1% IFB Fee + 2% Processor Reward — the lowest cost route. Global Card Network uses Stripe and charges 2.9%. Choose CoT for everyday top-ups.',
+      fr: 'DEUS propose deux méthodes de dépôt. La Communauté de Confiance facture seulement 1% de frais IFB + 2% de récompense — la voie la moins chère. Le Réseau Global de Cartes utilise Stripe et facture 2,9%. Choisissez CoT pour les recharges quotidiennes.',
+      es: 'DEUS ofrece dos métodos de depósito. Comunidad de Confianza cobra solo 1% de tarifa IFB + 2% de Recompensa — la ruta de menor costo. Red Global de Tarjetas usa Stripe y cobra 2.9%. Elige CoT para recargas del día a día.',
+    },
+    tip: { en: 'CoT deposits settle in minutes via peer network.', fr: 'Les dépôts CoT se règlent en quelques minutes.', es: 'Los depósitos CoT se liquidan en minutos.' },
   },
-
-  es: {
-    prev: 'Anterior', next: 'Siguiente',
-    slides: [
-      {
-        stage: 'Descripción General', icon: 'star',
-        title: 'La Guía Completa de Transacciones DEUS',
-        subtitle: 'Desde tu primer depósito hasta retiros internacionales — cada tipo de transacción explicado con todo detalle.',
-        body: 'DEUS te ofrece un conjunto completo de herramientas financieras: recibir dinero, pagar a cualquiera, emitir facturas, aceptar pagos con tarjeta, enviar internacionalmente y gestionar tu historial completo — todo desde una sola plataforma.',
-        features: [
-          'Depósito por transferencia bancaria, tarjeta o dinero móvil',
-          'Envío instantáneo a cualquier cuenta DEUS o por SWIFT',
-          'Recepción por IBAN, código QR o enlace de pago',
-          'Aceptar pagos con Tap to Pay o terminal virtual',
-          'Retiro a cualquier cuenta bancaria del mundo',
-          'Historial completo de transacciones con exportación PDF/CSV',
-        ],
-      },
-      {
-        stage: 'Etapa 1 · Depósito', icon: 'deposit',
-        title: 'Depositar Fondos en Tu Cuenta DEUS',
-        subtitle: 'Añade dinero a tu cuenta por transferencia bancaria, tarjeta de débito/crédito o dinero móvil.',
-        features: [
-          'Transferencia bancaria (SWIFT / redes locales) — gratuita, 1–3 días hábiles',
-          'Depósito con tarjeta (Visa / Mastercard) — instantáneo, comisión del 1,5 %',
-          'Integración de dinero móvil en mercados compatibles',
-          'Depósito mínimo: 10 USD equivalente',
-        ],
-        details: [
-          'Abre DEUS → Banca → toca "Depositar"',
-          'Elige tu método de financiación: Transferencia bancaria, Tarjeta o Dinero Móvil',
-          'Ingresa el monto y la moneda que deseas depositar',
-          'Para transferencia: usa tu IBAN DEUS dedicado como destino',
-          'Para tarjeta: ingresa los datos de forma segura — fondos disponibles al instante',
-          'Se envía confirmación por email y notificación en la app al recibirse los fondos',
-        ],
-        scenario: 'Aminata transfirió $2,000 desde su cuenta Citibank a su IBAN DEUS un lunes por la mañana — los fondos aparecieron en DEUS el martes por la tarde.',
-        tip: 'Las transferencias bancarias siempre son gratuitas. Guarda tu IBAN DEUS en tu banco externo como beneficiario frecuente para hacer depósitos futuros en segundos.',
-      },
-      {
-        stage: 'Etapa 2 · Envío (IFB a IFB)', icon: 'send',
-        title: 'Enviar Dinero entre Cuentas DEUS',
-        subtitle: 'Transferencias instantáneas y sin comisiones a cualquier titular de cuenta IFB — 24/7, incluso fines de semana.',
-        features: [
-          'Liquidación instantánea — el destinatario ve los fondos en tiempo real',
-          'Sin comisiones para transferencias IFB a IFB',
-          'Busca por nombre, correo electrónico o ID de IFB',
-          'Nota de referencia opcional y generación de recibo',
-        ],
-        details: [
-          'Ve a Pagos → Enviar Dinero',
-          'Busca al destinatario por nombre, email o ID IFB',
-          'Ingresa el monto y una nota opcional (ej. "Factura #045")',
-          'Revisa el resumen de la transferencia — verifica nombre y monto cuidadosamente',
-          'Confirma con tu PIN o biométrico (Face ID / huella)',
-          'La transferencia se completa al instante — ambas partes reciben una notificación',
-        ],
-        scenario: 'Kofi necesitaba pagar a su proveedor en Lagos, Jean-Pierre, $850 a las 11pm de un domingo. La cuenta DEUS de Jean-Pierre fue acreditada en 3 segundos.',
-        tip: 'Siempre verifica el nombre del destinatario mostrado antes de confirmar. Una vez enviadas, las transferencias instantáneas no pueden revertirse.',
-      },
-      {
-        stage: 'Etapa 3 · Envío (Banco Externo)', icon: 'external',
-        title: 'Enviar a Cualquier Cuenta Bancaria Externa',
-        subtitle: 'Transfiere fondos desde DEUS a cualquier cuenta bancaria del mundo usando SWIFT o redes de pago locales.',
-        features: [
-          'Transferencias SWIFT a más de 180 países',
-          'Redes locales para transferencias domésticas más rápidas',
-          'Multidivisa: envía en más de 30 monedas',
-          'Comisión y tipo de cambio exactos mostrados antes de confirmar',
-        ],
-        details: [
-          'Ve a Pagos → Transferencia Bancaria',
-          'Ingresa los datos bancarios del destinatario: nombre, IBAN o número de cuenta, código SWIFT/BIC',
-          'Selecciona la moneda de destino y el monto',
-          'DEUS muestra el tipo de cambio exacto y la comisión total por anticipado',
-          'Revisa y confirma — procesamiento en 1 a 3 días hábiles',
-          'Guarda al destinatario como "Beneficiario" para futuras transferencias rápidas',
-        ],
-        scenario: 'Una empresa comercial de Dakar envió €12,000 a su proveedor alemán vía SWIFT — la transferencia fue confirmada en 2 días hábiles con un recibo completo en DEUS.',
-        tip: 'Guarda las cuentas externas frecuentes como Beneficiarios. Para transferencias FX grandes o recurrentes, contacta al soporte para negociar un tipo de cambio fijo.',
-      },
-      {
-        stage: 'Etapa 4 · Recibir Dinero', icon: 'receive',
-        title: 'Recibir Dinero de Cualquier Persona, en Cualquier Lugar',
-        subtitle: 'Tu cuenta DEUS tiene un IBAN único, código QR y enlace de pago compartible — comparte el más conveniente.',
-        features: [
-          'IBAN dedicado aceptado por todos los bancos del mundo (SWIFT)',
-          'Código QR personal para pagos instantáneos en persona',
-          'Enlace de pago compartible — el pagador no necesita cuenta DEUS',
-          'Notificación en tiempo real cuando lleguen los fondos',
-        ],
-        details: [
-          'Encuentra tu IBAN: Banca → Datos de Cuenta → copiar o compartir',
-          'Para pagos QR: Pagos → Recibir → Mostrar Código QR',
-          'Para enlaces de pago: Pagos → Enlaces de Pago → Crear Enlace',
-          'Comparte por WhatsApp, email o cualquier canal',
-          'Todas las transferencias entrantes aparecen al instante en tu historial',
-          'Descarga un recibo PDF de cualquier pago entrante',
-        ],
-        scenario: 'María asistió a una feria comercial en Abidján. Mostró su código QR DEUS — 12 compradores le pagaron un total de $4,800 durante el día sin intercambiar efectivo.',
-        tip: 'Tu IBAN DEUS funciona exactamente como cualquier cuenta bancaria normal. Cualquier persona con una cuenta bancaria — independientemente del país — puede transferirte dinero.',
-      },
-      {
-        stage: 'Etapa 5 · Pagos con Código QR', icon: 'qr',
-        title: 'Pagar y Cobrar con un Solo Escaneo',
-        subtitle: 'Genera un código QR para solicitar un pago, o escanea el de cualquier cuenta DEUS para pagar al instante.',
-        features: [
-          'QR estático (sin monto) — el pagador ingresa el monto',
-          'QR dinámico (monto preestablecido) — un escaneo confirma el pago exacto',
-          'Funciona entre dos cuentas DEUS en segundos',
-          'Recibo automático generado tras cada pago QR',
-        ],
-        details: [
-          'Para recibir: Pagos → Recibir → Código QR → definir monto fijo (opcional)',
-          'Muestra el QR en pantalla o imprímelo para tu mostrador/puesto',
-          'Para pagar: Pagos → Escanear QR → apunta la cámara al QR del comerciante',
-          'Monto y nombre del destinatario confirmados en pantalla antes del pago',
-          'Toca "Pagar" — confirmado con PIN o biométrico',
-          'Ambas partes reciben una notificación de recibo instantánea',
-        ],
-        scenario: 'Una vendedora en Dakar imprimió su código QR y lo pegó en su puesto. Los clientes escanean y pagan productos en segundos — termina cada día sin manipular efectivo.',
-        tip: 'Usa códigos QR dinámicos (con monto preestablecido) para productos de precio fijo — elimina errores y reduce el tiempo de cobro a menos de 5 segundos.',
-      },
-      {
-        stage: 'Etapa 6 · Enlaces de Pago', icon: 'link',
-        title: 'Solicitar Dinero con un Enlace Compartible',
-        subtitle: 'Crea un enlace de pago seguro y compártelo donde quieras. Tu cliente paga con su propia tarjeta — sin necesidad de cuenta DEUS.',
-        features: [
-          'El pagador usa cualquier Visa / Mastercard — sin cuenta DEUS requerida',
-          'Define un monto específico, descripción y fecha de vencimiento',
-          'Comparte por WhatsApp, email, SMS o redes sociales',
-          'Fondos acreditados al instante en tu cuenta DEUS',
-        ],
-        details: [
-          'Ve a Pagos → Enlaces de Pago → Nuevo Enlace',
-          'Ingresa el monto, descripción (ej. "Diseño web — Factura 12") y fecha de vencimiento',
-          'Toca "Generar Enlace" — se crea una URL segura única',
-          'Copia y comparte el enlace por el canal que prefieras',
-          'El pagador abre el enlace en cualquier navegador, ingresa sus datos de tarjeta y paga',
-          'Recibes notificación instantánea y los fondos aparecen en tu saldo',
-        ],
-        scenario: 'Una freelancer de Lagos envió un enlace de pago de $3,500 por WhatsApp a un cliente en el Reino Unido. El cliente pagó con su tarjeta Barclays en 2 minutos — sin compartir datos bancarios.',
-        tip: 'Siempre establece una fecha de vencimiento en los enlaces de pago por seguridad. Crea un nuevo enlace para cada transacción en vez de reutilizar los anteriores.',
-      },
-      {
-        stage: 'Etapa 7 · Tarjeta PayMe', icon: 'card',
-        title: 'Tu Tarjeta de Débito DEUS — Virtual y Física',
-        subtitle: 'Usa tu saldo DEUS en cualquier lugar donde se acepte Visa/Mastercard — en línea o en tienda, en todo el mundo.',
-        features: [
-          'Tarjeta virtual: disponible inmediatamente tras el KYC',
-          'Tarjeta física: entregada en 5 a 7 días hábiles',
-          'Congelar / descongelar al instante desde la app',
-          'Establece límites de gasto y controles por categoría de comercio',
-        ],
-        details: [
-          'Solicita tu tarjeta: Banca → Tarjetas → Solicitar Tarjeta',
-          'Los datos de la tarjeta virtual (número, vencimiento, CVV) aparecen inmediatamente',
-          'Usa la tarjeta virtual en cualquier sitio web — copia los datos o añade a Apple/Google Pay',
-          'La tarjeta física llega por correo — actívala en la app al recibirla',
-          'Para congelar: Banca → Tarjetas → selecciona la tarjeta → Congelar',
-          'Consulta todas las transacciones con tarjeta en Banca → Tarjetas → Historial',
-        ],
-        scenario: 'Una empresaria usó su tarjeta virtual DEUS para pagar el hosting de AWS, una suscripción a Canva y una reserva de hotel en Dubái — todo facturado en monedas locales, convertido automáticamente.',
-        tip: 'Congela tu tarjeta inmediatamente en la app si sospechas que ha sido comprometida. Esto tarda 2 segundos y bloquea al instante todas las nuevas transacciones.',
-      },
-      {
-        stage: 'Etapa 8 · Tap to Pay', icon: 'nfc',
-        title: 'Aceptar Pagos — Tu Teléfono como Terminal',
-        subtitle: 'Convierte tu smartphone en un terminal de pago profesional. Acepta cualquier tarjeta o billetera móvil — sin hardware adicional.',
-        features: [
-          'Acepta Visa, Mastercard, Apple Pay, Google Pay',
-          'Sin hardware externo — usa el chip NFC de tu teléfono',
-          'Disponible en Android con NFC e iPhone (iOS 17+)',
-          'Fondos liquidados en tu cuenta DEUS el siguiente día hábil',
-        ],
-        details: [
-          'Activa Tap to Pay: Pagos → Terminal → Activar Tap to Pay',
-          'Ingresa el monto a cobrar y toca "Listo para aceptar pago"',
-          'Pide al cliente que acerque su tarjeta, teléfono o reloj a la parte trasera de tu dispositivo',
-          'DEUS confirma el pago — se envía recibo a ambas partes',
-          'La transacción aparece en tu historial en Pagos → Historial Terminal',
-          'Los fondos se liquidan por lotes en tu cuenta DEUS cada día hábil',
-        ],
-        scenario: 'Un operador de food truck en Nairobi eliminó su política de solo efectivo. Ahora acepta todos los pagos con tarjeta en su Android — su facturación aumentó un 40 % en el primer mes.',
-        tip: 'Tap to Pay funciona mejor cuando el cliente mantiene su tarjeta plana e inmóvil contra la parte trasera de tu teléfono durante 1 a 2 segundos hasta escuchar el sonido de confirmación.',
-      },
-      {
-        stage: 'Etapa 9 · Transferencias Internacionales', icon: 'globe',
-        title: 'Enviar y Recibir en Más de 30 Monedas',
-        subtitle: 'Pagos transfronterizos con tipos de cambio transparentes, bajas comisiones y seguimiento en tiempo real — a más de 180 países.',
-        features: [
-          'Envía en la moneda local del destinatario — DEUS gestiona la conversión',
-          'Tipo de cambio de mercado mostrado antes de confirmar',
-          'Enrutamiento SWIFT y red local para entrega más rápida',
-          'Sigue el estado de la transferencia en tiempo real',
-        ],
-        details: [
-          'Ve a Pagos → Transferencia Internacional',
-          'Selecciona el país de destino y la moneda del destinatario',
-          'Ingresa el monto — DEUS muestra al instante el monto convertido, tipo y comisión',
-          'Añade datos bancarios del destinatario o selecciona un Beneficiario guardado',
-          'Confirma — DEUS enruta por SWIFT o red local para liquidación óptima',
-          'Recibe actualizaciones de estado: Iniciada → En proceso → Entregada',
-        ],
-        scenario: 'Un importador keniata pagó CNY 280,000 a un proveedor chino. DEUS convirtió desde KES al tipo de cambio de mercado con un 0,5 % de comisión — ahorrando $800 comparado con su banco anterior.',
-        tip: 'Para pagos internacionales recurrentes (ej. proveedor mensual), guarda el beneficiario y el monto recurrente — cada transferencia futura tarda menos de 30 segundos.',
-      },
-      {
-        stage: 'Etapa 10 · Facturación', icon: 'invoice',
-        title: 'Crear y Enviar Facturas Profesionales',
-        subtitle: 'Genera facturas con tu marca dentro de DEUS, envíalas por email o enlace, y sigue el estado de pago en tiempo real.',
-        features: [
-          'Facturas con tu logo y datos de empresa',
-          'Añade líneas, cantidades, impuestos y descuentos',
-          'Envía por email o enlace compartible — el cliente paga en línea',
-          'Sigue el estado: Borrador → Enviada → Vista → Pagada → Vencida',
-        ],
-        details: [
-          'Ve a Pagos → Facturas → Nueva Factura',
-          'Añade nombre del cliente, email y dirección de facturación',
-          'Añade líneas: descripción, cantidad, precio unitario, tasa de impuesto',
-          'Establece fecha de vencimiento y penalización por mora opcional',
-          'Envía por email — DEUS adjunta un PDF y un botón "Pagar Ahora"',
-          'El cliente paga en línea con tarjeta — fondos depositados en tu saldo DEUS al instante',
-        ],
-        scenario: 'Una firma consultora en Lagos envía 60 facturas al mes por DEUS. Los clientes hacen clic en "Pagar Ahora" — la firma recibe pagos 3 veces más rápido que con la facturación bancaria tradicional.',
-        tip: 'Configura facturas recurrentes para clientes con contrato de retención — DEUS las envía y rastrea automáticamente en cada ciclo de facturación sin acción manual.',
-      },
-      {
-        stage: 'Etapa 11 · Retiro', icon: 'withdraw',
-        title: 'Retirar Tu Saldo a Cualquier Cuenta Bancaria',
-        subtitle: 'Mueve tus fondos DEUS a cualquier cuenta bancaria externa — local o internacionalmente — de forma rápida y segura.',
-        features: [
-          'Retiro a cualquier cuenta bancaria guardada o nueva',
-          'Gratuito para la mayoría de retiros locales; pequeña comisión internacional',
-          'Tiempo de procesamiento: 1 a 2 días hábiles (local), 2 a 3 (internacional)',
-          'Retiro mínimo: 10 USD equivalente',
-        ],
-        details: [
-          'Ve a Banca → Retirar',
-          'Selecciona una cuenta bancaria guardada o añade una nueva (IBAN, código de clasificación o número de cuenta)',
-          'Ingresa el monto del retiro en tu moneda preferida',
-          'DEUS muestra la comisión exacta y la fecha de llegada estimada',
-          'Confirma con tu PIN o biométrico — el retiro es enviado',
-          'Sigue el estado en Banca → Historial — recibirás una alerta al completarse',
-        ],
-        scenario: 'Tras recibir un pago de cliente de $9,000, David retiró $7,500 a su cuenta Standard Chartered en Accra. Los fondos llegaron en 2 días hábiles con una comisión fija de $4.',
-        tip: 'Guarda tu cuenta bancaria principal como "Cuenta de Retiro Predeterminada" — los futuros retiros se rellenan previamente y se confirman con un solo toque.',
-      },
-      {
-        stage: 'Etapa 12 · Historial', icon: 'history',
-        title: 'Rastrear, Buscar y Exportar Cada Transacción',
-        subtitle: 'Tu registro financiero completo — filtra por fecha, tipo, monto o moneda, y exporta para contabilidad en segundos.',
-        features: [
-          'Historial completo: depósitos, envíos, recepciones, pagos, retiros',
-          'Filtra por rango de fechas, tipo, moneda o monto',
-          'Haz clic en cualquier transacción para ver detalles y recibo',
-          'Exporta como PDF (estado de cuenta) o CSV (para software contable)',
-        ],
-        details: [
-          'Ve a Banca → Historial de Transacciones',
-          'Usa filtros: Rango de Fechas, Tipo, Moneda, Monto',
-          'Busca por nombre del destinatario, número de referencia o monto',
-          'Haz clic en una entrada para ver todos los detalles — monto, tipo de cambio, comisiones, marca de tiempo, estado',
-          'Toca "Descargar Recibo" para guardar un recibo PDF de una transacción específica',
-          'Toca "Exportar Estado de Cuenta" para descargar el período completo como PDF o CSV',
-        ],
-        scenario: 'Un auditor solicitó 12 meses de registros de transacciones. La CFO abrió el Historial de DEUS, configuró el rango de fechas y descargó un CSV completo en 45 segundos — sin visitar ninguna sucursal bancaria.',
-        tip: 'Etiqueta las transacciones con categorías internas (Nómina, Proveedor, Marketing, Impuesto) a medida que ocurren — la conciliación mensual se vuelve 10 veces más rápida.',
-      },
-      {
-        stage: 'Resumen', icon: 'check',
-        title: 'Ahora Conoces Todas las Transacciones de DEUS',
-        subtitle: 'Desde tu primer depósito hasta retiros transfronterizos — tienes el panorama completo.',
-        body: 'Realiza la evaluación a continuación para poner a prueba tus conocimientos en los 12 módulos de transacciones. Obtén tu certificado IFB de la Guía de Transacciones al completarla.',
-        features: [
-          'Depósito: transferencia bancaria (gratuita), tarjeta (instantánea), dinero móvil',
-          'Envío: IFB a IFB (instantáneo, gratuito) · Banco externo (SWIFT, 1–3 días)',
-          'Recepción: IBAN · código QR · enlace de pago',
-          'Pago: código QR · tarjeta · Terminal Tap to Pay NFC',
-          'Internacional: más de 30 monedas, tarifas transparentes, más de 180 países',
-          'Facturación: con marca, rastreable, botón de pago en línea',
-          'Retiro: cualquier banco, 1–3 días, bajas comisiones',
-          'Historial: registros completos, filtros, exportación PDF/CSV',
-        ],
-        cta: true,
-        buttons: ['Descargar App', 'Abrir DEUS', 'Contactar Soporte'],
-      },
-    ],
+  {
+    id: 'send', hl: 'sendBtn',
+    title:   { en: 'Send Money', fr: 'Envoyer de l\'Argent', es: 'Enviar Dinero' },
+    path:    { en: 'Home → Send', fr: 'Accueil → Envoyer', es: 'Inicio → Enviar' },
+    prompt:  { en: 'Tap Send Now to confirm the transfer', fr: 'Appuyez sur Envoyer Maintenant pour confirmer le transfert', es: 'Toca Enviar Ahora para confirmar la transferencia' },
+    explain: {
+      en: 'The Send flow opens a bottom sheet. Select USD or AFR, pick a contact, enter the amount and a note, then hit Send Now. The funds move instantly within the IFB network.',
+      fr: 'Le flux Envoyer ouvre une feuille du bas. Sélectionnez USD ou AFR, choisissez un contact, entrez le montant et une note, puis appuyez sur Envoyer Maintenant. Les fonds se déplacent instantanément dans le réseau IFB.',
+      es: 'El flujo de Envío abre una hoja inferior. Selecciona USD o AFR, elige un contacto, ingresa el monto y una nota, luego presiona Enviar Ahora. Los fondos se mueven instantáneamente dentro de la red IFB.',
+    },
+    tip: { en: 'You can search contacts by name or account ID.', fr: 'Vous pouvez rechercher des contacts par nom ou ID de compte.', es: 'Puedes buscar contactos por nombre o ID de cuenta.' },
   },
-};
+  {
+    id: 'withdraw-global', hl: 'globalBtn',
+    title:   { en: 'Withdraw — Global Bank/Card', fr: 'Retrait — Banque/Carte Mondiale', es: 'Retirar — Banco/Tarjeta Global' },
+    path:    { en: 'Home → Withdraw → Global Bank/Card', fr: 'Accueil → Retirer → Banque/Carte Mondiale', es: 'Inicio → Retirar → Banco/Tarjeta Global' },
+    prompt:  { en: 'Tap Global Bank/Card to select this withdrawal method', fr: 'Appuyez sur Banque/Carte Mondiale pour sélectionner cette méthode de retrait', es: 'Toca Banco/Tarjeta Global para seleccionar este método de retiro' },
+    explain: {
+      en: 'Global Bank/Card withdrawal routes funds via International Wire or ACH. IFB handles the transfer on your behalf — ideal for sending to a traditional bank account anywhere in the world.',
+      fr: 'Le retrait Banque/Carte Mondiale achemine les fonds via virement international ou ACH. IFB gère le transfert en votre nom — idéal pour envoyer vers un compte bancaire traditionnel partout dans le monde.',
+      es: 'El retiro de Banco/Tarjeta Global enruta fondos vía Wire Internacional o ACH. IFB gestiona la transferencia en tu nombre — ideal para enviar a una cuenta bancaria tradicional en cualquier parte del mundo.',
+    },
+    tip: { en: '"IFB Handled" means the team verifies and processes your wire.', fr: '"IFB Géré" signifie que l\'équipe vérifie et traite votre virement.', es: '"IFB Gestionado" significa que el equipo verifica y procesa tu transferencia.' },
+  },
+  {
+    id: 'receive', hl: 'genLink',
+    title:   { en: 'Request / Receive Funds', fr: 'Demander / Recevoir des Fonds', es: 'Solicitar / Recibir Fondos' },
+    path:    { en: 'Home → Receive', fr: 'Accueil → Recevoir', es: 'Inicio → Recibir' },
+    prompt:  { en: 'Tap Generate Link to create your payment request', fr: 'Appuyez sur Générer le Lien pour créer votre demande de paiement', es: 'Toca Generar Enlace para crear tu solicitud de pago' },
+    explain: {
+      en: 'Fill in what the payment is for, the payer\'s email, and the amount. Generate Link creates a shareable payment URL. You can also tap Send Invoice by Email to send a formal invoice directly.',
+      fr: 'Remplissez l\'objet du paiement, l\'email du payeur et le montant. Générer le Lien crée une URL de paiement partageable. Vous pouvez aussi appuyer sur Envoyer la Facture par Email pour envoyer une facture formelle.',
+      es: 'Completa para qué es el pago, el correo del pagador y el monto. Generar Enlace crea una URL de pago compartible. También puedes tocar Enviar Factura por Email para enviar una factura formal.',
+    },
+    tip: { en: 'Payment links expire after 72 hours.', fr: 'Les liens de paiement expirent après 72 heures.', es: 'Los enlaces de pago expiran después de 72 horas.' },
+  },
+  {
+    id: 'qr', hl: 'qrCode',
+    title:   { en: 'Pay Me — QR Code', fr: 'Payez-Moi — Code QR', es: 'Págame — Código QR' },
+    path:    { en: 'Home → Pay Me → QR Code tab', fr: 'Accueil → Payez-Moi → Onglet Code QR', es: 'Inicio → Págame → Pestaña Código QR' },
+    prompt:  { en: 'Tap the QR code to confirm you know where it is', fr: 'Appuyez sur le code QR pour confirmer que vous savez où il se trouve', es: 'Toca el código QR para confirmar que sabes dónde está' },
+    explain: {
+      en: 'Your personal Pay Me QR is unique to your account. Any DEUS user — or anyone with the app — can scan it to send you money instantly. It encodes your account ID and currency preference.',
+      fr: 'Votre QR Payez-Moi personnel est unique à votre compte. Tout utilisateur DEUS peut le scanner pour vous envoyer de l\'argent instantanément. Il encode votre ID de compte et votre préférence de devise.',
+      es: 'Tu QR personal de Págame es único para tu cuenta. Cualquier usuario DEUS puede escanearlo para enviarte dinero al instante. Codifica tu ID de cuenta y preferencia de moneda.',
+    },
+    tip: { en: 'Tap "Share" to send your QR code via any messaging app.', fr: 'Appuyez sur "Partager" pour envoyer votre QR via toute application de messagerie.', es: 'Toca "Compartir" para enviar tu QR a través de cualquier app de mensajería.' },
+  },
+  {
+    id: 'link', hl: 'copyLink',
+    title:   { en: 'Pay Me — Payment Link', fr: 'Payez-Moi — Lien de Paiement', es: 'Págame — Enlace de Pago' },
+    path:    { en: 'Home → Pay Me → Link tab', fr: 'Accueil → Payez-Moi → Onglet Lien', es: 'Inicio → Págame → Pestaña Enlace' },
+    prompt:  { en: 'Tap Copy Link to copy your payment URL', fr: 'Appuyez sur Copier le Lien pour copier votre URL de paiement', es: 'Toca Copiar Enlace para copiar tu URL de pago' },
+    explain: {
+      en: 'The Link tab shows your persistent IFB payment URL. Copy it and paste anywhere — WhatsApp, email, social media. The payer opens the link and enters their card details. Funds land in your account.',
+      fr: 'L\'onglet Lien affiche votre URL de paiement IFB persistante. Copiez-la et collez-la n\'importe où — WhatsApp, email, réseaux sociaux. Le payeur ouvre le lien et saisit ses coordonnées bancaires.',
+      es: 'La pestaña Enlace muestra tu URL de pago IFB persistente. Cópiala y pégala en cualquier lugar — WhatsApp, correo, redes sociales. El pagador abre el enlace e ingresa sus datos de tarjeta.',
+    },
+    tip: { en: 'Your payment link never changes — bookmark it.', fr: 'Votre lien de paiement ne change jamais — mettez-le en signet.', es: 'Tu enlace de pago nunca cambia — guárdalo como favorito.' },
+  },
+  {
+    id: 'payme-card', hl: 'freezeBtn',
+    title:   { en: 'Pay Me — Virtual Card', fr: 'Payez-Moi — Carte Virtuelle', es: 'Págame — Tarjeta Virtual' },
+    path:    { en: 'Home → Pay Me → Card tab', fr: 'Accueil → Payez-Moi → Onglet Carte', es: 'Inicio → Págame → Pestaña Tarjeta' },
+    prompt:  { en: 'Tap Freeze Card to see card controls', fr: 'Appuyez sur Geler la Carte pour voir les contrôles de carte', es: 'Toca Congelar Tarjeta para ver los controles de tarjeta' },
+    explain: {
+      en: 'Your IFB virtual card can be used anywhere Visa/Mastercard is accepted online. The Card tab shows your card details, spend limit, and quick controls. Freeze it instantly if lost or compromised.',
+      fr: 'Votre carte virtuelle IFB peut être utilisée partout où Visa/Mastercard est acceptée en ligne. L\'onglet Carte affiche vos détails de carte, limite de dépenses et contrôles rapides. Gelez-la instantanément si perdue ou compromise.',
+      es: 'Tu tarjeta virtual IFB se puede usar en cualquier lugar donde Visa/Mastercard sea aceptada en línea. La pestaña Tarjeta muestra detalles de tu tarjeta, límite de gasto y controles rápidos. Congélala al instante si se pierde o compromete.',
+    },
+    tip: { en: 'Freezing takes effect in under 1 second.', fr: 'Le gel prend effet en moins d\'1 seconde.', es: 'El congelamiento surte efecto en menos de 1 segundo.' },
+  },
+  {
+    id: 'nfc', hl: 'nfcSend',
+    title:   { en: 'NFC — Tap & Pay', fr: 'NFC — Appuyez & Payez', es: 'NFC — Toca y Paga' },
+    path:    { en: 'Bottom Nav → Tap to Pay (center button)', fr: 'Barre de navigation → Tap to Pay (bouton central)', es: 'Barra de navegación → Tap to Pay (botón central)' },
+    prompt:  { en: 'Tap Send Money to activate NFC payment mode', fr: 'Appuyez sur Envoyer de l\'Argent pour activer le mode paiement NFC', es: 'Toca Enviar Dinero para activar el modo de pago NFC' },
+    explain: {
+      en: 'The center button in the bottom nav opens NFC Tap & Pay. Choose Send Money (violet) to pay another device, Receive from IFB (emerald) to collect at a terminal, or Get Paid by Card (blue) to accept card payments.',
+      fr: 'Le bouton central de la barre de navigation ouvre NFC Tap & Pay. Choisissez Envoyer de l\'Argent (violet) pour payer un autre appareil, Recevoir d\'IFB (emeraude) pour encaisser à un terminal, ou Être Payé par Carte (bleu) pour accepter des paiements par carte.',
+      es: 'El botón central de la barra de navegación abre NFC Tap & Pay. Elige Enviar Dinero (violeta) para pagar otro dispositivo, Recibir de IFB (esmeralda) para cobrar en una terminal, o Cobrar con Tarjeta (azul) para aceptar pagos con tarjeta.',
+    },
+    tip: { en: 'Hold your phone within 5 cm of the other device.', fr: 'Tenez votre téléphone à moins de 5 cm de l\'autre appareil.', es: 'Mantén tu teléfono a menos de 5 cm del otro dispositivo.' },
+  },
+  {
+    id: 'swift', hl: 'swiftBtn',
+    title:   { en: 'International Wire — SWIFT', fr: 'Virement International — SWIFT', es: 'Wire Internacional — SWIFT' },
+    path:    { en: 'Home → Exchange → SWIFT', fr: 'Accueil → Échange → SWIFT', es: 'Inicio → Cambio → SWIFT' },
+    prompt:  { en: 'Tap SWIFT / Wire Transfer to select international routing', fr: 'Appuyez sur SWIFT / Virement pour sélectionner le routage international', es: 'Toca SWIFT / Wire para seleccionar el enrutamiento internacional' },
+    explain: {
+      en: 'For sending large amounts internationally, DEUS supports SWIFT wire transfers. Enter the beneficiary IBAN, BIC/SWIFT code, bank name and country. IFB confirms within 1–3 business days.',
+      fr: 'Pour envoyer de grandes sommes à l\'international, DEUS prend en charge les virements SWIFT. Saisissez l\'IBAN du bénéficiaire, le code BIC/SWIFT, le nom et le pays de la banque. IFB confirme sous 1 à 3 jours ouvrables.',
+      es: 'Para enviar grandes cantidades internacionalmente, DEUS soporta transferencias SWIFT. Ingresa el IBAN del beneficiario, código BIC/SWIFT, nombre del banco y país. IFB confirma en 1–3 días hábiles.',
+    },
+    tip: { en: 'Double-check the SWIFT code — errors cause costly returns.', fr: 'Vérifiez le code SWIFT — les erreurs causent des retours coûteux.', es: 'Verifica el código SWIFT — los errores causan devoluciones costosas.' },
+  },
+  {
+    id: 'invoice', hl: 'invoiceBtn',
+    title:   { en: 'Invoicing', fr: 'Facturation', es: 'Facturación' },
+    path:    { en: 'Home → Receive → Send Invoice by Email', fr: 'Accueil → Recevoir → Envoyer la Facture par Email', es: 'Inicio → Recibir → Enviar Factura por Email' },
+    prompt:  { en: 'Tap Send Invoice by Email to send the invoice', fr: 'Appuyez sur Envoyer la Facture par Email pour envoyer la facture', es: 'Toca Enviar Factura por Email para enviar la factura' },
+    explain: {
+      en: 'After generating a payment link, tap Send Invoice by Email. DEUS composes a professional invoice with your business name, logo, and payment details, and emails it directly to your client.',
+      fr: 'Après avoir généré un lien de paiement, appuyez sur Envoyer la Facture par Email. DEUS compose une facture professionnelle avec votre nom d\'entreprise, logo et détails de paiement, et l\'envoie directement à votre client.',
+      es: 'Después de generar un enlace de pago, toca Enviar Factura por Email. DEUS compone una factura profesional con tu nombre de empresa, logo y detalles de pago, y la envía directamente a tu cliente.',
+    },
+    tip: { en: 'Invoices are PDF-ready and branded with the IFB seal.', fr: 'Les factures sont prêtes en PDF et brandées avec le sceau IFB.', es: 'Las facturas están listas en PDF y con el sello IFB.' },
+  },
+  {
+    id: 'withdraw-cot', hl: 'cotBtn',
+    title:   { en: 'Withdraw — Community of Trust P2P', fr: 'Retrait — Communauté de Confiance P2P', es: 'Retirar — Comunidad de Confianza P2P' },
+    path:    { en: 'Home → Withdraw → Community of Trust P2P', fr: 'Accueil → Retirer → Communauté de Confiance P2P', es: 'Inicio → Retirar → Comunidad de Confianza P2P' },
+    prompt:  { en: 'Tap Community of Trust P2P to choose peer-to-peer withdrawal', fr: 'Appuyez sur Communauté de Confiance P2P pour choisir le retrait pair-à-pair', es: 'Toca Comunidad de Confianza P2P para elegir retiro peer-to-peer' },
+    explain: {
+      en: 'CoT P2P connects you with a verified local peer who physically hands you cash or mobile money. Options include Local Bank, Mobile Money, and Cash. Best for fast local withdrawals with minimal fees.',
+      fr: 'CoT P2P vous connecte avec un pair local vérifié qui vous remet physiquement de l\'argent liquide ou mobile. Les options incluent Banque Locale, Mobile Money et Espèces. Idéal pour les retraits locaux rapides avec des frais minimaux.',
+      es: 'CoT P2P te conecta con un par local verificado que te entrega físicamente efectivo o dinero móvil. Las opciones incluyen Banco Local, Dinero Móvil y Efectivo. Ideal para retiros locales rápidos con tarifas mínimas.',
+    },
+    tip: { en: 'Always meet your P2P peer in a public location.', fr: 'Rencontrez toujours votre pair P2P dans un lieu public.', es: 'Siempre reúnete con tu par P2P en un lugar público.' },
+  },
+  {
+    id: 'ledger', hl: 'exportBtn',
+    title:   { en: 'Transaction History & Export', fr: 'Historique des Transactions et Export', es: 'Historial de Transacciones y Exportar' },
+    path:    { en: 'Bottom Nav → Transactions', fr: 'Barre de navigation → Transactions', es: 'Barra de navegación → Transacciones' },
+    prompt:  { en: 'Tap Export to download your statement', fr: 'Appuyez sur Exporter pour télécharger votre relevé', es: 'Toca Exportar para descargar tu estado de cuenta' },
+    explain: {
+      en: 'The Transactions screen shows a complete ledger of all your activity. Filter by date range, type, or amount. Tap Export to download a PDF or CSV statement — useful for tax filings and audits.',
+      fr: 'L\'écran Transactions affiche un grand livre complet de toute votre activité. Filtrez par plage de dates, type ou montant. Appuyez sur Exporter pour télécharger un relevé PDF ou CSV — utile pour les déclarations fiscales et les audits.',
+      es: 'La pantalla de Transacciones muestra un libro mayor completo de toda tu actividad. Filtra por rango de fechas, tipo o monto. Toca Exportar para descargar un estado de cuenta PDF o CSV — útil para declaraciones de impuestos y auditorías.',
+    },
+    tip: { en: 'CSV exports open directly in Excel or Google Sheets.', fr: 'Les exports CSV s\'ouvrent directement dans Excel ou Google Sheets.', es: 'Los exports CSV se abren directamente en Excel o Google Sheets.' },
+  },
+  {
+    id: 'summary', noTap: true,
+    title:   { en: 'You\'re Ready!', fr: 'Vous êtes Prêt!', es: '¡Estás Listo!' },
+    path:    { en: 'Course Complete', fr: 'Cours Terminé', es: 'Curso Completado' },
+    prompt:  { en: '', fr: '', es: '' },
+    explain: {
+      en: 'You\'ve learned all 13 core DEUS transaction flows — from depositing funds to international wires, QR payments, NFC, invoicing, and exporting statements. Take the assessment to earn your certificate.',
+      fr: 'Vous avez appris les 13 flux de transactions DEUS principaux — des dépôts de fonds aux virements internationaux, paiements QR, NFC, facturation et export de relevés. Passez l\'évaluation pour obtenir votre certificat.',
+      es: 'Aprendiste los 13 flujos de transacciones principales de DEUS — desde depositar fondos hasta wires internacionales, pagos QR, NFC, facturación y exportar estados de cuenta. Realiza la evaluación para obtener tu certificado.',
+    },
+    tip: { en: '', fr: '', es: '' },
+  },
+];
 
-// ─── ASSESSMENT QUESTIONS (8 × 3 languages) ───────────────────────────────────
-
+// ─── ASSESSMENT ───────────────────────────────────────────────────────────────
 const QUESTIONS = {
   en: [
-    {
-      q: 'You want to add $5,000 to your DEUS account from your external bank. What is the correct path in the app?',
-      options: ['Payments → Send Money', 'Banking → Deposit → Bank Transfer', 'Banking → Withdraw', 'Payments → Payment Links'],
-      answer: 1,
-      explanation: 'To deposit funds, go to Banking → Deposit and select Bank Transfer. You\'ll see your DEUS IBAN to use as the destination in your external bank.',
-    },
-    {
-      q: 'Your client has a DEUS account. You send them $1,000 at midnight on Saturday. When do they receive it?',
-      options: ['Next business day (Monday)', 'Within 3 business days', 'Instantly — IFB-to-IFB transfers are 24/7 real-time', 'Within 24 hours'],
-      answer: 2,
-      explanation: 'IFB-to-IFB transfers are instant and operate 24/7 — including weekends and holidays. Your client sees the funds within seconds, regardless of the time.',
-    },
-    {
-      q: 'A walk-in customer wants to pay you in person but does not have the DEUS app. What is the most practical method?',
-      options: ['Ask them to open a DEUS account first', 'Show your DEUS QR code — they scan and pay from their own banking app', 'Send them a payment link via email on the spot', 'Accept only cash and deposit later'],
-      answer: 2,
-      explanation: 'The fastest in-person option when the payer doesn\'t have DEUS is to send them a Payment Link on the spot — they pay with their own Visa/Mastercard from any browser, no account needed.',
-    },
-    {
-      q: 'You realise your physical DEUS card may have been stolen. What should you do FIRST?',
-      options: ['Call your bank and wait on hold', 'Report to police before anything else', 'Send a message to DEUS support by email', 'Open DEUS → Banking → Cards → select the card → Freeze instantly'],
-      answer: 3,
-      explanation: 'Freezing the card in the app takes 2 seconds and immediately blocks all new transactions. Do this first — then report to support and request a replacement card.',
-    },
-    {
-      q: 'A supplier abroad needs to receive funds in EUR, but your DEUS account is in USD. What happens when you send via International Transfer?',
-      options: ['The transfer is rejected — currency mismatch', 'You must open a separate EUR account first', 'DEUS converts from USD to EUR at the shown rate and delivers EUR to the recipient', 'The recipient receives USD and converts themselves'],
-      answer: 2,
-      explanation: 'DEUS handles multi-currency conversion automatically. You send in your account currency (USD), DEUS converts at the rate shown before you confirm, and the recipient receives EUR in their account.',
-    },
-    {
-      q: 'A merchant wants to accept contactless payments using ONLY their smartphone — no card reader hardware. Which DEUS feature enables this?',
-      options: ['Payment Links', 'QR Code — Generate', 'Tap to Pay (NFC Terminal)', 'Virtual Card'],
-      answer: 2,
-      explanation: 'Tap to Pay uses your phone\'s built-in NFC chip to act as a card reader. No external hardware is needed — customers tap their card or phone and payment is confirmed instantly.',
-    },
-    {
-      q: 'A company\'s accountant needs the last 12 months of transactions as a CSV file for their accounting software. Where do they go?',
-      options: ['Banking → Transaction History → set date range → Export as CSV', 'Payments → Invoices → Download', 'Banking → Cards → History', 'Settings → Data Export'],
-      answer: 0,
-      explanation: 'Go to Banking → Transaction History, set the date range to the last 12 months, and tap Export Statement → CSV. The file includes all transaction types with full details.',
-    },
-    {
-      q: 'You sent a bank transfer to an external account 2 business days ago. It still shows "Processing". This most likely means:',
-      options: ['The transfer was cancelled — you must resend', 'Your account is locked — contact support', 'External bank transfers can take up to 3 business days — this is normal processing time', 'You entered the wrong account number'],
-      answer: 2,
-      explanation: 'External bank transfers via SWIFT can take 1–3 business days depending on the destination country and receiving bank. "Processing" after 2 days is normal — check again on day 3.',
-    },
+    { q: 'Which deposit method charges the lowest combined fee?', opts: ['Global Card Network (Stripe)', 'Community of Trust (CoT)', 'Bank Wire', 'Cash Deposit'], ans: 1 },
+    { q: 'Where do you find the NFC Tap & Pay feature?', opts: ['Home → More', 'Bottom Nav center button', 'Home → Receive', 'Settings → Payments'], ans: 1 },
+    { q: 'What does "IFB Handled" mean on the Withdrawal screen?', opts: ['Instant transfer', 'IFB verifies and processes the wire manually', 'No fee applies', 'ATM withdrawal'], ans: 1 },
+    { q: 'How do you send a formal invoice to a client?', opts: ['Export → PDF', 'Home → Receive → Generate Link → Send Invoice by Email', 'Home → Send → Invoice mode', 'Transactions → New Invoice'], ans: 1 },
+    { q: 'Your Pay Me QR code is…', opts: ['Different every day', 'Unique and permanent to your account', 'Shared across all IFB users', 'Only valid for USD'], ans: 1 },
+    { q: 'Which export formats does DEUS support for statements?', opts: ['PDF only', 'CSV only', 'PDF and CSV', 'XLS only'], ans: 2 },
+    { q: 'How long do payment links (from Generate Link) stay active?', opts: ['24 hours', '48 hours', '72 hours', '7 days'], ans: 2 },
+    { q: 'For fast local cash withdrawal with minimal fees, you should use…', opts: ['SWIFT wire', 'Global Bank/Card', 'Community of Trust P2P', 'ATM Card'], ans: 2 },
   ],
   fr: [
-    {
-      q: 'Vous voulez ajouter 5 000 $ sur votre compte DEUS depuis votre banque externe. Quel est le bon chemin dans l\'application?',
-      options: ['Paiements → Envoyer de l\'argent', 'Banque → Déposer → Virement Bancaire', 'Banque → Retirer', 'Paiements → Liens de Paiement'],
-      answer: 1,
-      explanation: 'Pour déposer des fonds, allez dans Banque → Déposer et sélectionnez Virement Bancaire. Vous verrez votre IBAN DEUS à utiliser comme destination dans votre banque externe.',
-    },
-    {
-      q: 'Votre client a un compte DEUS. Vous lui envoyez 1 000 $ à minuit un samedi. Quand le reçoit-il?',
-      options: ['Le prochain jour ouvré (lundi)', 'Sous 3 jours ouvrés', 'Instantanément — les transferts IFB-à-IFB sont en temps réel 24h/24', 'Sous 24 heures'],
-      answer: 2,
-      explanation: 'Les transferts IFB-à-IFB sont instantanés et fonctionnent 24h/24, 7j/7 — y compris les week-ends et jours fériés. Votre client voit les fonds en quelques secondes, quelle que soit l\'heure.',
-    },
-    {
-      q: 'Un client se présentant en personne veut vous payer mais n\'a pas l\'application DEUS. Quelle est la méthode la plus pratique?',
-      options: ['Lui demander d\'ouvrir d\'abord un compte DEUS', 'Afficher votre QR code DEUS — il scanne et paie depuis son application bancaire', 'Lui envoyer un lien de paiement par email sur-le-champ', 'N\'accepter que du liquide et déposer ensuite'],
-      answer: 2,
-      explanation: 'L\'option en personne la plus rapide quand le payeur n\'a pas DEUS est de lui envoyer un Lien de Paiement sur-le-champ — il paie avec sa propre Visa/Mastercard depuis n\'importe quel navigateur, sans compte requis.',
-    },
-    {
-      q: 'Vous réalisez que votre carte DEUS physique a peut-être été volée. Que devez-vous faire EN PREMIER?',
-      options: ['Appeler votre banque et attendre en ligne', 'Signaler à la police avant tout', 'Envoyer un message au support DEUS par email', 'Ouvrez DEUS → Banque → Cartes → sélectionnez la carte → Geler instantanément'],
-      answer: 3,
-      explanation: 'Geler la carte dans l\'application prend 2 secondes et bloque immédiatement toutes les nouvelles transactions. Faites cela en premier — puis signalez au support et demandez une carte de remplacement.',
-    },
-    {
-      q: 'Un fournisseur à l\'étranger doit recevoir des fonds en EUR, mais votre compte DEUS est en USD. Que se passe-t-il lors d\'un Transfert International?',
-      options: ['Le transfert est rejeté — incompatibilité de devises', 'Vous devez d\'abord ouvrir un compte EUR séparé', 'DEUS convertit de USD en EUR au taux affiché et livre des EUR au destinataire', 'Le destinataire reçoit des USD et convertit lui-même'],
-      answer: 2,
-      explanation: 'DEUS gère automatiquement la conversion multi-devises. Vous envoyez dans la devise de votre compte (USD), DEUS convertit au taux affiché avant confirmation, et le destinataire reçoit des EUR.',
-    },
-    {
-      q: 'Un marchand veut accepter des paiements sans contact en utilisant UNIQUEMENT son smartphone — sans terminal de carte externe. Quelle fonctionnalité DEUS permet cela?',
-      options: ['Liens de Paiement', 'QR Code — Générer', 'Tap to Pay (Terminal NFC)', 'Carte Virtuelle'],
-      answer: 2,
-      explanation: 'Tap to Pay utilise la puce NFC intégrée de votre téléphone pour agir comme un lecteur de carte. Aucun matériel externe n\'est nécessaire — les clients tapent leur carte ou téléphone et le paiement est confirmé instantanément.',
-    },
-    {
-      q: 'Le comptable d\'une entreprise a besoin des 12 derniers mois de transactions sous forme de fichier CSV pour son logiciel comptable. Où va-t-il?',
-      options: ['Banque → Historique des Transactions → définir plage de dates → Exporter en CSV', 'Paiements → Factures → Télécharger', 'Banque → Cartes → Historique', 'Paramètres → Export de Données'],
-      answer: 0,
-      explanation: 'Allez dans Banque → Historique des Transactions, définissez la plage des 12 derniers mois, et appuyez sur Exporter le Relevé → CSV. Le fichier inclut tous les types de transactions avec tous les détails.',
-    },
-    {
-      q: 'Vous avez envoyé un virement bancaire vers un compte externe il y a 2 jours ouvrés. Il indique encore "En cours de traitement". Cela signifie très probablement:',
-      options: ['Le transfert a été annulé — vous devez le renvoyer', 'Votre compte est bloqué — contactez le support', 'Les virements bancaires externes peuvent prendre jusqu\'à 3 jours ouvrés — c\'est normal', 'Vous avez saisi un mauvais numéro de compte'],
-      answer: 2,
-      explanation: 'Les virements bancaires externes via SWIFT peuvent prendre 1 à 3 jours ouvrés selon le pays de destination et la banque destinataire. "En cours de traitement" après 2 jours est normal — vérifiez à nouveau le 3e jour.',
-    },
+    { q: 'Quelle méthode de dépôt a les frais combinés les plus bas?', opts: ['Réseau Global de Cartes (Stripe)', 'Communauté de Confiance (CoT)', 'Virement Bancaire', 'Dépôt en Espèces'], ans: 1 },
+    { q: 'Où trouvez-vous la fonctionnalité NFC Tap & Pay?', opts: ['Accueil → Plus', 'Bouton central de la barre de navigation', 'Accueil → Recevoir', 'Paramètres → Paiements'], ans: 1 },
+    { q: 'Que signifie "IFB Géré" sur l\'écran de retrait?', opts: ['Transfert instantané', 'IFB vérifie et traite le virement manuellement', 'Aucun frais applicable', 'Retrait ATM'], ans: 1 },
+    { q: 'Comment envoyer une facture formelle à un client?', opts: ['Export → PDF', 'Accueil → Recevoir → Générer Lien → Envoyer Facture par Email', 'Accueil → Envoyer → Mode Facture', 'Transactions → Nouvelle Facture'], ans: 1 },
+    { q: 'Votre code QR Payez-Moi est…', opts: ['Différent chaque jour', 'Unique et permanent pour votre compte', 'Partagé entre tous les utilisateurs IFB', 'Valide uniquement en USD'], ans: 1 },
+    { q: 'Quels formats d\'export DEUS supporte-t-il pour les relevés?', opts: ['PDF seulement', 'CSV seulement', 'PDF et CSV', 'XLS seulement'], ans: 2 },
+    { q: 'Combien de temps les liens de paiement restent-ils actifs?', opts: ['24 heures', '48 heures', '72 heures', '7 jours'], ans: 2 },
+    { q: 'Pour un retrait local rapide en espèces avec des frais minimaux, utilisez…', opts: ['Virement SWIFT', 'Banque/Carte Mondiale', 'Communauté de Confiance P2P', 'Carte ATM'], ans: 2 },
   ],
   es: [
-    {
-      q: 'Quieres añadir $5,000 a tu cuenta DEUS desde tu banco externo. ¿Cuál es el camino correcto en la app?',
-      options: ['Pagos → Enviar Dinero', 'Banca → Depositar → Transferencia Bancaria', 'Banca → Retirar', 'Pagos → Enlaces de Pago'],
-      answer: 1,
-      explanation: 'Para depositar fondos, ve a Banca → Depositar y selecciona Transferencia Bancaria. Verás tu IBAN DEUS para usar como destino en tu banco externo.',
-    },
-    {
-      q: 'Tu cliente tiene una cuenta DEUS. Le envías $1,000 a medianoche el sábado. ¿Cuándo lo recibe?',
-      options: ['El siguiente día hábil (lunes)', 'En 3 días hábiles', 'Al instante — las transferencias IFB a IFB son en tiempo real 24/7', 'En 24 horas'],
-      answer: 2,
-      explanation: 'Las transferencias IFB a IFB son instantáneas y operan 24/7 — incluyendo fines de semana y festivos. Tu cliente ve los fondos en segundos, independientemente de la hora.',
-    },
-    {
-      q: 'Un cliente que llega en persona quiere pagarte pero no tiene la app de DEUS. ¿Cuál es el método más práctico?',
-      options: ['Pedirle que abra primero una cuenta DEUS', 'Mostrar tu código QR DEUS — escanea y paga desde su app bancaria', 'Enviarle un enlace de pago por email en el momento', 'Aceptar solo efectivo y depositar después'],
-      answer: 2,
-      explanation: 'La opción en persona más rápida cuando el pagador no tiene DEUS es enviarle un Enlace de Pago en el momento — paga con su propia Visa/Mastercard desde cualquier navegador, sin cuenta requerida.',
-    },
-    {
-      q: 'Te das cuenta de que tu tarjeta DEUS física puede haber sido robada. ¿Qué debes hacer PRIMERO?',
-      options: ['Llamar a tu banco y esperar en espera', 'Reportar a la policía antes de nada', 'Enviar un mensaje al soporte de DEUS por email', 'Abre DEUS → Banca → Tarjetas → selecciona la tarjeta → Congelar al instante'],
-      answer: 3,
-      explanation: 'Congelar la tarjeta en la app tarda 2 segundos y bloquea inmediatamente todas las nuevas transacciones. Haz esto primero — luego reporta al soporte y solicita una tarjeta de reemplazo.',
-    },
-    {
-      q: 'Un proveedor en el extranjero necesita recibir fondos en EUR, pero tu cuenta DEUS está en USD. ¿Qué sucede al enviar por Transferencia Internacional?',
-      options: ['La transferencia es rechazada — incompatibilidad de moneda', 'Primero debes abrir una cuenta EUR separada', 'DEUS convierte de USD a EUR al tipo mostrado y entrega EUR al destinatario', 'El destinatario recibe USD y convierte por su cuenta'],
-      answer: 2,
-      explanation: 'DEUS gestiona la conversión multidivisa automáticamente. Envías en la moneda de tu cuenta (USD), DEUS convierte al tipo mostrado antes de confirmar, y el destinatario recibe EUR en su cuenta.',
-    },
-    {
-      q: 'Un comerciante quiere aceptar pagos sin contacto usando SOLO su smartphone — sin terminal de tarjeta externa. ¿Qué función de DEUS lo permite?',
-      options: ['Enlaces de Pago', 'Código QR — Generar', 'Tap to Pay (Terminal NFC)', 'Tarjeta Virtual'],
-      answer: 2,
-      explanation: 'Tap to Pay usa el chip NFC integrado de tu teléfono para actuar como lector de tarjetas. No se necesita hardware externo — los clientes acercan su tarjeta o teléfono y el pago se confirma al instante.',
-    },
-    {
-      q: 'El contable de una empresa necesita los últimos 12 meses de transacciones como archivo CSV para su software contable. ¿Dónde va?',
-      options: ['Banca → Historial de Transacciones → configurar rango de fechas → Exportar como CSV', 'Pagos → Facturas → Descargar', 'Banca → Tarjetas → Historial', 'Configuración → Exportar Datos'],
-      answer: 0,
-      explanation: 'Ve a Banca → Historial de Transacciones, establece el rango de los últimos 12 meses y toca Exportar Estado de Cuenta → CSV. El archivo incluye todos los tipos de transacciones con detalles completos.',
-    },
-    {
-      q: 'Enviaste una transferencia bancaria a una cuenta externa hace 2 días hábiles. Aún aparece como "En proceso". Esto probablemente significa:',
-      options: ['La transferencia fue cancelada — debes reenviarla', 'Tu cuenta está bloqueada — contacta al soporte', 'Las transferencias bancarias externas pueden tardar hasta 3 días hábiles — es tiempo de procesamiento normal', 'Ingresaste el número de cuenta incorrecto'],
-      answer: 2,
-      explanation: 'Las transferencias bancarias externas por SWIFT pueden tardar 1 a 3 días hábiles según el país de destino y el banco receptor. "En proceso" tras 2 días es normal — vuelve a verificar el día 3.',
-    },
+    { q: '¿Qué método de depósito cobra la tarifa combinada más baja?', opts: ['Red Global de Tarjetas (Stripe)', 'Comunidad de Confianza (CoT)', 'Wire Bancario', 'Depósito en Efectivo'], ans: 1 },
+    { q: '¿Dónde encuentras la función NFC Tap & Pay?', opts: ['Inicio → Más', 'Botón central de la barra de navegación', 'Inicio → Recibir', 'Ajustes → Pagos'], ans: 1 },
+    { q: '¿Qué significa "IFB Gestionado" en la pantalla de Retiro?', opts: ['Transferencia instantánea', 'IFB verifica y procesa el wire manualmente', 'No aplica tarifa', 'Retiro ATM'], ans: 1 },
+    { q: '¿Cómo envías una factura formal a un cliente?', opts: ['Exportar → PDF', 'Inicio → Recibir → Generar Enlace → Enviar Factura por Email', 'Inicio → Enviar → Modo Factura', 'Transacciones → Nueva Factura'], ans: 1 },
+    { q: 'Tu código QR de Págame es…', opts: ['Diferente cada día', 'Único y permanente para tu cuenta', 'Compartido entre todos los usuarios IFB', 'Solo válido en USD'], ans: 1 },
+    { q: '¿Qué formatos de exportación soporta DEUS para estados de cuenta?', opts: ['Solo PDF', 'Solo CSV', 'PDF y CSV', 'Solo XLS'], ans: 2 },
+    { q: '¿Cuánto tiempo permanecen activos los enlaces de pago?', opts: ['24 horas', '48 horas', '72 horas', '7 días'], ans: 2 },
+    { q: 'Para retiro local rápido en efectivo con tarifas mínimas, usa…', opts: ['Wire SWIFT', 'Banco/Tarjeta Global', 'Comunidad de Confianza P2P', 'Tarjeta ATM'], ans: 2 },
   ],
 };
 
-const CERT_LABELS = {
-  en: { title: 'Certificate of Completion', program: 'Transaction Mastery Program', issuer: 'Issued by Infinite Future Bank LLC · Washington DC', nameLabel: 'Enter your name', score: 'Assessment Score', retake: 'Retake Assessment', returnGuide: 'Return to Guide', perfect: 'Outstanding — Perfect Score!', great: 'Excellent Result', pass: 'Assessment Passed', retry: 'Keep Practising', date: 'Completion Date' },
-  fr: { title: 'Certificat de Réussite', program: 'Programme de Maîtrise des Transactions', issuer: 'Délivré par Infinite Future Bank LLC · Washington DC', nameLabel: 'Entrez votre nom', score: 'Score d\'Évaluation', retake: 'Reprendre l\'Évaluation', returnGuide: 'Retour au Guide', perfect: 'Excellent — Score Parfait!', great: 'Excellent Résultat', pass: 'Évaluation Réussie', retry: 'Continuez à Pratiquer', date: 'Date de Réussite' },
-  es: { title: 'Certificado de Finalización', program: 'Programa de Dominio de Transacciones', issuer: 'Emitido por Infinite Future Bank LLC · Washington DC', nameLabel: 'Ingrese su nombre', score: 'Puntuación de Evaluación', retake: 'Repetir Evaluación', returnGuide: 'Volver a la Guía', perfect: '¡Sobresaliente — Puntuación Perfecta!', great: 'Excelente Resultado', pass: 'Evaluación Aprobada', retry: 'Sigue Practicando', date: 'Fecha de Finalización' },
+const CERT = {
+  en: { title: 'Transaction Mastery Certificate', sub: 'has successfully completed the DEUS Transaction Guide', issuer: 'Infinite Future Bank · DEUS OS' },
+  fr: { title: 'Certificat de Maîtrise des Transactions', sub: 'a réussi le Guide des Transactions DEUS', issuer: 'Infinite Future Bank · DEUS OS' },
+  es: { title: 'Certificado de Dominio de Transacciones', sub: 'ha completado exitosamente la Guía de Transacciones DEUS', issuer: 'Infinite Future Bank · DEUS OS' },
 };
 
-// ─── SLIDE MOCKUP ─────────────────────────────────────────────────────────────
-
-const iconMap = {
-  deposit:  <ArrowDownCircle size={28} className="text-emerald-400" />,
-  send:     <Send size={28} className="text-blue-400" />,
-  external: <ArrowUpCircle size={28} className="text-violet-400" />,
-  receive:  <ArrowDownCircle size={28} className="text-teal-400" />,
-  qr:       <QrCode size={28} className="text-amber-400" />,
-  link:     <LinkIcon size={28} className="text-pink-400" />,
-  card:     <CreditCard size={28} className="text-blue-300" />,
-  nfc:      <Wifi size={28} className="text-cyan-400" />,
-  globe:    <Globe size={28} className="text-indigo-400" />,
-  invoice:  <FileText size={28} className="text-orange-400" />,
-  withdraw: <Banknote size={28} className="text-red-400" />,
-  history:  <History size={28} className="text-slate-300" />,
-  check:    <CheckCircle2 size={28} className="text-emerald-400" />,
-  star:     <Star size={28} className="text-yellow-400" />,
-};
-
-function SlideMockup({ slide }) {
-  const s = slide;
-  const icon = s?.icon ? iconMap[s.icon] : null;
-
-  if (!s) return null;
-
-  if (s.icon === 'star') return (
-    <div className="bg-slate-800 rounded-[2rem] p-4 shadow-2xl max-w-[280px] mx-auto">
-      <div className="bg-slate-900 rounded-[1.5rem] overflow-hidden">
-        <div className="bg-[#0a0f1e] px-4 py-3 flex items-center gap-2 border-b border-slate-800">
-          <div className="w-2 h-2 rounded-full bg-slate-600" />
-          <span className="text-white text-xs font-black">DEUS Banking</span>
-        </div>
-        <div className="p-4 space-y-2">
-          {[['Deposit', 'emerald'], ['Send', 'blue'], ['Receive', 'teal'], ['QR Pay', 'amber'], ['Tap to Pay', 'cyan'], ['Withdraw', 'red']].map(([label, color]) => (
-            <div key={label} className={`bg-${color}-500/10 border border-${color}-500/20 rounded-xl px-3 py-2 flex items-center gap-2`}>
-              <div className={`w-2 h-2 rounded-full bg-${color}-400`} />
-              <span className={`text-${color}-300 text-xs font-bold`}>{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  if (s.icon === 'deposit') return (
-    <div className="bg-slate-800 rounded-[2rem] p-4 shadow-2xl max-w-[280px] mx-auto">
-      <div className="bg-slate-900 rounded-[1.5rem] overflow-hidden">
-        <div className="bg-emerald-600 px-4 py-3 flex items-center gap-2">
-          <ArrowDownCircle size={14} className="text-white" />
-          <span className="text-white text-xs font-black">Deposit Funds</span>
-        </div>
-        <div className="p-4 space-y-3">
-          <div className="bg-slate-800 rounded-xl p-3 text-center">
-            <p className="text-slate-400 text-[10px] mb-1">Amount</p>
-            <p className="text-white font-black text-2xl">$2,000.00</p>
-            <p className="text-slate-500 text-[10px]">USD</p>
-          </div>
-          {['Bank Transfer (Free)', 'Card — 1.5% fee', 'Mobile Money'].map((m, i) => (
-            <div key={m} className={`rounded-xl px-3 py-2.5 flex items-center gap-2 ${i === 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800'}`}>
-              <div className={`w-3 h-3 rounded-full border-2 ${i === 0 ? 'border-emerald-400 bg-emerald-400' : 'border-slate-600'}`} />
-              <span className="text-slate-300 text-xs font-bold">{m}</span>
-            </div>
-          ))}
-          <button className="w-full bg-emerald-600 rounded-xl py-2 text-white text-xs font-black">Confirm Deposit</button>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (s.icon === 'send') return (
-    <div className="bg-slate-800 rounded-[2rem] p-4 shadow-2xl max-w-[280px] mx-auto">
-      <div className="bg-slate-900 rounded-[1.5rem] overflow-hidden">
-        <div className="bg-blue-600 px-4 py-3 flex items-center gap-2">
-          <Send size={14} className="text-white" />
-          <span className="text-white text-xs font-black">Send Money</span>
-        </div>
-        <div className="p-4 space-y-3">
-          <div className="bg-slate-800 rounded-xl p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-black">KF</div>
-            <div>
-              <p className="text-white text-xs font-black">Kofi Mensah</p>
-              <p className="text-slate-400 text-[10px]">IFB · @kofi.mensah</p>
-            </div>
-            <CheckCircle2 size={14} className="text-emerald-400 ml-auto" />
-          </div>
-          <div className="bg-slate-800 rounded-xl p-3 text-center">
-            <p className="text-slate-400 text-[10px] mb-1">Amount</p>
-            <p className="text-white font-black text-2xl">$850.00</p>
-          </div>
-          <div className="bg-slate-800 rounded-xl px-3 py-2 flex justify-between text-xs">
-            <span className="text-slate-400">Fee</span>
-            <span className="text-emerald-400 font-black">Free</span>
-          </div>
-          <button className="w-full bg-blue-600 rounded-xl py-2 text-white text-xs font-black">Send Instantly ⚡</button>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (s.icon === 'qr') return (
-    <div className="bg-slate-800 rounded-[2rem] p-4 shadow-2xl max-w-[280px] mx-auto">
-      <div className="bg-slate-900 rounded-[1.5rem] overflow-hidden">
-        <div className="bg-amber-500 px-4 py-3 flex items-center gap-2">
-          <QrCode size={14} className="text-slate-900" />
-          <span className="text-slate-900 text-xs font-black">QR Code Payment</span>
-        </div>
-        <div className="p-4 flex flex-col items-center gap-3">
-          <div className="bg-white rounded-xl p-3 w-28 h-28 grid grid-cols-3 gap-1">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className={`rounded-sm ${[0,1,3,5,7,8,4].includes(i) ? 'bg-slate-900' : 'bg-white'}`} />
-            ))}
-          </div>
-          <div className="text-center">
-            <p className="text-white font-black text-sm">Market Vendor</p>
-            <p className="text-emerald-400 font-black">Fixed: $25.00</p>
-            <p className="text-slate-500 text-[10px]">Scan to pay instantly</p>
-          </div>
-          <button className="w-full bg-amber-500 rounded-xl py-2 text-slate-900 text-xs font-black">Share QR</button>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (s.icon === 'nfc') return (
-    <div className="bg-slate-800 rounded-[2rem] p-4 shadow-2xl max-w-[280px] mx-auto">
-      <div className="bg-slate-900 rounded-[1.5rem] overflow-hidden">
-        <div className="bg-cyan-600 px-4 py-3 flex items-center gap-2">
-          <Wifi size={14} className="text-white" />
-          <span className="text-white text-xs font-black">Tap to Pay</span>
-        </div>
-        <div className="p-4 flex flex-col items-center gap-3">
-          <div className="text-center">
-            <p className="text-slate-400 text-[10px] mb-1">Charge Amount</p>
-            <p className="text-white font-black text-3xl">$48.50</p>
-          </div>
-          <div className="w-24 h-24 rounded-full border-4 border-cyan-500 flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full border-4 border-cyan-400/50 flex items-center justify-center">
-              <Wifi size={32} className="text-cyan-400" />
-            </div>
-          </div>
-          <p className="text-cyan-300 text-xs font-black animate-pulse">Hold card or phone here</p>
-          <p className="text-slate-500 text-[10px]">Visa · Mastercard · Apple Pay · Google Pay</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (s.icon === 'history') return (
-    <div className="bg-slate-800 rounded-[2rem] p-4 shadow-2xl max-w-[280px] mx-auto">
-      <div className="bg-slate-900 rounded-[1.5rem] overflow-hidden">
-        <div className="bg-slate-700 px-4 py-3 flex items-center justify-between">
-          <span className="text-white text-xs font-black">Transaction History</span>
-          <Download size={12} className="text-slate-400" />
-        </div>
-        <div className="p-3 space-y-2">
-          {[
-            { label: 'Kofi Mensah', sub: 'IFB Transfer', amt: '-$850', color: 'text-red-400' },
-            { label: 'Client Payment', sub: 'Payment Link', amt: '+$3,500', color: 'text-emerald-400' },
-            { label: 'Bank Transfer', sub: 'Deposit', amt: '+$2,000', color: 'text-emerald-400' },
-            { label: 'AWS Hosting', sub: 'Card Payment', amt: '-$120', color: 'text-red-400' },
-          ].map((t) => (
-            <div key={t.label} className="bg-slate-800 rounded-xl px-3 py-2 flex items-center justify-between">
-              <div>
-                <p className="text-white text-xs font-bold">{t.label}</p>
-                <p className="text-slate-500 text-[10px]">{t.sub}</p>
-              </div>
-              <span className={`text-xs font-black ${t.color}`}>{t.amt}</span>
-            </div>
-          ))}
-        </div>
-        <div className="px-3 pb-3">
-          <button className="w-full bg-slate-700 rounded-xl py-2 text-slate-300 text-[10px] font-black flex items-center justify-center gap-1">
-            <Download size={10} /> Export CSV / PDF
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Generic mockup for remaining slides
+// ─── PHONE FRAME ─────────────────────────────────────────────────────────────
+function Phone({ children, dark = false }) {
   return (
-    <div className="bg-slate-800 rounded-[2rem] p-4 shadow-2xl max-w-[280px] mx-auto">
-      <div className="bg-slate-900 rounded-[1.5rem] overflow-hidden">
-        <div className="bg-slate-700 px-4 py-3 flex items-center gap-2">
-          {icon}
-          <span className="text-white text-xs font-black">{s.stage}</span>
+    <div className="relative mx-auto" style={{ width: 252, height: 496 }}>
+      {/* Outer shell */}
+      <div className={`absolute inset-0 rounded-[36px] ${dark ? 'bg-slate-900' : 'bg-white'} shadow-2xl border-2 ${dark ? 'border-slate-700' : 'border-slate-200'}`} />
+      {/* Dynamic island */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-5 bg-black rounded-full z-10" />
+      {/* Status bar */}
+      <div className={`absolute top-8 left-4 right-4 flex justify-between items-center z-10 ${dark ? 'text-white' : 'text-slate-800'}`} style={{ fontSize: 8, fontWeight: 700 }}>
+        <span>9:41</span>
+        <div className="flex items-center gap-1">
+          <span>●●●</span>
+          <span>WiFi</span>
+          <span>🔋</span>
         </div>
-        <div className="p-4 space-y-2">
-          {(s.features || []).slice(0, 4).map((f) => (
-            <div key={f} className="bg-slate-800 rounded-xl px-3 py-2 flex items-start gap-2">
-              <CheckCircle2 size={12} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-              <span className="text-slate-300 text-[10px] leading-snug">{f}</span>
+      </div>
+      {/* Screen content */}
+      <div className="absolute top-14 left-1 right-1 bottom-1 rounded-b-[32px] overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── HIGHLIGHT WRAPPER ────────────────────────────────────────────────────────
+function HL({ children, onTap, done, radius = 'rounded-xl', labelPos = 'top' }) {
+  return (
+    <div className="relative inline-block" onClick={!done ? onTap : undefined} style={{ cursor: done ? 'default' : 'pointer' }}>
+      {children}
+      {!done && (
+        <>
+          <span className={`absolute inset-0 ${radius} border-2 border-yellow-400 animate-ping opacity-75`} />
+          <span className={`absolute inset-0 ${radius} border-2 border-yellow-400`} />
+          <span className={`absolute ${labelPos === 'top' ? '-top-5' : '-bottom-5'} left-1/2 -translate-x-1/2 text-yellow-400 font-black whitespace-nowrap`} style={{ fontSize: 8 }}>TAP!</span>
+        </>
+      )}
+      {done && (
+        <span className="absolute -top-2 -right-2 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+          <Check size={9} className="text-white" strokeWidth={3} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─── SCREEN COMPONENTS ────────────────────────────────────────────────────────
+
+function DashboardScreen({ hl, onTap, done }) {
+  const actions = [
+    { id: 'SEND',     icon: Send,          label: 'Send',     color: 'bg-blue-600' },
+    { id: 'REQUEST',  icon: Download,      label: 'Receive',  color: 'bg-emerald-600' },
+    { id: 'PAY_ME',   icon: QrCode,        label: 'Pay Me',   color: 'bg-blue-500' },
+    { id: 'DEPOSIT',  icon: Plus,          label: 'Add',      color: 'bg-emerald-500' },
+    { id: 'WITHDRAW', icon: Landmark,      label: 'Withdraw', color: 'bg-slate-600' },
+    { id: 'NFC',      icon: Wifi,          label: 'Tap & Pay',color: 'bg-violet-600' },
+    { id: 'VAULT',    icon: Shield,        label: 'Vault',    color: 'bg-indigo-700' },
+    { id: 'TRANSFER', icon: ArrowRightLeft,label: 'Exchange', color: 'bg-indigo-600' },
+    { id: 'ANALYTICS',icon: BarChart2,     label: 'Analytics',color: 'bg-slate-500' },
+  ];
+
+  return (
+    <div className="w-full h-full bg-[#0a0f1e] flex flex-col">
+      {/* Header */}
+      <div className="px-3 pt-2 pb-1">
+        <div className="text-slate-400" style={{ fontSize: 8 }}>IFB Account · USD</div>
+        <div className="text-white font-black" style={{ fontSize: 20 }}>$12,450.00</div>
+        <div className="text-emerald-400" style={{ fontSize: 7 }}>▲ +$320 today</div>
+      </div>
+
+      {/* Quick actions grid */}
+      <div className="px-2 mt-1">
+        <div className="text-slate-400 mb-1" style={{ fontSize: 7 }}>Quick Actions</div>
+        <div className="grid grid-cols-5 gap-1">
+          {actions.slice(0, 5).map((a) => {
+            const Icon = a.icon;
+            const isHL = hl === a.id;
+            const btn = (
+              <div key={a.id} className="flex flex-col items-center gap-0.5">
+                <div className={`w-9 h-9 rounded-xl ${a.color} flex items-center justify-center`}>
+                  <Icon size={14} className="text-white" />
+                </div>
+                <span className="text-slate-400 text-center leading-tight" style={{ fontSize: 6 }}>{a.label}</span>
+              </div>
+            );
+            return isHL ? <HL key={a.id} onTap={onTap} done={done} radius="rounded-xl" labelPos="top">{btn}</HL> : btn;
+          })}
+        </div>
+        <div className="grid grid-cols-4 gap-1 mt-1">
+          {actions.slice(5).map((a) => {
+            const Icon = a.icon;
+            const isHL = hl === a.id;
+            const btn = (
+              <div key={a.id} className="flex flex-col items-center gap-0.5">
+                <div className={`w-9 h-9 rounded-xl ${a.color} flex items-center justify-center`}>
+                  <Icon size={14} className="text-white" />
+                </div>
+                <span className="text-slate-400 text-center leading-tight" style={{ fontSize: 6 }}>{a.label}</span>
+              </div>
+            );
+            return isHL ? <HL key={a.id} onTap={onTap} done={done} radius="rounded-xl" labelPos="top">{btn}</HL> : btn;
+          })}
+        </div>
+      </div>
+
+      {/* Recent tx stub */}
+      <div className="px-2 mt-2 flex-1">
+        <div className="text-slate-400 mb-1" style={{ fontSize: 7 }}>Recent</div>
+        {[{ label: 'Maria Santos', amt: '-$50.00', color: 'text-red-400' }, { label: 'Deposit CoT', amt: '+$200.00', color: 'text-emerald-400' }].map((t, i) => (
+          <div key={i} className="flex justify-between items-center py-1 border-b border-slate-800">
+            <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center">
+              <span className="text-white" style={{ fontSize: 6 }}>{t.label[0]}</span>
+            </div>
+            <span className="text-white flex-1 ml-1" style={{ fontSize: 7 }}>{t.label}</span>
+            <span className={`font-bold ${t.color}`} style={{ fontSize: 7 }}>{t.amt}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom nav */}
+      <div className="bg-[#0a0f1e] border-t border-slate-800 flex items-center justify-around px-2 py-1.5 relative">
+        <div className="flex flex-col items-center">
+          <Compass size={13} className="text-blue-400" strokeWidth={2.5} />
+          <div className="absolute top-0 left-[17px] w-6 h-0.5 bg-blue-500 rounded" />
+          <span className="text-blue-400" style={{ fontSize: 5 }}>Home</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <ArrowRightLeft size={13} className="text-slate-400" />
+          <span className="text-slate-400" style={{ fontSize: 5 }}>Transactions</span>
+        </div>
+        {/* Center CreditCard */}
+        <div className="-mt-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg">
+            <CreditCard size={16} className="text-white" />
+          </div>
+        </div>
+        <div className="flex flex-col items-center">
+          <Bell size={13} className="text-slate-400" />
+          <span className="text-slate-400" style={{ fontSize: 5 }}>Alerts</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <Menu size={13} className="text-slate-400" />
+          <span className="text-slate-400" style={{ fontSize: 5 }}>More</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DepositScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-[#0B0F19] flex flex-col">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 pt-2 pb-2">
+        <ArrowLeft size={14} className="text-white" />
+        <span className="text-white font-black" style={{ fontSize: 12 }}>Add Funds</span>
+      </div>
+      {/* Tabs */}
+      <div className="flex mx-3 bg-slate-800 rounded-xl p-0.5 mb-3">
+        <div className="flex-1 bg-white rounded-lg text-center text-slate-900 font-bold" style={{ fontSize: 8, padding: '3px 0' }}>New Deposit</div>
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 8, padding: '3px 0' }}>Records</div>
+      </div>
+      {/* Amount */}
+      <div className="text-center py-2">
+        <div className="text-slate-400" style={{ fontSize: 8 }}>Enter Amount</div>
+        <div className="text-white font-black" style={{ fontSize: 26 }}>$0.00</div>
+      </div>
+      {/* Method cards */}
+      <div className="px-3 flex flex-col gap-2 flex-1">
+        {/* Global Card Network */}
+        <div className="bg-blue-900/30 border border-blue-600/40 rounded-2xl p-3 flex items-start gap-2">
+          <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+            <CreditCard size={13} className="text-white" />
+          </div>
+          <div>
+            <div className="text-white font-bold" style={{ fontSize: 9 }}>Global Card Network</div>
+            <div className="text-slate-400" style={{ fontSize: 7 }}>Stripe Gateway · 2.9% Fee</div>
+          </div>
+        </div>
+        {/* Community of Trust */}
+        <HL onTap={onTap} done={done} radius="rounded-2xl" labelPos="top">
+          <div className="bg-emerald-900/30 border-2 border-emerald-400 rounded-2xl p-3 flex items-start gap-2">
+            <div className="w-7 h-7 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
+              <Users size={13} className="text-white" />
+            </div>
+            <div>
+              <div className="text-white font-bold" style={{ fontSize: 9 }}>Community of Trust</div>
+              <div className="text-emerald-300" style={{ fontSize: 7 }}>1% IFB Fee · 2% Processor Reward</div>
+            </div>
+          </div>
+        </HL>
+      </div>
+    </div>
+  );
+}
+
+function SendScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-[#0a0f1e] flex flex-col justify-end">
+      <div className="h-24 flex items-center justify-center">
+        <div className="text-slate-600" style={{ fontSize: 9 }}>Dashboard (dimmed)</div>
+      </div>
+      {/* Bottom sheet */}
+      <div className="bg-white rounded-t-[20px] flex flex-col gap-2 p-4 flex-1">
+        <div className="text-slate-900 font-black mb-1" style={{ fontSize: 11 }}>Send Money</div>
+        {/* Currency */}
+        <div>
+          <div className="text-slate-500" style={{ fontSize: 7 }}>Currency</div>
+          <div className="flex gap-1 mt-0.5">
+            <div className="flex-1 bg-blue-50 border border-blue-300 rounded-lg text-center text-blue-700 font-bold" style={{ fontSize: 8, padding: '3px' }}>USD</div>
+            <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg text-center text-slate-500" style={{ fontSize: 8, padding: '3px' }}>AFR</div>
+          </div>
+        </div>
+        {/* Contact */}
+        <div>
+          <div className="text-slate-500" style={{ fontSize: 7 }}>Recipient</div>
+          <div className="bg-slate-100 rounded-lg p-1.5 mt-0.5 flex items-center gap-1">
+            <div className="w-5 h-5 rounded-full bg-blue-200 flex items-center justify-center">
+              <span style={{ fontSize: 7 }}>M</span>
+            </div>
+            <span className="text-slate-700" style={{ fontSize: 8 }}>Maria Santos</span>
+          </div>
+        </div>
+        {/* Amount */}
+        <div>
+          <div className="text-slate-500" style={{ fontSize: 7 }}>Amount</div>
+          <div className="bg-slate-100 rounded-lg p-1.5 mt-0.5">
+            <span className="text-slate-900 font-bold" style={{ fontSize: 12 }}>$50.00</span>
+          </div>
+        </div>
+        {/* Note */}
+        <div>
+          <div className="text-slate-500" style={{ fontSize: 7 }}>Note (optional)</div>
+          <div className="bg-slate-100 rounded-lg p-1.5 mt-0.5">
+            <span className="text-slate-400" style={{ fontSize: 8 }}>Lunch split</span>
+          </div>
+        </div>
+        {/* Send Now */}
+        <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
+          <div className="w-full bg-blue-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+            Send Now
+          </div>
+        </HL>
+      </div>
+    </div>
+  );
+}
+
+function WithdrawScreen({ variant, onTap, done }) {
+  // variant: 'GLOBAL' | 'COT'
+  return (
+    <div className="w-full h-full bg-white flex flex-col">
+      <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
+        <ArrowLeft size={13} className="text-slate-800" />
+        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Withdraw Capital</span>
+      </div>
+      {/* Tabs */}
+      <div className="flex mx-3 mt-2 bg-slate-100 rounded-xl p-0.5 mb-2">
+        <div className="flex-1 bg-white rounded-lg text-center text-slate-900 font-bold" style={{ fontSize: 7, padding: '3px 0' }}>Withdraw</div>
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 7, padding: '3px 0' }}>History</div>
+      </div>
+      {/* Amount */}
+      <div className="text-center py-2">
+        <div className="text-slate-400" style={{ fontSize: 8 }}>Amount</div>
+        <div className="text-slate-900 font-black" style={{ fontSize: 22 }}>$0.00</div>
+      </div>
+      {/* Methods */}
+      <div className="px-3 flex flex-col gap-2 flex-1">
+        {/* CoT P2P */}
+        {variant === 'COT' ? (
+          <HL onTap={onTap} done={done} radius="rounded-2xl" labelPos="top">
+            <div className="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-3 flex items-start gap-2">
+              <div className="w-7 h-7 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
+                <MapPin size={13} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-900 font-bold" style={{ fontSize: 9 }}>Community of Trust P2P</span>
+                  <span className="bg-emerald-100 text-emerald-700 font-bold rounded-full px-1" style={{ fontSize: 6 }}>Peer Network</span>
+                </div>
+                <div className="text-slate-500" style={{ fontSize: 7 }}>Local Bank · Mobile Money · Cash</div>
+              </div>
+            </div>
+          </HL>
+        ) : (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-start gap-2">
+            <div className="w-7 h-7 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
+              <MapPin size={13} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-1">
+                <span className="text-slate-900 font-bold" style={{ fontSize: 9 }}>Community of Trust P2P</span>
+                <span className="bg-emerald-100 text-emerald-700 font-bold rounded-full px-1" style={{ fontSize: 6 }}>Peer Network</span>
+              </div>
+              <div className="text-slate-500" style={{ fontSize: 7 }}>Local Bank · Mobile Money · Cash</div>
+            </div>
+          </div>
+        )}
+        {/* Global Bank/Card */}
+        {variant === 'GLOBAL' ? (
+          <HL onTap={onTap} done={done} radius="rounded-2xl" labelPos="top">
+            <div className="bg-blue-50 border-2 border-blue-400 rounded-2xl p-3 flex items-start gap-2">
+              <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+                <Landmark size={13} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-900 font-bold" style={{ fontSize: 9 }}>Global Bank / Card</span>
+                  <span className="bg-blue-100 text-blue-700 font-bold rounded-full px-1" style={{ fontSize: 6 }}>IFB Handled</span>
+                </div>
+                <div className="text-slate-500" style={{ fontSize: 7 }}>International Wire · ACH</div>
+              </div>
+            </div>
+          </HL>
+        ) : (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 flex items-start gap-2">
+            <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+              <Landmark size={13} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-1">
+                <span className="text-slate-900 font-bold" style={{ fontSize: 9 }}>Global Bank / Card</span>
+                <span className="bg-blue-100 text-blue-700 font-bold rounded-full px-1" style={{ fontSize: 6 }}>IFB Handled</span>
+              </div>
+              <div className="text-slate-500" style={{ fontSize: 7 }}>International Wire · ACH</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReceiveScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-white flex flex-col p-4 gap-2">
+      <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+        <ArrowLeft size={13} className="text-slate-800" />
+        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Request Funds</span>
+      </div>
+      <div>
+        <div className="text-slate-500" style={{ fontSize: 7 }}>Purpose</div>
+        <div className="bg-slate-100 rounded-lg p-1.5 mt-0.5">
+          <span className="text-slate-700" style={{ fontSize: 8 }}>Freelance design work</span>
+        </div>
+      </div>
+      <div>
+        <div className="text-slate-500" style={{ fontSize: 7 }}>Client email</div>
+        <div className="bg-slate-100 rounded-lg p-1.5 mt-0.5">
+          <span className="text-slate-700" style={{ fontSize: 8 }}>client@company.com</span>
+        </div>
+      </div>
+      <div>
+        <div className="text-slate-500" style={{ fontSize: 7 }}>Amount</div>
+        <div className="bg-slate-100 rounded-lg p-1.5 mt-0.5">
+          <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>$350.00</span>
+        </div>
+      </div>
+      <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
+        <div className="w-full bg-emerald-600 rounded-xl text-center text-white font-black" style={{ fontSize: 9, padding: '6px' }}>
+          Generate Link
+        </div>
+      </HL>
+      <div className="text-center text-slate-400" style={{ fontSize: 7 }}>or</div>
+      <div className="w-full border border-slate-300 rounded-xl text-center text-slate-600 font-bold" style={{ fontSize: 8, padding: '5px' }}>
+        Send Invoice by Email
+      </div>
+    </div>
+  );
+}
+
+function QRScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-slate-900 flex flex-col">
+      <div className="flex items-center gap-2 px-3 pt-2 pb-2">
+        <ArrowLeft size={13} className="text-white" />
+        <span className="text-white font-black" style={{ fontSize: 11 }}>Pay Me</span>
+      </div>
+      {/* Tabs */}
+      <div className="flex mx-3 bg-slate-800 rounded-xl p-0.5 mb-3">
+        <div className="flex-1 bg-white rounded-lg text-center text-slate-900 font-bold" style={{ fontSize: 7, padding: '3px 0' }}>QR Code</div>
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 7, padding: '3px 0' }}>Link</div>
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 7, padding: '3px 0' }}>Card</div>
+      </div>
+      <div className="flex flex-col items-center flex-1 pt-2">
+        <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
+          {/* QR code SVG */}
+          <div className="bg-white p-2 rounded-xl">
+            <svg width="96" height="96" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+              {/* top-left finder */}
+              <rect x="1" y="1" width="7" height="7" rx="1" fill="black"/>
+              <rect x="2" y="2" width="5" height="5" rx="0.5" fill="white"/>
+              <rect x="3" y="3" width="3" height="3" fill="black"/>
+              {/* top-right finder */}
+              <rect x="13" y="1" width="7" height="7" rx="1" fill="black"/>
+              <rect x="14" y="2" width="5" height="5" rx="0.5" fill="white"/>
+              <rect x="15" y="3" width="3" height="3" fill="black"/>
+              {/* bottom-left finder */}
+              <rect x="1" y="13" width="7" height="7" rx="1" fill="black"/>
+              <rect x="2" y="14" width="5" height="5" rx="0.5" fill="white"/>
+              <rect x="3" y="15" width="3" height="3" fill="black"/>
+              {/* data modules */}
+              <rect x="9" y="1" width="1" height="1" fill="black"/>
+              <rect x="11" y="1" width="1" height="1" fill="black"/>
+              <rect x="9" y="3" width="2" height="1" fill="black"/>
+              <rect x="9" y="5" width="1" height="1" fill="black"/>
+              <rect x="11" y="4" width="1" height="2" fill="black"/>
+              <rect x="9" y="9" width="3" height="1" fill="black"/>
+              <rect x="13" y="9" width="2" height="1" fill="black"/>
+              <rect x="16" y="9" width="4" height="1" fill="black"/>
+              <rect x="9" y="11" width="1" height="1" fill="black"/>
+              <rect x="11" y="11" width="3" height="1" fill="black"/>
+              <rect x="15" y="11" width="2" height="1" fill="black"/>
+              <rect x="18" y="11" width="2" height="1" fill="black"/>
+              <rect x="9" y="13" width="2" height="1" fill="black"/>
+              <rect x="12" y="13" width="1" height="1" fill="black"/>
+              <rect x="14" y="13" width="3" height="1" fill="black"/>
+              <rect x="9" y="15" width="1" height="3" fill="black"/>
+              <rect x="11" y="15" width="2" height="1" fill="black"/>
+              <rect x="14" y="15" width="1" height="1" fill="black"/>
+              <rect x="16" y="15" width="4" height="1" fill="black"/>
+              <rect x="11" y="17" width="3" height="1" fill="black"/>
+              <rect x="15" y="17" width="1" height="1" fill="black"/>
+              <rect x="17" y="17" width="1" height="1" fill="black"/>
+              <rect x="9" y="19" width="2" height="1" fill="black"/>
+              <rect x="12" y="19" width="2" height="1" fill="black"/>
+              <rect x="15" y="19" width="3" height="1" fill="black"/>
+              <rect x="19" y="19" width="1" height="1" fill="black"/>
+            </svg>
+          </div>
+        </HL>
+        <div className="text-slate-400 mt-2" style={{ fontSize: 8 }}>Scan to pay · IFB Account</div>
+        <div className="text-white font-bold mt-1" style={{ fontSize: 9 }}>sapiens.ifb</div>
+        <div className="mt-3 bg-slate-800 px-4 py-2 rounded-xl flex items-center gap-2">
+          <FileText size={11} className="text-slate-300" />
+          <span className="text-slate-300 font-bold" style={{ fontSize: 8 }}>Share QR</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LinkScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-slate-900 flex flex-col">
+      <div className="flex items-center gap-2 px-3 pt-2 pb-2">
+        <ArrowLeft size={13} className="text-white" />
+        <span className="text-white font-black" style={{ fontSize: 11 }}>Pay Me</span>
+      </div>
+      {/* Tabs */}
+      <div className="flex mx-3 bg-slate-800 rounded-xl p-0.5 mb-3">
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 7, padding: '3px 0' }}>QR Code</div>
+        <div className="flex-1 bg-white rounded-lg text-center text-slate-900 font-bold" style={{ fontSize: 7, padding: '3px 0' }}>Link</div>
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 7, padding: '3px 0' }}>Card</div>
+      </div>
+      <div className="flex flex-col items-center flex-1 px-3 gap-3">
+        <div className="text-slate-400 text-center" style={{ fontSize: 8 }}>Your permanent payment URL</div>
+        <div className="w-full bg-slate-800 rounded-xl p-3">
+          <div className="text-emerald-400 font-mono text-center" style={{ fontSize: 7 }}>pay.infinitefuturebank.org/</div>
+          <div className="text-white font-mono font-bold text-center" style={{ fontSize: 9 }}>@sapiens.ifb</div>
+        </div>
+        <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
+          <div className="flex items-center gap-2 bg-blue-600 rounded-xl px-4 py-2">
+            <Copy size={12} className="text-white" />
+            <span className="text-white font-black" style={{ fontSize: 9 }}>Copy Link</span>
+          </div>
+        </HL>
+        <div className="w-full bg-slate-800 rounded-xl p-2 flex flex-col gap-1.5">
+          {['WhatsApp', 'Email', 'SMS'].map((s) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-slate-600" />
+              <span className="text-slate-300" style={{ fontSize: 8 }}>Share via {s}</span>
             </div>
           ))}
         </div>
@@ -1242,282 +699,599 @@ function SlideMockup({ slide }) {
   );
 }
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-
-export default function TransactionGuide({ onClose } = {}) {
-  const [slide, setSlide] = useState(0);
-  const [lang, setLang] = useState('en');
-  const [mode, setMode] = useState('course');
-  const [qIndex, setQIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [certName, setCertName] = useState('');
-  const [touchStart, setTouchStart] = useState(null);
-
-  const TOTAL = 14;
-  const goNext = useCallback(() => setSlide(s => Math.min(s + 1, TOTAL - 1)), []);
-  const goPrev = useCallback(() => setSlide(s => Math.max(s - 1, 0)), []);
-
-  useEffect(() => {
-    if (mode !== 'course') return;
-    const handler = (e) => {
-      if (e.key === 'ArrowRight') goNext();
-      if (e.key === 'ArrowLeft') goPrev();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [goNext, goPrev, mode]);
-
-  const handleTouchStart = (e) => setTouchStart(e.touches[0].clientX);
-  const handleTouchEnd = (e) => {
-    if (touchStart === null) return;
-    const delta = touchStart - e.changedTouches[0].clientX;
-    if (Math.abs(delta) > 50) { delta > 0 ? goNext() : goPrev(); }
-    setTouchStart(null);
-  };
-
-  const content = CONTENT[lang];
-  const currentSlide = content.slides[slide];
-  const questions = QUESTIONS[lang];
-  const certLabels = CERT_LABELS[lang];
-  const currentQ = questions[qIndex];
-  const selectedAnswer = answers[qIndex];
-  const isAnswered = selectedAnswer !== undefined;
-  const totalQ = questions.length;
-  const score = Object.values(answers).reduce((acc, a, i) => acc + (a === questions[i]?.answer ? 1 : 0), 0);
-
-  const startAssessment = () => { setMode('assessment'); setQIndex(0); setAnswers({}); };
-  const selectAnswer = (idx) => { if (!isAnswered) setAnswers(prev => ({ ...prev, [qIndex]: idx })); };
-  const nextQuestion = () => { if (qIndex < totalQ - 1) setQIndex(q => q + 1); else setMode('certificate'); };
-  const retakeAssessment = () => { setMode('assessment'); setQIndex(0); setAnswers({}); };
-  const returnToGuide = () => { setMode('course'); setSlide(0); setQIndex(0); setAnswers({}); };
-
-  const counterLabel = mode === 'assessment' ? `Q${qIndex + 1} / ${totalQ}` : mode === 'certificate' ? certLabels.title : `${slide + 1} / ${TOTAL}`;
-
-  const topBar = (
-    <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-xl font-black flex-shrink-0">
-          <span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span>
-        </span>
-        <span className="hidden sm:inline text-slate-500 text-xs font-medium truncate">
-          {mode === 'certificate' ? 'Certificate' : mode === 'assessment' ? 'Assessment' : 'Transaction Guide'}
-        </span>
+function PayMeCardScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-slate-900 flex flex-col">
+      <div className="flex items-center gap-2 px-3 pt-2 pb-2">
+        <ArrowLeft size={13} className="text-white" />
+        <span className="text-white font-black" style={{ fontSize: 11 }}>Pay Me</span>
       </div>
-      <span className="text-slate-400 text-xs font-black flex-shrink-0">{counterLabel}</span>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
-          {(['en', 'fr', 'es']).map((l) => (
-            <button key={l} onClick={() => setLang(l)}
-              className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}>
-              {l.toUpperCase()}
-            </button>
-          ))}
+      {/* Tabs */}
+      <div className="flex mx-3 bg-slate-800 rounded-xl p-0.5 mb-3">
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 7, padding: '3px 0' }}>QR Code</div>
+        <div className="flex-1 text-center text-slate-400" style={{ fontSize: 7, padding: '3px 0' }}>Link</div>
+        <div className="flex-1 bg-white rounded-lg text-center text-slate-900 font-bold" style={{ fontSize: 7, padding: '3px 0' }}>Card</div>
+      </div>
+      {/* Virtual card */}
+      <div className="mx-3 rounded-2xl p-4 mb-3" style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0f2a4a 100%)' }}>
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-slate-400" style={{ fontSize: 6 }}>VIRTUAL CARD</div>
+            <div className="text-white font-bold" style={{ fontSize: 8 }}>IFB · Infinite Future Bank</div>
+          </div>
+          <div className="text-blue-400 font-black" style={{ fontSize: 10 }}>VISA</div>
         </div>
-        {onClose && (
+        <div className="text-white font-mono mt-2" style={{ fontSize: 9, letterSpacing: 2 }}>•••• •••• •••• 4821</div>
+        <div className="flex justify-between mt-2">
+          <div>
+            <div className="text-slate-400" style={{ fontSize: 5 }}>VALID THRU</div>
+            <div className="text-white font-mono" style={{ fontSize: 8 }}>12/28</div>
+          </div>
+          <div>
+            <div className="text-slate-400" style={{ fontSize: 5 }}>LIMIT</div>
+            <div className="text-white font-mono" style={{ fontSize: 8 }}>$5,000</div>
+          </div>
+        </div>
+      </div>
+      {/* Controls */}
+      <div className="px-3 flex flex-col gap-2">
+        <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
+          <div className="w-full flex items-center gap-2 bg-slate-700 rounded-xl px-3 py-2">
+            <Lock size={12} className="text-yellow-400" />
+            <span className="text-white font-bold" style={{ fontSize: 9 }}>Freeze Card</span>
+          </div>
+        </HL>
+        <div className="flex gap-2">
+          <div className="flex-1 bg-slate-800 rounded-xl flex items-center gap-1.5 px-2 py-1.5">
+            <Globe size={10} className="text-blue-400" />
+            <span className="text-slate-300" style={{ fontSize: 7 }}>Online Use: ON</span>
+          </div>
+          <div className="flex-1 bg-slate-800 rounded-xl flex items-center gap-1.5 px-2 py-1.5">
+            <Zap size={10} className="text-emerald-400" />
+            <span className="text-slate-300" style={{ fontSize: 7 }}>Limit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NFCScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-slate-900 flex flex-col">
+      {/* Header */}
+      <div className="flex flex-col items-center pt-3 pb-2 border-b border-slate-800">
+        <Wifi size={20} className="text-violet-400" />
+        <div className="text-white font-black mt-1" style={{ fontSize: 11 }}>NFC Tap &amp; Pay</div>
+        <div className="text-slate-400" style={{ fontSize: 7 }}>Hold phone near device to transact</div>
+      </div>
+      {/* Mode buttons */}
+      <div className="flex flex-col gap-2 p-3 flex-1">
+        <HL onTap={onTap} done={done} radius="rounded-2xl" labelPos="top">
+          <div className="w-full bg-violet-900/40 border-2 border-violet-400 rounded-2xl p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center flex-shrink-0">
+              <Send size={14} className="text-white" />
+            </div>
+            <div>
+              <div className="text-white font-bold" style={{ fontSize: 9 }}>Send Money</div>
+              <div className="text-slate-400" style={{ fontSize: 7 }}>Tap another DEUS device to pay</div>
+            </div>
+          </div>
+        </HL>
+        <div className="w-full bg-slate-800/60 border border-slate-700 rounded-2xl p-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center flex-shrink-0">
+            <Download size={14} className="text-white" />
+          </div>
+          <div>
+            <div className="text-white font-bold" style={{ fontSize: 9 }}>Receive from IFB</div>
+            <div className="text-slate-400" style={{ fontSize: 7 }}>Collect at IFB terminal</div>
+          </div>
+        </div>
+        <div className="w-full bg-slate-800/60 border border-slate-700 rounded-2xl p-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+            <CreditCard size={14} className="text-white" />
+          </div>
+          <div>
+            <div className="text-white font-bold" style={{ fontSize: 9 }}>Get Paid by Card</div>
+            <div className="text-slate-400" style={{ fontSize: 7 }}>Accept card payments</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SwiftScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-white flex flex-col">
+      <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
+        <ArrowLeft size={13} className="text-slate-800" />
+        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>International Transfer</span>
+      </div>
+      {/* Routing methods */}
+      <div className="px-3 pt-3 flex flex-col gap-2">
+        <HL onTap={onTap} done={done} radius="rounded-2xl" labelPos="top">
+          <div className="bg-blue-50 border-2 border-blue-400 rounded-2xl p-3 flex items-start gap-2">
+            <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+              <Globe size={13} className="text-white" />
+            </div>
+            <div>
+              <div className="text-slate-900 font-bold" style={{ fontSize: 9 }}>SWIFT / Wire Transfer</div>
+              <div className="text-slate-500" style={{ fontSize: 7 }}>IBAN · BIC · International routing</div>
+              <div className="text-blue-600 font-bold mt-0.5" style={{ fontSize: 6 }}>1–3 business days</div>
+            </div>
+          </div>
+        </HL>
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-start gap-2">
+          <div className="w-7 h-7 rounded-xl bg-indigo-500 flex items-center justify-center flex-shrink-0">
+            <ArrowRightLeft size={13} className="text-white" />
+          </div>
+          <div>
+            <div className="text-slate-900 font-bold" style={{ fontSize: 9 }}>ACH Transfer</div>
+            <div className="text-slate-500" style={{ fontSize: 7 }}>US domestic · Routing + Account</div>
+            <div className="text-indigo-600 font-bold mt-0.5" style={{ fontSize: 6 }}>1–2 business days</div>
+          </div>
+        </div>
+        {/* SWIFT form preview */}
+        <div className="bg-slate-50 rounded-xl p-2 flex flex-col gap-1">
+          <div className="text-slate-500" style={{ fontSize: 6 }}>Beneficiary IBAN</div>
+          <div className="bg-white border border-slate-200 rounded-lg p-1"><span className="text-slate-400" style={{ fontSize: 7 }}>GB29 NWBK 6016 1331 9268 19</span></div>
+          <div className="text-slate-500" style={{ fontSize: 6 }}>BIC / SWIFT Code</div>
+          <div className="bg-white border border-slate-200 rounded-lg p-1"><span className="text-slate-400" style={{ fontSize: 7 }}>NWBKGB2L</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InvoiceScreen({ onTap, done }) {
+  return (
+    <div className="w-full h-full bg-white flex flex-col p-4 gap-2">
+      <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+        <ArrowLeft size={13} className="text-slate-800" />
+        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Request Funds</span>
+      </div>
+      {/* payment link generated banner */}
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 flex items-center gap-2">
+        <Check size={12} className="text-emerald-600" />
+        <div>
+          <div className="text-emerald-800 font-bold" style={{ fontSize: 8 }}>Payment link generated</div>
+          <div className="text-emerald-600 font-mono" style={{ fontSize: 6 }}>pay.ifb.org/req/8a2f...</div>
+        </div>
+        <div className="ml-auto">
+          <div className="bg-blue-100 text-blue-700 font-bold rounded-lg px-2 py-0.5" style={{ fontSize: 7 }}>Copy</div>
+        </div>
+      </div>
+      {/* Summary */}
+      <div className="bg-slate-50 rounded-xl p-2">
+        <div className="flex justify-between">
+          <span className="text-slate-500" style={{ fontSize: 7 }}>For:</span>
+          <span className="text-slate-800 font-bold" style={{ fontSize: 7 }}>Freelance design work</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500" style={{ fontSize: 7 }}>To:</span>
+          <span className="text-slate-800 font-bold" style={{ fontSize: 7 }}>client@company.com</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-slate-500" style={{ fontSize: 7 }}>Amount:</span>
+          <span className="text-slate-900 font-black" style={{ fontSize: 9 }}>$350.00</span>
+        </div>
+      </div>
+      <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
+        <div className="w-full flex items-center justify-center gap-2 bg-slate-800 rounded-xl text-white font-black" style={{ fontSize: 9, padding: '7px' }}>
+          <FileText size={12} />
+          Send Invoice by Email
+        </div>
+      </HL>
+    </div>
+  );
+}
+
+function LedgerScreen({ onTap, done }) {
+  const txs = [
+    { label: 'Maria Santos', type: 'Send', amt: '-$50.00', color: 'text-red-500', date: 'Today' },
+    { label: 'CoT Deposit', type: 'Deposit', amt: '+$200.00', color: 'text-emerald-500', date: 'Today' },
+    { label: 'SWIFT Wire', type: 'Wire', amt: '-$1,200.00', color: 'text-red-500', date: 'Yesterday' },
+    { label: 'Pay Me QR', type: 'Receive', amt: '+$75.00', color: 'text-emerald-500', date: 'Yesterday' },
+  ];
+  return (
+    <div className="w-full h-full bg-[#0a0f1e] flex flex-col">
+      {/* Header row */}
+      <div className="flex items-center justify-between px-3 pt-2 pb-2">
+        <span className="text-white font-black" style={{ fontSize: 11 }}>Transactions</span>
+        <HL onTap={onTap} done={done} radius="rounded-lg" labelPos="top">
+          <div className="flex items-center gap-1 bg-slate-700 rounded-lg px-2 py-1">
+            <Download size={11} className="text-white" />
+            <span className="text-white font-bold" style={{ fontSize: 8 }}>Export</span>
+          </div>
+        </HL>
+      </div>
+      {/* Filter chips */}
+      <div className="flex gap-1 px-3 mb-2">
+        {['All', 'Send', 'Receive', 'Deposit'].map((f, i) => (
+          <div key={f} className={`rounded-full px-2 py-0.5 font-bold ${i === 0 ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`} style={{ fontSize: 6 }}>{f}</div>
+        ))}
+      </div>
+      {/* Transactions */}
+      <div className="flex-1 px-3 flex flex-col gap-1">
+        {txs.map((t, i) => (
+          <div key={i} className="bg-slate-800/50 rounded-xl p-2 flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+              <span className="text-white" style={{ fontSize: 7 }}>{t.label[0]}</span>
+            </div>
+            <div className="flex-1">
+              <div className="text-white font-bold" style={{ fontSize: 8 }}>{t.label}</div>
+              <div className="text-slate-400" style={{ fontSize: 6 }}>{t.type} · {t.date}</div>
+            </div>
+            <span className={`font-black ${t.color}`} style={{ fontSize: 9 }}>{t.amt}</span>
+          </div>
+        ))}
+      </div>
+      {/* Bottom nav */}
+      <div className="bg-[#0a0f1e] border-t border-slate-800 flex items-center justify-around px-2 py-1.5 relative">
+        <div className="flex flex-col items-center">
+          <Compass size={13} className="text-slate-400" />
+          <span className="text-slate-400" style={{ fontSize: 5 }}>Home</span>
+        </div>
+        <div className="flex flex-col items-center relative">
+          <ArrowRightLeft size={13} className="text-blue-400" strokeWidth={2.5} />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-blue-500 rounded" style={{ top: -6 }} />
+          <span className="text-blue-400" style={{ fontSize: 5 }}>Transactions</span>
+        </div>
+        <div className="-mt-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg">
+            <CreditCard size={16} className="text-white" />
+          </div>
+        </div>
+        <div className="flex flex-col items-center">
+          <Bell size={13} className="text-slate-400" />
+          <span className="text-slate-400" style={{ fontSize: 5 }}>Alerts</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <Menu size={13} className="text-slate-400" />
+          <span className="text-slate-400" style={{ fontSize: 5 }}>More</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryScreen() {
+  return (
+    <div className="w-full h-full bg-[#0a0f1e] flex flex-col items-center justify-center p-4">
+      <div className="w-14 h-14 rounded-full bg-emerald-600/20 border-2 border-emerald-500 flex items-center justify-center mb-3">
+        <CheckCircle2 size={28} className="text-emerald-400" />
+      </div>
+      <div className="text-white font-black text-center mb-1" style={{ fontSize: 13 }}>All 13 Flows Complete!</div>
+      <div className="text-slate-400 text-center" style={{ fontSize: 8 }}>Take the assessment to earn{'\n'}your Transaction Certificate</div>
+      <div className="mt-4 grid grid-cols-3 gap-1 w-full">
+        {['Deposit', 'Send', 'Withdraw', 'Receive', 'QR Pay', 'Link Pay', 'Virtual Card', 'NFC', 'SWIFT', 'Invoice', 'P2P', 'Ledger', 'Export'].map((l) => (
+          <div key={l} className="flex items-center gap-1">
+            <Check size={8} className="text-emerald-400 flex-shrink-0" />
+            <span className="text-slate-300" style={{ fontSize: 6 }}>{l}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getScreen(idx, done, onTap) {
+  switch (idx) {
+    case 0:  return <DashboardScreen onTap={onTap} done={done} />;
+    case 1:  return <DepositScreen onTap={onTap} done={done} />;
+    case 2:  return <SendScreen onTap={onTap} done={done} />;
+    case 3:  return <WithdrawScreen variant="GLOBAL" onTap={onTap} done={done} />;
+    case 4:  return <ReceiveScreen onTap={onTap} done={done} />;
+    case 5:  return <QRScreen onTap={onTap} done={done} />;
+    case 6:  return <LinkScreen onTap={onTap} done={done} />;
+    case 7:  return <PayMeCardScreen onTap={onTap} done={done} />;
+    case 8:  return <NFCScreen onTap={onTap} done={done} />;
+    case 9:  return <SwiftScreen onTap={onTap} done={done} />;
+    case 10: return <InvoiceScreen onTap={onTap} done={done} />;
+    case 11: return <WithdrawScreen variant="COT" onTap={onTap} done={done} />;
+    case 12: return <LedgerScreen onTap={onTap} done={done} />;
+    case 13: return <SummaryScreen />;
+    default: return null;
+  }
+}
+
+const isDark = (idx) => [1, 5, 6, 7, 8, 12, 13].includes(idx);
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+export default function TransactionGuide({ onClose }) {
+  const [slide, setSlide]       = useState(0);
+  const [tapped, setTapped]     = useState({});
+  const [mode, setMode]         = useState('course'); // 'course' | 'assessment' | 'cert'
+  const [lang, setLang]         = useState('en');
+  const [answers, setAnswers]   = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [name, setName]         = useState('');
+
+  const s = SLIDES[slide];
+  const showExplain = s.noTap || tapped[slide];
+  const canNext     = showExplain;
+
+  function handleTap() {
+    setTapped((prev) => ({ ...prev, [slide]: true }));
+  }
+
+  function goNext() {
+    if (!canNext) return;
+    if (slide < SLIDES.length - 1) setSlide(slide + 1);
+    else setMode('assessment');
+  }
+
+  function goPrev() {
+    if (slide > 0) setSlide(slide - 1);
+  }
+
+  // ── ASSESSMENT ──
+  if (mode === 'assessment') {
+    const qs = QUESTIONS[lang];
+    const score = submitted ? qs.filter((q, i) => answers[i] === q.ans).length : 0;
+    const passed = submitted && score >= 6;
+
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex flex-col">
+        {/* Top bar */}
+        <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMode('course')} className="text-slate-400 hover:text-white">
+              <ChevronLeft size={18} />
+            </button>
+            <span className="text-white font-black text-sm">
+              {lang === 'fr' ? 'Évaluation' : lang === 'es' ? 'Evaluación' : 'Assessment'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+              {['en', 'fr', 'es'].map((l) => (
+                <button key={l} onClick={() => setLang(l)}
+                  className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}>
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          {submitted ? (
+            <div className="flex flex-col items-center py-8">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${passed ? 'bg-emerald-600/20 border-2 border-emerald-500' : 'bg-red-600/20 border-2 border-red-500'}`}>
+                {passed ? <Award size={36} className="text-emerald-400" /> : <X size={36} className="text-red-400" />}
+              </div>
+              <div className="text-white font-black text-2xl mb-1">{score}/8</div>
+              <div className={`text-sm font-bold mb-6 ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
+                {passed ? (lang === 'fr' ? 'Réussi!' : lang === 'es' ? '¡Aprobado!' : 'Passed!') : (lang === 'fr' ? 'Réessayez' : lang === 'es' ? 'Intenta de nuevo' : 'Try again')}
+              </div>
+              {qs.map((q, i) => (
+                <div key={i} className="w-full max-w-lg bg-slate-800 rounded-2xl p-4 mb-3">
+                  <div className="text-slate-300 text-sm mb-2">{i + 1}. {q.q}</div>
+                  {q.opts.map((o, j) => (
+                    <div key={j} className={`text-xs px-3 py-1.5 rounded-lg mb-1 ${j === q.ans ? 'bg-emerald-600/20 text-emerald-300 font-bold' : answers[i] === j && j !== q.ans ? 'bg-red-600/20 text-red-300' : 'text-slate-400'}`}>
+                      {j === q.ans ? '✓ ' : answers[i] === j ? '✗ ' : ''}{o}
+                    </div>
+                  ))}
+                </div>
+              ))}
+              <div className="flex gap-3 mt-4">
+                <button onClick={() => { setAnswers({}); setSubmitted(false); }}
+                  className="px-5 py-2 rounded-xl bg-slate-700 text-white font-black text-sm">
+                  {lang === 'fr' ? 'Réessayer' : lang === 'es' ? 'Reintentar' : 'Retake'}
+                </button>
+                {passed && (
+                  <button onClick={() => setMode('cert')}
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm">
+                    {lang === 'fr' ? 'Voir le Certificat' : lang === 'es' ? 'Ver Certificado' : 'Get Certificate'}
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-lg mx-auto">
+              <p className="text-slate-400 text-xs mb-6 text-center">
+                {lang === 'fr' ? '8 questions · 6/8 pour réussir' : lang === 'es' ? '8 preguntas · 6/8 para aprobar' : '8 questions · Score 6/8 to pass'}
+              </p>
+              {qs.map((q, i) => (
+                <div key={i} className="bg-slate-800 rounded-2xl p-4 mb-4">
+                  <div className="text-white font-bold text-sm mb-3">{i + 1}. {q.q}</div>
+                  {q.opts.map((o, j) => (
+                    <button key={j} onClick={() => setAnswers((a) => ({ ...a, [i]: j }))}
+                      className={`w-full text-left text-xs px-3 py-2 rounded-xl mb-1.5 transition-colors ${answers[i] === j ? 'bg-blue-600 text-white font-bold' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
+                      {o}
+                    </button>
+                  ))}
+                </div>
+              ))}
+              <button
+                disabled={Object.keys(answers).length < qs.length}
+                onClick={() => setSubmitted(true)}
+                className={`w-full py-3 rounded-2xl font-black text-white transition-colors ${Object.keys(answers).length < qs.length ? 'bg-slate-700 cursor-not-allowed opacity-50' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                {lang === 'fr' ? 'Soumettre' : lang === 'es' ? 'Enviar' : 'Submit'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── CERTIFICATE ──
+  if (mode === 'cert') {
+    const c = CERT[lang];
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-sm bg-gradient-to-b from-emerald-900/40 to-slate-900 border-2 border-emerald-500/40 rounded-3xl p-8 flex flex-col items-center">
+          <div className="flex gap-1 mb-4">
+            <span className="text-2xl font-black text-[#4285F4]">D</span>
+            <span className="text-2xl font-black text-[#EA4335]">E</span>
+            <span className="text-2xl font-black text-[#FBBC04]">U</span>
+            <span className="text-2xl font-black text-[#34A853]">S</span>
+          </div>
+          <Award size={48} className="text-emerald-400 mb-3" />
+          <div className="text-emerald-400 font-black text-center text-lg mb-2">{c.title}</div>
+          <div className="text-slate-400 text-xs text-center mb-4">{lang === 'fr' ? 'Ceci certifie que' : lang === 'es' ? 'Esto certifica que' : 'This certifies that'}</div>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={lang === 'fr' ? 'Votre nom complet' : lang === 'es' ? 'Tu nombre completo' : 'Your full name'}
+            className="w-full bg-slate-800 text-white text-center font-black text-lg rounded-xl px-4 py-2 mb-4 border border-emerald-500/40 focus:outline-none focus:border-emerald-400"
+          />
+          <div className="text-slate-300 text-xs text-center mb-2">{c.sub}</div>
+          <div className="bg-emerald-600/20 border border-emerald-500/30 rounded-xl px-4 py-2 mb-6">
+            <div className="text-emerald-300 font-black text-center" style={{ fontSize: 11 }}>{lang === 'fr' ? 'Score' : lang === 'es' ? 'Puntaje' : 'Score'}: {QUESTIONS[lang].length}/{QUESTIONS[lang].length}</div>
+          </div>
+          <div className="text-slate-500 text-xs text-center mb-6">{c.issuer}</div>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm">
+              {lang === 'fr' ? 'Fermer' : lang === 'es' ? 'Cerrar' : 'Done'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── COURSE ──
+  return (
+    <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex flex-col">
+      {/* Top bar */}
+      <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xl font-black">
+            <span className="text-[#4285F4]">D</span>
+            <span className="text-[#EA4335]">E</span>
+            <span className="text-[#FBBC04]">U</span>
+            <span className="text-[#34A853]">S</span>
+          </span>
+          <span className="text-slate-400 text-xs font-black uppercase tracking-widest">
+            {lang === 'fr' ? 'Guide Transactions' : lang === 'es' ? 'Guía Transacciones' : 'Transaction Guide'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+            {['en', 'fr', 'es'].map((l) => (
+              <button key={l} onClick={() => setLang(l)}
+                className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}>
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
           <button onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
             <X size={16} />
           </button>
-        )}
+        </div>
       </div>
-    </div>
-  );
 
-  return (
-    <div
-      className={`bg-[#0a0f1e] flex flex-col select-none ${onClose ? 'fixed inset-0 z-[9999]' : 'min-h-screen'}`}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      {topBar}
+      {/* Progress bar */}
+      <div className="bg-slate-900 h-1 flex-shrink-0">
+        <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${((slide + 1) / SLIDES.length) * 100}%` }} />
+      </div>
 
-      {/* ══ CERTIFICATE ══ */}
-      {mode === 'certificate' && (() => {
-        const passed = score >= 6;
-        const perfect = score === totalQ;
-        const badge = perfect ? 'bg-yellow-500 text-slate-900' : passed ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-900';
-        const verdict = perfect ? certLabels.perfect : passed ? certLabels.great : score >= 5 ? certLabels.pass : certLabels.retry;
-        const today = new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        return (
-          <div className="flex-1 overflow-y-auto flex items-center justify-center p-4 sm:p-8">
-            <div className="w-full max-w-xl">
-              <div className="relative bg-slate-900 rounded-3xl p-6 sm:p-10 border-2 border-emerald-500/40 shadow-[0_0_60px_rgba(16,185,129,0.12)]">
-                <div className="absolute inset-0 rounded-3xl border border-emerald-400/10 m-1 pointer-events-none" />
-                <div className="text-center mb-6">
-                  <div className="text-3xl font-black mb-1">
-                    <span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span>
-                  </div>
-                  <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em]">Infinite Future Bank</p>
-                </div>
-                <div className="text-center mb-6">
-                  <Award size={40} className="text-emerald-400 mx-auto mb-3" />
-                  <h2 className="text-xl sm:text-2xl font-black text-white mb-1">{certLabels.title}</h2>
-                  <p className="text-slate-400 text-sm font-medium">{certLabels.program}</p>
-                </div>
-                <div className="mb-6">
-                  <input type="text" value={certName} onChange={(e) => setCertName(e.target.value)}
-                    placeholder={certLabels.nameLabel}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 text-center text-white font-black text-lg placeholder:text-slate-500 outline-none focus:border-emerald-400 transition-colors" />
-                  {certName && <p className="text-center text-emerald-300 font-black text-sm mt-2">{certName}</p>}
-                </div>
-                <div className={`${badge} rounded-2xl py-3 px-5 text-center mb-4`}>
-                  <p className="text-sm font-black">{certLabels.score}: {score} / {totalQ}</p>
-                  <p className="text-xs font-bold mt-0.5 opacity-80">{verdict}</p>
-                </div>
-                <div className="text-center text-slate-500 text-[11px] font-medium mb-6">
-                  <p>{certLabels.date}: {today}</p>
-                  <p className="mt-1">{certLabels.issuer}</p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button onClick={retakeAssessment} className="flex-1 py-3 rounded-2xl border border-slate-600 text-slate-300 text-sm font-black hover:bg-slate-800 transition-colors">{certLabels.retake}</button>
-                  <button onClick={returnToGuide} className="flex-1 py-3 rounded-2xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors">{certLabels.returnGuide}</button>
-                </div>
+      {/* Slide counter */}
+      <div className="text-center text-slate-500 text-xs py-1 flex-shrink-0">
+        {slide + 1} / {SLIDES.length}
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col lg:flex-row items-start justify-center gap-6 p-4 max-w-5xl mx-auto">
+
+          {/* Left: phone mockup */}
+          <div className="flex-shrink-0 w-full flex justify-center lg:justify-start lg:sticky lg:top-4">
+            <div className="flex flex-col items-center gap-2">
+              {/* Path label */}
+              <div className="text-slate-500 text-xs font-mono bg-slate-900 border border-slate-700 rounded-lg px-3 py-1 mb-1">
+                {s.path[lang]}
               </div>
+              <Phone dark={isDark(slide)}>
+                {getScreen(slide, !!tapped[slide], handleTap)}
+              </Phone>
+              {/* TAP prompt */}
+              {!s.noTap && !tapped[slide] && (
+                <div className="mt-2 flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-2">
+                  <span className="text-yellow-400 text-xs font-black animate-pulse">👆</span>
+                  <span className="text-yellow-300 text-xs font-bold">{s.prompt[lang]}</span>
+                </div>
+              )}
+              {!s.noTap && tapped[slide] && (
+                <div className="mt-2 flex items-center gap-2 bg-emerald-400/10 border border-emerald-400/30 rounded-xl px-4 py-2">
+                  <CheckCircle2 size={14} className="text-emerald-400" />
+                  <span className="text-emerald-300 text-xs font-bold">
+                    {lang === 'fr' ? 'Bien! Lisez l\'explication.' : lang === 'es' ? '¡Bien! Lee la explicación.' : 'Great! Read the explanation.'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-        );
-      })()}
 
-      {/* ══ ASSESSMENT ══ */}
-      {mode === 'assessment' && (
-        <div className="flex-1 overflow-y-auto flex items-center justify-center p-4 sm:p-8">
-          <div className="w-full max-w-xl">
-            <div className="flex gap-1.5 mb-6 justify-center">
-              {questions.map((_, i) => (
-                <div key={i} className={`h-1.5 rounded-full transition-all ${i < qIndex ? 'bg-emerald-500 w-6' : i === qIndex ? 'bg-emerald-400 w-8' : 'bg-slate-700 w-4'}`} />
-              ))}
+          {/* Right: explanation */}
+          <div className="flex-1 flex flex-col gap-4 max-w-lg">
+            <div>
+              <h2 className="text-white font-black text-xl leading-tight mb-1">{s.title[lang]}</h2>
             </div>
-            <h2 className="text-white font-black text-lg sm:text-xl mb-6 leading-snug">{currentQ.q}</h2>
-            <div className="flex flex-col gap-3 mb-6">
-              {currentQ.options.map((opt, i) => {
-                let cls = 'border-slate-700 text-slate-300 hover:border-emerald-500 hover:bg-slate-800';
-                if (isAnswered) {
-                  if (i === currentQ.answer) cls = 'border-emerald-500 bg-emerald-500/10 text-emerald-300';
-                  else if (i === selectedAnswer) cls = 'border-red-500 bg-red-500/10 text-red-300';
-                  else cls = 'border-slate-800 text-slate-600';
-                }
-                return (
-                  <button key={i} onClick={() => selectAnswer(i)}
-                    className={`text-left border rounded-2xl px-5 py-4 text-sm font-bold transition-all flex items-center gap-3 ${cls}`}>
-                    <span className="w-6 h-6 rounded-full border border-current flex items-center justify-center text-[10px] font-black flex-shrink-0">{String.fromCharCode(65 + i)}</span>
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-            {isAnswered && (
-              <div className={`rounded-2xl p-4 mb-6 text-sm font-medium leading-relaxed ${selectedAnswer === currentQ.answer ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/10 text-red-300 border border-red-500/30'}`}>
-                {currentQ.explanation}
+
+            {showExplain ? (
+              <>
+                <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-4">
+                  <p className="text-slate-200 text-sm leading-relaxed">{s.explain[lang]}</p>
+                </div>
+                {s.tip && s.tip[lang] && (
+                  <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-4 flex gap-3">
+                    <span className="text-blue-400 text-lg flex-shrink-0">💡</span>
+                    <p className="text-blue-200 text-xs leading-relaxed">{s.tip[lang]}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="bg-slate-800/40 border border-dashed border-slate-600 rounded-2xl p-6 flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-yellow-400/10 border-2 border-yellow-400/40 flex items-center justify-center animate-pulse">
+                  <span className="text-2xl">👆</span>
+                </div>
+                <p className="text-slate-400 text-sm text-center">
+                  {lang === 'fr' ? 'Appuyez sur l\'élément surligné dans l\'écran du téléphone pour déverrouiller l\'explication.'
+                    : lang === 'es' ? 'Toca el elemento resaltado en la pantalla del teléfono para desbloquear la explicación.'
+                    : 'Tap the highlighted element on the phone screen to unlock the explanation.'}
+                </p>
               </div>
-            )}
-            {isAnswered && (
-              <button onClick={nextQuestion}
-                className="w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-sm hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
-                {qIndex < totalQ - 1 ? (<><span>{content.next}</span><ChevronRight size={16} /></>) : (<><Award size={16} /><span>{lang === 'fr' ? 'Voir le Certificat' : lang === 'es' ? 'Ver Certificado' : 'View Certificate'}</span></>)}
-              </button>
             )}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* ══ COURSE ══ */}
-      {mode === 'course' && (
-        <>
-          <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
-            <div className="flex-1 flex flex-col justify-center px-5 py-6 lg:px-12 lg:py-12 order-2 lg:order-1">
-              <div className="max-w-xl">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{currentSlide.stage}</span>
-                </div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-tight mb-3">{currentSlide.title}</h1>
-                <p className="text-slate-300 text-sm lg:text-base font-medium mb-4 leading-relaxed">{currentSlide.subtitle}</p>
-                {currentSlide.body && <p className="text-slate-400 text-sm mb-4 leading-relaxed">{currentSlide.body}</p>}
-                {currentSlide.features && (
-                  <ul className="flex flex-col gap-2 mb-4">
-                    {currentSlide.features.map((f) => (
-                      <li key={f} className="flex items-start gap-3">
-                        <div className="w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <CheckCircle2 size={9} className="text-white" />
-                        </div>
-                        <span className="text-slate-300 text-sm leading-relaxed">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {currentSlide.details && (
-                  <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 border border-slate-700/50">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-2">Step by step</p>
-                    <ul className="flex flex-col gap-1.5">
-                      {currentSlide.details.map((d, i) => (
-                        <li key={i} className="flex items-start gap-2 text-slate-300 text-xs leading-relaxed">
-                          <span className="text-emerald-400 font-black flex-shrink-0">{i + 1}.</span>
-                          {d}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {currentSlide.scenario && (
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-4 py-3 mb-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-1">Real example</p>
-                    <p className="text-amber-100 text-xs leading-relaxed">{currentSlide.scenario}</p>
-                  </div>
-                )}
-                {currentSlide.tip && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3 mb-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">Pro tip</p>
-                    <p className="text-emerald-100 text-xs leading-relaxed">{currentSlide.tip}</p>
-                  </div>
-                )}
-                {currentSlide.cta && (
-                  <div className="flex flex-wrap gap-3 mt-2">
-                    {(currentSlide.buttons || []).map((btn, i) => (
-                      <a key={btn}
-                        href={i === 0 ? '#' : i === 1 ? 'https://deus.infinitefuturebank.org' : 'mailto:support@infinitefuturebank.org'}
-                        className={`px-5 py-2.5 rounded-xl text-sm font-black transition-opacity hover:opacity-90 ${i === 0 ? 'bg-emerald-600 text-white' : i === 1 ? 'bg-white text-slate-900' : 'border border-slate-600 text-white'}`}>
-                        {btn}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="hidden lg:flex lg:w-[380px] xl:w-[440px] items-center justify-center px-6 py-8 order-1 lg:order-2 bg-slate-900 lg:bg-transparent flex-shrink-0">
-              <div className="w-full">
-                <SlideMockup slide={currentSlide} />
-              </div>
-            </div>
-          </div>
+      {/* Navigation */}
+      <div className="bg-[#0a0f1e] border-t border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+        <button onClick={goPrev} disabled={slide === 0}
+          className={`flex items-center gap-1 px-4 py-2 rounded-xl font-black text-sm transition-colors ${slide === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-white bg-slate-800 hover:bg-slate-700'}`}>
+          <ChevronLeft size={16} /> {lang === 'fr' ? 'Préc.' : lang === 'es' ? 'Ant.' : 'Prev'}
+        </button>
 
-          <div className="bg-[#0a0f1e] border-t border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
-            <button onClick={goPrev} disabled={slide === 0}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-black hover:bg-slate-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0">
-              <ChevronLeft size={15} />
-              <span className="hidden sm:inline">{content.prev}</span>
-            </button>
-            <div className="flex items-center gap-1 flex-wrap justify-center">
-              {Array.from({ length: TOTAL }).map((_, i) => (
-                <button key={i} onClick={() => setSlide(i)}
-                  className={`rounded-full transition-all ${i === slide ? 'w-4 h-2 bg-emerald-500' : 'w-2 h-2 bg-slate-600 hover:bg-slate-500'}`}
-                  aria-label={`Slide ${i + 1}`} />
-              ))}
-            </div>
-            {slide < TOTAL - 1 ? (
-              <button onClick={goNext}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 text-white text-sm font-black hover:bg-emerald-700 transition-colors flex-shrink-0">
-                <span className="hidden sm:inline">{content.next}</span>
-                <ChevronRight size={15} />
-              </button>
-            ) : (
-              <button onClick={startAssessment}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 text-slate-900 text-sm font-black hover:bg-amber-400 transition-colors flex-shrink-0">
-                <Award size={14} />
-                <span className="hidden sm:inline">{lang === 'fr' ? 'Évaluation' : lang === 'es' ? 'Evaluación' : 'Assessment'}</span>
-              </button>
-            )}
-          </div>
-        </>
-      )}
+        {/* Dot indicators */}
+        <div className="flex gap-1">
+          {SLIDES.map((_, i) => (
+            <button key={i} onClick={() => { if (i <= slide || tapped[i] || SLIDES[i].noTap) setSlide(i); }}
+              className={`rounded-full transition-all ${i === slide ? 'w-4 h-2 bg-blue-500' : tapped[i] || SLIDES[i].noTap ? 'w-2 h-2 bg-emerald-500' : 'w-2 h-2 bg-slate-700'}`} />
+          ))}
+        </div>
+
+        {slide === SLIDES.length - 1 ? (
+          <button onClick={() => setMode('assessment')}
+            className="flex items-center gap-1 px-4 py-2 rounded-xl font-black text-sm bg-emerald-600 hover:bg-emerald-700 text-white">
+            {lang === 'fr' ? 'Évaluation' : lang === 'es' ? 'Evaluación' : 'Assessment'} <ChevronRight size={16} />
+          </button>
+        ) : (
+          <button onClick={goNext} disabled={!canNext}
+            className={`flex items-center gap-1 px-4 py-2 rounded-xl font-black text-sm transition-colors ${!canNext ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
+            {lang === 'fr' ? 'Suiv.' : lang === 'es' ? 'Sig.' : 'Next'} <ChevronRight size={16} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
