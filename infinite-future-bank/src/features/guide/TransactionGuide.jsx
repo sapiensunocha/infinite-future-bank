@@ -1199,43 +1199,41 @@ export default function TransactionGuide({ onClose }) {
         {slide + 1} / {SLIDES.length}
       </div>
 
-      {/* Main content */}
+      {/* Main content — responsive: column on mobile, row on md+ */}
       <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col lg:flex-row items-start justify-center gap-6 p-4 max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row items-start justify-center gap-4 md:gap-8 p-4 md:p-8 max-w-5xl mx-auto">
 
-          {/* Left: phone mockup */}
-          <div className="flex-shrink-0 w-full flex justify-center lg:justify-start lg:sticky lg:top-4">
-            <div className="flex flex-col items-center gap-2">
-              {/* Path label */}
-              <div className="text-slate-500 text-xs font-mono bg-slate-900 border border-slate-700 rounded-lg px-3 py-1 mb-1">
-                {s.path[lang]}
-              </div>
+          {/* Phone column */}
+          <div className="flex-shrink-0 w-full md:w-auto flex flex-col items-center gap-2">
+            <div className="text-slate-500 text-[10px] font-mono bg-slate-900 border border-slate-700 rounded-lg px-3 py-1 text-center">
+              {s.path[lang]}
+            </div>
+            {/* Scale phone to 80% on mobile, full size on md+ */}
+            <div className="scale-[0.80] -mb-[99px] origin-top md:scale-100 md:mb-0">
               <Phone dark={isDark(slide)}>
                 {getScreen(slide, !!tapped[slide], handleTap)}
               </Phone>
-              {/* TAP prompt */}
-              {!s.noTap && !tapped[slide] && (
-                <div className="mt-2 flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-4 py-2">
-                  <span className="text-yellow-400 text-xs font-black animate-pulse">👆</span>
-                  <span className="text-yellow-300 text-xs font-bold">{s.prompt[lang]}</span>
-                </div>
-              )}
-              {!s.noTap && tapped[slide] && (
-                <div className="mt-2 flex items-center gap-2 bg-emerald-400/10 border border-emerald-400/30 rounded-xl px-4 py-2">
-                  <CheckCircle2 size={14} className="text-emerald-400" />
-                  <span className="text-emerald-300 text-xs font-bold">
-                    {lang === 'fr' ? 'Bien! Lisez l\'explication.' : lang === 'es' ? '¡Bien! Lee la explicación.' : 'Great! Read the explanation.'}
-                  </span>
-                </div>
-              )}
             </div>
+            {/* Tap prompts */}
+            {!s.noTap && !tapped[slide] && (
+              <div className="flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-3 py-2 max-w-[252px] text-center">
+                <span className="text-yellow-400 text-xs font-black animate-pulse flex-shrink-0">👆</span>
+                <span className="text-yellow-300 text-xs font-bold leading-tight">{s.prompt[lang]}</span>
+              </div>
+            )}
+            {!s.noTap && tapped[slide] && (
+              <div className="flex items-center gap-2 bg-emerald-400/10 border border-emerald-400/30 rounded-xl px-3 py-2">
+                <CheckCircle2 size={13} className="text-emerald-400 flex-shrink-0" />
+                <span className="text-emerald-300 text-xs font-bold">
+                  {lang === 'fr' ? 'Bien! Lisez l\'explication.' : lang === 'es' ? '¡Bien! Lee la explicación.' : 'Great! Read the explanation.'}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Right: explanation */}
-          <div className="flex-1 flex flex-col gap-4 max-w-lg">
-            <div>
-              <h2 className="text-white font-black text-xl leading-tight mb-1">{s.title[lang]}</h2>
-            </div>
+          {/* Explanation column — fills remaining space on desktop, full-width on mobile */}
+          <div className="flex-1 w-full flex flex-col gap-4">
+            <h2 className="text-white font-black text-lg md:text-xl leading-tight">{s.title[lang]}</h2>
 
             {showExplain ? (
               <>
@@ -1244,17 +1242,17 @@ export default function TransactionGuide({ onClose }) {
                 </div>
                 {s.tip && s.tip[lang] && (
                   <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-4 flex gap-3">
-                    <span className="text-blue-400 text-lg flex-shrink-0">💡</span>
+                    <span className="text-blue-400 text-base flex-shrink-0">💡</span>
                     <p className="text-blue-200 text-xs leading-relaxed">{s.tip[lang]}</p>
                   </div>
                 )}
               </>
             ) : (
-              <div className="bg-slate-800/40 border border-dashed border-slate-600 rounded-2xl p-6 flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-yellow-400/10 border-2 border-yellow-400/40 flex items-center justify-center animate-pulse">
-                  <span className="text-2xl">👆</span>
+              <div className="bg-slate-800/40 border border-dashed border-slate-600 rounded-2xl p-5 flex flex-col items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-yellow-400/10 border-2 border-yellow-400/40 flex items-center justify-center animate-pulse">
+                  <span className="text-xl">👆</span>
                 </div>
-                <p className="text-slate-400 text-sm text-center">
+                <p className="text-slate-400 text-sm text-center leading-relaxed">
                   {lang === 'fr' ? 'Appuyez sur l\'élément surligné dans l\'écran du téléphone pour déverrouiller l\'explication.'
                     : lang === 'es' ? 'Toca el elemento resaltado en la pantalla del teléfono para desbloquear la explicación.'
                     : 'Tap the highlighted element on the phone screen to unlock the explanation.'}
@@ -1266,29 +1264,29 @@ export default function TransactionGuide({ onClose }) {
       </div>
 
       {/* Navigation */}
-      <div className="bg-[#0a0f1e] border-t border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <div className="bg-[#0a0f1e] border-t border-slate-800 px-3 md:px-4 py-2 md:py-3 flex items-center justify-between gap-2 flex-shrink-0">
         <button onClick={goPrev} disabled={slide === 0}
-          className={`flex items-center gap-1 px-4 py-2 rounded-xl font-black text-sm transition-colors ${slide === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-white bg-slate-800 hover:bg-slate-700'}`}>
-          <ChevronLeft size={16} /> {lang === 'fr' ? 'Préc.' : lang === 'es' ? 'Ant.' : 'Prev'}
+          className={`flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm transition-colors flex-shrink-0 ${slide === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-white bg-slate-800 hover:bg-slate-700'}`}>
+          <ChevronLeft size={14} /> {lang === 'fr' ? 'Préc.' : lang === 'es' ? 'Ant.' : 'Prev'}
         </button>
 
-        {/* Dot indicators */}
-        <div className="flex gap-1">
+        {/* Dots — compact on mobile */}
+        <div className="flex gap-0.5 md:gap-1 flex-wrap justify-center max-w-[140px] md:max-w-none">
           {SLIDES.map((_, i) => (
             <button key={i} onClick={() => { if (i <= slide || tapped[i] || SLIDES[i].noTap) setSlide(i); }}
-              className={`rounded-full transition-all ${i === slide ? 'w-4 h-2 bg-blue-500' : tapped[i] || SLIDES[i].noTap ? 'w-2 h-2 bg-emerald-500' : 'w-2 h-2 bg-slate-700'}`} />
+              className={`rounded-full transition-all ${i === slide ? 'w-3 h-1.5 md:w-4 md:h-2 bg-blue-500' : tapped[i] || SLIDES[i].noTap ? 'w-1.5 h-1.5 bg-emerald-500' : 'w-1.5 h-1.5 bg-slate-700'}`} />
           ))}
         </div>
 
         {slide === SLIDES.length - 1 ? (
           <button onClick={() => setMode('assessment')}
-            className="flex items-center gap-1 px-4 py-2 rounded-xl font-black text-sm bg-emerald-600 hover:bg-emerald-700 text-white">
-            {lang === 'fr' ? 'Évaluation' : lang === 'es' ? 'Evaluación' : 'Assessment'} <ChevronRight size={16} />
+            className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0">
+            {lang === 'fr' ? 'Éval.' : lang === 'es' ? 'Eval.' : 'Quiz'} <ChevronRight size={14} />
           </button>
         ) : (
           <button onClick={goNext} disabled={!canNext}
-            className={`flex items-center gap-1 px-4 py-2 rounded-xl font-black text-sm transition-colors ${!canNext ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
-            {lang === 'fr' ? 'Suiv.' : lang === 'es' ? 'Sig.' : 'Next'} <ChevronRight size={16} />
+            className={`flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm transition-colors flex-shrink-0 ${!canNext ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
+            {lang === 'fr' ? 'Suiv.' : lang === 'es' ? 'Sig.' : 'Next'} <ChevronRight size={14} />
           </button>
         )}
       </div>
