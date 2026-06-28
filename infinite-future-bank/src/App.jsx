@@ -33,6 +33,7 @@ const AdminSupportDesk = lazyLoad(() => import('./AdminSupportDesk'));
 const ExecutiveCrm     = lazyLoad(() => import('./ExecutiveCrm'));
 const PublicEventPage  = lazyLoad(() => import('./PublicEventPage'));
 const CompanyGuide     = lazyLoad(() => import('./features/guide/CompanyGuide'));
+const GuideHub         = lazyLoad(() => import('./features/guide/GuideHub'));
 
 // --- MODALS ---
 import InfoModal from './components/modals/InfoModal';
@@ -101,7 +102,7 @@ function MainApp() {
   const [showPassword, setShowPassword] = useState(false);
   const [mobileOS, setMobileOS] = useState(null); // 'android' | 'ios' | null
   const [showAcademy, setShowAcademy] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
+  const [showGuideHub, setShowGuideHub] = useState(false);
 
 
   const [activeModal, setActiveModal] = useState(null);
@@ -453,7 +454,7 @@ function MainApp() {
 
         {/* CLEAN, UNIFIED FOOTER WITH NEW TRUST LINK */}
         <div className="mt-8 text-center text-[11px] font-medium text-slate-500 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
-          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. <span onClick={() => setActiveModal('registration')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Infinite Future Bank LLC</span> is incorporated in the State of Delaware, United States (File No. 10649108), headquartered at 1717 Pennsylvania Ave NW, Washington DC. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Trust Framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>. Explore our <span onClick={() => setShowGuide(true)} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Business Guide</span>.
+          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. <span onClick={() => setActiveModal('registration')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Infinite Future Bank LLC</span> is incorporated in the State of Delaware, United States (File No. 10649108), headquartered at 1717 Pennsylvania Ave NW, Washington DC. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Trust Framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>. Explore our <span onClick={() => setShowGuideHub(true)} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Guides</span>.
         </div>
 
         {/* DEUS ACADEMY LINK */}
@@ -468,7 +469,7 @@ function MainApp() {
         </div>
 
         {showAcademy && <Suspense fallback={<PageLoader />}><DEUSAcademy onClose={() => setShowAcademy(false)} /></Suspense>}
-        {showGuide && <Suspense fallback={<PageLoader />}><CompanyGuide onClose={() => setShowGuide(false)} /></Suspense>}
+        {showGuideHub && <Suspense fallback={<PageLoader />}><GuideHub onClose={() => setShowGuideHub(false)} /></Suspense>}
 
 
         {/* ── ANDROID: APK download ── */}
