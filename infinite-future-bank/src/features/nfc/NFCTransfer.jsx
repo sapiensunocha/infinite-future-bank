@@ -4,7 +4,7 @@ import QRCode from 'react-qr-code';
 import {
   Wifi, Send, QrCode, CheckCircle2, AlertTriangle,
   Loader2, UserPlus, Copy, Check, ArrowLeft, RefreshCw,
-  Smartphone, Signal, CreditCard, ExternalLink
+  Smartphone, Signal, CreditCard, ExternalLink, Zap
 } from 'lucide-react';
 
 const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);

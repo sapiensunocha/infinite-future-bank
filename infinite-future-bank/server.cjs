@@ -34,6 +34,9 @@ const MIME = {
   '.mp4':  'video/mp4',
   '.txt':  'text/plain',
   '.xml':  'application/xml',
+  '.apk':  'application/vnd.android.package-archive',
+  '.dmg':  'application/x-apple-diskimage',
+  '.exe':  'application/vnd.microsoft.portable-executable',
 };
 
 function getMime(fp) {
@@ -53,6 +56,8 @@ function sendFile(res, filePath, encoding, urlPath) {
   const stat = safeStat(filePath);
   if (!stat) return false;
 
+  const ext = path.extname(filePath.replace(/\.(gz|br)$/, ''));
+  const isBinaryDownload = ['.apk', '.dmg', '.exe'].includes(ext);
   const headers = {
     'Content-Type':   getMime(filePath),
     'Content-Length': stat.size,
@@ -62,6 +67,8 @@ function sendFile(res, filePath, encoding, urlPath) {
       : 'no-cache, no-store, must-revalidate',
   };
   if (encoding) headers['Content-Encoding'] = encoding;
+  if (isBinaryDownload) headers['Content-Disposition'] = `attachment; filename="${path.basename(filePath)}"`;
+
 
   res.writeHead(200, headers);
 

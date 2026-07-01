@@ -198,7 +198,15 @@ function MainApp() {
       }
     };
     
-    supabase.auth.getSession().then(({ data: { session } }) => { initializeUser(session); });
+    // Race getSession against an 8-second timeout — prevents the splash from
+    // freezing forever when Supabase is unreachable (common on slow mobile networks).
+    let initialized = false;
+    const initOnce = (s) => { if (!initialized) { initialized = true; initializeUser(s); } };
+    const fallbackTimer = setTimeout(() => { if (mounted) initOnce(null); }, 8000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => { clearTimeout(fallbackTimer); initOnce(session); })
+      .catch(() => { clearTimeout(fallbackTimer); if (mounted) initOnce(null); });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setCurrentView('update_password');
@@ -213,6 +221,7 @@ function MainApp() {
 
     return () => {
       mounted = false;
+      clearTimeout(fallbackTimer);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -476,9 +485,8 @@ function MainApp() {
         {mobileOS === 'android' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
             <a
-              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-v${__APP_VERSION__}.apk`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/DEUS-latest.apk"
+              download="DEUS.apk"
               className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
@@ -504,9 +512,8 @@ function MainApp() {
         {mobileOS === 'mac' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200 space-y-3">
             <a
-              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-${__APP_VERSION__}-mac-arm64.dmg`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/DEUS-mac-arm64.dmg"
+              download="DEUS-mac-arm64.dmg"
               className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
@@ -523,9 +530,8 @@ function MainApp() {
               </div>
             </a>
             <a
-              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-${__APP_VERSION__}-mac-x64.dmg`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/DEUS-mac-x64.dmg"
+              download="DEUS-mac-x64.dmg"
               className="flex items-center justify-between bg-slate-900/60 backdrop-blur-2xl border border-slate-700/30 p-4 rounded-[2rem] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
@@ -549,9 +555,8 @@ function MainApp() {
         {mobileOS === 'windows' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200 space-y-3">
             <a
-              href={`https://github.com/sapiensunocha/infinite-future-bank/releases/download/v${__APP_VERSION__}/DEUS-${__APP_VERSION__}-win-x64.exe`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/DEUS-win-x64.exe"
+              download="DEUS-win-x64.exe"
               className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
