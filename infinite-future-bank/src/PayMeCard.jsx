@@ -206,10 +206,10 @@ export default function PayMeCard({ profile, onClose }) {
               <div className="w-full bg-slate-900 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl relative mb-6">
                 
                 <div className="w-full aspect-square relative">
-                  <Scanner 
-                    onResult={(text) => handleScan(text)} 
-                    onError={() => setScanError('Camera access required — check permissions')} 
-                    options={{ delayBetweenScanAttempts: 1000 }}
+                  <Scanner
+                    onScan={(codes) => { const v = codes?.[0]?.rawValue; if (v) handleScan(v); }}
+                    onError={() => setScanError('Camera access required — check permissions')}
+                    scanDelay={1000}
                   />
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                     <div className="w-48 h-48 border-2 border-emerald-400/80 rounded-2xl animate-pulse shadow-[0_0_15px_rgba(52,211,153,0.5)]"></div>

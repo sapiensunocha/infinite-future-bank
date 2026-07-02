@@ -183,11 +183,27 @@ function MainApp() {
           const generatedName = currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || 'Client';
           const refCode = sessionStorage.getItem('ifb_ref_code') || null;
 
-          await supabase.rpc('provision_new_user', {
+          const { error: rpcErr } = await supabase.rpc('provision_new_user', {
             p_user_id: currentSession.user.id,
             p_full_name: generatedName,
             p_ref_code: refCode
           });
+
+          if (rpcErr) {
+            // RPC has stale schema — directly ensure the profile row exists
+            await supabase.from('profiles').upsert({
+              id: currentSession.user.id,
+              full_name: generatedName,
+              kyc_status: 'not_started',
+              role: 'client',
+              theme_preference: 'system',
+            }, { onConflict: 'id', ignoreDuplicates: true });
+            // Best-effort wallet — ignore if schema differs
+            supabase.from('wallets').upsert(
+              { user_id: currentSession.user.id, currency: 'USD', balance: 0 },
+              { onConflict: 'user_id', ignoreDuplicates: true }
+            ).catch(() => {});
+          }
         }
         // Silently reconcile any deposits that webhook may have missed
         supabase.functions.invoke('reconcile-deposits').catch(() => {});
