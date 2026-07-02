@@ -91,11 +91,18 @@ const AuthCallback = () => {
     let recoveryDetected = false;
     const currentURL = window.location.href;
 
-    if (currentURL.includes('error')) {
+    if (currentURL.includes('error=')) {
       setIsError(true);
       setStatus('LINK EXPIRED OR USED.');
       setTimeout(() => navigate('/'), 2500);
       return;
+    }
+
+    // Fast-path: detect recovery/invite from URL immediately (no async race with PKCE exchange)
+    if (currentURL.includes('type=recovery')) {
+      recoveryDetected = true;
+      setIsRecoveryMode(true);
+      setStatus('VAULT RECOVERY VERIFIED. AWAITING NEW CIPHER.');
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -146,7 +153,7 @@ const AuthCallback = () => {
 
     const stuckTimeout = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
-      if (!data.session && !recoveryDetected && isMounted) {
+      if (!data.session && !recoveryDetected && !currentURL.includes('type=recovery') && isMounted) {
         setIsError(true);
         setStatus('LINK EXPIRED OR USED.');
         setTimeout(() => navigate('/'), 2000);

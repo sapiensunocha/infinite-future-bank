@@ -277,7 +277,7 @@ function MainApp() {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(emailValue.trim().toLowerCase(), {
-        redirectTo: `${APP_URL}/auth/callback`,
+        redirectTo: `${APP_URL}/auth/callback?type=recovery`,
       });
       if (error) throw error;
       showMessage('Recovery link dispatched to your inbox.', 'success');
