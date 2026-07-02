@@ -5,18 +5,19 @@ const HEARTBEAT_MS = 60_000; // 1 minute
 
 // Deterministic device fingerprint — no PII
 function getDeviceId() {
-  const cached = localStorage.getItem('afr_device_id');
-  if (cached) return cached;
-  const ua = navigator.userAgent;
-  const lang = navigator.language;
+  try {
+    const cached = localStorage.getItem('afr_device_id');
+    if (cached) return cached;
+  } catch {}
+  const ua = navigator.userAgent || '';
+  const lang = navigator.language || 'en';
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const cores = navigator.hardwareConcurrency || 4;
   const raw = `${ua}|${lang}|${tz}|${cores}|${Date.now()}`;
-  // Simple hash — good enough for node identity, not security-critical
   let h = 0;
   for (let i = 0; i < raw.length; i++) h = (Math.imul(31, h) + raw.charCodeAt(i)) | 0;
   const id = 'node_' + Math.abs(h).toString(16).padStart(8, '0') + '_' + Date.now().toString(36);
-  localStorage.setItem('afr_device_id', id);
+  try { localStorage.setItem('afr_device_id', id); } catch {}
   return id;
 }
 

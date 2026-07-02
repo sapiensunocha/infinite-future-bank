@@ -48,8 +48,8 @@ export default function PayMeCard({ profile, onClose }) {
   const [mode, setMode] = useState('receive');
   const [scanError, setScanError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [activeTheme, setActiveTheme] = useState(() => localStorage.getItem('ifb_card_theme') || 'midnight');
-  const [activeShape, setActiveShape] = useState(() => localStorage.getItem('ifb_card_shape') || 'circle');
+  const [activeTheme, setActiveTheme] = useState(() => { try { return localStorage.getItem('ifb_card_theme') || 'midnight'; } catch { return 'midnight'; } });
+  const [activeShape, setActiveShape] = useState(() => { try { return localStorage.getItem('ifb_card_shape') || 'circle'; } catch { return 'circle'; } });
 
   if (!profile) return null;
 
@@ -86,8 +86,10 @@ export default function PayMeCard({ profile, onClose }) {
   };
 
   const saveDesign = () => {
-    localStorage.setItem('ifb_card_theme', activeTheme);
-    localStorage.setItem('ifb_card_shape', activeShape);
+    try {
+      localStorage.setItem('ifb_card_theme', activeTheme);
+      localStorage.setItem('ifb_card_shape', activeShape);
+    } catch {}
     setMode('receive');
   };
 

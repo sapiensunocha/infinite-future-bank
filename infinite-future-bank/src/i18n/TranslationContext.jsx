@@ -14,8 +14,10 @@ const LANGUAGE_MAP = {
 };
 
 function detectLanguage() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored && SUPPORTED.includes(stored)) return stored;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && SUPPORTED.includes(stored)) return stored;
+  } catch {}
   const langs = navigator.languages?.length ? navigator.languages : [navigator.language || 'en'];
   for (const lang of langs) {
     if (LANGUAGE_MAP[lang]) return LANGUAGE_MAP[lang];
@@ -42,7 +44,7 @@ export function TranslationProvider({ children }) {
 
   const setLanguage = useCallback((newLang) => {
     if (!SUPPORTED.includes(newLang)) return;
-    localStorage.setItem(STORAGE_KEY, newLang);
+    try { localStorage.setItem(STORAGE_KEY, newLang); } catch {}
     setLang(newLang);
   }, []);
 

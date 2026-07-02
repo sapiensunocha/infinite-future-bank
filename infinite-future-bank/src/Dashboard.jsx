@@ -136,6 +136,7 @@ export default function Dashboard({ session, onSignOut }) {
 
   const [runTour, setRunTour] = useState(false);
   const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [tourSteps, setTourSteps] = useState([]);
 
   const tabTitles = {
     NET_POSITION: 'Home', ACCOUNTS: 'My Accounts', ORGANIZE: 'Organize',
@@ -165,7 +166,10 @@ export default function Dashboard({ session, onSignOut }) {
     
     if (pData) {
       setProfile(pData);
-      if (pData.has_completed_tour === false) setRunTour(true);
+      if (pData.has_completed_tour === false) {
+        setRunTour(true);
+        TOUR_CONTENT_LAZY().then(content => setTourSteps(content)).catch(() => {});
+      }
     }
     if (bData) setBalances(bData);
     if (commData) setCommercialProfile(commData);
@@ -286,7 +290,7 @@ export default function Dashboard({ session, onSignOut }) {
       {runTour && (
         <Suspense fallback={null}>
           <LazyJoyride
-            steps={[]}
+            steps={tourSteps}
             run={runTour}
             stepIndex={tourStepIndex}
             continuous={true}

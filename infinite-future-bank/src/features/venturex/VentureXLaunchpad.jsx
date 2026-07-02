@@ -285,14 +285,16 @@ export default function VentureXLaunchpad({ session, myCompany }) {
 
   // Load saved progress from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(`ifb_journey_${uid}`);
-    if (saved) setCompletedTasks(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem(`ifb_journey_${uid}`);
+      if (saved) setCompletedTasks(JSON.parse(saved));
+    } catch {}
   }, [uid]);
 
   const toggleTask = (taskId) => {
     setCompletedTasks(prev => {
       const next = { ...prev, [taskId]: !prev[taskId] };
-      localStorage.setItem(`ifb_journey_${uid}`, JSON.stringify(next));
+      try { localStorage.setItem(`ifb_journey_${uid}`, JSON.stringify(next)); } catch {}
       return next;
     });
   };
