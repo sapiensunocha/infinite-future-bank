@@ -39,7 +39,7 @@ const GuideHub         = lazyLoad(() => import('./features/guide/GuideHub'));
 import InfoModal from './components/modals/InfoModal';
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+  <div className="min-h-[100dvh] bg-slate-950 flex items-center justify-center">
     <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"/>
   </div>
 );
@@ -298,7 +298,7 @@ function MainApp() {
 
   if (!isAppReady) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+      <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-center">
         <RefreshCw size={32} className="animate-spin text-blue-500 mb-4" />
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Connecting to Network...</p>
       </div>
@@ -314,7 +314,7 @@ function MainApp() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden flex flex-col items-center justify-center p-6 py-12 overflow-y-auto">
+    <div className="min-h-[100dvh] bg-slate-50/80 text-slate-800 relative flex flex-col items-center justify-center p-6 py-12 overflow-y-auto">
       
       <InfoModal activeModal={activeModal} onClose={() => setActiveModal(null)} />
 
