@@ -334,6 +334,17 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
           <p className="text-[8px] text-slate-500 text-center font-bold pt-1">
             Powered by MICHAEL Global Ops API
           </p>
+
+          {/* IFB Green Finance — SDG Alignment strip */}
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-[8px] font-black uppercase tracking-widest text-emerald-400 mb-2">IFB Green Finance · SDG Alignment</p>
+            <div className="flex flex-wrap gap-1">
+              {['SDG 1','SDG 2','SDG 7','SDG 8','SDG 9','SDG 10','SDG 12','SDG 13','SDG 14','SDG 15'].map(sdg => (
+                <span key={sdg} className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[7px] font-black rounded-full">{sdg}</span>
+              ))}
+            </div>
+            <p className="text-[7px] text-slate-500 mt-1.5">Just Transition Intermediary · IFC Green Bond Principles (ICMA 2025) · Paris Aligned</p>
+          </div>
         </div>
       </div>
     );

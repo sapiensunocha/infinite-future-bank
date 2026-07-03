@@ -5,7 +5,8 @@ import {
   Fingerprint, RefreshCw, FileText, Scale, ShieldCheck, Mail,
   Lock, Plus, Globe, UploadCloud, FileCheck, AlertTriangle,
   TrendingUp, Users, Briefcase, ArrowRightLeft, CheckCircle2,
-  Building, MapPin, DollarSign, FileWarning, ScanFace, XCircle
+  Building, MapPin, DollarSign, FileWarning, ScanFace, XCircle,
+  Leaf, Sun, Droplets, Recycle, Truck, TreePine, Ban
 } from 'lucide-react';
 import FaceAuthManager from '../features/auth/FaceAuthManager';
 import { useFaceAuth } from '../features/auth/useFaceAuth';
@@ -328,6 +329,7 @@ export default function SettingsHub({
           { id: 'LINKED_ACCOUNTS', label: 'Saved Banks', icon: <Landmark size={18} /> },
           { id: 'ACCESSIBILITY', label: 'Accessibility', icon: <Eye size={18} /> },
           { id: 'ABOUT', label: 'About IFB', icon: <Info size={18} /> },
+          { id: 'GREEN_FINANCE', label: 'Green Finance', icon: <Leaf size={18} /> },
         ].map((item) => (
           <button key={item.id} onClick={() => setSubTab(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${subTab === item.id ? 'bg-blue-600/10 text-blue-600 shadow-inner' : 'text-slate-500 hover:bg-white/50 hover:text-slate-800'}`}>
             {item.icon} {item.label}
@@ -924,6 +926,111 @@ export default function SettingsHub({
           </div>
         )}
         
+        {/* =======================
+            GREEN FINANCE TAB
+        =========================*/}
+        {subTab === 'GREEN_FINANCE' && (
+          <div className="space-y-8 max-w-2xl animate-in fade-in">
+            {/* Header */}
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center shrink-0">
+                <Leaf size={28} className="text-emerald-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">IFB Green Finance Framework</h2>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">Aligned with IFC Green Bond Principles (ICMA 2025) · Paris Agreement Committed · Just Transition Intermediary</p>
+              </div>
+            </div>
+
+            {/* Mission statement */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6">
+              <p className="text-sm text-emerald-900 font-medium leading-relaxed">
+                Infinite Future Bank is a <strong>Just Transition financial intermediary</strong> — channeling capital toward projects that protect the planet and create resilient livelihoods across emerging markets. Our Green Finance Framework mirrors IFC's Green Bond Principles and prioritizes underserved founders, farmers, and communities.
+              </p>
+            </div>
+
+            {/* 6 green categories */}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Eligible Green Categories</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { icon: <Sun size={18}/>, color: 'bg-amber-50 border-amber-200 text-amber-700', title: 'Renewable Energy', desc: 'Solar, wind, green hydrogen, low-carbon energy generation & distribution.', sdg: 'SDG 7 · SDG 13' },
+                  { icon: <TreePine size={18}/>, color: 'bg-green-50 border-green-200 text-green-700', title: 'Sustainable Agriculture & Nature', desc: 'Agroforestry, soil carbon, smallholder farming, fisheries, traceability.', sdg: 'SDG 2 · SDG 13 · SDG 15' },
+                  { icon: <Recycle size={18}/>, color: 'bg-teal-50 border-teal-200 text-teal-700', title: 'Circular Economy', desc: 'Waste reduction, product reuse, circular production, material recovery.', sdg: 'SDG 8 · SDG 9 · SDG 12' },
+                  { icon: <Truck size={18}/>, color: 'bg-blue-50 border-blue-200 text-blue-700', title: 'Clean Transportation', desc: 'Electric mobility, low-carbon logistics, public transport for underserved areas.', sdg: 'SDG 1 · SDG 9 · SDG 11 · SDG 13' },
+                  { icon: <Droplets size={18}/>, color: 'bg-cyan-50 border-cyan-200 text-cyan-700', title: 'Water & Sanitation', desc: 'Water supply, wastewater management, flood resilience, blue finance.', sdg: 'SDG 6 · SDG 13 · SDG 14' },
+                  { icon: <Building size={18}/>, color: 'bg-slate-50 border-slate-200 text-slate-700', title: 'Green Buildings', desc: 'Energy-efficient construction & retrofits. EDGE, LEED, or BREEAM certified.', sdg: 'SDG 7 · SDG 12 · SDG 13' },
+                ].map(({ icon, color, title, desc, sdg }) => (
+                  <div key={title} className={`border rounded-2xl p-4 ${color}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      {icon}
+                      <p className="text-xs font-black">{title}</p>
+                    </div>
+                    <p className="text-[11px] leading-relaxed opacity-80">{desc}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest mt-2 opacity-60">{sdg}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Exclusion list */}
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Ban size={16} className="text-red-600" />
+                <p className="text-xs font-black uppercase tracking-widest text-red-700">Exclusion List — IFB Will Not Finance</p>
+              </div>
+              <ul className="space-y-1">
+                {[
+                  'Fossil fuel extraction, production, or transportation',
+                  'Coal power generation or fossil-fuel-based energy',
+                  'Tobacco production or distribution',
+                  'Arms, weapons, or defense manufacturing',
+                  'Gambling operations',
+                  'Activities involving forced labor or child labor',
+                  'Projects causing deforestation or biodiversity destruction',
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-2 text-[11px] text-red-800">
+                    <span className="mt-0.5 shrink-0">✕</span> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Paris Alignment + Just Transition */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-blue-700 mb-2">Paris Agreement</p>
+                <p className="text-xs text-blue-900 leading-relaxed">IFB is committed to aligning 100% of its financing with the Paris Agreement climate objectives, following joint MDB methodologies for climate finance tracking.</p>
+              </div>
+              <div className="bg-purple-50 border border-purple-200 rounded-2xl p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-purple-700 mb-2">Just Transition</p>
+                <p className="text-xs text-purple-900 leading-relaxed">IFB prioritizes founders, borrowers, and ventures from underserved populations — women, youth, and rural communities — ensuring the green transition creates decent jobs and inclusive opportunity.</p>
+              </div>
+            </div>
+
+            {/* SDG Map */}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">SDG Impact Alignment</p>
+              <div className="flex flex-wrap gap-2">
+                {['SDG 1','SDG 2','SDG 7','SDG 8','SDG 9','SDG 10','SDG 12','SDG 13','SDG 14','SDG 15'].map(sdg => (
+                  <span key={sdg} className="px-3 py-1.5 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">{sdg}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* IFC alignment badge */}
+            <div className="bg-slate-900 rounded-2xl p-5 flex items-center gap-4">
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center shrink-0">
+                <ShieldCheck size={20} className="text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-white">Aligned with IFC Green Bond Principles</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">International Capital Markets Association (ICMA) — 2025 Edition · S&P Shades of Green framework</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* =======================
             LINKED ACCOUNTS TAB
         =========================*/}

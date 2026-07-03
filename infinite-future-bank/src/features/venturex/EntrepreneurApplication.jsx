@@ -92,6 +92,8 @@ const ADDONS = [
 ];
 
 const SECTORS = ['Technology','Fintech','Agriculture','Healthcare','Education','Energy','Real Estate','Manufacturing','Retail','Logistics','Media','Tourism','Other'];
+
+const GREEN_SECTORS = { Agriculture: 'Sustainable Agriculture & Nature (SDG 2, 13, 15)', Energy: 'Renewable Energy (SDG 7, 13)', Manufacturing: 'Circular Economy (SDG 8, 9, 12)', Logistics: 'Clean Transportation (SDG 9, 11, 13)', 'Real Estate': 'Green Buildings (SDG 7, 12, 13)', Tourism: 'Blue Finance / Nature (SDG 14, 15)' };
 const STAGES  = [
   { id: 'idea',        label: 'Idea Stage',     desc: 'Pre-product, validating concept' },
   { id: 'pre_revenue', label: 'Pre-Revenue',    desc: 'Built product, no paying customers yet' },
@@ -294,10 +296,18 @@ function ProfileStep({ form, setForm, onNext, session }) {
         </div>
         <div>
           <label className="label-xs">Sector</label>
-          <select value={form.sector} onChange={e => setForm(p=>({...p, sector: e.target.value}))} className="input-dark">
+          <select value={form.sector} onChange={e => setForm(p=>({...p, sector: e.target.value, is_green_eligible: false}))} className="input-dark">
             <option value="">— Select —</option>
             {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
+          {GREEN_SECTORS[form.sector] && (
+            <button type="button" onClick={() => setForm(p=>({...p, is_green_eligible: !p.is_green_eligible}))}
+              className={`mt-2 w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${form.is_green_eligible ? 'bg-emerald-900/40 border-emerald-500 text-emerald-300' : 'bg-slate-800/40 border-slate-600 text-slate-400 hover:border-emerald-600 hover:text-emerald-400'}`}>
+              <span className="text-base">🌱</span>
+              {form.is_green_eligible ? 'IFC Green Eligible · ' : 'Tag as IFC Green Eligible · '}
+              <span className="normal-case font-medium opacity-80">{GREEN_SECTORS[form.sector]}</span>
+            </button>
+          )}
         </div>
         <div>
           <label className="label-xs">Country of Operation</label>
@@ -651,6 +661,7 @@ export default function EntrepreneurApplication({ session, balances }) {
   const [form,    setForm]    = useState({
     company_name: '', sector: '', country: '', stage: '', team_size: 1,
     annual_revenue_usd: 0, capital_ask_usd: 0, problem_statement: '', solution_statement: '', website: '',
+    is_green_eligible: false,
   });
   const [selected, setSelected] = useState('growth');
   const [addons,   setAddons]   = useState([]);
