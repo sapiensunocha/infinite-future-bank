@@ -717,6 +717,15 @@ function HqGateway() {
 export default function App() {
   const [session, setSession] = useState(null);
 
+  // Hide splash on every route — not just MainApp
+  useEffect(() => {
+    const splash = document.getElementById('splash');
+    if (!splash) return;
+    splash.classList.add('hide');
+    const t = setTimeout(() => splash.parentNode?.removeChild(splash), 550);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => { setSession(session); });
