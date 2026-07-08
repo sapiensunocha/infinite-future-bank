@@ -34,6 +34,7 @@ const ExecutiveCrm     = lazyLoad(() => import('./ExecutiveCrm'));
 const PublicEventPage  = lazyLoad(() => import('./PublicEventPage'));
 const CompanyGuide     = lazyLoad(() => import('./features/guide/CompanyGuide'));
 const GuideHub         = lazyLoad(() => import('./features/guide/GuideHub'));
+const AdminKYCPortal   = lazyLoad(() => import('./features/kyc/AdminKYCPortal'));
 
 // --- MODALS ---
 import InfoModal from './components/modals/InfoModal';
@@ -81,7 +82,8 @@ const formatCount = (num) => {
 // MAIN DEUS APP (USER FACING)
 // ==========================================
 function MainApp() {
-  const [isAppReady, setIsAppReady] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(true);
+  const [sessionChecking, setSessionChecking] = useState(true);
   const [session, setSession] = useState(null);
 
   useEffect(() => {
@@ -210,7 +212,7 @@ function MainApp() {
       } catch (err) {
         console.error("Profile initialization error:", err);
       } finally {
-        if (mounted) setIsAppReady(true);
+        if (mounted) { setIsAppReady(true); setSessionChecking(false); }
       }
     };
     
@@ -218,11 +220,13 @@ function MainApp() {
     // freezing forever when Supabase is unreachable (common on slow mobile networks).
     let initialized = false;
     const initOnce = (s) => { if (!initialized) { initialized = true; initializeUser(s); } };
-    const fallbackTimer = setTimeout(() => { if (mounted) initOnce(null); }, 8000);
+    const fallbackTimer = setTimeout(() => { if (mounted) { initOnce(null); setSessionChecking(false); } }, 3000);
 
     supabase.auth.getSession()
       .then(({ data: { session } }) => { clearTimeout(fallbackTimer); initOnce(session); })
-      .catch(() => { clearTimeout(fallbackTimer); if (mounted) initOnce(null); });
+      .catch(() => { clearTimeout(fallbackTimer); if (mounted) { initOnce(null); setSessionChecking(false); } });
+
+    sessionStorage.removeItem('ifb_chunk_reload');
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setCurrentView('update_password');
@@ -312,15 +316,6 @@ function MainApp() {
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
-  if (!isAppReady) {
-    return (
-      <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-center">
-        <RefreshCw size={32} className="animate-spin text-blue-500 mb-4" />
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Connecting to Network...</p>
-      </div>
-    );
-  }
-
   if (session && currentView !== 'update_password') {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -373,7 +368,13 @@ function MainApp() {
 
           {currentView === 'enter_email' && (
             <div className="animate-in fade-in duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-8 text-slate-800">Access Portal</h2>
+              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Access Portal</h2>
+              {sessionChecking && (
+                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest flex items-center justify-center gap-1 mb-6">
+                  <RefreshCw size={10} className="animate-spin" /> Connecting to network...
+                </p>
+              )}
+              {!sessionChecking && <div className="mb-8" />}
               <form onSubmit={handleCheckEmail} className="space-y-4">
                 <div className="relative group">
                   <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
@@ -734,6 +735,7 @@ export default function App() {
         <Route path="/hq" element={<HqGateway />} />
         <Route path="/events/:id" element={<PublicEventPage />} />
         <Route path="/guide" element={<CompanyGuide />} />
+        <Route path="/kyc-admin" element={<AdminKYCPortal />} />
         <Route
           path="/FeedbackForm"
           element={
