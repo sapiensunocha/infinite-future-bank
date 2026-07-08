@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IFB — KYC Admin Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #070B14; font-family: Inter, system-ui, sans-serif; }
+  .inp { width:100%; background:#1a2035; border:1px solid rgba(100,116,139,.4); padding:12px 16px; border-radius:12px; color:#fff; font-size:14px; outline:none; transition:.2s; }
+  .inp:focus { border-color:rgba(59,130,246,.6); box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+  .inp::placeholder { color:#475569; }
+  .btn { width:100%; background:#2563eb; color:#fff; border:none; border-radius:12px; padding:14px; font-weight:700; font-size:14px; letter-spacing:.05em; cursor:pointer; transition:.2s; }
+  .btn:hover { background:#1d4ed8; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .lbl { display:block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#64748b; margin-bottom:6px; }
+  select.inp { appearance:none; cursor:pointer; }
+  .tag { display:inline-block; padding:2px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+  .stage-btn { background:#1a2035; border:1px solid rgba(100,116,139,.3); color:#94a3b8; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; transition:.2s; }
+  .stage-btn:hover { background:#243050; color:#fff; }
+  .stage-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+</style>
+</head>
+<body class="min-h-screen text-white">
+
+<div id="app"></div>
+
+<script>
+const SUPABASE_URL  = 'https://nfztdpyygfrpbjbhidxe.supabase.co';
+const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5menRkcHl5Z2ZycGJqYmhpZHhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1MzcxOTEsImV4cCI6MjA4NzExMzE5MX0.Ydo6vduICdQwBrygEN1e5JswVVaATLChNLtq7whqf7I';
+
+const STAGES  = ['intake','evaluation','structuring','financing','execution'];
+const STAGE_COLORS = { intake:'#3b82f6', evaluation:'#8b5cf6', structuring:'#f59e0b', financing:'#10b981', execution:'#14b8a6' };
+const STATUS_COLORS = { registered:'#64748b', payment_pending:'#f59e0b', active:'#10b981', in_pipeline:'#3b82f6', archived:'#ef4444' };
+const TIERS = [
+  { id:'startup',   label:'Startup',   desc:'$100K – $499K' },
+  { id:'sme',       label:'SME',       desc:'$500K – $1.9M' },
+  { id:'corporate', label:'Corporate', desc:'$2M – $9.9M'   },
+  { id:'enterprise',label:'Enterprise',desc:'$10M+'         },
+];
+
+async function callEdge(fn, body, token) {
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': ANON_KEY,
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'x-kyc-admin-token': token || '',
+    },
+    body: JSON.stringify(body),
+  });
+  return r.json();
+}
+
+function getSession() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('kyc_admin_session') || 'null');
+    if (!s || s.exp < Date.now()) { sessionStorage.removeItem('kyc_admin_session'); return null; }
+    return s;
+  } catch { return null; }
+}
+
+// ─── State ───────────────────────────────────────────────────
+let state = {
+  session: getSession(),
+  view: 'projects',  // login | projects | new_project | detail
+  projects: [],
+  selected: null,
+  loading: false,
+  error: '',
+  detail_tab: 'overview',
+};
+
+function setState(patch) { Object.assign(state, patch); render(); }
+
+// ─── Render ──────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  if (!state.session) { app.innerHTML = renderLogin(); bindLogin(); return; }
+  if (state.view === 'projects') { app.innerHTML = renderProjects(); bindProjects(); loadProjects(); return; }
+  if (state.view === 'new_project') { app.innerHTML = renderNewProject(); bindNewProject(); return; }
+  if (state.view === 'detail') { app.innerHTML = renderDetail(); bindDetail(); return; }
+}
+
+// ─── Login ───────────────────────────────────────────────────
+function renderLogin() {
+  return `
+  <div class="min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-10">
+        <div class="text-5xl font-black mb-6">
+          <span style="color:#4285F4">D</span><span style="color:#EA4335">E</span><span style="color:#FBBC04">U</span><span style="color:#34A853">S</span>
+        </div>
+        <h1 class="text-2xl font-black text-white">KYC Admin Portal</h1>
+        <p class="text-slate-400 text-sm mt-2">Restricted — authorized personnel only</p>
+      </div>
+      <div style="background:#0F1629;border:1px solid rgba(100,116,139,.3);border-radius:24px;padding:32px">
+        <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:16px;padding:16px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start">
+          <span style="color:#fbbf24;font-size:18px;flex-shrink:0">⚠</span>
+          <p style="color:#fde68a;font-size:12px;font-weight:600">This portal is monitored. All actions are logged and legally binding.</p>
+        </div>
+        ${state.error ? `<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:12px 16px;margin-bottom:20px;color:#fca5a5;font-size:13px">${state.error}</div>` : ''}
+        <form id="login-form" style="display:flex;flex-direction:column;gap:20px">
+          <div>
+            <label class="lbl">Admin Email</label>
+            <input id="l-email" type="email" required placeholder="admin@infinitefuturebank.org" class="inp" />
+          </div>
+          <div>
+            <label class="lbl">Access Passcode</label>
+            <input id="l-pass" type="password" required placeholder="Enter your passcode" class="inp" />
+          </div>
+          <div style="background:#1a2035;border:1px solid rgba(100,116,139,.3);border-radius:16px;padding:20px">
+            <p style="color:#cbd5e1;font-size:13px;font-weight:700;margin-bottom:12px">Terms & Acknowledgment</p>
+            <div style="color:#64748b;font-size:12px;margin-bottom:16px;display:flex;flex-direction:column;gap:6px">
+              <p>• I handle confidential client data under IFB data policies.</p>
+              <p>• I am an authorized IFB representative.</p>
+              <p>• All my actions are logged, audited and legally binding.</p>
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <div id="terms-box" onclick="toggleTerms()" style="width:20px;height:20px;border-radius:6px;border:2px solid #475569;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s"></div>
+              <span style="color:#94a3b8;font-size:12px">I accept the terms above</span>
+            </label>
+          </div>
+          <button type="submit" class="btn" id="login-btn">${state.loading ? 'Signing in…' : 'Sign In'}</button>
+        </form>
+      </div>
+    </div>
+  </div>`;
+}
+
+let termsAccepted = false;
+function toggleTerms() {
+  termsAccepted = !termsAccepted;
+  const box = document.getElementById('terms-box');
+  if (box) {
+    box.style.background = termsAccepted ? '#2563eb' : '';
+    box.style.borderColor = termsAccepted ? '#2563eb' : '#475569';
+    box.innerHTML = termsAccepted ? '<span style="color:#fff;font-size:12px">✓</span>' : '';
+  }
+}
+
+function bindLogin() {
+  termsAccepted = false;
+  document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!termsAccepted) { setState({ error: 'You must accept the terms.' }); return; }
+    const email = document.getElementById('l-email').value.trim().toLowerCase();
+    const pass  = document.getElementById('l-pass').value;
+    setState({ loading: true, error: '' });
+    try {
+      const res = await callEdge('kyc-admin-auth', { email, passcode: pass, acceptedTerms: true });
+      if (res.error) { setState({ loading: false, error: res.error }); return; }
+      const session = { ...res.admin, token: res.token, exp: Date.now() + 8*60*60*1000 };
+      sessionStorage.setItem('kyc_admin_session', JSON.stringify(session));
+      setState({ session, loading: false, view: 'projects' });
+    } catch { setState({ loading: false, error: 'Connection error. Check your internet.' }); }
+  });
+}
+
+// ─── Projects List ───────────────────────────────────────────
+function renderProjects() {
+  const rows = state.projects.map(p => `
+    <tr onclick="openDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="cursor:pointer;border-bottom:1px solid rgba(100,116,139,.15)" class="hover:bg-white/5 transition-colors">
+      <td style="padding:14px 16px">
+        <p style="color:#fff;font-weight:600;font-size:14px">${p.project_name || '—'}</p>
+        <p style="color:#64748b;font-size:12px">${p.founder_name || ''}</p>
+      </td>
+      <td style="padding:14px 16px;color:#94a3b8;font-size:13px">${p.country || '—'}</td>
+      <td style="padding:14px 16px;color:#94a3b8;font-size:13px">${p.sector || '—'}</td>
+      <td style="padding:14px 16px">
+        <span class="tag" style="background:${STATUS_COLORS[p.status] || '#64748b'}22;color:${STATUS_COLORS[p.status] || '#94a3b8'}">${p.status?.replace('_',' ') || '—'}</span>
+      </td>
+      <td style="padding:14px 16px">
+        ${p.venturex_stage ? `<span class="tag" style="background:${STAGE_COLORS[p.venturex_stage]}22;color:${STAGE_COLORS[p.venturex_stage]}">${p.venturex_stage}</span>` : '<span style="color:#475569;font-size:12px">—</span>'}
+      </td>
+      <td style="padding:14px 16px;color:#475569;font-size:12px">${p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td>
+    </tr>`).join('');
+
+  return `
+  <div class="min-h-screen" style="background:#070B14">
+    <!-- Topbar -->
+    <div style="background:#0F1629;border-bottom:1px solid rgba(100,116,139,.2);padding:16px 24px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:20px;font-weight:900">
+          <span style="color:#4285F4">D</span><span style="color:#EA4335">E</span><span style="color:#FBBC04">U</span><span style="color:#34A853">S</span>
+        </div>
+        <span style="width:1px;height:20px;background:#334155;display:inline-block"></span>
+        <span style="color:#94a3b8;font-size:14px;font-weight:700">KYC Admin Portal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="color:#fff;font-size:13px;font-weight:600">${state.session.name}</span>
+        <button onclick="logout()" style="color:#64748b;background:none;border:none;cursor:pointer;font-size:13px;font-weight:600" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#64748b'">Logout</button>
+      </div>
+    </div>
+
+    <div style="max-width:1200px;margin:0 auto;padding:32px 24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+        <div>
+          <h2 style="color:#fff;font-size:22px;font-weight:900">VentureX Projects</h2>
+          <p style="color:#475569;font-size:13px;margin-top:4px">${state.projects.length} projects registered</p>
+        </div>
+        <button onclick="setState({view:'new_project'})" class="btn" style="width:auto;padding:12px 24px">+ New Project</button>
+      </div>
+
+      <div style="background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:20px;overflow:hidden">
+        ${state.loading ? '<div style="padding:60px;text-align:center;color:#475569">Loading…</div>' :
+          state.projects.length === 0 ? '<div style="padding:60px;text-align:center;color:#475569">No projects yet. Register the first one.</div>' : `
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(100,116,139,.2)">
+              <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569">Project</th>
+              <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569">Country</th>
+              <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569">Sector</th>
+              <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569">Status</th>
+              <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569">Stage</th>
+              <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569">Date</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindProjects() {}
+
+let projectsLoaded = false;
+async function loadProjects() {
+  if (projectsLoaded) return;
+  projectsLoaded = true;
+  const res = await callEdge('kyc-list-projects', {}, state.session.token);
+  setState({ projects: res.projects || [] });
+  projectsLoaded = false;
+}
+
+function openDetail(p) { setState({ selected: p, view: 'detail', detail_tab: 'overview' }); }
+function logout() { sessionStorage.removeItem('kyc_admin_session'); setState({ session: null, view: 'login' }); }
+
+// ─── New Project Form ─────────────────────────────────────────
+function renderNewProject() {
+  return `
+  <div class="min-h-screen" style="background:#070B14">
+    <div style="background:#0F1629;border-bottom:1px solid rgba(100,116,139,.2);padding:16px 24px;display:flex;align-items:center;gap:12px">
+      <button onclick="setState({view:'projects'})" style="color:#64748b;background:none;border:none;cursor:pointer;font-size:20px">←</button>
+      <span style="color:#fff;font-weight:700;font-size:15px">Register New Project</span>
+    </div>
+    <div style="max-width:720px;margin:40px auto;padding:0 24px">
+      ${state.error ? `<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:12px 16px;margin-bottom:20px;color:#fca5a5;font-size:13px">${state.error}</div>` : ''}
+      <form id="project-form" style="display:flex;flex-direction:column;gap:28px">
+
+        <div style="background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:20px;padding:28px">
+          <p style="color:#fff;font-weight:800;font-size:15px;margin-bottom:20px">Founder Information</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div><label class="lbl">Full Name *</label><input name="founder_name" required class="inp" placeholder="John Doe" /></div>
+            <div><label class="lbl">Email *</label><input name="founder_email" type="email" required class="inp" placeholder="founder@company.com" /></div>
+            <div><label class="lbl">Phone</label><input name="founder_phone" class="inp" placeholder="+1 234 567 8900" /></div>
+            <div><label class="lbl">Country *</label>
+              <select name="country" required class="inp">
+                <option value="">Select country…</option>
+                ${['Algeria','Angola','Cameroon','DRC','Egypt','Ethiopia','Ghana','Ivory Coast','Kenya','Morocco','Nigeria','Rwanda','Senegal','South Africa','Tanzania','Uganda','Zimbabwe','France','United States','United Kingdom','Belgium','Canada','UAE','Other'].map(c=>`<option>${c}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:20px;padding:28px">
+          <p style="color:#fff;font-weight:800;font-size:15px;margin-bottom:20px">Project Details</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="grid-column:1/-1"><label class="lbl">Project Name *</label><input name="project_name" required class="inp" placeholder="My Venture" /></div>
+            <div><label class="lbl">Sector *</label>
+              <select name="sector" required class="inp">
+                <option value="">Select sector…</option>
+                ${['Agriculture & AgroTech','FinTech & Banking','HealthTech & Pharma','EdTech & Training','Energy & CleanTech','Real Estate & Construction','Logistics & Transport','Retail & E-Commerce','Manufacturing & Industry','ICT & Software','NGO & Social Enterprise','Other'].map(s=>`<option>${s}</option>`).join('')}
+              </select>
+            </div>
+            <div><label class="lbl">Website</label><input name="website" type="url" class="inp" placeholder="https://…" /></div>
+            <div style="grid-column:1/-1"><label class="lbl">Description *</label><textarea name="description" required class="inp" rows="3" placeholder="Describe the project…" style="resize:vertical"></textarea></div>
+          </div>
+        </div>
+
+        <div style="background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:20px;padding:28px">
+          <p style="color:#fff;font-weight:800;font-size:15px;margin-bottom:20px">Financing & Tier</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div style="grid-column:1/-1">
+              <label class="lbl">Financing Tier *</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="tier-grid">
+                ${TIERS.map(t => `
+                  <div onclick="selectTier('${t.id}')" id="tier-${t.id}" style="background:#1a2035;border:2px solid rgba(100,116,139,.3);border-radius:14px;padding:16px;cursor:pointer;transition:.2s">
+                    <p style="color:#fff;font-weight:700;font-size:14px">${t.label}</p>
+                    <p style="color:#64748b;font-size:12px">${t.desc}</p>
+                  </div>`).join('')}
+              </div>
+              <input type="hidden" name="payment_tier" id="tier-val" required />
+            </div>
+            <div><label class="lbl">Amount Requested ($)</label><input name="financing_amount" type="number" class="inp" placeholder="500000" /></div>
+            <div><label class="lbl">Currency</label>
+              <select name="financing_currency" class="inp">
+                <option>USD</option><option>EUR</option><option>GBP</option><option>XOF</option><option>XAF</option><option>KES</option><option>NGN</option><option>ZAR</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" id="submit-btn" style="padding:16px;font-size:15px">${state.loading ? 'Registering…' : 'Register Project'}</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+let selectedTier = '';
+function selectTier(id) {
+  selectedTier = id;
+  document.getElementById('tier-val').value = id;
+  TIERS.forEach(t => {
+    const el = document.getElementById(`tier-${t.id}`);
+    if (!el) return;
+    el.style.borderColor = t.id === id ? '#2563eb' : 'rgba(100,116,139,.3)';
+    el.style.background  = t.id === id ? 'rgba(37,99,235,.15)' : '#1a2035';
+  });
+}
+
+function bindNewProject() {
+  document.getElementById('project-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = Object.fromEntries(fd.entries());
+    if (!data.payment_tier) { setState({ error: 'Please select a financing tier.' }); return; }
+    setState({ loading: true, error: '' });
+    try {
+      const res = await callEdge('kyc-register-project', data, state.session.token);
+      if (res.error) { setState({ loading: false, error: res.error }); return; }
+      projectsLoaded = false;
+      setState({ loading: false, view: 'projects', error: '' });
+    } catch { setState({ loading: false, error: 'Connection error.' }); }
+  });
+}
+
+// ─── Detail ───────────────────────────────────────────────────
+function renderDetail() {
+  const p = state.selected;
+  if (!p) return '';
+  const tab = state.detail_tab;
+
+  const tabs = [
+    { id:'overview',  label:'Overview'  },
+    { id:'stage',     label:'VentureX Stage' },
+    { id:'payment',   label:'Payment'   },
+  ];
+
+  return `
+  <div class="min-h-screen" style="background:#070B14">
+    <div style="background:#0F1629;border-bottom:1px solid rgba(100,116,139,.2);padding:16px 24px;display:flex;align-items:center;gap:12px">
+      <button onclick="setState({view:'projects'})" style="color:#64748b;background:none;border:none;cursor:pointer;font-size:20px">←</button>
+      <span style="color:#fff;font-weight:700;font-size:15px">${p.project_name}</span>
+      <span class="tag" style="background:${STATUS_COLORS[p.status] || '#64748b'}22;color:${STATUS_COLORS[p.status] || '#94a3b8'}">${p.status?.replace('_',' ') || '—'}</span>
+    </div>
+
+    <div style="max-width:900px;margin:0 auto;padding:32px 24px">
+      <!-- Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:28px;border-bottom:1px solid rgba(100,116,139,.2);padding-bottom:0">
+        ${tabs.map(t => `
+          <button onclick="setState({detail_tab:'${t.id}'})"
+            style="padding:10px 20px;font-size:13px;font-weight:700;border:none;cursor:pointer;border-bottom:2px solid ${tab===t.id?'#2563eb':'transparent'};color:${tab===t.id?'#fff':'#64748b'};background:none;transition:.2s">
+            ${t.label}
+          </button>`).join('')}
+      </div>
+
+      ${tab === 'overview' ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        ${[
+          ['Project Name', p.project_name],
+          ['Founder', p.founder_name],
+          ['Email', p.founder_email],
+          ['Phone', p.founder_phone || '—'],
+          ['Country', p.country],
+          ['Sector', p.sector],
+          ['Website', p.website ? `<a href="${p.website}" target="_blank" style="color:#60a5fa">${p.website}</a>` : '—'],
+          ['Tier', p.payment_tier || '—'],
+          ['Amount', p.financing_amount ? `$${Number(p.financing_amount).toLocaleString()} ${p.financing_currency||''}` : '—'],
+        ].map(([k,v]) => `
+          <div style="background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:14px;padding:16px">
+            <p style="color:#475569;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${k}</p>
+            <p style="color:#fff;font-size:14px;font-weight:600">${v || '—'}</p>
+          </div>`).join('')}
+        <div style="grid-column:1/-1;background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:14px;padding:16px">
+          <p style="color:#475569;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Description</p>
+          <p style="color:#cbd5e1;font-size:14px;line-height:1.6">${p.description || '—'}</p>
+        </div>
+      </div>` : ''}
+
+      ${tab === 'stage' ? `
+      <div style="background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:20px;padding:28px">
+        <p style="color:#fff;font-weight:800;font-size:15px;margin-bottom:24px">VentureX Pipeline Stage</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
+          ${STAGES.map(s => `
+            <button onclick="updateStage('${s}')" class="stage-btn ${p.venturex_stage===s?'active':''}" style="${p.venturex_stage===s?`background:${STAGE_COLORS[s]};border-color:${STAGE_COLORS[s]};color:#fff`:''}">${s.charAt(0).toUpperCase()+s.slice(1)}</button>
+          `).join('')}
+        </div>
+        <div id="stage-msg"></div>
+        <div style="margin-top:20px">
+          <label class="lbl">Internal Notes</label>
+          <textarea id="stage-notes" class="inp" rows="4" placeholder="Add evaluation notes…" style="resize:vertical">${p.internal_notes || ''}</textarea>
+          <button onclick="saveNotes()" class="btn" style="width:auto;padding:10px 24px;margin-top:12px">Save Notes</button>
+        </div>
+      </div>` : ''}
+
+      ${tab === 'payment' ? `
+      <div style="background:#0F1629;border:1px solid rgba(100,116,139,.2);border-radius:20px;padding:28px">
+        <p style="color:#fff;font-weight:800;font-size:15px;margin-bottom:24px">Record Payment</p>
+        ${state.error ? `<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:12px 16px;margin-bottom:20px;color:#fca5a5;font-size:13px">${state.error}</div>` : ''}
+        <form id="payment-form" style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div><label class="lbl">Amount *</label><input name="amount" type="number" required class="inp" placeholder="10000" /></div>
+            <div><label class="lbl">Currency</label>
+              <select name="currency" class="inp"><option>USD</option><option>EUR</option><option>GBP</option></select>
+            </div>
+            <div><label class="lbl">Method *</label>
+              <select name="payment_method" required class="inp">
+                <option value="">Select…</option>
+                <option>bank_transfer</option><option>card</option><option>mobile_money</option><option>crypto</option><option>cash</option>
+              </select>
+            </div>
+            <div><label class="lbl">Reference</label><input name="payment_reference" class="inp" placeholder="TXN-12345" /></div>
+          </div>
+          <button type="submit" class="btn" id="pay-btn">${state.loading ? 'Recording…' : 'Record Payment & Activate'}</button>
+        </form>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+function bindDetail() {
+  document.getElementById('payment-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = Object.fromEntries(fd.entries());
+    setState({ loading: true, error: '' });
+    try {
+      const res = await callEdge('kyc-record-payment', { project_id: state.selected.id, ...data }, state.session.token);
+      if (res.error) { setState({ loading: false, error: res.error }); return; }
+      state.selected.status = 'active';
+      setState({ loading: false });
+    } catch { setState({ loading: false, error: 'Connection error.' }); }
+  });
+}
+
+async function updateStage(stage) {
+  const msg = document.getElementById('stage-msg');
+  if (msg) msg.innerHTML = '<p style="color:#64748b;font-size:13px">Updating…</p>';
+  const res = await callEdge('kyc-update-project', { project_id: state.selected.id, venturex_stage: stage }, state.session.token);
+  if (res.error) { if (msg) msg.innerHTML = `<p style="color:#f87171;font-size:13px">${res.error}</p>`; return; }
+  state.selected.venturex_stage = stage;
+  if (msg) msg.innerHTML = '<p style="color:#34d399;font-size:13px">✓ Stage updated</p>';
+  setState({});
+}
+
+async function saveNotes() {
+  const notes = document.getElementById('stage-notes')?.value || '';
+  const res = await callEdge('kyc-update-project', { project_id: state.selected.id, internal_notes: notes }, state.session.token);
+  if (!res.error) { state.selected.internal_notes = notes; alert('Notes saved.'); }
+}
+
+// Boot
+render();
+</script>
+</body>
+</html>
