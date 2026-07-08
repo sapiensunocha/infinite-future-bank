@@ -1,39 +1,5 @@
-# Stage 1 — build the Vite app
-FROM node:20-slim AS builder
-WORKDIR /app
-
-# Declare all VITE_ vars as build args — Railway passes env vars as build args automatically
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
-ARG VITE_GEMINI_API_KEY
-ARG VITE_STRIPE_PUBLIC_KEY
-ARG VITE_MICHAEL_API_KEY
-ARG VITE_RESEND_API_KEY
-ARG VITE_BACKEND_URL
-ARG VITE_RPC_PROVIDER_URL
-
-# Expose them to Vite at build time
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
-ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
-ENV VITE_STRIPE_PUBLIC_KEY=$VITE_STRIPE_PUBLIC_KEY
-ENV VITE_MICHAEL_API_KEY=$VITE_MICHAEL_API_KEY
-ENV VITE_RESEND_API_KEY=$VITE_RESEND_API_KEY
-ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
-ENV VITE_RPC_PROVIDER_URL=$VITE_RPC_PROVIDER_URL
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
-ENV ELECTRON_SKIP_DIST_DOWNLOAD=true
-
-COPY package*.json ./
-RUN npm install
-
-COPY . .
-RUN npm run build
-
-# Stage 2 — lean production image
+# Fast deploy: dist is pre-built locally and uploaded via .railwayignore (!dist/)
+# No npm install + vite build inside Docker = ~1 min deploy instead of 10 min
 FROM node:20-slim
 WORKDIR /app
 
@@ -41,11 +7,12 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
 ENV ELECTRON_SKIP_DIST_DOWNLOAD=true
+ENV NODE_ENV=production
 
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
-COPY --from=builder /app/dist ./dist
+COPY dist ./dist
 COPY server.cjs ./
 
 EXPOSE 3000
