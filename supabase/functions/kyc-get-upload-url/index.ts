@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kyc-admin-token',
 }
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const storagePath = `kyc/${project_id}/${doc_type}/${Date.now()}.${ext}`
 
     const { data: uploadData, error } = await supabase.storage
-      .from('documents')
+      .from('kyc-documents')
       .createSignedUploadUrl(storagePath)
 
     if (error) return json({ error: error.message }, 500)
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       .insert({
         project_id,
         doc_type,
-        file_url: `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/documents/${storagePath}`,
+        file_url: `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/kyc-documents/${storagePath}`,
         file_name,
         file_size,
         uploaded_by: admin.email,

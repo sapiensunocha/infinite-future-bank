@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IFB — Portail Admin KYC</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background:#070B14; font-family:Inter,system-ui,sans-serif; color:#fff; }
+  .inp { width:100%; background:#1a2035; border:1px solid rgba(100,116,139,.4); padding:11px 14px; border-radius:10px; color:#fff; font-size:14px; outline:none; transition:.2s; }
+  .inp:focus { border-color:rgba(59,130,246,.6); box-shadow:0 0 0 3px rgba(59,130,246,.08); }
+  .inp::placeholder { color:#475569; }
+  select.inp { appearance:none; cursor:pointer; }
+  textarea.inp { resize:vertical; }
+  .btn-primary { background:#2563eb; color:#fff; border:none; border-radius:10px; padding:12px 20px; font-weight:700; font-size:14px; cursor:pointer; transition:.2s; }
+  .btn-primary:hover { background:#1d4ed8; }
+  .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-sm { background:#1e293b; color:#94a3b8; border:1px solid rgba(100,116,139,.3); border-radius:8px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer; transition:.2s; }
+  .btn-sm:hover { background:#243050; color:#fff; }
+  .btn-danger { background:rgba(239,68,68,.15); color:#f87171; border:1px solid rgba(239,68,68,.2); border-radius:8px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer; }
+  .lbl { display:block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#64748b; margin-bottom:5px; }
+  .tag { display:inline-block; padding:2px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+  .card { background:#0F1629; border:1px solid rgba(100,116,139,.2); border-radius:16px; padding:24px; }
+  .lang-btn { background:none; border:1px solid rgba(100,116,139,.4); color:#94a3b8; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; transition:.2s; }
+  .lang-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+  .tab-btn { padding:10px 18px; font-size:13px; font-weight:700; border:none; cursor:pointer; background:none; border-bottom:2px solid transparent; color:#64748b; transition:.2s; white-space:nowrap; }
+  .tab-btn.active { border-bottom-color:#2563eb; color:#fff; }
+  .upload-zone { border:2px dashed rgba(100,116,139,.4); border-radius:12px; padding:32px; text-align:center; cursor:pointer; transition:.2s; }
+  .upload-zone:hover { border-color:#2563eb; background:rgba(37,99,235,.05); }
+  .doc-item { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#1a2035; border-radius:10px; margin-bottom:8px; }
+  .fee-box { background:linear-gradient(135deg,rgba(37,99,235,.2),rgba(16,185,129,.1)); border:1px solid rgba(37,99,235,.4); border-radius:14px; padding:20px; text-align:center; }
+  .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+  tr:hover td { background:rgba(255,255,255,.02); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SUPABASE_URL = 'https://nfztdpyygfrpbjbhidxe.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5menRkcHl5Z2ZycGJqYmhpZHhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1MzcxOTEsImV4cCI6MjA4NzExMzE5MX0.Ydo6vduICdQwBrygEN1e5JswVVaATLChNLtq7whqf7I';
+const ACTIVATION_FEE = 100000;
+const ACTIVATION_CURRENCY = 'XOF';
+
+const T = {
+  fr: {
+    title:'Portail Admin KYC', subtitle:'Accès restreint — personnel autorisé uniquement',
+    warning:'Ce portail est surveillé. Toutes les actions sont enregistrées et ont valeur légale.',
+    email_lbl:'Email Admin', passcode_lbl:'Code d\'accès', passcode_ph:'Votre code secret',
+    terms_title:'Conditions d\'utilisation',
+    terms:['Je traite des données confidentielles selon les politiques IFB.','Je suis un représentant IFB autorisé.','Toutes mes actions sont auditées et juridiquement contraignantes.','Je ne partage pas mes identifiants.'],
+    terms_accept:'J\'accepte les conditions', must_accept:'Veuillez accepter les conditions.',
+    sign_in:'Se connecter', signing_in:'Connexion…', conn_err:'Erreur réseau. Vérifiez votre connexion.', logout:'Déconnexion',
+    projects_title:'Projets VentureX', new_project:'+ Nouveau projet', loading:'Chargement…',
+    no_projects:'Aucun projet enregistré. Créez le premier.',
+    col_founder:'Fondateur', col_country:'Pays', col_sector:'Secteur', col_status:'Statut', col_vxstage:'Étape VX', col_date:'Date',
+    reg_title:'Enregistrer un projet',
+    s_founder:'Informations du Fondateur', full_name:'Nom complet', phone:'Téléphone', country:'Pays', sel_country:'Choisir un pays…',
+    s_project:'Détails du Projet',
+    proj_type:'Type de dossier', type_project:'Projet', type_company:'Entreprise',
+    biz_stage:'Stade de développement',
+    stages_biz:{idea:'Idée',mvp:'MVP',growth:'Croissance',scaling:'Expansion'},
+    sector:'Secteur d\'activité', sel_sector:'Choisir un secteur…',
+    website:'Site web', description:'Description du projet', desc_ph:'Problème résolu, marché cible, modèle économique…',
+    revenue_model:'Modèle de revenus', revenue_ph:'Ex: commission, abonnement, ventes directes…',
+    team_size:'Taille de l\'équipe',
+    s_financing:'Financement & Frais d\'activation',
+    fee_title:'Frais d\'activation VentureX', fee_sub:'À régler pour activer le dossier dans le pipeline IFB',
+    tier_label:'Niveau de financement sollicité', sel_tier:'Sélectionner…',
+    amount_req:'Montant sollicité', currency:'Devise',
+    registering:'Enregistrement…', register_btn:'Enregistrer le projet',
+    tab_overview:'Aperçu', tab_stage:'Pipeline VX', tab_payment:'Paiement', tab_docs:'Documents', tab_edit:'Modifier',
+    overview_fields:{founder:'Fondateur',email:'Email',phone:'Téléphone',country:'Pays',type:'Type',biz_stage:'Stade',sector:'Secteur',website:'Site web',amount:'Financement demandé',description:'Description'},
+    pipeline_title:'Étape du Pipeline VentureX',
+    notes_lbl:'Notes internes', notes_ph:'Évaluation, commentaires, décisions…', save_notes:'Sauvegarder',
+    stage_ok:'✓ Étape mise à jour', stage_err:'Erreur lors de la mise à jour',
+    payment_title:'Frais d\'activation — 100 000 XOF',
+    payment_info:'Enregistrez le paiement reçu pour activer le compte du fondateur.',
+    pay_amount:'Montant reçu', pay_currency:'Devise', pay_method:'Mode de paiement', sel_method:'Choisir…',
+    pay_methods:['Virement bancaire','Mobile Money / Espèces','Via DEUS App','Stripe / Carte'],
+    pay_methods_val:['bank_transfer','offline','deus','stripe'],
+    pay_ref:'Référence de paiement', pay_btn:'Confirmer le paiement & Activer le compte',
+    paying:'Enregistrement…', pay_ok:'✓ Paiement enregistré — compte activé',
+    record_payment:'Enregistrer un paiement',
+    edit_title:'Modifier le dossier', edit_save:'Enregistrer les modifications', edit_saving:'Enregistrement…', edit_ok:'✓ Dossier mis à jour',
+    edit_status:'Statut du dossier', edit_s:{registered:'Enregistré',payment_pending:'En attente paiement',active:'Actif',in_pipeline:'En pipeline',archived:'Archivé'},
+    docs_title:'Documents du dossier',
+    docs_info:'Téléversez les pièces justificatives du fondateur et de l\'entreprise.',
+    doc_types:{passport:'Passeport / CNI',cv:'CV / Curriculum Vitae',company_reg:'Registre de commerce',business_plan:'Business Plan',financial_stmt:'États financiers',other:'Autre document'},
+    doc_type_lbl:'Type de document', sel_doc_type:'Choisir le type…',
+    upload_btn:'Choisir un fichier', uploading:'Téléversement…', upload_ok:'✓ Document téléversé',
+    no_docs:'Aucun document téléversé.',
+    vx_stages:{intake:'Réception',evaluation:'Évaluation',structuring:'Structuration',financing:'Financement',execution:'Exécution'},
+    status_lbl:{registered:'Enregistré',payment_pending:'En attente paiement',active:'Actif',in_pipeline:'En pipeline',archived:'Archivé'},
+    sectors:['Agriculture & AgroTech','FinTech & Banque','HealthTech & Pharma','EdTech & Formation','Énergie & CleanTech','Immobilier & Construction','Logistique & Transport','Commerce & E-Commerce','Industrie','ICT & Logiciel','ONG & Entreprise Sociale','Autre'],
+    countries:['Algérie','Angola','Bénin','Burkina Faso','Burundi','Cameroun','Cap-Vert','RCA','Tchad','Comores','Congo','RDC','Côte d\'Ivoire','Djibouti','Égypte','Éthiopie','Gabon','Gambie','Ghana','Guinée','Guinée-Bissau','Kenya','Lesotho','Liberia','Libye','Madagascar','Malawi','Mali','Mauritanie','Maurice','Maroc','Mozambique','Namibie','Niger','Nigeria','Rwanda','Sénégal','Seychelles','Sierra Leone','Somalie','Afrique du Sud','Soudan du Sud','Soudan','Tanzanie','Togo','Tunisie','Ouganda','Zambie','Zimbabwe','France','Belgique','Suisse','Canada','États-Unis','Royaume-Uni','Émirats Arabes Unis','Autre'],
+  },
+  en: {
+    title:'KYC Admin Portal', subtitle:'Restricted access — authorized personnel only',
+    warning:'This portal is monitored. All actions are logged and legally binding.',
+    email_lbl:'Admin Email', passcode_lbl:'Access Passcode', passcode_ph:'Your secret passcode',
+    terms_title:'Terms of Use',
+    terms:['I handle confidential data under IFB data policies.','I am an authorized IFB representative.','All my actions are audited and legally binding.','I will not share my credentials.'],
+    terms_accept:'I accept the terms', must_accept:'Please accept the terms.',
+    sign_in:'Sign In', signing_in:'Signing in…', conn_err:'Network error. Check your connection.', logout:'Logout',
+    projects_title:'VentureX Projects', new_project:'+ New Project', loading:'Loading…',
+    no_projects:'No projects yet. Register the first one.',
+    col_founder:'Founder', col_country:'Country', col_sector:'Sector', col_status:'Status', col_vxstage:'VX Stage', col_date:'Date',
+    reg_title:'Register a Project',
+    s_founder:'Founder Information', full_name:'Full Name', phone:'Phone', country:'Country', sel_country:'Select country…',
+    s_project:'Project Details',
+    proj_type:'Type', type_project:'Project', type_company:'Company',
+    biz_stage:'Development Stage',
+    stages_biz:{idea:'Idea',mvp:'MVP',growth:'Growth',scaling:'Scaling'},
+    sector:'Sector', sel_sector:'Select sector…',
+    website:'Website', description:'Project Description', desc_ph:'Problem solved, target market, business model…',
+    revenue_model:'Revenue Model', revenue_ph:'E.g. commission, subscription, direct sales…',
+    team_size:'Team Size',
+    s_financing:'Financing & Activation Fee',
+    fee_title:'VentureX Activation Fee', fee_sub:'Must be paid to activate the file in the IFB pipeline',
+    tier_label:'Financing tier requested', sel_tier:'Select…',
+    amount_req:'Amount requested', currency:'Currency',
+    registering:'Registering…', register_btn:'Register Project',
+    tab_overview:'Overview', tab_stage:'VX Pipeline', tab_payment:'Payment', tab_docs:'Documents', tab_edit:'Edit',
+    overview_fields:{founder:'Founder',email:'Email',phone:'Phone',country:'Country',type:'Type',biz_stage:'Stage',sector:'Sector',website:'Website',amount:'Financing requested',description:'Description'},
+    pipeline_title:'VentureX Pipeline Stage',
+    notes_lbl:'Internal Notes', notes_ph:'Evaluation, comments, decisions…', save_notes:'Save',
+    stage_ok:'✓ Stage updated', stage_err:'Error updating stage',
+    payment_title:'Activation Fee — 100,000 XOF',
+    payment_info:'Record the received payment to activate the founder\'s account.',
+    pay_amount:'Amount received', pay_currency:'Currency', pay_method:'Payment method', sel_method:'Select…',
+    pay_methods:['Bank Transfer','Mobile Money / Cash','Via DEUS App','Stripe / Card'],
+    pay_methods_val:['bank_transfer','offline','deus','stripe'],
+    pay_ref:'Payment Reference', pay_btn:'Confirm Payment & Activate Account',
+    paying:'Recording…', pay_ok:'✓ Payment recorded — account activated',
+    record_payment:'Record a Payment',
+    edit_title:'Edit Project File', edit_save:'Save Changes', edit_saving:'Saving…', edit_ok:'✓ File updated',
+    edit_status:'File Status', edit_s:{registered:'Registered',payment_pending:'Payment Pending',active:'Active',in_pipeline:'In Pipeline',archived:'Archived'},
+    docs_title:'Project Documents',
+    docs_info:'Upload the founder\'s and company\'s supporting documents.',
+    doc_types:{passport:'Passport / ID Card',cv:'CV / Resume',company_reg:'Company Registration',business_plan:'Business Plan',financial_stmt:'Financial Statements',other:'Other Document'},
+    doc_type_lbl:'Document Type', sel_doc_type:'Select type…',
+    upload_btn:'Choose File', uploading:'Uploading…', upload_ok:'✓ Document uploaded',
+    no_docs:'No documents uploaded yet.',
+    vx_stages:{intake:'Intake',evaluation:'Evaluation',structuring:'Structuring',financing:'Financing',execution:'Execution'},
+    status_lbl:{registered:'Registered',payment_pending:'Payment Pending',active:'Active',in_pipeline:'In Pipeline',archived:'Archived'},
+    sectors:['Agriculture & AgroTech','FinTech & Banking','HealthTech & Pharma','EdTech & Training','Energy & CleanTech','Real Estate & Construction','Logistics & Transport','Retail & E-Commerce','Manufacturing','ICT & Software','NGO & Social Enterprise','Other'],
+    countries:['Algeria','Angola','Benin','Burkina Faso','Burundi','Cameroon','Cape Verde','CAR','Chad','Comoros','Congo','DRC','Ivory Coast','Djibouti','Egypt','Ethiopia','Gabon','Gambia','Ghana','Guinea','Guinea-Bissau','Kenya','Lesotho','Liberia','Libya','Madagascar','Malawi','Mali','Mauritania','Mauritius','Morocco','Mozambique','Namibia','Niger','Nigeria','Rwanda','Senegal','Seychelles','Sierra Leone','Somalia','South Africa','South Sudan','Sudan','Tanzania','Togo','Tunisia','Uganda','Zambia','Zimbabwe','France','Belgium','Switzerland','Canada','United States','United Kingdom','UAE','Other'],
+  }
+};
+
+const VX_STAGE_COLORS = {intake:'#3b82f6',evaluation:'#8b5cf6',structuring:'#f59e0b',financing:'#10b981',execution:'#14b8a6'};
+const STATUS_COLORS   = {registered:'#64748b',payment_pending:'#f59e0b',active:'#10b981',in_pipeline:'#3b82f6',archived:'#ef4444'};
+const TIERS = [
+  {id:'startup',   label:'Startup',   desc:'$100K – $499K'},
+  {id:'sme',       label:'PME / SME', desc:'$500K – $1.9M'},
+  {id:'corporate', label:'Corporate', desc:'$2M – $9.9M'},
+  {id:'enterprise',label:'Enterprise',desc:'$10M+'},
+];
+
+// ── Helpers ───────────────────────────────────────────────────
+async function callEdge(fn, body, token) {
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':ANON_KEY,'Authorization':`Bearer ${ANON_KEY}`,'x-kyc-admin-token':token||''},
+    body:JSON.stringify(body),
+  });
+  return r.json();
+}
+
+function getSession() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('kyc_admin_session')||'null');
+    if (!s||s.exp<Date.now()){sessionStorage.removeItem('kyc_admin_session');return null;}
+    return s;
+  } catch {return null;}
+}
+
+function fmt(n){return Number(n).toLocaleString('fr-FR');}
+function fmtDate(d){return d?new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'—';}
+
+// ── State ─────────────────────────────────────────────────────
+let S = {
+  session: getSession(), lang:'fr', view:'projects',
+  projects:[], selected:null, loading:false, error:'',
+  tab:'overview', uploading:false, uploadMsg:'', payMsg:'', stageMsg:'', notesMsg:'', editMsg:'',
+};
+const tx = ()=>T[S.lang];
+
+function set(patch){Object.assign(S,patch);render();}
+
+function langBar(){
+  return `<div style="display:flex;gap:6px">
+    <button onclick="set({lang:'fr'})" class="lang-btn ${S.lang==='fr'?'active':''}">FR</button>
+    <button onclick="set({lang:'en'})" class="lang-btn ${S.lang==='en'?'active':''}">EN</button>
+  </div>`;
+}
+
+function topbar(title, back){
+  return `<div style="background:#0F1629;border-bottom:1px solid rgba(100,116,139,.2);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10">
+    <div style="display:flex;align-items:center;gap:10px">
+      ${back?`<button onclick="set({view:'${back}',error:'',payMsg:'',stageMsg:'',notesMsg:'',uploadMsg:''})" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:20px;padding:0 4px">←</button>`:''}
+      <span style="font-size:18px;font-weight:900"><span style="color:#4285F4">D</span><span style="color:#EA4335">E</span><span style="color:#FBBC04">U</span><span style="color:#34A853">S</span></span>
+      <span style="width:1px;height:16px;background:#334155"></span>
+      <span style="color:#94a3b8;font-size:13px;font-weight:700">${title}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      ${langBar()}
+      ${S.session?`<span style="color:#fff;font-size:13px;font-weight:600">${S.session.name}</span>
+      <button onclick="logout()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:13px;font-weight:600">${tx().logout}</button>`:''}
+    </div>
+  </div>`;
+}
+
+function errBox(msg){return msg?`<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:12px 14px;color:#fca5a5;font-size:13px;margin-bottom:16px">${msg}</div>`:''; }
+function okBox(msg) {return msg?`<div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:12px 14px;color:#6ee7b7;font-size:13px;margin-bottom:16px">${msg}</div>`:''; }
+
+function render(){
+  const app=document.getElementById('app');
+  if(!S.session)         {app.innerHTML=renderLogin();    bindLogin();      return;}
+  if(S.view==='projects'){app.innerHTML=renderProjects(); loadProjects();   return;}
+  if(S.view==='new')     {app.innerHTML=renderNew();      bindNew();        return;}
+  if(S.view==='detail')  {app.innerHTML=renderDetail();   bindDetail();     return;}
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function renderLogin(){
+  const t=tx();
+  return `
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+    <div style="width:100%;max-width:420px">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="font-size:56px;font-weight:900;letter-spacing:-2px;margin-bottom:12px">
+          <span style="color:#4285F4">D</span><span style="color:#EA4335">E</span><span style="color:#FBBC04">U</span><span style="color:#34A853">S</span>
+        </div>
+        <h1 style="font-size:20px;font-weight:900;color:#fff">${t.title}</h1>
+        <p style="color:#475569;font-size:13px;margin-top:4px">${t.subtitle}</p>
+        <div style="margin-top:12px">${langBar()}</div>
+      </div>
+      <div class="card">
+        <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;margin-bottom:20px;display:flex;gap:10px">
+          <span style="color:#fbbf24">⚠</span>
+          <p style="color:#fde68a;font-size:12px;font-weight:600">${t.warning}</p>
+        </div>
+        ${errBox(S.error)}
+        <form id="lf" style="display:flex;flex-direction:column;gap:16px">
+          <div><label class="lbl">${t.email_lbl}</label>
+            <input id="le" type="email" required placeholder="admin@infinitefuturebank.org" class="inp"/></div>
+          <div><label class="lbl">${t.passcode_lbl}</label>
+            <input id="lp" type="password" required placeholder="${t.passcode_ph}" class="inp"/></div>
+          <div style="background:#111827;border:1px solid rgba(100,116,139,.2);border-radius:10px;padding:16px">
+            <p style="color:#cbd5e1;font-size:13px;font-weight:700;margin-bottom:8px">${t.terms_title}</p>
+            <div style="color:#475569;font-size:12px;display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+              ${t.terms.map(x=>`<p>• ${x}</p>`).join('')}
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <div id="tb" onclick="toggleTerms()" style="width:18px;height:18px;border-radius:5px;border:2px solid #475569;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s"></div>
+              <span style="color:#94a3b8;font-size:12px">${t.terms_accept}</span>
+            </label>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%;padding:14px">${S.loading?t.signing_in:t.sign_in}</button>
+        </form>
+      </div>
+    </div>
+  </div>`;
+}
+
+let termsOk=false;
+function toggleTerms(){
+  termsOk=!termsOk;
+  const b=document.getElementById('tb');
+  if(b){b.style.background=termsOk?'#2563eb':'';b.style.borderColor=termsOk?'#2563eb':'#475569';b.innerHTML=termsOk?'<span style="color:#fff;font-size:11px">✓</span>':'';}
+}
+function bindLogin(){
+  termsOk=false;
+  document.getElementById('lf')?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(!termsOk){set({error:tx().must_accept});return;}
+    const email=document.getElementById('le').value.trim().toLowerCase();
+    const pass=document.getElementById('lp').value;
+    set({loading:true,error:''});
+    try{
+      const r=await callEdge('kyc-admin-auth',{email,passcode:pass,acceptedTerms:true});
+      if(r.error){set({loading:false,error:r.error});return;}
+      const s={...r.admin,token:r.token,exp:Date.now()+8*60*60*1000};
+      sessionStorage.setItem('kyc_admin_session',JSON.stringify(s));
+      set({session:s,loading:false,view:'projects'});
+    }catch{set({loading:false,error:tx().conn_err});}
+  });
+}
+function logout(){sessionStorage.removeItem('kyc_admin_session');set({session:null,error:''});}
+
+// ── PROJECTS LIST ─────────────────────────────────────────────
+function renderProjects(){
+  const t=tx();
+  const rows=S.projects.map(p=>{
+    const sc=STATUS_COLORS[p.status]||'#64748b';
+    const vxc=p.venturex_stage?VX_STAGE_COLORS[p.venturex_stage]:'#334155';
+    const hasPayment=p.kyc_project_payments?.length>0;
+    const docCount=p.kyc_project_documents?.length||0;
+    return `<tr onclick="openProject(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="cursor:pointer;border-bottom:1px solid rgba(100,116,139,.1)">
+      <td style="padding:12px 16px">
+        <p style="color:#fff;font-weight:600;font-size:13px">${p.founder_name||'—'}</p>
+        <p style="color:#475569;font-size:11px">${p.founder_email||''}</p>
+      </td>
+      <td style="padding:12px 16px;color:#94a3b8;font-size:13px">${p.founder_country||'—'}</td>
+      <td style="padding:12px 16px;color:#94a3b8;font-size:12px">${p.sector||'—'}</td>
+      <td style="padding:12px 16px">
+        <span class="tag" style="background:${sc}22;color:${sc}">${t.status_lbl[p.status]||p.status||'—'}</span>
+      </td>
+      <td style="padding:12px 16px">
+        ${p.venturex_stage?`<span class="tag" style="background:${vxc}22;color:${vxc}">${t.vx_stages[p.venturex_stage]||p.venturex_stage}</span>`:'<span style="color:#334155;font-size:12px">—</span>'}
+      </td>
+      <td style="padding:12px 16px">
+        <span style="color:${hasPayment?'#34d399':'#f59e0b'};font-size:12px;font-weight:700">${hasPayment?'✓ Payé':'⏳ En attente'}</span>
+      </td>
+      <td style="padding:12px 16px;color:#475569;font-size:11px">${docCount} doc${docCount>1?'s':''}</td>
+      <td style="padding:12px 16px;color:#475569;font-size:11px">${fmtDate(p.created_at)}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+  <div style="min-height:100vh">
+    ${topbar(t.projects_title)}
+    <div style="max-width:1300px;margin:0 auto;padding:28px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <h2 style="color:#fff;font-size:20px;font-weight:900">${t.projects_title}</h2>
+          <p style="color:#475569;font-size:12px;margin-top:2px">${S.projects.length} dossiers</p>
+        </div>
+        <button onclick="set({view:'new',error:''})" class="btn-primary">${t.new_project}</button>
+      </div>
+
+      <!-- Summary cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+        ${[
+          ['Total',S.projects.length,'#3b82f6'],
+          ['Actifs',S.projects.filter(p=>p.status==='active').length,'#10b981'],
+          ['En attente paiement',S.projects.filter(p=>p.status==='registered'&&!p.kyc_project_payments?.length).length,'#f59e0b'],
+          ['En pipeline',S.projects.filter(p=>p.venturex_stage).length,'#8b5cf6'],
+        ].map(([l,v,c])=>`
+          <div class="card" style="text-align:center;padding:16px">
+            <p style="font-size:26px;font-weight:900;color:${c}">${v}</p>
+            <p style="font-size:11px;color:#64748b;margin-top:2px">${l}</p>
+          </div>`).join('')}
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        ${S.loading?`<div style="padding:48px;text-align:center;color:#475569">${t.loading}</div>`:
+          S.projects.length===0?`<div style="padding:48px;text-align:center;color:#475569">${t.no_projects}</div>`:`
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(100,116,139,.15)">
+              ${[t.col_founder,t.col_country,t.col_sector,t.col_status,t.col_vxstage,'Paiement','Docs',t.col_date]
+                .map(h=>`<th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#475569;white-space:nowrap">${h}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+let listLoaded=false;
+async function loadProjects(){
+  if(listLoaded)return;listLoaded=true;
+  const r=await callEdge('kyc-list-projects',{},S.session.token);
+  set({projects:r.projects||[]});listLoaded=false;
+}
+function openProject(p){set({selected:p,view:'detail',tab:'overview',error:'',payMsg:'',stageMsg:'',notesMsg:'',uploadMsg:''});}
+
+// ── NEW PROJECT ───────────────────────────────────────────────
+function renderNew(){
+  const t=tx();
+  return `
+  <div style="min-height:100vh">
+    ${topbar(t.reg_title,'projects')}
+    <div style="max-width:760px;margin:32px auto;padding:0 20px 60px">
+      ${errBox(S.error)}
+      <form id="pf" style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- Founder -->
+        <div class="card">
+          <p style="font-weight:800;font-size:14px;color:#fff;margin-bottom:16px">${t.s_founder}</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><label class="lbl">${t.full_name} *</label><input name="founder_name" required class="inp" placeholder="Jean Dupont"/></div>
+            <div><label class="lbl">Email *</label><input name="founder_email" type="email" required class="inp" placeholder="jean@exemple.com"/></div>
+            <div><label class="lbl">${t.phone}</label><input name="founder_phone" class="inp" placeholder="+225 07 00 00 00 00"/></div>
+            <div><label class="lbl">${t.country} *</label>
+              <select name="country" required class="inp">
+                <option value="">${t.sel_country}</option>
+                ${t.countries.map(c=>`<option>${c}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project -->
+        <div class="card">
+          <p style="font-weight:800;font-size:14px;color:#fff;margin-bottom:16px">${t.s_project}</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><label class="lbl">${t.proj_type} *</label>
+              <select name="project_type" required class="inp">
+                <option value="">—</option>
+                <option value="project">${t.type_project}</option>
+                <option value="company">${t.type_company}</option>
+              </select>
+            </div>
+            <div><label class="lbl">${t.biz_stage} *</label>
+              <select name="stage" required class="inp">
+                <option value="">—</option>
+                ${Object.entries(t.stages_biz).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}
+              </select>
+            </div>
+            <div><label class="lbl">${t.sector} *</label>
+              <select name="sector" required class="inp">
+                <option value="">${t.sel_sector}</option>
+                ${t.sectors.map(s=>`<option>${s}</option>`).join('')}
+              </select>
+            </div>
+            <div><label class="lbl">${t.team_size}</label><input name="team_size" type="number" class="inp" placeholder="5"/></div>
+            <div><label class="lbl">${t.website}</label><input name="website" type="url" class="inp" placeholder="https://…"/></div>
+            <div><label class="lbl">${t.revenue_model}</label><input name="revenue_model" class="inp" placeholder="${t.revenue_ph}"/></div>
+            <div style="grid-column:1/-1"><label class="lbl">${t.description} *</label>
+              <textarea name="business_description" required class="inp" rows="4" placeholder="${t.desc_ph}"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financing & Activation fee -->
+        <div class="card">
+          <p style="font-weight:800;font-size:14px;color:#fff;margin-bottom:16px">${t.s_financing}</p>
+
+          <!-- Activation fee highlight -->
+          <div class="fee-box" style="margin-bottom:20px">
+            <p style="font-size:28px;font-weight:900;color:#fff">${fmt(ACTIVATION_FEE)} XOF</p>
+            <p style="font-size:12px;font-weight:700;color:#60a5fa;margin-top:4px">${t.fee_title}</p>
+            <p style="font-size:11px;color:#475569;margin-top:2px">${t.fee_sub}</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="grid-column:1/-1">
+              <label class="lbl">${t.tier_label}</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                ${TIERS.map(ti=>`
+                  <div onclick="selTier('${ti.id}')" id="t_${ti.id}" style="background:#1a2035;border:2px solid rgba(100,116,139,.3);border-radius:10px;padding:12px;cursor:pointer;transition:.2s">
+                    <p style="color:#fff;font-weight:700;font-size:13px">${ti.label}</p>
+                    <p style="color:#64748b;font-size:11px">${ti.desc}</p>
+                  </div>`).join('')}
+              </div>
+              <input type="hidden" name="payment_tier" id="tv"/>
+            </div>
+            <div><label class="lbl">${t.amount_req}</label><input name="financing_amount" type="number" class="inp" placeholder="500000"/></div>
+            <div><label class="lbl">${t.currency}</label>
+              <select name="financing_currency" class="inp">
+                <option>XOF</option><option>XAF</option><option>USD</option><option>EUR</option><option>GBP</option><option>NGN</option><option>KES</option><option>ZAR</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width:100%;padding:14px;font-size:15px">${S.loading?t.registering:t.register_btn}</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function selTier(id){
+  document.getElementById('tv').value=id;
+  TIERS.forEach(ti=>{
+    const el=document.getElementById(`t_${ti.id}`);
+    if(!el)return;
+    el.style.borderColor=ti.id===id?'#2563eb':'rgba(100,116,139,.3)';
+    el.style.background=ti.id===id?'rgba(37,99,235,.15)':'#1a2035';
+  });
+}
+
+function bindNew(){
+  document.getElementById('pf')?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const d=Object.fromEntries(new FormData(e.target).entries());
+    if(!d.payment_tier){set({error:tx().sel_tier});return;}
+    set({loading:true,error:''});
+    try{
+      const r=await callEdge('kyc-register-project',{
+        founder_name:d.founder_name, founder_email:d.founder_email,
+        founder_phone:d.founder_phone, founder_country:d.country,
+        project_type:d.project_type, stage:d.stage, sector:d.sector,
+        business_description:d.business_description,
+        revenue_model:d.revenue_model, team_size:d.team_size,
+        website:d.website,
+        funding_amount_needed:d.financing_amount,
+        funding_currency:d.financing_currency,
+        payment_tier:d.payment_tier,
+        activation_fee:ACTIVATION_FEE,
+        activation_currency:ACTIVATION_CURRENCY,
+      },S.session.token);
+      if(r.error){set({loading:false,error:r.error});return;}
+      listLoaded=false;
+      set({loading:false,view:'projects',error:''});
+    }catch{set({loading:false,error:tx().conn_err});}
+  });
+}
+
+// ── DETAIL ────────────────────────────────────────────────────
+function renderDetail(){
+  const t=tx(); const p=S.selected; if(!p)return'';
+  const sc=STATUS_COLORS[p.status]||'#64748b';
+  const docs=p.kyc_project_documents||[];
+  const payments=p.kyc_project_payments||[];
+  const paid=payments.length>0;
+
+  return `
+  <div style="min-height:100vh">
+    ${topbar(`${p.founder_name} — ${t.status_lbl[p.status]||p.status}`,'projects')}
+    <div style="max-width:960px;margin:0 auto;padding:24px 20px 60px">
+
+      <!-- Status bar -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <span class="tag" style="background:${sc}22;color:${sc};font-size:13px;padding:4px 14px">${t.status_lbl[p.status]||p.status}</span>
+        ${p.venturex_stage?`<span class="tag" style="background:${VX_STAGE_COLORS[p.venturex_stage]}22;color:${VX_STAGE_COLORS[p.venturex_stage]};font-size:13px;padding:4px 14px">${t.vx_stages[p.venturex_stage]}</span>`:''}
+        <span style="color:#475569;font-size:12px">Enregistré le ${fmtDate(p.created_at)}</span>
+        <span style="color:${paid?'#34d399':'#f59e0b'};font-size:12px;font-weight:700">${paid?`✓ ${fmt(payments[0].amount)} ${payments[0].currency} payé`:'⏳ Frais d\'activation non réglés'}</span>
+        <span style="color:#475569;font-size:12px">${docs.length} document(s)</span>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display:flex;border-bottom:1px solid rgba(100,116,139,.2);margin-bottom:24px;overflow-x:auto">
+        ${[[t.tab_overview,'overview'],[t.tab_stage,'stage'],[t.tab_payment,'payment'],[t.tab_docs,'docs'],[t.tab_edit,'edit']]
+          .map(([l,id])=>`<button onclick="set({tab:'${id}',payMsg:'',stageMsg:'',notesMsg:'',uploadMsg:'',editMsg:'',error:''})" class="tab-btn ${S.tab===id?'active':''}">${l}</button>`).join('')}
+      </div>
+
+      ${S.tab==='overview'?renderOverview(p,t):''}
+      ${S.tab==='stage'?renderStage(p,t):''}
+      ${S.tab==='payment'?renderPayment(p,t,paid,payments):''}
+      ${S.tab==='docs'?renderDocs(p,t,docs):''}
+      ${S.tab==='edit'?renderEdit(p,t):''}
+    </div>
+  </div>`;
+}
+
+function renderOverview(p,t){
+  const fields=[
+    [t.overview_fields.founder,p.founder_name],
+    [t.overview_fields.email,p.founder_email],
+    [t.overview_fields.phone,p.founder_phone||'—'],
+    [t.overview_fields.country,p.founder_country||'—'],
+    [t.overview_fields.type,p.project_type||'—'],
+    [t.overview_fields.biz_stage,t.stages_biz?.[p.stage]||p.stage||'—'],
+    [t.overview_fields.sector,p.sector||'—'],
+    [t.overview_fields.website,p.website?`<a href="${p.website}" target="_blank" style="color:#60a5fa">${p.website}</a>`:'—'],
+    [t.overview_fields.amount,p.funding_amount_needed?`${fmt(p.funding_amount_needed)} ${p.funding_currency||'USD'}`:'—'],
+  ];
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    ${fields.map(([k,v])=>`
+      <div class="card" style="padding:14px">
+        <p style="color:#475569;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">${k}</p>
+        <p style="color:#fff;font-size:14px;font-weight:600">${v||'—'}</p>
+      </div>`).join('')}
+    <div class="card" style="grid-column:1/-1;padding:14px">
+      <p style="color:#475569;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${t.overview_fields.description}</p>
+      <p style="color:#cbd5e1;font-size:13px;line-height:1.7">${p.business_description||'—'}</p>
+    </div>
+  </div>`;
+}
+
+function renderStage(p,t){
+  return `
+  <div class="card">
+    <p style="font-weight:800;font-size:14px;color:#fff;margin-bottom:16px">${t.pipeline_title}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      ${Object.entries(VX_STAGE_COLORS).map(([s,c])=>`
+        <button onclick="updateStage('${s}')" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:2px solid ${p.venturex_stage===s?c:'rgba(100,116,139,.3)'};background:${p.venturex_stage===s?c+'33':'#1a2035'};color:${p.venturex_stage===s?'#fff':'#94a3b8'};transition:.2s">
+          ${t.vx_stages[s]}
+        </button>`).join('')}
+    </div>
+    ${okBox(S.stageMsg)}${errBox(S.error&&S.tab==='stage'?S.error:'')}
+    <label class="lbl" style="margin-top:8px">${t.notes_lbl}</label>
+    <textarea id="notes_ta" class="inp" rows="5" placeholder="${t.notes_ph}">${p.notes||''}</textarea>
+    <button onclick="saveNotes()" class="btn-primary" style="margin-top:10px;padding:10px 20px">${t.save_notes}</button>
+    ${okBox(S.notesMsg)}
+  </div>`;
+}
+
+function renderPayment(p,t,paid,payments){
+  return `
+  <div>
+    <!-- Activation fee info -->
+    <div class="fee-box" style="margin-bottom:20px;text-align:center">
+      <p style="font-size:30px;font-weight:900;color:#fff">${fmt(ACTIVATION_FEE)} XOF</p>
+      <p style="font-size:13px;font-weight:700;color:#60a5fa;margin-top:4px">${t.payment_title}</p>
+      <p style="font-size:12px;color:#475569;margin-top:2px">${t.payment_info}</p>
+    </div>
+
+    ${payments.length>0?`
+    <div class="card" style="margin-bottom:16px">
+      <p style="font-weight:800;font-size:13px;color:#34d399;margin-bottom:12px">✓ Paiements enregistrés</p>
+      ${payments.map(py=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#1a2035;border-radius:8px;margin-bottom:8px">
+          <div>
+            <p style="color:#fff;font-size:13px;font-weight:700">${fmt(py.amount)} ${py.currency}</p>
+            <p style="color:#64748b;font-size:11px">${py.payment_method} · ${fmtDate(py.paid_at)}</p>
+          </div>
+          <span class="tag" style="background:#10b98122;color:#34d399">${py.payment_status}</span>
+        </div>`).join('')}
+    </div>`:''}
+
+    <div class="card">
+      <p style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px">${t.record_payment||'Enregistrer un paiement'}</p>
+      <p style="color:#475569;font-size:12px;margin-bottom:16px">${S.lang==='fr'?'Vous pouvez enregistrer un paiement à tout moment, y compris au nom du fondateur.':'You can record a payment at any time, including on behalf of the founder.'}</p>
+      ${okBox(S.payMsg)}${errBox(S.error&&S.tab==='payment'?S.error:'')}
+      <form id="payf" style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><label class="lbl">${t.pay_amount} *</label>
+            <input name="amount" type="number" required class="inp" value="${ACTIVATION_FEE}"/></div>
+          <div><label class="lbl">${t.pay_currency}</label>
+            <select name="currency" class="inp">
+              <option selected>XOF</option><option>XAF</option><option>USD</option><option>EUR</option><option>GBP</option>
+            </select>
+          </div>
+          <div><label class="lbl">${t.tier_label} *</label>
+            <select name="tier" required class="inp">
+              ${TIERS.map(ti=>`<option value="${ti.id}"${(p.payment_tier||'sme')===ti.id?' selected':''}>${ti.label} — ${ti.desc}</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="lbl">${t.pay_method} *</label>
+            <select name="payment_method" required class="inp">
+              <option value="">—</option>
+              ${t.pay_methods.map((m,i)=>`<option value="${t.pay_methods_val[i]}">${m}</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="lbl">${t.pay_ref}</label>
+            <input name="reference" class="inp" placeholder="TXN-0001"/></div>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;padding:14px">${S.loading&&S.tab==='payment'?t.paying:t.pay_btn}</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function renderDocs(p,t,docs){
+  const docTypeKeys=Object.keys(t.doc_types);
+  return `
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <p style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px">${t.docs_title}</p>
+      <p style="color:#475569;font-size:12px;margin-bottom:16px">${t.docs_info}</p>
+
+      ${okBox(S.uploadMsg)}${errBox(S.error&&S.tab==='docs'?S.error:'')}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div><label class="lbl">${t.doc_type_lbl}</label>
+          <select id="doc_type" class="inp">
+            <option value="">${t.sel_doc_type}</option>
+            ${docTypeKeys.map(k=>`<option value="${k}">${t.doc_types[k]}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:flex-end">
+          <input type="file" id="doc_file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="handleFileSelected()"/>
+          <button onclick="document.getElementById('doc_file').click()" class="btn-primary" style="width:100%;padding:12px">
+            ${S.uploading?t.uploading:t.upload_btn}
+          </button>
+        </div>
+      </div>
+      <p id="file_name_display" style="color:#64748b;font-size:12px;margin-bottom:8px"></p>
+      <button id="do_upload_btn" onclick="doUpload()" class="btn-primary" style="display:none;width:100%;padding:12px;margin-top:4px">
+        ↑ Téléverser ce fichier
+      </button>
+    </div>
+
+    <div class="card">
+      <p style="font-weight:800;font-size:13px;color:#fff;margin-bottom:12px">${docs.length} document(s) téléversé(s)</p>
+      ${docs.length===0?`<p style="color:#475569;font-size:13px">${t.no_docs}</p>`:
+        docs.map(d=>`
+        <div class="doc-item">
+          <div>
+            <p style="color:#fff;font-size:13px;font-weight:600">${t.doc_types[d.doc_type]||d.doc_type}</p>
+            <p style="color:#64748b;font-size:11px">${d.file_name} · ${fmtDate(d.uploaded_at||d.created_at)}</p>
+          </div>
+          <a href="${d.file_url}" target="_blank" class="btn-sm">↓ Voir</a>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderEdit(p,t){
+  const sel=(name,opts,val)=>`<select name="${name}" class="inp">${opts.map(([v,l])=>`<option value="${v}"${v===val?' selected':''}>${l}</option>`).join('')}</select>`;
+  const inp=(name,val,ph='',type='text')=>`<input name="${name}" type="${type}" class="inp" placeholder="${ph}" value="${val||''}"/>`;
+  const lbl=(l,el)=>`<div><label class="lbl">${l}</label>${el}</div>`;
+  return `
+  <div class="card">
+    <p style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px">${t.edit_title}</p>
+    <p style="color:#475569;font-size:12px;margin-bottom:20px">ID: ${p.id}</p>
+    ${okBox(S.editMsg)}${errBox(S.error&&S.tab==='edit'?S.error:'')}
+    <form id="editf" style="display:flex;flex-direction:column;gap:14px">
+
+      <p style="color:#60a5fa;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;border-top:1px solid rgba(100,116,139,.2);padding-top:14px">${t.s_founder||'Fondateur'}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${lbl(t.full_name, inp('founder_name', p.founder_name))}
+        ${lbl(t.overview_fields.email, inp('founder_email', p.founder_email, '', 'email'))}
+        ${lbl(t.phone, inp('founder_phone', p.founder_phone, '+225 07 00 00 00'))}
+        ${lbl(t.country, sel('founder_country', [['',t.sel_country],...t.countries.map(c=>[c,c])], p.founder_country))}
+      </div>
+
+      <p style="color:#60a5fa;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;border-top:1px solid rgba(100,116,139,.2);padding-top:14px">${t.s_project||'Projet'}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${lbl(t.proj_type, sel('project_type', [['project',t.type_project],['company',t.type_company]], p.project_type))}
+        ${lbl(t.biz_stage, sel('stage', Object.entries(t.stages_biz).map(([v,l])=>[v,l]), p.stage))}
+        ${lbl(t.sector, sel('sector', [['',t.sel_sector],...t.sectors.map(s=>[s,s])], p.sector))}
+        ${lbl(t.website, inp('website', p.website, 'https://'))}
+        ${lbl(t.team_size, inp('team_size', p.team_size, '3', 'number'))}
+        ${lbl(t.edit_status, sel('status', Object.entries(t.edit_s).map(([v,l])=>[v,l]), p.status))}
+      </div>
+      <div style="grid-column:1/-1">
+        ${lbl(t.description, `<textarea name="business_description" class="inp" rows="4" placeholder="${t.desc_ph}">${p.business_description||''}</textarea>`)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${lbl(t.revenue_model, `<textarea name="revenue_model" class="inp" rows="2" placeholder="${t.revenue_ph}">${p.revenue_model||''}</textarea>`)}
+        ${lbl(t.amount_req, inp('funding_amount_needed', p.funding_amount_needed, '500000', 'number'))}
+      </div>
+
+      <button type="submit" class="btn-primary" style="width:100%;padding:14px;margin-top:4px">
+        ${S.loading&&S.tab==='edit'?t.edit_saving:t.edit_save}
+      </button>
+    </form>
+  </div>`;
+}
+
+function bindDetail(){
+  // Payment form
+  document.getElementById('payf')?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const d=Object.fromEntries(new FormData(e.target).entries());
+    set({loading:true,error:''});
+    try{
+      const r=await callEdge('kyc-record-payment',{
+        project_id:S.selected.id,
+        amount:Number(d.amount),
+        currency:d.currency,
+        tier:d.tier,
+        payment_method:d.payment_method,
+        reference:d.reference,
+      },S.session.token);
+      if(r.error){set({loading:false,error:r.error,tab:'payment'});return;}
+      S.selected.status='active';
+      S.selected.venturex_stage='intake';
+      if(!S.selected.kyc_project_payments)S.selected.kyc_project_payments=[];
+      S.selected.kyc_project_payments.push(r.payment);
+      listLoaded=false;
+      set({loading:false,payMsg:tx().pay_ok,error:''});
+    }catch{set({loading:false,error:tx().conn_err,tab:'payment'});}
+  });
+
+  // Edit form
+  document.getElementById('editf')?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const d=Object.fromEntries(new FormData(e.target).entries());
+    set({loading:true,editMsg:'',error:''});
+    const updates={
+      founder_name:d.founder_name,
+      founder_email:d.founder_email,
+      founder_phone:d.founder_phone||null,
+      founder_country:d.founder_country||null,
+      project_type:d.project_type,
+      stage:d.stage,
+      sector:d.sector||null,
+      website:d.website||null,
+      business_description:d.business_description||null,
+      revenue_model:d.revenue_model||null,
+      team_size:d.team_size?parseInt(d.team_size):null,
+      funding_amount_needed:d.funding_amount_needed?Number(d.funding_amount_needed):null,
+      status:d.status,
+    };
+    try{
+      const r=await callEdge('kyc-update-project',{
+        project_id:S.selected.id,
+        updates,
+        action:'project_edited',
+      },S.session.token);
+      if(r.error){set({loading:false,error:r.error,tab:'edit'});return;}
+      Object.assign(S.selected, updates);
+      listLoaded=false;
+      set({loading:false,editMsg:tx().edit_ok,error:''});
+    }catch{set({loading:false,error:tx().conn_err,tab:'edit'});}
+  });
+}
+
+async function updateStage(stage){
+  set({stageMsg:'',error:''});
+  const r=await callEdge('kyc-update-project',{
+    project_id:S.selected.id,
+    updates:{venturex_stage:stage},
+    action:'stage_updated',
+  },S.session.token);
+  if(r.error){set({error:r.error});return;}
+  S.selected.venturex_stage=stage;
+  listLoaded=false;
+  set({stageMsg:tx().stage_ok});
+}
+
+async function saveNotes(){
+  const notes=document.getElementById('notes_ta')?.value||'';
+  const r=await callEdge('kyc-update-project',{
+    project_id:S.selected.id,
+    updates:{notes},
+    action:'notes_updated',
+  },S.session.token);
+  if(r.error){set({error:r.error});return;}
+  S.selected.notes=notes;
+  set({notesMsg:'✓ Notes sauvegardées'});
+}
+
+let selectedFile=null;
+function handleFileSelected(){
+  const f=document.getElementById('doc_file')?.files?.[0];
+  if(!f)return;
+  selectedFile=f;
+  const nd=document.getElementById('file_name_display');
+  const ub=document.getElementById('do_upload_btn');
+  if(nd)nd.textContent=`📎 ${f.name} (${(f.size/1024).toFixed(0)} KB)`;
+  if(ub)ub.style.display='block';
+}
+
+async function doUpload(){
+  const docType=document.getElementById('doc_type')?.value;
+  if(!docType){set({error:tx().sel_doc_type,uploadMsg:''});return;}
+  if(!selectedFile){return;}
+  set({uploading:true,uploadMsg:'',error:''});
+  try{
+    // Get signed upload URL
+    const r=await callEdge('kyc-get-upload-url',{
+      project_id:S.selected.id,
+      doc_type:docType,
+      file_name:selectedFile.name,
+      file_size:selectedFile.size,
+    },S.session.token);
+    if(r.error){set({uploading:false,error:r.error});return;}
+
+    // Upload file directly to Supabase Storage
+    const upload=await fetch(r.signed_url,{
+      method:'PUT',
+      headers:{'Content-Type':selectedFile.type||'application/octet-stream','x-upsert':'true'},
+      body:selectedFile,
+    });
+    if(!upload.ok){set({uploading:false,error:`Upload failed: ${upload.status}`});return;}
+
+    // Add doc to local state
+    if(!S.selected.kyc_project_documents)S.selected.kyc_project_documents=[];
+    S.selected.kyc_project_documents.push({
+      id:r.doc_id, doc_type:docType,
+      file_name:selectedFile.name, file_size:selectedFile.size,
+      file_url:`${SUPABASE_URL}/storage/v1/object/public/kyc-documents/${r.path}`,
+      uploaded_at:new Date().toISOString(),
+    });
+    selectedFile=null;
+    listLoaded=false;
+    set({uploading:false,uploadMsg:tx().upload_ok,error:''});
+  }catch(e){set({uploading:false,error:'Erreur de téléversement: '+e.message});}
+}
+
+render();
+</script>
+</body>
+</html>

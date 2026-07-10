@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kyc-admin-token',
 }
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       founder_email, founder_name, founder_phone, founder_country, founder_resume_text,
       project_type, sector, business_description, revenue_model, team_size, stage,
       website, timeline, financing_types, financing_other, funding_amount_needed, funding_currency,
-      notes, create_user_account,
+      payment_tier, notes, create_user_account,
     } = body
 
     if (!founder_email || !founder_name || !project_type || !sector || !business_description || !stage) {
@@ -75,6 +75,7 @@ Deno.serve(async (req) => {
         stage, website, timeline,
         financing_types: financing_types || [],
         financing_other, funding_amount_needed, funding_currency: funding_currency || 'USD',
+        payment_tier: payment_tier || null,
         status: 'registered',
         registered_by: admin.email,
         notes, user_id: userId,

@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kyc-admin-token',
 }
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       .select(`
         *,
         kyc_project_documents(id, doc_type, file_name, uploaded_at),
-        kyc_project_payments(id, amount, currency, tier, payment_status, paid_at)
+        kyc_project_payments(id, amount, currency, tier, payment_method, payment_status, paid_at)
       `)
       .order('created_at', { ascending: false })
 
