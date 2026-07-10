@@ -592,7 +592,6 @@ function renderStage(p,t){
 }
 
 function renderPayment(p,t,paid,payments){
-  return `
   const fr=S.lang==='fr';
   const tierInfo=TIERS.find(ti=>ti.id===(p.payment_tier||'sme'))||TIERS[1];
   const MOBILE_NETWORKS=[
