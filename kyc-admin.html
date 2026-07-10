@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>IFB — Portail Admin KYC</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background:#070B14; font-family:Inter,system-ui,sans-serif; color:#fff; }
@@ -185,6 +186,12 @@ let S = {
   projects:[], selected:null, loading:false, error:'',
   tab:'overview', uploading:false, uploadMsg:'', payMsg:'', stageMsg:'', notesMsg:'', editMsg:'',
 };
+
+// Stripe state — kept outside S to avoid re-mount on every render
+let _stripe = null;
+let _cardEl = null;
+let _omProofFile = null;
+const STRIPE_PK = 'pk_live_51QlhX1DV4GGUfngRRIJi02QYB2pTZg2bbX9T4xwM0i6FflEPt2FtV7ydZfNks9I9vOAcmwsLGM1U7tzbpmaP454C00qsme0XJ8';
 const tx = ()=>T[S.lang];
 
 function set(patch){Object.assign(S,patch);render();}
@@ -586,56 +593,163 @@ function renderStage(p,t){
 
 function renderPayment(p,t,paid,payments){
   return `
+  const fr=S.lang==='fr';
+  const tierInfo=TIERS.find(ti=>ti.id===(p.payment_tier||'sme'))||TIERS[1];
+  const MOBILE_NETWORKS=[
+    ['orange_money','🟠 Orange Money'],['mtn_momo','🟡 MTN Mobile Money'],
+    ['wave','🔵 Wave'],['moov','🟢 Moov Money'],
+    ['airtel_money','🔴 Airtel Money'],['mpesa','🟢 M-Pesa'],['other_mobile','📱 Autre réseau'],
+  ];
+  return `
   <div>
-    <!-- Activation fee info -->
+    <!-- Fee banner -->
     <div class="fee-box" style="margin-bottom:20px;text-align:center">
       <p style="font-size:30px;font-weight:900;color:#fff">${fmt(ACTIVATION_FEE)} XOF</p>
       <p style="font-size:13px;font-weight:700;color:#60a5fa;margin-top:4px">${t.payment_title}</p>
-      <p style="font-size:12px;color:#475569;margin-top:2px">${t.payment_info}</p>
+      <p style="font-size:12px;color:#475569;margin-top:2px">${tierInfo.label} — ${tierInfo.desc}</p>
     </div>
 
+    <!-- Existing payments -->
     ${payments.length>0?`
     <div class="card" style="margin-bottom:16px">
-      <p style="font-weight:800;font-size:13px;color:#34d399;margin-bottom:12px">✓ Paiements enregistrés</p>
+      <p style="font-weight:800;font-size:13px;color:#34d399;margin-bottom:12px">✓ ${fr?'Paiements enregistrés':'Payments recorded'}</p>
       ${payments.map(py=>`
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#1a2035;border-radius:8px;margin-bottom:8px">
           <div>
             <p style="color:#fff;font-size:13px;font-weight:700">${fmt(py.amount)} ${py.currency}</p>
-            <p style="color:#64748b;font-size:11px">${py.payment_method} · ${fmtDate(py.paid_at)}</p>
+            <p style="color:#64748b;font-size:11px">${py.payment_method}${py.reference?' · '+py.reference:''} · ${fmtDate(py.paid_at)}</p>
+            ${py.payment_proof_url?`<a href="${py.payment_proof_url}" target="_blank" style="color:#60a5fa;font-size:11px">📎 ${fr?'Voir le reçu':'View receipt'}</a>`:''}
           </div>
           <span class="tag" style="background:#10b98122;color:#34d399">${py.payment_status}</span>
         </div>`).join('')}
     </div>`:''}
 
+    <!-- Payment card -->
     <div class="card">
-      <p style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px">${t.record_payment||'Enregistrer un paiement'}</p>
-      <p style="color:#475569;font-size:12px;margin-bottom:16px">${S.lang==='fr'?'Vous pouvez enregistrer un paiement à tout moment, y compris au nom du fondateur.':'You can record a payment at any time, including on behalf of the founder.'}</p>
-      ${okBox(S.payMsg)}${errBox(S.error&&S.tab==='payment'?S.error:'')}
-      <form id="payf" style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div><label class="lbl">${t.pay_amount} *</label>
-            <input name="amount" type="number" required class="inp" value="${ACTIVATION_FEE}"/></div>
-          <div><label class="lbl">${t.pay_currency}</label>
-            <select name="currency" class="inp">
-              <option selected>XOF</option><option>XAF</option><option>USD</option><option>EUR</option><option>GBP</option>
-            </select>
-          </div>
-          <div><label class="lbl">${t.tier_label} *</label>
-            <select name="tier" required class="inp">
-              ${TIERS.map(ti=>`<option value="${ti.id}"${(p.payment_tier||'sme')===ti.id?' selected':''}>${ti.label} — ${ti.desc}</option>`).join('')}
-            </select>
-          </div>
-          <div><label class="lbl">${t.pay_method} *</label>
-            <select name="payment_method" required class="inp">
-              <option value="">—</option>
-              ${t.pay_methods.map((m,i)=>`<option value="${t.pay_methods_val[i]}">${m}</option>`).join('')}
-            </select>
-          </div>
-          <div><label class="lbl">${t.pay_ref}</label>
-            <input name="reference" class="inp" placeholder="TXN-0001"/></div>
+      <p style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px">${t.record_payment}</p>
+      <p style="color:#475569;font-size:12px;margin-bottom:16px">${fr?'Sélectionnez le mode de paiement et complétez le paiement pour activer le compte.':'Select a payment method to collect and activate the account.'}</p>
+
+      <!-- Tier selector (shared, always visible) -->
+      <div style="margin-bottom:16px">
+        <label class="lbl">${t.tier_label}</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="tier-sel">
+          ${TIERS.map(ti=>`
+            <div onclick="selPayTier('${ti.id}')" id="ptier_${ti.id}"
+              style="flex:1;min-width:120px;background:#1a2035;border:2px solid ${(p.payment_tier||'sme')===ti.id?'#2563eb':'rgba(100,116,139,.3)'};border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:.2s">
+              <p style="color:#fff;font-weight:700;font-size:13px">${ti.label}</p>
+              <p style="color:#64748b;font-size:10px">${ti.desc}</p>
+            </div>`).join('')}
         </div>
-        <button type="submit" class="btn-primary" style="width:100%;padding:14px">${S.loading&&S.tab==='payment'?t.paying:t.pay_btn}</button>
-      </form>
+        <input type="hidden" id="selected_tier" value="${p.payment_tier||'sme'}"/>
+      </div>
+
+      <!-- Method tabs -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(100,116,139,.2)">
+        ${[
+          ['stripe',   '💳 '+(fr?'Carte bancaire':'Card')],
+          ['offline',  '🟠 Orange Money / Mobile'],
+          ['bank',     '🏦 '+(fr?'Virement':'Bank Transfer')],
+          ['cash',     '💵 '+(fr?'Espèces / DEUS':'Cash / DEUS')],
+        ].map(([m,l],i)=>`
+          <button onclick="payTab('${m}')" id="ptab_${m}"
+            style="padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ${i===0?'#2563eb':'rgba(100,116,139,.3)'};background:${i===0?'rgba(37,99,235,.2)':'#1a2035'};color:${i===0?'#fff':'#64748b'};transition:.2s">
+            ${l}
+          </button>`).join('')}
+      </div>
+
+      ${okBox(S.payMsg)}${errBox(S.error&&S.tab==='payment'?S.error:'')}
+
+      <!-- ── Stripe Card ───────────────────────────────────────── -->
+      <div id="pay_stripe" style="display:block">
+        <p style="color:#64748b;font-size:12px;margin-bottom:10px">
+          ${fr?`Montant facturé : <strong style="color:#fff">153 EUR</strong> (équivalent 100 000 XOF, taux fixe)`
+              :`Charged amount: <strong style="color:#fff">€153 EUR</strong> (≈ 100,000 XOF, fixed rate)`}
+        </p>
+        <div style="background:#1a2035;border:1px solid rgba(100,116,139,.4);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div id="card-element"></div>
+        </div>
+        <p id="card-errors" style="color:#f87171;font-size:12px;min-height:16px;margin-bottom:10px"></p>
+        <button id="stripe-pay-btn" onclick="payWithStripe()" class="btn-primary" style="width:100%;padding:14px">
+          ${fr?'Débiter 153 € & Activer le compte':'Charge €153 & Activate Account'}
+        </button>
+      </div>
+
+      <!-- ── Orange Money / Mobile ────────────────────────────── -->
+      <div id="pay_offline" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label class="lbl">${fr?'Réseau mobile':'Mobile Network'}</label>
+            <select id="om_network" class="inp">
+              ${MOBILE_NETWORKS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="lbl">${fr?'N° de transaction *':'Transaction ID *'}</label>
+            <input id="om_ref" class="inp" placeholder="ex: OM-2026-7394820"/>
+          </div>
+          <div>
+            <label class="lbl">${fr?'Montant reçu (XOF)':'Amount received (XOF)'}</label>
+            <input id="om_amount" type="number" class="inp" value="${ACTIVATION_FEE}"/>
+          </div>
+          <div>
+            <label class="lbl">${fr?'Preuve de paiement (capture d\'écran)':'Payment Proof (screenshot / receipt)'}</label>
+            <input type="file" id="om_proof_file" accept="image/*,.pdf" style="display:none" onchange="omFileSelected()"/>
+            <div onclick="document.getElementById('om_proof_file').click()" class="upload-zone" style="padding:18px">
+              <p id="om_file_label" style="color:#475569;font-size:13px;margin:0">${fr?'📎 Cliquez pour joindre un reçu (optionnel)':'📎 Click to attach receipt (optional)'}</p>
+            </div>
+          </div>
+          <button onclick="payWithMobileMoney()" class="btn-primary" style="width:100%;padding:14px">
+            ${S.uploading?'⏳ '+(fr?'Vérification…':'Verifying…'):'✓ '+(fr?'Valider & Activer le compte':'Verify & Activate Account')}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Bank Transfer ────────────────────────────────────── -->
+      <div id="pay_bank" style="display:none">
+        <div style="background:#1a2035;border:1px solid rgba(100,116,139,.2);border-radius:10px;padding:16px;margin-bottom:14px;font-size:12px">
+          <p style="color:#64748b;font-weight:800;text-transform:uppercase;font-size:10px;letter-spacing:.08em;margin-bottom:8px">${fr?'Coordonnées bancaires IFB':'IFB Bank Details'}</p>
+          <p style="color:#cbd5e1">IBAN: <span style="color:#60a5fa;font-family:monospace">FR76 3000 4028 0005 0000 0000 123</span></p>
+          <p style="color:#cbd5e1">BIC: <span style="color:#60a5fa;font-family:monospace">BNPAFRPPXXX</span></p>
+          <p style="color:#fbbf24;margin-top:6px">${fr?'Référence':'Reference'}: <strong>IFB-KYC-${p.id?.slice(0,8)?.toUpperCase()||'XXXXXXXX'}</strong></p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label class="lbl">${fr?'Référence du virement reçu *':'Transfer Reference *'}</label>
+            <input id="bt_ref" class="inp" placeholder="IFB-KYC-XXXXXXXX"/>
+          </div>
+          <div>
+            <label class="lbl">${fr?'Montant reçu (XOF)':'Amount Received (XOF)'}</label>
+            <input id="bt_amount" type="number" class="inp" value="${ACTIVATION_FEE}"/>
+          </div>
+          <button onclick="payManual('bank_transfer','bt_ref','bt_amount')" class="btn-primary" style="width:100%;padding:14px">
+            ${fr?'Confirmer le virement & Activer':'Confirm Transfer & Activate'}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Cash / DEUS ─────────────────────────────────────── -->
+      <div id="pay_cash" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label class="lbl">${fr?'Mode de réception':'Receipt Mode'}</label>
+            <select id="cash_mode" class="inp">
+              <option value="deus">${fr?'Via DEUS App':'Via DEUS App'}</option>
+              <option value="offline">${fr?'Espèces (cash)':'Cash in hand'}</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">${fr?'Référence / Notes':'Reference / Notes'}</label>
+            <input id="cash_ref" class="inp" placeholder="${fr?'ex: Reçu espèces N°001':'ex: Cash Receipt #001'}"/>
+          </div>
+          <div>
+            <label class="lbl">${fr?'Montant reçu (XOF)':'Amount Received (XOF)'}</label>
+            <input id="cash_amount" type="number" class="inp" value="${ACTIVATION_FEE}"/>
+          </div>
+          <button onclick="payManualCash()" class="btn-primary" style="width:100%;padding:14px">
+            ${fr?'Confirmer la réception & Activer':'Confirm Receipt & Activate'}
+          </button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
@@ -729,29 +843,18 @@ function renderEdit(p,t){
 }
 
 function bindDetail(){
-  // Payment form
-  document.getElementById('payf')?.addEventListener('submit',async e=>{
-    e.preventDefault();
-    const d=Object.fromEntries(new FormData(e.target).entries());
-    set({loading:true,error:''});
-    try{
-      const r=await callEdge('kyc-record-payment',{
-        project_id:S.selected.id,
-        amount:Number(d.amount),
-        currency:d.currency,
-        tier:d.tier,
-        payment_method:d.payment_method,
-        reference:d.reference,
-      },S.session.token);
-      if(r.error){set({loading:false,error:r.error,tab:'payment'});return;}
-      S.selected.status='active';
-      S.selected.venturex_stage='intake';
-      if(!S.selected.kyc_project_payments)S.selected.kyc_project_payments=[];
-      S.selected.kyc_project_payments.push(r.payment);
-      listLoaded=false;
-      set({loading:false,payMsg:tx().pay_ok,error:''});
-    }catch{set({loading:false,error:tx().conn_err,tab:'payment'});}
-  });
+  // Init Stripe when payment tab is active
+  if(S.tab==='payment'){
+    setTimeout(()=>{
+      if(!_stripe) _stripe=Stripe(STRIPE_PK);
+      if(document.getElementById('card-element')){
+        const els=_stripe.elements({appearance:{theme:'night',variables:{colorPrimary:'#2563eb',colorBackground:'#1a2035',colorText:'#ffffff',colorTextPlaceholder:'#475569',fontFamily:'Inter,system-ui,sans-serif'}}});
+        _cardEl=els.create('card');
+        _cardEl.mount('#card-element');
+        _cardEl.on('change',e=>{const err=document.getElementById('card-errors');if(err)err.textContent=e.error?.message||'';});
+      }
+    },80);
+  }
 
   // Edit form
   document.getElementById('editf')?.addEventListener('submit',async e=>{
@@ -858,6 +961,170 @@ async function doUpload(){
     listLoaded=false;
     set({uploading:false,uploadMsg:tx().upload_ok,error:''});
   }catch(e){set({uploading:false,error:'Erreur de téléversement: '+e.message});}
+}
+
+// ── Payment method tab switcher (DOM-only, no re-render) ──────
+function payTab(m){
+  ['stripe','offline','bank','cash'].forEach(id=>{
+    const el=document.getElementById('pay_'+id);
+    const btn=document.getElementById('ptab_'+id);
+    if(el) el.style.display=(id===m)?'block':'none';
+    if(btn){
+      btn.style.borderColor=(id===m)?'#2563eb':'rgba(100,116,139,.3)';
+      btn.style.background=(id===m)?'rgba(37,99,235,.2)':'#1a2035';
+      btn.style.color=(id===m)?'#fff':'#64748b';
+    }
+  });
+  if(m==='stripe'&&!_cardEl){
+    if(!_stripe)_stripe=Stripe(STRIPE_PK);
+    const els=_stripe.elements({appearance:{theme:'night',variables:{colorPrimary:'#2563eb',colorBackground:'#1a2035',colorText:'#ffffff',colorTextPlaceholder:'#475569',fontFamily:'Inter,system-ui,sans-serif'}}});
+    _cardEl=els.create('card');
+    _cardEl.mount('#card-element');
+    _cardEl.on('change',e=>{const err=document.getElementById('card-errors');if(err)err.textContent=e.error?.message||'';});
+  }
+}
+
+function selPayTier(id){
+  document.getElementById('selected_tier').value=id;
+  TIERS.forEach(ti=>{
+    const el=document.getElementById('ptier_'+ti.id);
+    if(!el)return;
+    el.style.borderColor=ti.id===id?'#2563eb':'rgba(100,116,139,.3)';
+  });
+}
+
+function _getPayTier(){return document.getElementById('selected_tier')?.value||S.selected?.payment_tier||'sme';}
+
+function _onPaySuccess(payment){
+  S.selected.status='active';
+  S.selected.venturex_stage='intake';
+  if(!S.selected.kyc_project_payments)S.selected.kyc_project_payments=[];
+  S.selected.kyc_project_payments.push(payment);
+  listLoaded=false;
+  const fr=S.lang==='fr';
+  set({loading:false,uploading:false,payMsg:'✓ '+(fr?'Paiement confirmé — compte activé':'Payment confirmed — account activated'),error:''});
+}
+
+// ── Stripe Card Payment ───────────────────────────────────────
+async function payWithStripe(){
+  if(!_stripe||!_cardEl){set({error:'Stripe non initialisé. Cliquez sur "Carte bancaire" d\'abord.'});return;}
+  const btn=document.getElementById('stripe-pay-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Traitement…';}
+  set({loading:true,payMsg:'',error:''});
+  try{
+    const r=await callEdge('kyc-create-payment-intent',{
+      project_id:S.selected.id,
+      amount_eur:153,
+      founder_name:S.selected.founder_name,
+      founder_email:S.selected.founder_email,
+    },S.session.token);
+    if(r.error){set({loading:false,error:r.error,tab:'payment'});if(btn)btn.disabled=false;return;}
+
+    const {error:stripeErr,paymentIntent}=await _stripe.confirmCardPayment(r.client_secret,{
+      payment_method:{card:_cardEl,billing_details:{name:S.selected.founder_name||'',email:S.selected.founder_email||''}},
+    });
+    if(stripeErr){set({loading:false,error:stripeErr.message,tab:'payment'});if(btn)btn.disabled=false;return;}
+
+    if(paymentIntent.status==='succeeded'){
+      const r2=await callEdge('kyc-record-payment',{
+        project_id:S.selected.id,
+        amount:153,currency:'EUR',
+        tier:_getPayTier(),
+        payment_method:'stripe',
+        reference:paymentIntent.id,
+      },S.session.token);
+      if(r2.error){set({loading:false,error:r2.error,tab:'payment'});return;}
+      _onPaySuccess(r2.payment);
+    }
+  }catch(e){set({loading:false,error:'Stripe: '+e.message,tab:'payment'});if(btn)btn.disabled=false;}
+}
+
+// ── Orange Money / Mobile Money ───────────────────────────────
+function omFileSelected(){
+  const f=document.getElementById('om_proof_file')?.files?.[0];
+  if(!f)return;
+  _omProofFile=f;
+  const lbl=document.getElementById('om_file_label');
+  if(lbl)lbl.textContent=`📎 ${f.name} (${(f.size/1024).toFixed(0)} KB)`;
+}
+
+async function payWithMobileMoney(){
+  const ref=document.getElementById('om_ref')?.value?.trim();
+  const network=document.getElementById('om_network')?.value||'orange_money';
+  const amount=Number(document.getElementById('om_amount')?.value)||ACTIVATION_FEE;
+  if(!ref){set({error:S.lang==='fr'?'Numéro de transaction requis':'Transaction ID required',tab:'payment'});return;}
+
+  set({uploading:true,payMsg:'',error:''});
+  let proofUrl=null;
+
+  try{
+    // Upload proof screenshot if provided
+    if(_omProofFile){
+      const ur=await callEdge('kyc-get-upload-url',{
+        project_id:S.selected.id,
+        doc_type:'payment_proof',
+        file_name:'proof_'+_omProofFile.name,
+        file_size:_omProofFile.size,
+      },S.session.token);
+      if(!ur.error){
+        const up=await fetch(ur.signed_url,{method:'PUT',headers:{'Content-Type':_omProofFile.type||'image/jpeg','x-upsert':'true'},body:_omProofFile});
+        if(up.ok){
+          proofUrl=`${SUPABASE_URL}/storage/v1/object/public/kyc-documents/${ur.path}`;
+          if(!S.selected.kyc_project_documents)S.selected.kyc_project_documents=[];
+          S.selected.kyc_project_documents.push({id:ur.doc_id,doc_type:'payment_proof',file_name:_omProofFile.name,file_url:proofUrl,uploaded_at:new Date().toISOString()});
+        }
+      }
+    }
+
+    const r=await callEdge('kyc-record-payment',{
+      project_id:S.selected.id,
+      amount,currency:'XOF',
+      tier:_getPayTier(),
+      payment_method:'offline',
+      reference:`${network}:${ref}`,
+      payment_proof_url:proofUrl,
+    },S.session.token);
+    if(r.error){set({uploading:false,error:r.error,tab:'payment'});return;}
+    _omProofFile=null;
+    _onPaySuccess(r.payment);
+  }catch(e){set({uploading:false,error:'Erreur: '+e.message,tab:'payment'});}
+}
+
+// ── Bank Transfer ─────────────────────────────────────────────
+async function payManual(method,refId,amountId){
+  const ref=document.getElementById(refId)?.value?.trim()||'';
+  const amount=Number(document.getElementById(amountId)?.value)||ACTIVATION_FEE;
+  set({loading:true,payMsg:'',error:''});
+  try{
+    const r=await callEdge('kyc-record-payment',{
+      project_id:S.selected.id,
+      amount,currency:'XOF',
+      tier:_getPayTier(),
+      payment_method:method,
+      reference:ref||undefined,
+    },S.session.token);
+    if(r.error){set({loading:false,error:r.error,tab:'payment'});return;}
+    _onPaySuccess(r.payment);
+  }catch{set({loading:false,error:tx().conn_err,tab:'payment'});}
+}
+
+// ── Cash / DEUS App ───────────────────────────────────────────
+async function payManualCash(){
+  const mode=document.getElementById('cash_mode')?.value||'offline';
+  const ref=document.getElementById('cash_ref')?.value?.trim()||'';
+  const amount=Number(document.getElementById('cash_amount')?.value)||ACTIVATION_FEE;
+  set({loading:true,payMsg:'',error:''});
+  try{
+    const r=await callEdge('kyc-record-payment',{
+      project_id:S.selected.id,
+      amount,currency:'XOF',
+      tier:_getPayTier(),
+      payment_method:mode,
+      reference:ref||undefined,
+    },S.session.token);
+    if(r.error){set({loading:false,error:r.error,tab:'payment'});return;}
+    _onPaySuccess(r.payment);
+  }catch{set({loading:false,error:tx().conn_err,tab:'payment'});}
 }
 
 render();

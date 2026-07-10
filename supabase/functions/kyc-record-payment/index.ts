@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
   if (!admin) return json({ error: 'Unauthorized' }, 401)
 
   try {
-    const { project_id, amount, currency, tier, payment_method, reference, notes } = await req.json()
+    const { project_id, amount, currency, tier, payment_method, reference, notes, payment_proof_url } = await req.json()
     if (!project_id || !amount || !tier || !payment_method) return json({ error: 'Missing required fields' }, 400)
 
     const supabase = createClient(
@@ -35,10 +35,11 @@ Deno.serve(async (req) => {
     const { data: payment, error: payError } = await supabase
       .from('kyc_project_payments')
       .insert({
-        project_id, amount, currency: currency || 'USD',
+        project_id, amount, currency: currency || 'XOF',
         tier, payment_method,
         payment_status: 'completed',
         reference, notes,
+        payment_proof_url: payment_proof_url || null,
         paid_at: new Date().toISOString(),
         recorded_by: admin.email,
       })
