@@ -1,7 +1,7 @@
 // DEUS AFR Network Node — Service Worker
 // Turns every installed device into a sovereign light node on the AFR chain.
 
-const CACHE_NAME = 'deus-afr-v2';
+const CACHE_NAME = 'deus-afr-v3';
 const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/favicon.svg'];
 const IDB_NAME = 'deus-afr-node';
 const IDB_VERSION = 1;
@@ -75,31 +75,59 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// ── Fetch: network-first with cache fallback ──────────────────────────────────
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // Only handle http/https — skip chrome-extension://, data:, blob: etc.
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
-  // Supabase / API calls — network first, no caching of auth tokens
+  // Supabase / API calls — always network, never cache auth tokens
   if (url.hostname.includes('supabase.co') || url.pathname.startsWith('/functions/')) {
     event.respondWith(fetch(event.request).catch(() => new Response(JSON.stringify({ error: 'offline' }), { headers: { 'Content-Type': 'application/json' }, status: 503 })));
     return;
   }
 
-  // Static assets — cache first
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        if (response.ok && event.request.method === 'GET') {
+  // Navigation requests (HTML pages) — network-first so deploys are instant
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
         }
         return response;
-      }).catch(() => new Response('', { status: 503 }));
-    })
+      }).catch(() => caches.match(event.request).then((cached) => cached || new Response('', { status: 503 })))
+    );
+    return;
+  }
+
+  // Content-hashed Vite assets (/assets/*.js, /assets/*.css) — cache-first (immutable filenames)
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
+          }
+          return response;
+        }).catch(() => new Response('', { status: 503 }));
+      })
+    );
+    return;
+  }
+
+  // Everything else (icons, manifest, fonts) — network-first with cache fallback
+  event.respondWith(
+    fetch(event.request).then((response) => {
+      if (response.ok && event.request.method === 'GET') {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone).catch(() => {}));
+      }
+      return response;
+    }).catch(() => caches.match(event.request).then((cached) => cached || new Response('', { status: 503 })))
   );
 });
 
