@@ -5,13 +5,17 @@ import { readFileSync } from 'fs';
 import viteCompression from 'vite-plugin-compression';
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 
+// Skip compression on Railway — it times out the 30-min build limit.
+// Railway's CDN handles gzip automatically; local server.cjs serves .gz/.br for self-hosted.
+const isRailway = !!process.env.RAILWAY_ENVIRONMENT;
+
 export default defineConfig({
   plugins: [
     react(),
-    // Generate .gz — serve package auto-serves them: 1MB vendor-misc → ~280KB
-    viteCompression({ algorithm: 'gzip', ext: '.gz', threshold: 10240 }),
-    // Brotli is 20% smaller than gzip, supported by all modern browsers incl. Safari
-    viteCompression({ algorithm: 'brotliCompress', ext: '.br', threshold: 10240 }),
+    ...(!isRailway ? [
+      viteCompression({ algorithm: 'gzip', ext: '.gz', threshold: 10240 }),
+      viteCompression({ algorithm: 'brotliCompress', ext: '.br', threshold: 10240 }),
+    ] : []),
   ],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
