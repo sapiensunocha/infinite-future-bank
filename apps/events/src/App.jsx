@@ -2,9 +2,9 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 
-const TicketingSystem = lazy(() => import('./TicketingSystem'));
-const PublicEventPage = lazy(() => import('./PublicEventPage'));
-const TicketGate = lazy(() => import('./TicketGate'));
+const TicketingSystem  = lazy(() => import('@core/TicketingSystem'));
+const PublicEventPage  = lazy(() => import('@core/PublicEventPage'));
+const TicketGate       = lazy(() => import('@core/features/commerce/TicketGate'));
 
 const Spinner = () => (
   <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -22,15 +22,15 @@ export default function App() {
   }, []);
 
   if (session === undefined) return <Spinner />;
-  if (!session) return <Navigate to="https://app.infinitefuturebank.org" />;
+  if (!session) window.location.href = 'https://app.infinitefuturebank.org';
 
   return (
     <Router>
       <Suspense fallback={<Spinner />}>
         <Routes>
-          <Route path="/" element={<TicketingSystem />} />
+          <Route path="/"          element={<TicketingSystem />} />
           <Route path="/event/:id" element={<PublicEventPage />} />
-          <Route path="/gate/:id" element={<TicketGate />} />
+          <Route path="/gate/:id"  element={<TicketGate />} />
         </Routes>
       </Suspense>
     </Router>

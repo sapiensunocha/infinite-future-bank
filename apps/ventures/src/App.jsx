@@ -14,8 +14,6 @@ const CapitalPlatform = lazy(() => import('./features/capital/CapitalPlatform'))
 const VentureExchange = lazy(() => import('./features/exchange/VentureExchange'));
 const MarketIntelligence = lazy(() => import('./features/market/MarketIntelligence'));
 const DeusMarket = lazy(() => import('./features/market/DeusMarket'));
-const FirstCustomerEngine = lazy(() => import('./features/network/FirstCustomerEngine'));
-
 const Spinner = () => (
   <div className="min-h-screen bg-slate-950 flex items-center justify-center">
     <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
@@ -35,7 +33,6 @@ const navItems = [
   { path: '/exchange', label: 'Exchange' },
   { path: '/market', label: 'Market Intel' },
   { path: '/deus-market', label: 'DEUS Market' },
-  { path: '/first-customer', label: 'First Customer' },
 ];
 
 export default function App() {
@@ -93,7 +90,6 @@ export default function App() {
               <Route path="/exchange" element={<VentureExchange />} />
               <Route path="/market" element={<MarketIntelligence />} />
               <Route path="/deus-market" element={<DeusMarket />} />
-              <Route path="/first-customer" element={<FirstCustomerEngine />} />
             </Routes>
           </Suspense>
         </main>
