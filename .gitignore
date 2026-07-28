@@ -1,1 +1,40 @@
+# Dependencies
 node_modules
+**/node_modules
+
+# Build outputs
+**/dist
+**/.turbo
+
+# Env files — NEVER commit real keys
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# Netlify
+.netlify
+**/.netlify
+
+# Apple / macOS
+.DS_Store
+**/.DS_Store
+
+# Capacitor / Mobile (separate repo when ready)
+apps/core/ios
+apps/core/android
+apps/core/electron
+
+# Large APK / desktop build artifacts
+apps/core/*.apk
+apps/core/*.dmg
+apps/core/*.exe
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode
+*.code-workspace
