@@ -56,7 +56,7 @@ export default function App() {
           >
             Emergency SOS
           </NavLink>
-          <AppSwitcher currentApp="npo" />
+          <AppSwitcher currentApp="npo" supabase={supabase} />
         </aside>
 
         {/* Main content */}

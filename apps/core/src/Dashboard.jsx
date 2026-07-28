@@ -320,6 +320,7 @@ export default function Dashboard({ session, onSignOut }) {
           activeTab={activeTab} setActiveTab={setActiveTab}
           onSignOut={onSignOut} t={t} commercialProfile={commercialProfile}
           onOpenAdmin={() => setShowAdmin(true)}
+          supabase={supabase}
         />
         
         <main className="flex-1 flex flex-col relative overflow-hidden">

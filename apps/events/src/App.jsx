@@ -47,7 +47,7 @@ export default function App() {
               {label}
             </NavLink>
           ))}
-          <AppSwitcher currentApp="events" />
+          <AppSwitcher currentApp="events" supabase={supabase} />
         </aside>
         <main className="flex-1 ml-52 p-6">
           <Suspense fallback={<Spinner />}>

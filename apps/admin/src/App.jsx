@@ -52,7 +52,7 @@ export default function App() {
               {label}
             </NavLink>
           ))}
-          <AppSwitcher currentApp="admin" />
+          <AppSwitcher currentApp="admin" supabase={supabase} />
         </aside>
         <main className="flex-1 ml-52 p-6">
           <Suspense fallback={<Spinner />}>

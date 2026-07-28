@@ -4,8 +4,9 @@ import {
   Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, Shield,
   Building2
 } from 'lucide-react';
+import AppSwitcher from '../AppSwitcher';
 
-export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, onOpenAdmin, t, commercialProfile }) {
+export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, onOpenAdmin, t, commercialProfile, supabase }) {
   const isCapitalEligible = commercialProfile?.pascaline_status === 'eligible_for_funding';
   const tabs = [
     { id: 'NET_POSITION',    icon: <Compass size={18} />,    label: t('nav.home') },
@@ -76,6 +77,11 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
             </button>
           ))}
         </nav>
+
+        {/* App switcher */}
+        <div className="px-4 pb-2">
+          <AppSwitcher currentApp="core" supabase={supabase} light />
+        </div>
 
         {/* Sign out + Admin */}
         <div className="p-4 border-t border-slate-200/60 shrink-0 space-y-2">

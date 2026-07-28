@@ -75,7 +75,7 @@ export default function App() {
               {label}
             </NavLink>
           ))}
-          <AppSwitcher currentApp="ventures" />
+          <AppSwitcher currentApp="ventures" supabase={supabase} />
         </aside>
 
         {/* Main content */}

@@ -47,7 +47,7 @@ const APPS = [
     textColor: 'text-blue-400',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-        <path d="M12 2L8 6H4l2 4-4 2 4 2-2 4h4l4 4 4-4h4l-2-4 4-2-4-2 2-4h-4L12 2z" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 2L8 8H2l4 4-2 6 8-4 8 4-2-6 4-4h-6L12 2z" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -90,14 +90,41 @@ const APPS = [
   },
 ];
 
-export default function AppSwitcher({ currentApp }) {
+async function bridgeAndGo(supabase, url) {
+  try {
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        const target = new URL(url);
+        target.hash = [
+          `access_token=${session.access_token}`,
+          `refresh_token=${session.refresh_token}`,
+          `expires_in=3600`,
+          `token_type=bearer`,
+        ].join('&');
+        window.location.href = target.toString();
+        return;
+      }
+    }
+  } catch (_) {}
+  window.location.href = url;
+}
+
+export default function AppSwitcher({ currentApp, supabase, light = false }) {
   const [open, setOpen] = useState(false);
 
+  const border  = light ? 'border-slate-200/60' : 'border-slate-800';
+  const btnBase = light
+    ? 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+    : 'text-slate-400 hover:text-white hover:bg-slate-800';
+  const menuBg  = light ? 'bg-white border border-slate-200 shadow-lg' : 'bg-slate-800 border border-slate-700';
+  const itemHover = light ? 'hover:bg-slate-50' : 'hover:bg-slate-700';
+
   return (
-    <div className="relative mt-auto pt-4 border-t border-slate-800">
+    <div className={`relative mt-auto pt-4 border-t ${border}`}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm"
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-sm ${btnBase}`}
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
           <rect x="3" y="3" width="4" height="4" rx="1" />
@@ -110,7 +137,7 @@ export default function AppSwitcher({ currentApp }) {
           <rect x="10" y="17" width="4" height="4" rx="1" />
           <rect x="17" y="17" width="4" height="4" rx="1" />
         </svg>
-        <span>Switch App</span>
+        <span className="text-xs font-semibold uppercase tracking-widest">IFB Apps</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
           className={`w-3 h-3 ml-auto transition-transform ${open ? 'rotate-180' : ''}`}>
           <polyline points="6 9 12 15 18 9" />
@@ -118,20 +145,20 @@ export default function AppSwitcher({ currentApp }) {
       </button>
 
       {open && (
-        <div className="mt-1 bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
+        <div className={`mt-1 rounded-lg overflow-hidden ${menuBg}`}>
           {APPS.filter(a => a.key !== currentApp).map(app => (
-            <a
+            <button
               key={app.key}
-              href={app.url}
-              className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700 transition-colors group"
+              onClick={() => bridgeAndGo(supabase, app.url)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 transition-colors group ${itemHover}`}
             >
               <span className={`${app.color} rounded-md p-1 text-white shrink-0`}>
                 {app.icon}
               </span>
-              <span className={`text-xs font-medium ${app.textColor} group-hover:text-white transition-colors`}>
+              <span className={`text-xs font-semibold ${light ? 'text-slate-600 group-hover:text-slate-900' : `${app.textColor} group-hover:text-white`} transition-colors`}>
                 {app.name}
               </span>
-            </a>
+            </button>
           ))}
         </div>
       )}
