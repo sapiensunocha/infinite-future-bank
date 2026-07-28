@@ -54,15 +54,11 @@ export default function App() {
         {/* Sidebar */}
         <aside className="w-56 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-blue-600 rounded-lg p-1.5">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
-                  <path d="M12 2L8 8H2l4 4-2 6 8-4 8 4-2-6 4-4h-6L12 2z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <span className="text-blue-400 font-bold text-lg">VentureX</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-white font-black text-2xl tracking-tight">DEUS</span>
+              <span className="text-blue-400 text-[10px] font-semibold uppercase tracking-widest leading-none mb-0.5">ventures</span>
             </div>
-            <p className="text-slate-500 text-xs">IFB Ventures Platform</p>
+            <p className="text-slate-600 text-[10px] mt-0.5 tracking-wide">Infinite Future Bank</p>
           </div>
           {navItems.map(({ path, label }) => (
             <NavLink

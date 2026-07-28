@@ -40,15 +40,11 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-white flex">
         <aside className="w-52 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-red-700 rounded-lg p-1.5">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <span className="text-red-400 font-bold text-lg">Admin</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-white font-black text-2xl tracking-tight">DEUS</span>
+              <span className="text-red-400 text-[10px] font-semibold uppercase tracking-widest leading-none mb-0.5">admin</span>
             </div>
-            <p className="text-slate-500 text-xs">IFB Administration</p>
+            <p className="text-slate-600 text-[10px] mt-0.5 tracking-wide">Infinite Future Bank</p>
           </div>
           {navItems.map(({ path, label }) => (
             <NavLink key={path} to={path}

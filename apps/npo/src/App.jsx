@@ -30,15 +30,11 @@ export default function App() {
         {/* Sidebar */}
         <aside className="w-52 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-rose-600 rounded-lg p-1.5">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <span className="text-rose-400 font-bold text-lg">NPO Hub</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-white font-black text-2xl tracking-tight">DEUS</span>
+              <span className="text-rose-400 text-[10px] font-semibold uppercase tracking-widest leading-none mb-0.5">npo</span>
             </div>
-            <p className="text-slate-500 text-xs">IFB Nonprofit Suite</p>
+            <p className="text-slate-600 text-[10px] mt-0.5 tracking-wide">Infinite Future Bank</p>
           </div>
           <NavLink
             to="/hub"
