@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
+import AppSwitcher from '@core/components/AppSwitcher';
 
 const NpoHub = lazy(() => import('./NpoHub'));
 const EmergencySOS = lazy(() => import('./EmergencySOS'));
@@ -27,16 +28,23 @@ export default function App() {
     <Router>
       <div className="min-h-screen bg-slate-950 text-white flex">
         {/* Sidebar */}
-        <aside className="w-48 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0">
+        <aside className="w-52 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <span className="text-emerald-400 font-bold text-xl">NPO Hub</span>
-            <p className="text-slate-500 text-xs mt-1">IFB Nonprofit Suite</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-rose-600 rounded-lg p-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span className="text-rose-400 font-bold text-lg">NPO Hub</span>
+            </div>
+            <p className="text-slate-500 text-xs">IFB Nonprofit Suite</p>
           </div>
           <NavLink
             to="/hub"
             className={({ isActive }) =>
               `px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                isActive ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`
             }
           >
@@ -52,10 +60,11 @@ export default function App() {
           >
             Emergency SOS
           </NavLink>
+          <AppSwitcher currentApp="npo" />
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 ml-48 p-6">
+        <main className="flex-1 ml-52 p-6">
           <Suspense fallback={<Spinner />}>
             <Routes>
               <Route path="/" element={<Navigate to="/hub" replace />} />

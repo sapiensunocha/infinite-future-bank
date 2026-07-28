@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
+import AppSwitcher from '@core/components/AppSwitcher';
 
 const VentureXAccelerator = lazy(() => import('./features/venturex/VentureXAccelerator'));
 const VentureXFeed = lazy(() => import('./features/venturex/VentureXFeed'));
@@ -53,8 +54,15 @@ export default function App() {
         {/* Sidebar */}
         <aside className="w-56 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <span className="text-blue-400 font-bold text-xl">VentureX</span>
-            <p className="text-slate-500 text-xs mt-1">IFB Ventures Platform</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-blue-600 rounded-lg p-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
+                  <path d="M12 2L8 8H2l4 4-2 6 8-4 8 4-2-6 4-4h-6L12 2z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span className="text-blue-400 font-bold text-lg">VentureX</span>
+            </div>
+            <p className="text-slate-500 text-xs">IFB Ventures Platform</p>
           </div>
           {navItems.map(({ path, label }) => (
             <NavLink
@@ -71,6 +79,7 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <AppSwitcher currentApp="ventures" />
         </aside>
 
         {/* Main content */}

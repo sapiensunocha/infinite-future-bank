@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
+import AppSwitcher from '@core/components/AppSwitcher';
 
 const CompanyFormationHub   = lazy(() => import('@core/features/formation/CompanyFormationHub'));
 const BillingTerminal       = lazy(() => import('@core/features/commerce/BillingTerminal'));
@@ -59,8 +60,16 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-white flex">
         <aside className="w-56 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <span className="text-cyan-400 font-bold text-xl">IFB Business</span>
-            <p className="text-slate-500 text-xs mt-1">Business Suite</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-cyan-600 rounded-lg p-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
+                  <rect x="2" y="7" width="20" height="14" rx="2" />
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="text-cyan-400 font-bold text-lg">Business</span>
+            </div>
+            <p className="text-slate-500 text-xs">IFB Business Suite</p>
           </div>
           {navItems.map(({ path, label }) => (
             <NavLink key={path} to={path}
@@ -68,6 +77,7 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <AppSwitcher currentApp="business" />
         </aside>
         <main className="flex-1 ml-56 p-6">
           <Suspense fallback={<Spinner />}>

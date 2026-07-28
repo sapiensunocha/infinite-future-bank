@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
+import AppSwitcher from '@core/components/AppSwitcher';
 
 const AdminKYCPortal  = lazy(() => import('@core/features/kyc/AdminKYCPortal'));
 const KYCWizard       = lazy(() => import('@core/features/kyc/KYCWizard'));
@@ -39,8 +40,15 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-white flex">
         <aside className="w-52 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <span className="text-red-400 font-bold text-xl">IFB Admin</span>
-            <p className="text-slate-500 text-xs mt-1">Administration Panel</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-red-700 rounded-lg p-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span className="text-red-400 font-bold text-lg">Admin</span>
+            </div>
+            <p className="text-slate-500 text-xs">IFB Administration</p>
           </div>
           {navItems.map(({ path, label }) => (
             <NavLink key={path} to={path}
@@ -48,6 +56,7 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <AppSwitcher currentApp="admin" />
         </aside>
         <main className="flex-1 ml-52 p-6">
           <Suspense fallback={<Spinner />}>

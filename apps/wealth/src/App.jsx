@@ -1,6 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
+import AppSwitcher from '@core/components/AppSwitcher';
 
 const CommunityLoanNetwork  = lazy(() => import('@core/features/lending/CommunityLoanNetwork'));
 const LombardCredit         = lazy(() => import('@core/features/lending/LombardCredit'));
@@ -58,8 +59,16 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-white flex">
         <aside className="w-56 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col py-6 px-4 gap-1 fixed left-0 top-0 bottom-0 overflow-y-auto">
           <div className="mb-6 px-2">
-            <span className="text-emerald-400 font-bold text-xl">IFB Wealth</span>
-            <p className="text-slate-500 text-xs mt-1">Wealth Management</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-emerald-600 rounded-lg p-1.5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
+                  <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline points="16 7 22 7 22 13" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <span className="text-emerald-400 font-bold text-lg">Wealth</span>
+            </div>
+            <p className="text-slate-500 text-xs">IFB Wealth Management</p>
           </div>
           {navItems.map(({ path, label }) => (
             <NavLink key={path} to={path}
@@ -67,6 +76,7 @@ export default function App() {
               {label}
             </NavLink>
           ))}
+          <AppSwitcher currentApp="wealth" />
         </aside>
         <main className="flex-1 ml-56 p-6">
           <Suspense fallback={<Spinner />}>
