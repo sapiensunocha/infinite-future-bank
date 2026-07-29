@@ -1,8 +1,9 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 import AppSwitcher from '@core/components/AppSwitcher';
 
+const BusinessDashboard     = lazy(() => import('./BusinessDashboard'));
 const CompanyFormationHub   = lazy(() => import('@core/features/formation/CompanyFormationHub'));
 const BillingTerminal       = lazy(() => import('@core/features/commerce/BillingTerminal'));
 const AFRNetworkPanel       = lazy(() => import('@core/features/network/AFRNetworkPanel'));
@@ -26,17 +27,18 @@ const Spinner = () => (
 );
 
 const navItems = [
+  { path: '/',                label: 'Dashboard' },
   { path: '/formation',       label: 'Company Formation' },
   { path: '/billing',         label: 'Billing Terminal' },
+  { path: '/payroll',         label: 'Payroll' },
+  { path: '/contracts',       label: 'Smart Contracts' },
+  { path: '/crm',             label: 'Executive CRM' },
+  { path: '/underwriting',    label: 'Underwriting' },
+  { path: '/first-customer',  label: 'First Customer' },
   { path: '/network',         label: 'AFR Network' },
   { path: '/tap-to-pay',      label: 'Tap To Pay' },
   { path: '/become-processor',label: 'Become Processor' },
   { path: '/processor-map',   label: 'Processor Map' },
-  { path: '/first-customer',  label: 'First Customer' },
-  { path: '/crm',             label: 'Executive CRM' },
-  { path: '/payroll',         label: 'Payroll' },
-  { path: '/contracts',       label: 'Smart Contracts' },
-  { path: '/underwriting',    label: 'Underwriting' },
   { path: '/deus-market',     label: 'DEUS Market' },
   { path: '/deus-nexus',      label: 'DEUS Nexus' },
   { path: '/market-intel',    label: 'Market Intel' },
@@ -77,7 +79,7 @@ export default function App() {
         <main className="flex-1 ml-56 p-6">
           <Suspense fallback={<Spinner />}>
             <Routes>
-              <Route path="/"                element={<Navigate to="/formation" replace />} />
+              <Route path="/"                element={<BusinessDashboard />} />
               <Route path="/formation"       element={<CompanyFormationHub />} />
               <Route path="/billing"         element={<BillingTerminal />} />
               <Route path="/network"         element={<AFRNetworkPanel />} />

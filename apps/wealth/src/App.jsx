@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-do
 import { supabase } from './services/supabaseClient';
 import AppSwitcher from '@core/components/AppSwitcher';
 
+const WealthDashboard       = lazy(() => import('./WealthDashboard'));
 const CommunityLoanNetwork  = lazy(() => import('@core/features/lending/CommunityLoanNetwork'));
 const LombardCredit         = lazy(() => import('@core/features/lending/LombardCredit'));
 const AgriShield            = lazy(() => import('@core/features/insurance/AgriShield'));
@@ -10,12 +11,6 @@ const PensionFund           = lazy(() => import('@core/features/pension/PensionF
 const PocketVaultSync       = lazy(() => import('@core/features/mysafe/PocketVaultSync'));
 const VaultManager          = lazy(() => import('@core/features/mysafe/VaultManager'));
 const CashOptimizer         = lazy(() => import('@core/features/treasury/CashOptimizer'));
-const WealthHome = () => (
-  <div className="p-8">
-    <h1 className="text-3xl font-black text-white mb-2">IFB Wealth</h1>
-    <p className="text-slate-400">Select a tool from the sidebar.</p>
-  </div>
-);
 const FinancialPlanner      = lazy(() => import('@core/FinancialPlanner'));
 const WealthInvest          = lazy(() => import('@core/WealthInvest'));
 const NetPositionHome       = lazy(() => import('@core/views/NetPositionHome'));
@@ -28,6 +23,7 @@ const Spinner = () => (
 );
 
 const navItems = [
+  { path: '/',              label: 'Dashboard' },
   { path: '/dashboard',     label: 'Overview' },
   { path: '/net-position',  label: 'Net Position' },
   { path: '/planner',       label: 'Financial Planner' },
@@ -76,8 +72,8 @@ export default function App() {
         <main className="flex-1 ml-56 p-6">
           <Suspense fallback={<Spinner />}>
             <Routes>
-              <Route path="/"             element={<WealthHome />} />
-              <Route path="/dashboard"    element={<WealthHome />} />
+              <Route path="/"             element={<WealthDashboard />} />
+              <Route path="/dashboard"    element={<WealthDashboard />} />
               <Route path="/net-position" element={<NetPositionHome />} />
               <Route path="/planner"      element={<FinancialPlanner />} />
               <Route path="/invest"       element={<WealthInvest />} />

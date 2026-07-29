@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-do
 import { supabase } from './services/supabaseClient';
 import AppSwitcher from '@core/components/AppSwitcher';
 
+const EventsDashboard  = lazy(() => import('./EventsDashboard'));
 const TicketingSystem  = lazy(() => import('@core/TicketingSystem'));
 const PublicEventPage  = lazy(() => import('@core/PublicEventPage'));
 const TicketGate       = lazy(() => import('@core/features/commerce/TicketGate'));
@@ -14,7 +15,8 @@ const Spinner = () => (
 );
 
 const navItems = [
-  { path: '/',        label: 'All Events' },
+  { path: '/',        label: 'Dashboard'   },
+  { path: '/events',  label: 'All Events'  },
   { path: '/gate/0',  label: 'Ticket Gate' },
 ];
 
@@ -52,7 +54,8 @@ export default function App() {
         <main className="flex-1 ml-52 p-6">
           <Suspense fallback={<Spinner />}>
             <Routes>
-              <Route path="/"          element={<TicketingSystem />} />
+              <Route path="/"          element={<EventsDashboard />} />
+              <Route path="/events"    element={<TicketingSystem />} />
               <Route path="/event/:id" element={<PublicEventPage />} />
               <Route path="/gate/:id"  element={<TicketGate />} />
             </Routes>

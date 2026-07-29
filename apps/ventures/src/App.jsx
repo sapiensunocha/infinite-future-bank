@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react
 import { supabase } from './services/supabaseClient';
 import AppSwitcher from '@core/components/AppSwitcher';
 
+const VenturesDashboard = lazy(() => import('./VenturesDashboard'));
 const VentureXAccelerator = lazy(() => import('./features/venturex/VentureXAccelerator'));
 const VentureXFeed = lazy(() => import('./features/venturex/VentureXFeed'));
 const VentureXFranchise = lazy(() => import('./features/venturex/VentureXFranchise'));
@@ -22,6 +23,7 @@ const Spinner = () => (
 );
 
 const navItems = [
+  { path: '/', label: 'Dashboard' },
   { path: '/feed', label: 'Feed' },
   { path: '/accelerator', label: 'Accelerator' },
   { path: '/launchpad', label: 'Launchpad' },
@@ -82,7 +84,7 @@ export default function App() {
         <main className="flex-1 ml-56 p-6">
           <Suspense fallback={<Spinner />}>
             <Routes>
-              <Route path="/" element={<Navigate to="/feed" replace />} />
+              <Route path="/" element={<VenturesDashboard />} />
               <Route path="/feed" element={<VentureXFeed />} />
               <Route path="/accelerator" element={<VentureXAccelerator />} />
               <Route path="/launchpad" element={<VentureXLaunchpad />} />

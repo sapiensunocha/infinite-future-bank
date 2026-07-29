@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink, Navigate } from 'react
 import { supabase } from './services/supabaseClient';
 import AppSwitcher from '@core/components/AppSwitcher';
 
+const NpoDashboard = lazy(() => import('./NpoDashboard'));
 const NpoHub = lazy(() => import('./NpoHub'));
 const EmergencySOS = lazy(() => import('./EmergencySOS'));
 
@@ -36,26 +37,16 @@ export default function App() {
             </div>
             <p className="text-slate-600 text-[10px] mt-0.5 tracking-wide">Infinite Future Bank</p>
           </div>
-          <NavLink
-            to="/hub"
-            className={({ isActive }) =>
-              `px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`
-            }
-          >
-            NPO Hub
-          </NavLink>
-          <NavLink
-            to="/sos"
-            className={({ isActive }) =>
-              `px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
-              }`
-            }
-          >
-            Emergency SOS
-          </NavLink>
+          {[
+            { path: '/',    label: 'Dashboard'     },
+            { path: '/hub', label: 'NPO Hub'       },
+            { path: '/sos', label: 'Emergency SOS' },
+          ].map(({ path, label }) => (
+            <NavLink key={path} to={path} end={path === '/'}
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-lg text-sm transition-colors ${isActive ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`
+              }>{label}</NavLink>
+          ))}
           <AppSwitcher currentApp="npo" supabase={supabase} />
         </aside>
 
@@ -63,7 +54,7 @@ export default function App() {
         <main className="flex-1 ml-52 p-6">
           <Suspense fallback={<Spinner />}>
             <Routes>
-              <Route path="/" element={<Navigate to="/hub" replace />} />
+              <Route path="/"    element={<NpoDashboard />} />
               <Route path="/hub" element={<NpoHub />} />
               <Route path="/sos" element={<EmergencySOS />} />
             </Routes>
