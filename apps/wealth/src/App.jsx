@@ -52,7 +52,7 @@ export default function App() {
   }, []);
 
   if (session === undefined) return <Spinner />;
-  if (!session) { window.location.href = 'https://app.infinitefuturebank.org'; return null; }
+  if (!session) { const _coreUrl = window.location.hostname === 'localhost' ? 'http://localhost:5173' : 'https://app.infinitefuturebank.org'; const _rt = encodeURIComponent(window.location.href.split('#')[0]); window.location.href = `${_coreUrl}?return_to=${_rt}`; return null; }
 
   return (
     <Router>

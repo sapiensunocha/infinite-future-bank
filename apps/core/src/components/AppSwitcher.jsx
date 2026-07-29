@@ -1,10 +1,12 @@
 import { useState } from 'react';
 
+const IS_DEV = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+
 const APPS = [
   {
     key: 'core',
     name: 'IFB Banking',
-    url: 'https://app.infinitefuturebank.org',
+    url: IS_DEV ? 'http://localhost:5173' : 'https://app.infinitefuturebank.org',
     color: 'bg-violet-600',
     textColor: 'text-violet-400',
     icon: (
@@ -16,7 +18,7 @@ const APPS = [
   {
     key: 'business',
     name: 'Business',
-    url: 'https://business.infinitefuturebank.org',
+    url: IS_DEV ? 'http://localhost:5177' : 'https://business.infinitefuturebank.org',
     color: 'bg-cyan-600',
     textColor: 'text-cyan-400',
     icon: (
@@ -29,7 +31,7 @@ const APPS = [
   {
     key: 'wealth',
     name: 'Wealth',
-    url: 'https://wealth.infinitefuturebank.org',
+    url: IS_DEV ? 'http://localhost:5178' : 'https://wealth.infinitefuturebank.org',
     color: 'bg-emerald-600',
     textColor: 'text-emerald-400',
     icon: (
@@ -42,7 +44,7 @@ const APPS = [
   {
     key: 'ventures',
     name: 'Ventures',
-    url: 'https://ventures.infinitefuturebank.org',
+    url: IS_DEV ? 'http://localhost:5174' : 'https://ventures.infinitefuturebank.org',
     color: 'bg-blue-600',
     textColor: 'text-blue-400',
     icon: (
@@ -54,7 +56,7 @@ const APPS = [
   {
     key: 'npo',
     name: 'NPO Hub',
-    url: 'https://npo.infinitefuturebank.org',
+    url: IS_DEV ? 'http://localhost:5175' : 'https://npo.infinitefuturebank.org',
     color: 'bg-rose-600',
     textColor: 'text-rose-400',
     icon: (
@@ -66,7 +68,7 @@ const APPS = [
   {
     key: 'events',
     name: 'Events',
-    url: 'https://tickets.infinitefuturebank.org',
+    url: IS_DEV ? 'http://localhost:5176' : 'https://tickets.infinitefuturebank.org',
     color: 'bg-amber-600',
     textColor: 'text-amber-400',
     icon: (
@@ -79,7 +81,7 @@ const APPS = [
   {
     key: 'admin',
     name: 'Admin',
-    url: 'https://admin.infinitefuturebank.org',
+    url: IS_DEV ? 'http://localhost:5179' : 'https://admin.infinitefuturebank.org',
     color: 'bg-red-700',
     textColor: 'text-red-400',
     icon: (
@@ -95,13 +97,14 @@ async function bridgeAndGo(supabase, url) {
     if (supabase) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
+        const params = new URLSearchParams({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+          expires_in: '3600',
+          token_type: 'bearer',
+        });
         const target = new URL(url);
-        target.hash = [
-          `access_token=${session.access_token}`,
-          `refresh_token=${session.refresh_token}`,
-          `expires_in=3600`,
-          `token_type=bearer`,
-        ].join('&');
+        target.hash = params.toString();
         window.location.href = target.toString();
         return;
       }

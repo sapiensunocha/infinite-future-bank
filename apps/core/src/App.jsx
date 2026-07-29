@@ -176,6 +176,23 @@ function MainApp() {
 
       setSession(currentSession);
 
+      // If a scaffold app redirected here for cross-app SSO, bridge the session back
+      const returnTo = new URLSearchParams(window.location.search).get('return_to');
+      if (returnTo) {
+        try {
+          const params = new URLSearchParams({
+            access_token: currentSession.access_token,
+            refresh_token: currentSession.refresh_token,
+            expires_in: '3600',
+            token_type: 'bearer',
+          });
+          const target = new URL(decodeURIComponent(returnTo));
+          target.hash = params.toString();
+          window.location.replace(target.toString());
+          return;
+        } catch (_) {}
+      }
+
       try {
         const { data: profile } = await supabase.from('profiles').select('id,theme_preference,kyc_status,role,full_name').eq('id', currentSession.user.id).maybeSingle();
           
