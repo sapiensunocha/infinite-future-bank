@@ -20,7 +20,7 @@ export default function TicketingSystem({ session }) {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
-  const APP_DOMAIN = "https://deus.infinitefuturebank.org";
+  const APP_DOMAIN = "https://app.infinitefuturebank.org";
 
   const showToast = (msg, type = 'success') => {
     setNotification({ msg, type });

@@ -8,7 +8,7 @@ import {
 import { supabase } from '../../services/supabaseClient';
 import QRCode from 'react-qr-code';
 
-const APP_DOMAIN = 'https://deus.infinitefuturebank.org';
+const APP_DOMAIN = 'https://app.infinitefuturebank.org';
 
 const EVENT_CATEGORIES = [
   'Conference', 'Concert', 'Workshop', 'Networking',

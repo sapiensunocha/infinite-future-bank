@@ -11,7 +11,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
 
-const BIOMETRIC_SERVER = 'deus.infinitefuturebank.org';
+const BIOMETRIC_SERVER = 'app.infinitefuturebank.org';
 const FACE_AUTH_FN = 'face-auth';
 
 // Detect if running inside Capacitor native runtime

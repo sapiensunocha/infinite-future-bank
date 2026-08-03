@@ -212,9 +212,10 @@ function MainApp() {
             // RPC has stale schema — directly ensure the profile row exists
             await supabase.from('profiles').upsert({
               id: currentSession.user.id,
+              email: currentSession.user.email,
               full_name: generatedName,
               kyc_status: 'not_started',
-              role: 'client',
+              role: 'user',
               theme_preference: 'system',
             }, { onConflict: 'id', ignoreDuplicates: true });
             // Best-effort wallet — ignore if schema differs
