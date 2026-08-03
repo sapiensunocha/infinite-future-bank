@@ -285,7 +285,15 @@ function MainApp() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: emailValue.trim().toLowerCase(), password: passwordValue });
       if (error) throw error;
-    } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
+    } catch (error) {
+      const msg = error.message?.toLowerCase() ?? '';
+      // Unconfirmed account — silently resend confirmation instead of showing raw error
+      if (msg.includes('not confirmed') || msg.includes('email') || msg.includes('confirm')) {
+        await handleResend();
+        return;
+      }
+      showMessage(error.message, 'error');
+    } finally { setIsLoading(false); }
   };
 
   const handleRegister = async (e) => {
@@ -301,10 +309,10 @@ function MainApp() {
         },
       });
 
-      // Email already registered but unconfirmed — resend the confirmation
+      // Email already registered or email-sending failure — resend via our edge function
       if (authError) {
         const msg = authError.message?.toLowerCase() ?? '';
-        const isEmailError = msg.includes('sending') || msg.includes('confirmation') || msg.includes('email');
+        const isEmailError = msg.includes('send') || msg.includes('email') || msg.includes('confirm') || msg.includes('smtp');
         const isAlreadyRegistered = msg.includes('already registered') || msg.includes('already been registered') || authError.status === 422;
         if (isEmailError || isAlreadyRegistered) {
           await handleResend();
