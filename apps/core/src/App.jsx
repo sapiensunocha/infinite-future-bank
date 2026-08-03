@@ -300,11 +300,42 @@ function MainApp() {
           emailRedirectTo: `${APP_URL}/auth/callback`,
         },
       });
-      if (authError) throw authError;
+
+      // Email already registered but unconfirmed — resend the confirmation
+      if (authError) {
+        const msg = authError.message?.toLowerCase() ?? '';
+        const isEmailError = msg.includes('sending') || msg.includes('confirmation') || msg.includes('email');
+        const isAlreadyRegistered = msg.includes('already registered') || msg.includes('already been registered') || authError.status === 422;
+        if (isEmailError || isAlreadyRegistered) {
+          await handleResend();
+          return;
+        }
+        throw authError;
+      }
+
       if (authData?.user && !authData?.session) setCurrentView('check_email');
       else showMessage('Identity Secured. Welcome to IFB.', 'success');
     } catch (err) {
       showMessage(err.message, 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: emailValue.trim().toLowerCase(),
+        options: { emailRedirectTo: `${APP_URL}/auth/callback` },
+      });
+      if (error) throw error;
+      setCurrentView('check_email');
+      showMessage('Confirmation email resent — check your inbox.', 'success');
+    } catch (err) {
+      // Even if resend fails, move to check_email so user knows to look in inbox
+      setCurrentView('check_email');
     } finally {
       setIsLoading(false);
     }
@@ -476,9 +507,17 @@ function MainApp() {
           {currentView === 'check_email' && (
             <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
               <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 animate-pulse mb-6 shadow-inner"><Mail size={40}/></div>
-              <h2 className="text-2xl font-black mb-2 text-slate-800">Check Inbox</h2>
-              <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
-              <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-500 hover:text-blue-600 transition-colors">Back to Login</button>
+              <h2 className="text-2xl font-black mb-2 text-slate-800">Check Your Inbox</h2>
+              <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-2">{emailValue}</p>
+              <p className="text-xs text-slate-500 font-medium mb-8 px-4">We sent a confirmation link. Click it to activate your account. Check your <span className="font-bold text-slate-700">Spam</span> or <span className="font-bold text-slate-700">Junk</span> folder if you don't see it.</p>
+              <button
+                onClick={handleResend}
+                disabled={isLoading}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all mb-4">
+                {isLoading ? <RefreshCw size={14} className="animate-spin"/> : <Mail size={14}/>}
+                {isLoading ? 'Sending…' : 'Resend Confirmation Email'}
+              </button>
+              <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Back to Login</button>
             </div>
           )}
 
