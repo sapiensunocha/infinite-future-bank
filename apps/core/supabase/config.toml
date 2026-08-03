@@ -107,9 +107,9 @@ file_size_limit = "50MiB"
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "https://deus.infinitefuturebank.org"
+site_url = "https://app.infinitefuturebank.org"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://deus.infinitefuturebank.org/auth/callback", "https://deus.infinitefuturebank.org/*", "https://michael.worlddisastercenter.org/**", "https://michael-api-382117221028.us-central1.run.app/**"]
+additional_redirect_urls = ["https://app.infinitefuturebank.org/**", "https://admin.infinitefuturebank.org/**", "https://ventures.infinitefuturebank.org/**", "https://npo.infinitefuturebank.org/**", "https://tickets.infinitefuturebank.org/**", "https://business.infinitefuturebank.org/**", "https://wealth.infinitefuturebank.org/**", "https://michael.worlddisastercenter.org/**", "https://michael-api-382117221028.us-central1.run.app/**", "https://skyhol.com", "https://skyhol.com/*", "https://www.skyhol.com", "https://www.skyhol.com/*", "https://skylink-navy.vercel.app", "https://skylink-navy.vercel.app/*", "https://skylink-*-wdc-1.vercel.app/*"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # If disabled, the refresh token will never expire.

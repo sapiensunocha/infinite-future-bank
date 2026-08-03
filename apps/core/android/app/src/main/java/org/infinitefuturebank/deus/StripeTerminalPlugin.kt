@@ -1,6 +1,5 @@
 package org.infinitefuturebank.deus
 
-import android.app.Application
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
@@ -46,7 +45,6 @@ class StripeTerminalPlugin : Plugin() {
         connectionToken = token
         activity.runOnUiThread {
             try {
-                TerminalApplicationDelegate.onCreate(activity.application as Application)
                 if (!Terminal.isInitialized()) {
                     Terminal.initTerminal(activity, LogLevel.VERBOSE, tokenProvider, object : TerminalListener {
                         override fun onUnexpectedReaderDisconnect(reader: Reader) {}

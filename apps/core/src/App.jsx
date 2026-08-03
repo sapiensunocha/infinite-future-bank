@@ -313,8 +313,10 @@ function MainApp() {
         throw authError;
       }
 
-      if (authData?.user && !authData?.session) setCurrentView('check_email');
-      else showMessage('Identity Secured. Welcome to IFB.', 'success');
+      if (authData?.user && !authData?.session) {
+        // User created but needs email confirmation — send via our edge function (no rate limit)
+        handleResend();
+      } else showMessage('Identity Secured. Welcome to IFB.', 'success');
     } catch (err) {
       showMessage(err.message, 'error');
     } finally {
@@ -325,16 +327,30 @@ function MainApp() {
   const handleResend = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: emailValue.trim().toLowerCase(),
-        options: { emailRedirectTo: `${APP_URL}/auth/callback` },
-      });
-      if (error) throw error;
+      // Use our own edge function — bypasses Supabase's 3/hour rate limit entirely.
+      // Generates a fresh confirmation link via Admin API and sends it via Resend.
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-confirmation-email`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            email: emailValue.trim().toLowerCase(),
+            redirectTo: `${APP_URL}/auth/callback`,
+          }),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Failed to send confirmation email');
       setCurrentView('check_email');
-      showMessage('Confirmation email resent — check your inbox.', 'success');
+      showMessage('Confirmation email sent — check your inbox.', 'success');
     } catch (err) {
-      // Even if resend fails, move to check_email so user knows to look in inbox
+      // Always move to check_email — never leave user stranded on the form
       setCurrentView('check_email');
     } finally {
       setIsLoading(false);
