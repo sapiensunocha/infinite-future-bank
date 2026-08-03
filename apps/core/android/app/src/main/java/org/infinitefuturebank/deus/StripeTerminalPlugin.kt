@@ -62,6 +62,8 @@ class StripeTerminalPlugin : Plugin() {
     @PluginMethod
     fun discoverAndConnect(call: PluginCall) {
         call.setKeepAlive(true)
+        val locationId = call.getString("locationId")
+            ?: return call.reject("locationId is required — set STRIPE_TERMINAL_LOCATION_ID in Supabase secrets")
         val config = DiscoveryConfiguration.LocalMobileDiscoveryConfiguration(isSimulated = false)
         discoveryCancelable = Terminal.getInstance().discoverReaders(config, object : DiscoveryListener {
             override fun onUpdateDiscoveredReaders(readers: List<Reader>) {
@@ -70,7 +72,7 @@ class StripeTerminalPlugin : Plugin() {
                     override fun onSuccess() {}
                     override fun onFailure(e: TerminalException) {}
                 })
-                val connConfig = ConnectionConfiguration.LocalMobileConnectionConfiguration("tml_local")
+                val connConfig = ConnectionConfiguration.LocalMobileConnectionConfiguration(locationId)
                 Terminal.getInstance().connectLocalMobileReader(reader, connConfig, object : ReaderCallback {
                     override fun onSuccess(r: Reader) {
                         call.resolve(JSObject().put("readerId", r.serialNumber ?: "local").put("label", r.label ?: "Tap to Pay"))

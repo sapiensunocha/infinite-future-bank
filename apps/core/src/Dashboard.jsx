@@ -571,8 +571,9 @@ export default function Dashboard({ session, onSignOut }) {
                 profile={profile}
                 onClose={() => setShowNFC(false)}
                 onSuccess={() => { fetchAllData(); }}
+                onOpenTapToPay={() => { setShowNFC(false); setShowTapToPay(true); }}
               />
-              {/* Tap to Pay entry point */}
+              {/* Tap to Pay entry point — shown on web (on Android it surfaces inside NFCTransfer receive flow) */}
               <div className="mt-6 pt-4 border-t border-slate-800">
                 <button
                   onClick={() => { setShowNFC(false); setShowTapToPay(true); }}

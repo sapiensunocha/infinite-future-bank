@@ -63,8 +63,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const locationId = Deno.env.get("STRIPE_TERMINAL_LOCATION_ID") ?? null;
     return new Response(
-      JSON.stringify({ secret: data.secret }),
+      JSON.stringify({ secret: data.secret, locationId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: unknown) {

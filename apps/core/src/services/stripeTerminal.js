@@ -15,18 +15,21 @@ async function authHeaders() {
 
 const BASE = import.meta.env.VITE_SUPABASE_URL + '/functions/v1';
 
+let _locationId = null;
+
 export async function initTerminal() {
   if (!isNative()) throw new Error('Tap to Pay requires the Android app.');
   const headers = await authHeaders();
   const res  = await fetch(`${BASE}/stripe-terminal-token`, { method: 'POST', headers });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Could not get connection token');
+  _locationId = data.locationId ?? null;
   await plugin().initialize({ connectionToken: data.secret });
 }
 
 export async function connectReader() {
   if (!isNative()) throw new Error('Tap to Pay requires the Android app.');
-  return plugin().discoverAndConnect({});
+  return plugin().discoverAndConnect({ locationId: _locationId });
 }
 
 export async function collectPayment(amountUSD, note) {

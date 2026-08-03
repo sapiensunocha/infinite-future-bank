@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '../../services/supabaseClient';
 import QRCode from 'react-qr-code';
 import {
@@ -49,7 +50,7 @@ function startNFCScan(onToken, onError) {
   return ndef;
 }
 
-export default function NFCTransfer({ session, balances, profile, onClose, onSuccess }) {
+export default function NFCTransfer({ session, balances, profile, onClose, onSuccess, onOpenTapToPay }) {
   const [mode, setMode]           = useState(null);         // null | 'send' | 'receive'
   const [step, setStep]           = useState(1);
   const [amount, setAmount]       = useState('');
@@ -70,7 +71,10 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
   const nfcRef    = useRef(null);
   const pollRef   = useRef(null);
   const liquid    = balances?.liquid_usd || 0;
-  const nfcSupported = 'NDEFReader' in window;
+  const isNative     = Capacitor.isNativePlatform();
+  // Web NFC (NDEFReader) is not available inside the Capacitor WebView on Android.
+  // For native Android, NFC payment receive goes through Stripe Terminal (TapToPay).
+  const nfcSupported = !isNative && ('NDEFReader' in window);
 
   // ── Auto-poll for claim once token is shared ─────────────────────────────────
   useEffect(() => {
@@ -238,8 +242,8 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
             <p className="text-[10px] text-slate-400">Tap phones · Send money instantly</p>
           </div>
         </div>
-        {nfcSupported
-          ? <span className="flex items-center gap-1 px-2 py-1 bg-emerald-900/30 border border-emerald-700/30 rounded-full text-[9px] font-black text-emerald-400 uppercase tracking-widest"><Signal size={9}/>NFC Ready</span>
+        {(isNative || nfcSupported)
+          ? <span className="flex items-center gap-1 px-2 py-1 bg-emerald-900/30 border border-emerald-700/30 rounded-full text-[9px] font-black text-emerald-400 uppercase tracking-widest"><Signal size={9}/>{isNative ? 'NFC Active' : 'NFC Ready'}</span>
           : <span className="flex items-center gap-1 px-2 py-1 bg-amber-900/30 border border-amber-700/30 rounded-full text-[9px] font-black text-amber-400 uppercase tracking-widest">Code Mode</span>
         }
       </div>
@@ -390,7 +394,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
           {/* Method tabs */}
           <div className="flex gap-2 bg-slate-900 p-1 rounded-2xl">
             {[
-              { id: 'nfc',  label: '📱 NFC Tap', disabled: !nfcSupported },
+              { id: 'nfc',  label: isNative ? '💳 Card Tap' : '📱 NFC Tap', disabled: !isNative && !nfcSupported },
               { id: 'code', label: '🔢 Enter Code' },
             ].map(({ id, label, disabled }) => (
               <button key={id} onClick={() => !disabled && setInputMethod(id)}
@@ -403,8 +407,30 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
             ))}
           </div>
 
-          {/* NFC Scan */}
-          {inputMethod === 'nfc' && (
+          {/* Native Android: redirect to Stripe Terminal Tap to Pay */}
+          {inputMethod === 'nfc' && isNative && (
+            <div className="space-y-4">
+              <div className="rounded-3xl border-2 border-violet-700/50 bg-violet-900/10 p-8 flex flex-col items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-violet-900/40 border-2 border-violet-600 flex items-center justify-center">
+                  <CreditCard size={36} className="text-violet-400"/>
+                </div>
+                <div className="text-center">
+                  <p className="font-black text-white">Receive Card Payment</p>
+                  <p className="text-xs text-slate-400 mt-1">Your Android phone's NFC chip acts as a card reader — accept Visa, Mastercard, Amex, Apple Pay & Google Pay by having the payer tap their card to the back of your phone.</p>
+                </div>
+              </div>
+              <button
+                onClick={onOpenTapToPay}
+                disabled={!onOpenTapToPay}
+                className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-900/30">
+                <CreditCard size={16}/> Open Tap to Pay
+              </button>
+              <p className="text-[10px] text-slate-600 text-center">For IFB-to-IFB transfers, use Enter Code below</p>
+            </div>
+          )}
+
+          {/* Web NFC Scan (browser on compatible Android) */}
+          {inputMethod === 'nfc' && !isNative && (
             <div className="space-y-4">
               <div className={`rounded-3xl border-2 p-10 flex flex-col items-center gap-4 transition-all ${
                 nfcScanning ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 bg-slate-800/20'
