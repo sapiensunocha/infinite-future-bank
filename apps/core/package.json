@@ -3,7 +3,7 @@
   "description": "DEUS — Infinite Future Bank Desktop App",
   "author": "Infinite Future Bank <support@infinitefuturebank.org>",
   "private": true,
-  "version": "1.4.6",
+  "version": "1.4.7",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
