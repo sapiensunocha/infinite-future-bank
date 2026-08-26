@@ -12,7 +12,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { email, redirectTo } = await req.json()
+    const { email, password, name, redirectTo } = await req.json()
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -26,17 +26,42 @@ serve(async (req: Request) => {
 
     const callbackUrl = redirectTo || 'https://app.infinitefuturebank.org/auth/callback'
 
-    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+    // Try to generate a confirmation link — works if user already exists and is unconfirmed
+    let { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       type: 'signup',
       email,
       options: { redirectTo: callbackUrl }
     })
 
-    if (linkError) {
-      // User might already be confirmed — still succeed silently
-      console.error('generateLink error:', linkError.message)
+    // If generateLink failed, user likely doesn't exist yet — create them via admin
+    if (linkError && password) {
+      console.log('generateLink failed, creating user via admin:', linkError.message)
+
+      const { error: createError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: false,
+        user_metadata: { full_name: name || '' }
+      })
+
+      // Ignore "already registered" — just try generateLink again
+      if (createError && !createError.message?.toLowerCase().includes('already')) {
+        throw createError
+      }
+
+      // Now generate the confirmation link for the newly created user
+      ;({ data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+        type: 'signup',
+        email,
+        options: { redirectTo: callbackUrl }
+      }))
+
+      if (linkError) throw linkError
+    } else if (linkError) {
+      // No password provided and user doesn't exist — silent success (resend-only call for confirmed user)
+      console.log('generateLink failed and no password provided:', linkError.message)
       return new Response(
-        JSON.stringify({ success: true, note: 'already_confirmed_or_error' }),
+        JSON.stringify({ success: true, note: 'already_confirmed_or_not_found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
@@ -44,74 +69,67 @@ serve(async (req: Request) => {
     const confirmationUrl = linkData?.properties?.action_link
     if (!confirmationUrl) throw new Error('Could not generate confirmation link')
 
+    const displayName = name ? name.split(' ')[0] : 'there'
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Activate your DEUS account</title></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
-    <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Confirm your DEUS account</title></head>
+<body style="margin:0;padding:0;background:#060912;font-family:'Helvetica Neue',Arial,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:48px 24px;">
 
-        <!-- Header -->
-        <tr><td align="center" style="padding-bottom:32px;">
-          <h1 style="margin:0;font-size:32px;font-weight:900;letter-spacing:4px;line-height:1;">
-            <span style="color:#4285F4">D</span><span style="color:#EA4335">E</span><span style="color:#FBBC04">U</span><span style="color:#34A853">S</span>
-          </h1>
-          <p style="margin:6px 0 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:3px;color:#94a3b8;">Infinite Future Bank</p>
-        </td></tr>
+  <div style="text-align:center;margin-bottom:48px;">
+    <div style="display:inline-block;background:linear-gradient(135deg,#2563EB,#7C3AED);border-radius:14px;width:52px;height:52px;line-height:52px;color:#fff;font-size:26px;font-weight:900;text-align:center;letter-spacing:-1px;">D</div>
+    <div style="margin-top:12px;color:#F8FAFC;font-size:14px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;">INFINITE FUTURE BANK</div>
+    <div style="color:#475569;font-size:10px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;margin-top:4px;">DEUS Platform</div>
+  </div>
 
-        <!-- Card -->
-        <tr><td style="background:#ffffff;border-radius:24px;padding:48px 40px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
-          <table width="100%" cellpadding="0" cellspacing="0">
+  <div style="background:linear-gradient(135deg,#0F172A 0%,#1E1B4B 50%,#0F172A 100%);border:1px solid #1E293B;border-radius:32px;padding:52px 40px;text-align:center;margin-bottom:20px;">
 
-            <!-- Icon -->
-            <tr><td align="center" style="padding-bottom:24px;">
-              <div style="width:72px;height:72px;background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:20px;display:inline-block;text-align:center;line-height:72px;font-size:32px;">✉️</div>
-            </td></tr>
+    <div style="display:inline-block;background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);color:#A5B4FC;font-size:10px;font-weight:900;letter-spacing:0.25em;text-transform:uppercase;padding:6px 18px;border-radius:100px;margin-bottom:28px;">
+      ✉️ &nbsp;Account Confirmation
+    </div>
 
-            <!-- Title -->
-            <tr><td align="center" style="padding-bottom:12px;">
-              <h2 style="margin:0;font-size:24px;font-weight:800;color:#0f172a;">Confirm Your Account</h2>
-            </td></tr>
+    <h1 style="color:#F8FAFC;font-size:32px;font-weight:900;margin:0 0 16px;line-height:1.15;letter-spacing:-0.02em;">
+      Hello ${displayName},<br/><span style="background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Confirm Your Identity</span>
+    </h1>
 
-            <!-- Body -->
-            <tr><td align="center" style="padding-bottom:36px;">
-              <p style="margin:0;font-size:15px;color:#64748b;line-height:1.7;max-width:340px;">
-                You're one step away from accessing the most intelligent banking platform ever built. Click below to activate your identity.
-              </p>
-            </td></tr>
+    <p style="color:#94A3B8;font-size:15px;line-height:1.75;margin:0 0 36px;max-width:380px;margin-left:auto;margin-right:auto;">
+      You are one step away from accessing the most intelligent banking platform ever built. Click below to activate your account.
+    </p>
 
-            <!-- CTA -->
-            <tr><td align="center" style="padding-bottom:32px;">
-              <a href="${confirmationUrl}"
-                 style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#ffffff;text-decoration:none;padding:18px 48px;border-radius:16px;font-weight:800;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;">
-                Activate My Account &rarr;
-              </a>
-            </td></tr>
+    <a href="${confirmationUrl}"
+       style="display:inline-block;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#ffffff;text-decoration:none;padding:18px 52px;border-radius:16px;font-weight:900;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;box-shadow:0 8px 32px rgba(99,102,241,0.45);">
+      Activate My Account &rarr;
+    </a>
 
-            <!-- Fine print -->
-            <tr><td align="center">
-              <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
-                This link expires in 24 hours.<br>
-                If you didn't create an account, you can safely ignore this email.
-              </p>
-            </td></tr>
+    <p style="color:#475569;font-size:12px;margin:28px 0 0;line-height:1.6;">
+      This link expires in 24 hours.<br/>
+      If you didn't create an account, you can safely ignore this email.
+    </p>
 
-          </table>
-        </td></tr>
+  </div>
 
-        <!-- Footer -->
-        <tr><td align="center" style="padding-top:32px;">
-          <p style="margin:0;font-size:12px;color:#94a3b8;">&copy; 2026 Infinite Future Bank &middot; DEUS Platform</p>
-          <p style="margin:6px 0 0;font-size:12px;color:#cbd5e1;">
-            <a href="https://app.infinitefuturebank.org" style="color:#7c3aed;text-decoration:none;">app.infinitefuturebank.org</a>
-          </p>
-        </td></tr>
+  <div style="background:#0F172A;border:1px solid #1E293B;border-radius:18px;padding:20px 24px;margin-bottom:32px;">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="font-size:24px;flex-shrink:0;">🔐</div>
+      <div>
+        <div style="color:#4ADE80;font-size:13px;font-weight:900;margin-bottom:3px;">Bank-Grade Security</div>
+        <div style="color:#475569;font-size:12px;line-height:1.6;">Your identity is verified and encrypted end-to-end. Never share this link with anyone.</div>
+      </div>
+    </div>
+  </div>
 
-      </table>
-    </td></tr>
-  </table>
+  <div style="border-top:1px solid #1E293B;padding-top:24px;text-align:center;">
+    <div style="color:#334155;font-size:12px;line-height:1.9;">
+      <strong style="color:#475569;">Infinite Future Bank</strong> · DEUS Platform<br/>
+      <a href="https://app.infinitefuturebank.org" style="color:#3B82F6;text-decoration:none;">app.infinitefuturebank.org</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:support@infinitefuturebank.org" style="color:#3B82F6;text-decoration:none;">support@infinitefuturebank.org</a>
+    </div>
+    <div style="color:#1E293B;font-size:11px;margin-top:12px;">&copy; 2026 Infinite Future Bank. All rights reserved.</div>
+  </div>
+
+</div>
 </body>
 </html>`
 

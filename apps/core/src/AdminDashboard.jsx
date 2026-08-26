@@ -258,6 +258,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
   // Check admin role on mount
   useEffect(() => {
+    if (!session?.user?.id) return;
     const check = async () => {
       try {
         const { data } = await supabase.from('admin_roles')
@@ -282,7 +283,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
       finally { setCheckingRole(false); }
     };
     check();
-  }, [session.user.id, profile?.role]);
+  }, [session?.user?.id, profile?.role]);
 
   const canAccess = (tab) => {
     if (!adminRole) return false;
@@ -808,6 +809,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
       loadUsers(userSearch);
     } catch (e) { notify(e.message, 'error'); }
   };
+
+  if (!session?.user) return null;
 
   if (checkingRole) {
     return (

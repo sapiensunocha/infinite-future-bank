@@ -491,6 +491,7 @@ export default function VentureExchange({ session, profile }) {
   const [loading, setLoading]     = useState(true);
 
   const load = useCallback(async () => {
+    if (!session?.user?.id) return;
     setLoading(true);
     const [{ data: mine }, { data: listed }, { data: reqs }] = await Promise.all([
       supabase.from('ifb_ventures').select('*').eq('user_id', session.user.id).maybeSingle(),
@@ -501,7 +502,7 @@ export default function VentureExchange({ session, profile }) {
     setListedCos(listed || []);
     setReqs(reqs || []);
     setLoading(false);
-  }, [session.user.id]);
+  }, [session?.user?.id]);
 
   useEffect(() => { load(); }, [load]);
 

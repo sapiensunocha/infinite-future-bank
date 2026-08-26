@@ -207,6 +207,7 @@ export default function CapitalMatchmaker({ session, profile, commercialProfile 
   const [showFilters,setShowFilters]= useState(false);
 
   const load = useCallback(async (refresh = false) => {
+    if (!session?.user?.id) return;
     if (refresh) setIsRefreshing(true);
     else setIsLoading(true);
     setError(null);
@@ -236,7 +237,7 @@ export default function CapitalMatchmaker({ session, profile, commercialProfile 
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [session.user.id, filter]);
+  }, [session?.user?.id, filter]);
 
   useEffect(() => { load(false); }, [load]);
 

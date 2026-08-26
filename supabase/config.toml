@@ -34,6 +34,27 @@ entrypoint = "./functions/process-p2p-receipt/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/process-p2p-receipt/*.html" ]
 
+[functions.kyc-admin-auth]
+verify_jwt = false
+
+[functions.kyc-list-projects]
+verify_jwt = false
+
+[functions.kyc-register-project]
+verify_jwt = false
+
+[functions.kyc-update-project]
+verify_jwt = false
+
+[functions.kyc-record-payment]
+verify_jwt = false
+
+[functions.kyc-get-upload-url]
+verify_jwt = false
+
+[functions.kyc-create-payment-intent]
+verify_jwt = false
+
 [functions.analyze-receipt-ocr]
 verify_jwt = true
 

@@ -47,6 +47,7 @@ export default function PensionFund({ session, balances, fetchAllData }) {
   };
 
   const load = useCallback(async () => {
+    if (!session?.user?.id) { setLoading(false); return; }
     setLoading(true);
     const { data: acc } = await supabase
       .from('pension_accounts')
@@ -65,7 +66,7 @@ export default function PensionFund({ session, balances, fetchAllData }) {
       setContributions(contribs || []);
     }
     setLoading(false);
-  }, [session.user.id]);
+  }, [session?.user?.id]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -113,6 +114,8 @@ export default function PensionFund({ session, balances, fetchAllData }) {
       setSubmitting(false);
     }
   };
+
+  if (!session?.user) return null;
 
   if (loading) {
     return (

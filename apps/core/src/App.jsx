@@ -349,6 +349,10 @@ function MainApp() {
           },
           body: JSON.stringify({
             email: emailValue.trim().toLowerCase(),
+            // Pass registration data so the edge function can create the user
+            // if Supabase's signUp failed before inserting them into auth.users
+            password: passwordValue || undefined,
+            name: nameValue || undefined,
             redirectTo: `${APP_URL}/auth/callback`,
           }),
         }
