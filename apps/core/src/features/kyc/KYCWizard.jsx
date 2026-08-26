@@ -385,11 +385,11 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
     if (!file) return null;
     if (preUploadedUrls[docType]) return preUploadedUrls[docType];
     const ext = file.name.split('.').pop();
-    const path = `${session.user.id}/${docType}_${Date.now()}.${ext}`;
+    const path = `kyc/${session.user.id}/${docType}_${Date.now()}.${ext}`;
     setUploadProgress(p => ({ ...p, [docType]: 'uploading' }));
-    const { error } = await supabase.storage.from('kyc_documents').upload(path, file);
+    const { error } = await supabase.storage.from('kyc-documents').upload(path, file);
     if (error) throw new Error(`Upload failed for ${docType}: ${error.message}`);
-    const { data: { publicUrl } } = supabase.storage.from('kyc_documents').getPublicUrl(path);
+    const { data: { publicUrl } } = supabase.storage.from('kyc-documents').getPublicUrl(path);
     setUploadProgress(p => ({ ...p, [docType]: 'done' }));
     return publicUrl;
   };
@@ -404,10 +404,10 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
     setAiScanning(true);
     try {
       const ext = file.name.split('.').pop();
-      const path = `${session.user.id}/id_front_${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('kyc_documents').upload(path, file);
+      const path = `kyc/${session.user.id}/id_front_${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('kyc-documents').upload(path, file);
       if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from('kyc_documents').getPublicUrl(path);
+      const { data: { publicUrl } } = supabase.storage.from('kyc-documents').getPublicUrl(path);
       setPreUploadedUrls(p => ({ ...p, id_front: publicUrl }));
 
       const { data, error: aiErr } = await supabase.functions.invoke('kyc-ai-extract', {
