@@ -5,7 +5,7 @@
 -- Remove duplicate rows first (keep latest per user, required before adding unique constraint)
 DELETE FROM public.kyc_submissions a
   USING public.kyc_submissions b
-  WHERE a.created_at < b.created_at
+  WHERE a.submitted_at < b.submitted_at
     AND a.user_id = b.user_id;
 
 -- Add the unique constraint the upsert depends on
