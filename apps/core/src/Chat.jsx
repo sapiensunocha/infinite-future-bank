@@ -107,8 +107,8 @@ export default function Chat({ session, onClose, balances, profile }) {
         // No open tickets, normal state
       }
     };
-    checkOpenTicket();
-  }, [session.user.id]);
+    if (session?.user?.id) checkOpenTicket();
+  }, [session?.user?.id]);
 
   // Real-time listener for agent replies
   useEffect(() => {

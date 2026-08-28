@@ -74,6 +74,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
   };
 
   const load = useCallback(async () => {
+    if (!session?.user?.id) { setLoading(false); return; }
     setLoading(true);
     const [{ data: pol }, { data: clm }] = await Promise.all([
       supabase.from('insurance_policies').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
@@ -82,7 +83,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
     setPolicies(pol || []);
     setClaims(clm || []);
     setLoading(false);
-  }, [session.user.id]);
+  }, [session?.user?.id]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -154,6 +155,8 @@ export default function AgriShield({ session, balances, fetchAllData }) {
       setSubmitting(false);
     }
   };
+
+  if (!session?.user) return null;
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">

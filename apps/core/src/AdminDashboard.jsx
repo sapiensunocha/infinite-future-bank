@@ -258,6 +258,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
   // Check admin role on mount
   useEffect(() => {
+    if (!session?.user?.id) return;
     const check = async () => {
       try {
         const { data } = await supabase.from('admin_roles')
@@ -282,7 +283,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
       finally { setCheckingRole(false); }
     };
     check();
-  }, [session.user.id, profile?.role]);
+  }, [session?.user?.id, profile?.role]);
 
   const canAccess = (tab) => {
     if (!adminRole) return false;
@@ -433,9 +434,78 @@ export default function AdminDashboard({ session, profile, onClose }) {
         p_notes: note || null,
       });
       if (error) throw error;
+
+      // Send email notification for terminal decisions
+      if (['approved', 'needs_more_info', 'rejected'].includes(status)) {
+        const sub = kycQueue.find(s => s.user_id === userId);
+        const toEmail = sub?.profiles?.email;
+        const toName  = sub?.profiles?.full_name || 'there';
+        if (toEmail) sendKycStatusEmail(toEmail, toName, status, note);
+      }
+
       notify(`KYC ${status} successfully`);
       loadKyc();
     } catch (e) { notify(e.message, 'error'); }
+  };
+
+  const sendKycStatusEmail = async (toEmail, toName, decision, notes) => {
+    const firstName = toName.split(' ')[0];
+    const subjects = {
+      approved:        'Your IFB account is verified ✓',
+      needs_more_info: 'Action required — complete your KYC',
+      rejected:        'IFB KYC — application update',
+    };
+    const bodies = {
+      approved: `<p>Hi ${firstName},</p>
+        <p>Your identity has been verified. Your IFB account is now fully activated with access to all platform features including VentureX, the Sovereign Card, and cross-border transfers.</p>
+        <p><a href="https://app.infinitefuturebank.org" style="color:#2563eb;font-weight:bold;">Log in to DEUS</a></p>`,
+      needs_more_info: `<p>Hi ${firstName},</p>
+        <p>Your KYC application needs a little more information before we can verify your account.</p>
+        ${notes ? `<blockquote style="border-left:3px solid #f59e0b;padding-left:12px;color:#92400e;">${notes}</blockquote>` : ''}
+        <p>Please log in and resubmit the requested items. Your progress is saved.</p>
+        <p><a href="https://app.infinitefuturebank.org" style="color:#2563eb;font-weight:bold;">Complete KYC Now</a></p>`,
+      rejected: `<p>Hi ${firstName},</p>
+        <p>After review, we were unable to approve your KYC application at this time.</p>
+        ${notes ? `<blockquote style="border-left:3px solid #ef4444;padding-left:12px;color:#991b1b;">${notes}</blockquote>` : ''}
+        <p>If you have questions, contact <a href="mailto:compliance@infinitefuturebank.org" style="color:#2563eb;">compliance@infinitefuturebank.org</a>.</p>`,
+    };
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+        body: JSON.stringify({
+          from: 'DEUS · Infinite Future Bank <noreply@infinitefuturebank.org>',
+          to: toEmail,
+          subject: subjects[decision],
+          html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
+            <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
+            <p style="font-size:20px;font-weight:900;color:#0f172a;margin:0 0 24px;">⬡ DEUS</p>
+            ${bodies[decision]}
+            <p style="margin-top:32px;font-size:11px;color:#94a3b8;">Infinite Future Bank · Automated compliance notification</p>
+            </div></body></html>`,
+        }),
+      });
+    } catch (_) {}
+  };
+
+  const [ariaRunning, setAriaRunning] = useState({});
+  const [ariaResults, setAriaResults] = useState({});
+  const handleAriaReview = async (userId) => {
+    setAriaRunning(r => ({ ...r, [userId]: true }));
+    setAriaResults(r => ({ ...r, [userId]: null }));
+    try {
+      const { data, error } = await supabase.functions.invoke('kyc-ai-reviewer', {
+        body: { user_id: userId },
+      });
+      if (error) throw error;
+      setAriaResults(r => ({ ...r, [userId]: data }));
+      notify(`ARIA decision: ${data?.decision?.toUpperCase()} (${data?.confidence}% confidence)`);
+      loadKyc();
+    } catch (e) {
+      notify(e.message || 'ARIA review failed', 'error');
+    } finally {
+      setAriaRunning(r => ({ ...r, [userId]: false }));
+    }
   };
 
   // VentureX company status update
@@ -808,6 +878,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
       loadUsers(userSearch);
     } catch (e) { notify(e.message, 'error'); }
   };
+
+  if (!session?.user) return null;
 
   if (checkingRole) {
     return (
@@ -1544,7 +1616,50 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         );
                       })()}
 
-                      {/* ── Action row ── */}
+                      {/* ── ARIA AI Review ── */}
+                      <div className="pt-2 border-t border-slate-800 space-y-3">
+                        <button
+                          onClick={() => handleAriaReview(sub.user_id)}
+                          disabled={ariaRunning[sub.user_id]}
+                          className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2"
+                        >
+                          {ariaRunning[sub.user_id]
+                            ? <><Loader2 size={13} className="animate-spin"/> ARIA is reviewing…</>
+                            : <><Brain size={13}/> Run ARIA AI Review</>}
+                        </button>
+
+                        {ariaResults[sub.user_id] && (() => {
+                          const r = ariaResults[sub.user_id];
+                          const decisionColor = r.decision === 'approved' ? 'text-emerald-400 border-emerald-700/40 bg-emerald-900/20'
+                            : r.decision === 'rejected' ? 'text-red-400 border-red-700/40 bg-red-900/20'
+                            : 'text-amber-400 border-amber-700/40 bg-amber-900/20';
+                          const riskColor = r.risk_rating === 'low' ? 'text-emerald-400' : r.risk_rating === 'medium' ? 'text-amber-400' : r.risk_rating === 'high' ? 'text-orange-400' : 'text-red-400';
+                          return (
+                            <div className={`border rounded-xl p-4 space-y-2 ${decisionColor}`}>
+                              <div className="flex items-center justify-between">
+                                <span className="font-black text-xs uppercase tracking-widest">
+                                  ARIA: {r.decision?.replace(/_/g,' ')}
+                                </span>
+                                <span className="text-[10px] font-black opacity-70">{r.confidence}% confidence · <span className={riskColor}>{r.risk_rating?.toUpperCase()} RISK</span></span>
+                              </div>
+                              {r.reviewer_notes && <p className="text-[11px] opacity-80 leading-relaxed">{r.reviewer_notes}</p>}
+                              {r.flags?.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {r.flags.map(f => <span key={f} className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full text-[9px] font-black uppercase">{f}</span>)}
+                                </div>
+                              )}
+                              {(r.missing_fields?.length > 0 || r.missing_docs?.length > 0) && (
+                                <div className="text-[10px] opacity-70">
+                                  {r.missing_fields?.length > 0 && <p>Missing fields: {r.missing_fields.join(', ')}</p>}
+                                  {r.missing_docs?.length > 0 && <p>Missing docs: {r.missing_docs.join(', ')}</p>}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* ── Manual override row ── */}
                       <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-800">
                         <input
                           className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-slate-500 outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10"

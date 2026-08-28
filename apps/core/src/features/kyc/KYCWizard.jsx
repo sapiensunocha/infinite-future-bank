@@ -385,11 +385,11 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
     if (!file) return null;
     if (preUploadedUrls[docType]) return preUploadedUrls[docType];
     const ext = file.name.split('.').pop();
-    const path = `${session.user.id}/${docType}_${Date.now()}.${ext}`;
+    const path = `kyc/${session.user.id}/${docType}_${Date.now()}.${ext}`;
     setUploadProgress(p => ({ ...p, [docType]: 'uploading' }));
-    const { error } = await supabase.storage.from('kyc_documents').upload(path, file);
+    const { error } = await supabase.storage.from('kyc-documents').upload(path, file);
     if (error) throw new Error(`Upload failed for ${docType}: ${error.message}`);
-    const { data: { publicUrl } } = supabase.storage.from('kyc_documents').getPublicUrl(path);
+    const { data: { publicUrl } } = supabase.storage.from('kyc-documents').getPublicUrl(path);
     setUploadProgress(p => ({ ...p, [docType]: 'done' }));
     return publicUrl;
   };
@@ -404,10 +404,10 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
     setAiScanning(true);
     try {
       const ext = file.name.split('.').pop();
-      const path = `${session.user.id}/id_front_${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('kyc_documents').upload(path, file);
+      const path = `kyc/${session.user.id}/id_front_${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('kyc-documents').upload(path, file);
       if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from('kyc_documents').getPublicUrl(path);
+      const { data: { publicUrl } } = supabase.storage.from('kyc-documents').getPublicUrl(path);
       setPreUploadedUrls(p => ({ ...p, id_front: publicUrl }));
 
       const { data, error: aiErr } = await supabase.functions.invoke('kyc-ai-extract', {
@@ -593,13 +593,20 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         aml_terms_agreed: true,
       }).eq('id', userId);
 
+      // Fire document OCR extraction first (populates ai_confidence_score, ai_flags, etc.)
       if (selfie_with_id_url || selfie_url) {
         supabase.functions.invoke('kyc-ai-extract', {
           body: { document_url: selfie_with_id_url || selfie_url, document_type: selfie_with_id_url ? 'selfie_with_id' : 'selfie' }
         }).catch(() => {});
       }
 
-      triggerNotification('success', 'KYC submitted. Our AI compliance team reviews within 24–48 hours.');
+      // Then trigger ARIA — the full compliance reviewer — async in the background.
+      // ARIA reads all 150 fields + the OCR results and issues the binding decision.
+      supabase.functions.invoke('kyc-ai-reviewer', {
+        body: { user_id: userId }
+      }).catch(() => {});
+
+      triggerNotification('success', 'KYC submitted. ARIA is reviewing your application — you\'ll be notified shortly.');
       onComplete?.();
     } catch (err) {
       triggerNotification('error', err.message || 'Submission failed. Please try again.');

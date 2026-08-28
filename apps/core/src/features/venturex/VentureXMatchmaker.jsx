@@ -122,6 +122,7 @@ export default function VentureXMatchmaker({ session, profile, balances }) {
   const [loadingIntel, setLoadingIntel] = useState(false);
 
   const loadCompanyAndInvestors = useCallback(async () => {
+    if (!session?.user?.id) return;
     setLoading(true);
     try {
       const [compRes, invRes, listRes] = await Promise.all([
@@ -149,7 +150,7 @@ export default function VentureXMatchmaker({ session, profile, balances }) {
     } finally {
       setLoading(false);
     }
-  }, [session.user.id, matchType]);
+  }, [session?.user?.id, matchType]);
 
   useEffect(() => { loadCompanyAndInvestors(); }, [loadCompanyAndInvestors]);
 

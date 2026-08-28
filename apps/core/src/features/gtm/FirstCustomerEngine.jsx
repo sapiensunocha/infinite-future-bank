@@ -808,6 +808,7 @@ export default function FirstCustomerEngine({ session, balances, profile }) {
   const notify = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 4000); };
 
   const load = useCallback(async () => {
+    if (!session?.user?.id) return;
     setLoading(true);
     const { data: prog } = await supabase.from('first_customer_programs').select('*').eq('user_id', session.user.id).maybeSingle();
     if (prog) {
@@ -816,7 +817,7 @@ export default function FirstCustomerEngine({ session, balances, profile }) {
       setLeads(ldata || []);
     }
     setLoading(false);
-  }, [session.user.id]);
+  }, [session?.user?.id]);
 
   useEffect(() => { load(); }, [load]);
 
