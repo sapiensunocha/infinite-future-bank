@@ -45,6 +45,20 @@ export default function SettingsHub({
   });
   const [kycFiles, setKycFiles] = useState({ passport: null, selfie: null, proofOfAddress: null });
 
+  const [ariaFeedback, setAriaFeedback] = useState(null);
+  const [showKycWizard, setShowKycWizard] = useState(false);
+
+  useEffect(() => {
+    if (profile?.kyc_status === 'needs_more_info' && session?.user?.id) {
+      supabase
+        .from('kyc_submissions')
+        .select('reviewer_notes, ai_flags, ai_confidence_score, risk_rating')
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+        .then(({ data }) => { if (data) setAriaFeedback(data); });
+    }
+  }, [profile?.kyc_status, session?.user?.id]);
+
   // Face Auth state
   const faceAuth = useFaceAuth(session);
   const [showFaceEnroll, setShowFaceEnroll] = useState(false);
@@ -385,7 +399,55 @@ export default function SettingsHub({
                 )}
               </div>
 
-              {profile?.kyc_status === 'pending_kyc' ? (
+              {profile?.kyc_status === 'needs_more_info' && !showKycWizard ? (
+                <div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-4">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shrink-0">
+                        <AlertTriangle size={20}/>
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-800 text-base mb-1">Action Required</h4>
+                        <p className="text-sm text-slate-600">ARIA, our compliance AI, reviewed your application and needs additional information before your account can be verified.</p>
+                      </div>
+                    </div>
+                    {ariaFeedback?.reviewer_notes && (
+                      <div className="bg-white border border-amber-200 rounded-xl p-4 mb-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-2">Compliance Notes</p>
+                        <p className="text-sm text-slate-700 leading-relaxed">{ariaFeedback.reviewer_notes}</p>
+                      </div>
+                    )}
+                    {ariaFeedback?.ai_flags?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {ariaFeedback.ai_flags.map(flag => (
+                          <span key={flag} className="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded-lg">
+                            {flag.replace(/_/g, ' ')}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Shield size={12}/>
+                      <span>Confidence: {ariaFeedback?.ai_confidence_score ?? '—'}% · Risk: {(ariaFeedback?.risk_rating || '—').toUpperCase()}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowKycWizard(true)}
+                    className="w-full py-4 bg-slate-800 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    <FileWarning size={14}/> Complete My KYC Application
+                  </button>
+                </div>
+              ) : profile?.kyc_status === 'rejected' ? (
+                <div className="py-8 text-center">
+                  <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <XCircle size={24}/>
+                  </div>
+                  <h4 className="font-black text-slate-800 text-base mb-2">Application Unsuccessful</h4>
+                  <p className="text-sm text-slate-500 max-w-sm mx-auto mb-4">Your KYC application could not be approved. Please contact our compliance team for assistance.</p>
+                  <a href="mailto:compliance@infinitefuturebank.org" className="inline-block px-6 py-3 bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-700 transition-all">Contact Compliance</a>
+                </div>
+              ) : profile?.kyc_status === 'pending_kyc' ? (
                 <div className="py-8 text-center">
                   <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <RefreshCw size={24} className="animate-spin"/>
@@ -393,20 +455,33 @@ export default function SettingsHub({
                   <h4 className="font-black text-slate-800 text-base mb-2">Under Review</h4>
                   <p className="text-sm text-slate-500 max-w-sm mx-auto">Your KYC application has been submitted and is being reviewed by our compliance team. This typically takes 24–48 hours.</p>
                 </div>
-              ) : profile?.kyc_status !== 'verified' && profile?.kyc_status !== 'approved' ? (
-                <KYCWizard
-                  session={session}
-                  profile={profile}
-                  triggerNotification={triggerNotification}
-                  onComplete={fetchAllData}
-                />
-              ) : (
+              ) : profile?.kyc_status === 'verified' || profile?.kyc_status === 'approved' ? (
                 <div className="text-center py-10 bg-slate-50 border border-slate-100 rounded-2xl">
                   <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <ShieldCheck size={32}/>
                   </div>
                   <h4 className="font-black text-slate-800 text-lg mb-2">Clearance Level: Tier 1 Active</h4>
                   <p className="text-sm text-slate-500 max-w-sm mx-auto">Your identity, operational address, and financial ledgers have been cryptographically verified and securely vaulted.</p>
+                </div>
+              ) : (
+                <KYCWizard
+                  session={session}
+                  profile={profile}
+                  triggerNotification={triggerNotification}
+                  onComplete={() => { setShowKycWizard(false); fetchAllData(); }}
+                />
+              )}
+              {showKycWizard && profile?.kyc_status === 'needs_more_info' && (
+                <div className="mt-4">
+                  <button onClick={() => setShowKycWizard(false)} className="mb-4 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 font-bold">
+                    ← Back to feedback
+                  </button>
+                  <KYCWizard
+                    session={session}
+                    profile={profile}
+                    triggerNotification={triggerNotification}
+                    onComplete={() => { setShowKycWizard(false); fetchAllData(); }}
+                  />
                 </div>
               )}
             </div>

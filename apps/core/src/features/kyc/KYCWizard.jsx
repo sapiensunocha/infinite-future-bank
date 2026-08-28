@@ -593,13 +593,20 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         aml_terms_agreed: true,
       }).eq('id', userId);
 
+      // Fire document OCR extraction first (populates ai_confidence_score, ai_flags, etc.)
       if (selfie_with_id_url || selfie_url) {
         supabase.functions.invoke('kyc-ai-extract', {
           body: { document_url: selfie_with_id_url || selfie_url, document_type: selfie_with_id_url ? 'selfie_with_id' : 'selfie' }
         }).catch(() => {});
       }
 
-      triggerNotification('success', 'KYC submitted. Our AI compliance team reviews within 24–48 hours.');
+      // Then trigger ARIA — the full compliance reviewer — async in the background.
+      // ARIA reads all 150 fields + the OCR results and issues the binding decision.
+      supabase.functions.invoke('kyc-ai-reviewer', {
+        body: { user_id: userId }
+      }).catch(() => {});
+
+      triggerNotification('success', 'KYC submitted. ARIA is reviewing your application — you\'ll be notified shortly.');
       onComplete?.();
     } catch (err) {
       triggerNotification('error', err.message || 'Submission failed. Please try again.');
