@@ -467,16 +467,18 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
 
   // ── Write AI review metadata to submission ─────────────────────────────
   const { error: subUpdateErr } = await adminSb.from("kyc_submissions").update({
-    status:              dbSubmissionStatus,
-    ai_recommendation:   dbAiRec,
-    ai_confidence_score: decision.confidence,
-    risk_rating:         decision.risk_rating,
-    ai_flags:            decision.flags ?? [],
-    ai_reviewed_at:      new Date().toISOString(),
-    ai_model_version:    "openai/gpt-oss-120b",
-    reviewer_notes:      decision.reviewer_notes,
-    reviewed_at:         new Date().toISOString(),
-    updated_at:          new Date().toISOString(),
+    status:                 dbSubmissionStatus,
+    ai_recommendation:      dbAiRec,
+    ai_confidence_score:    decision.confidence,
+    risk_rating:            decision.risk_rating,
+    ai_flags:               decision.flags ?? [],
+    aria_missing_fields:    decision.missing_fields ?? [],
+    aria_missing_documents: decision.missing_documents ?? [],
+    ai_reviewed_at:         new Date().toISOString(),
+    ai_model_version:       "openai/gpt-oss-120b",
+    reviewer_notes:         decision.reviewer_notes,
+    reviewed_at:            new Date().toISOString(),
+    updated_at:             new Date().toISOString(),
   }).eq("user_id", userId);
   // ── Sync kyc_status to profiles ────────────────────────────────────────
   const { error: profUpdateErr } = await adminSb.from("profiles")

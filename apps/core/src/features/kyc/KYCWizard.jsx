@@ -269,6 +269,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
   const [aiFields, setAiFields] = useState([]);
   const [aiConfidence, setAiConfidence] = useState(null);
   const [preUploadedUrls, setPreUploadedUrls] = useState({});
+  const [prefilled, setPrefilled] = useState(false);
 
   const [form, setForm] = useState({
     // Identity
@@ -380,6 +381,44 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const setFile = (key, val) => setFiles(f => ({ ...f, [key]: val }));
 
+  // W1: Pre-populate from existing submission when resubmitting after needs_more_info
+  useEffect(() => {
+    if (profile?.kyc_status !== 'needs_more_info' || !session?.user?.id) return;
+    supabase
+      .from('kyc_submissions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
+      .then(({ data: sub }) => {
+        if (!sub) return;
+        setForm(f => {
+          const updated = { ...f };
+          Object.keys(f).forEach(k => {
+            const v = sub[k];
+            if (v === null || v === undefined) return;
+            if (typeof v === 'number') { updated[k] = String(v); return; }
+            if (typeof v === 'boolean' || Array.isArray(v) || typeof v === 'object') { updated[k] = v; return; }
+            if (String(v).trim()) updated[k] = String(v);
+          });
+          updated.aml_terms_agreed = false; // user must re-agree each time
+          return updated;
+        });
+        // Pre-populate doc URLs so previously uploaded files skip re-upload
+        const urls = {};
+        [
+          ['id_front', sub.id_front_url], ['id_back', sub.id_back_url],
+          ['selfie', sub.selfie_url], ['selfie_with_id', sub.selfie_with_id_url],
+          ['proof_of_address', sub.proof_of_address_url], ['proof_of_income', sub.proof_of_income_url],
+          ['bank_statement', sub.bank_statement_url], ['tax_return', sub.tax_return_url],
+          ['business_license', sub.business_license_url], ['employment_letter', sub.employment_letter_url],
+          ['certificate_of_incorporation', sub.certificate_of_incorporation_url],
+          ['board_resolution', sub.board_resolution_url], ['ubo_id_document', sub.ubo_id_document_url],
+        ].forEach(([key, url]) => { if (url) urls[key] = url; });
+        setPreUploadedUrls(urls);
+        setPrefilled(true);
+      });
+  }, []);
+
   // Upload file — reuses pre-uploaded URL when possible
   const uploadFile = async (file, docType) => {
     if (!file) return null;
@@ -478,7 +517,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
       const submission = {
         user_id: userId,
-        status: 'pending',
+        status: 'ai_reviewing',
         legal_first_name: form.legal_first_name,
         legal_middle_name: form.legal_middle_name,
         legal_last_name: form.legal_last_name,
@@ -593,18 +632,15 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         aml_terms_agreed: true,
       }).eq('id', userId);
 
-      // Fire document OCR extraction first (populates ai_confidence_score, ai_flags, etc.)
+      // W4: Await OCR so ARIA sees face-match & confidence scores before reviewing
       if (selfie_with_id_url || selfie_url) {
-        supabase.functions.invoke('kyc-ai-extract', {
+        await supabase.functions.invoke('kyc-ai-extract', {
           body: { document_url: selfie_with_id_url || selfie_url, document_type: selfie_with_id_url ? 'selfie_with_id' : 'selfie' }
         }).catch(() => {});
       }
 
-      // Then trigger ARIA — the full compliance reviewer — async in the background.
-      // ARIA reads all 150 fields + the OCR results and issues the binding decision.
-      supabase.functions.invoke('kyc-ai-reviewer', {
-        body: { user_id: userId }
-      }).catch(() => {});
+      // Set status → 'pending' to fire pg_net trigger → ARIA reviews with fresh OCR data
+      await supabase.from('kyc_submissions').update({ status: 'pending' }).eq('user_id', userId);
 
       triggerNotification('success', 'KYC submitted. ARIA is reviewing your application — you\'ll be notified shortly.');
       onComplete?.();
@@ -1022,6 +1058,13 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
   return (
     <div className="space-y-6">
+
+      {prefilled && (
+        <div className="bg-amber-950/20 border border-amber-700/30 rounded-xl px-4 py-3 flex items-center gap-2">
+          <AlertTriangle size={13} className="text-amber-400 shrink-0"/>
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Previous submission loaded — update what's flagged and resubmit.</p>
+        </div>
+      )}
 
       {/* ── Step indicator ── */}
       <div className="relative">

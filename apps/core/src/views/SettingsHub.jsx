@@ -52,7 +52,7 @@ export default function SettingsHub({
     if (profile?.kyc_status === 'needs_more_info' && session?.user?.id) {
       supabase
         .from('kyc_submissions')
-        .select('reviewer_notes, ai_flags, ai_confidence_score, risk_rating')
+        .select('reviewer_notes, ai_flags, ai_confidence_score, risk_rating, aria_missing_fields, aria_missing_documents')
         .eq('user_id', session.user.id)
         .maybeSingle()
         .then(({ data }) => { if (data) setAriaFeedback(data); });
@@ -436,6 +436,37 @@ export default function SettingsHub({
                             {flag.replace(/_/g, ' ')}
                           </span>
                         ))}
+                      </div>
+                    )}
+                    {(ariaFeedback?.aria_missing_fields?.length > 0 || ariaFeedback?.aria_missing_documents?.length > 0) && (
+                      <div className="bg-white border border-amber-200 rounded-xl p-4 mb-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-3">What to provide on resubmission</p>
+                        {ariaFeedback.aria_missing_fields?.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1.5">Missing Information</p>
+                            <ul className="space-y-1.5">
+                              {ariaFeedback.aria_missing_fields.map(f => (
+                                <li key={f} className="text-xs text-slate-700 flex items-center gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"/>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {ariaFeedback.aria_missing_documents?.length > 0 && (
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1.5">Documents to Upload</p>
+                            <ul className="space-y-1.5">
+                              {ariaFeedback.aria_missing_documents.map(d => (
+                                <li key={d} className="text-xs text-slate-700 flex items-center gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"/>
+                                  {d}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-xs text-slate-500">
