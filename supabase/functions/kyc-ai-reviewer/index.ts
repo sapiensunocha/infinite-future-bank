@@ -403,8 +403,6 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
   } catch (e) {
     console.error("[ARIA ERROR]", String(e));
   }
-  if (!decision) return json({ status: "p2p_review", reason: "AI unavailable — queued for human review" });
-
   // ── Fetch user email + name for notifications ──────────────────────────
   const { data: profile } = await adminSb
     .from("profiles")
@@ -414,15 +412,18 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
   const userEmail = profile?.email ?? sub.email_primary;
   const userName  = profile?.full_name ?? sub.legal_full_name ?? "there";
 
-  // ── Fallback: if Claude fails, queue for human review ──────────────────
   if (!decision) {
+    // AI unavailable — reset status so user isn't stuck at ai_reviewing
     await adminSb.from("kyc_submissions")
       .update({ status: "p2p_review", updated_at: new Date().toISOString() })
       .eq("user_id", userId);
-    await adminSb.from("notifications").insert([{
-      user_id: userId, type: "system", read: false, status: "completed",
+    await adminSb.from("profiles")
+      .update({ kyc_status: "pending_kyc", updated_at: new Date().toISOString() })
+      .eq("id", userId);
+    await adminSb.from("notifications").insert({
+      user_id: userId, type: "system", read: false,
       message: "Your KYC is being reviewed by our compliance team. We'll update you within 24–48 hours.",
-    }]);
+    });
     return json({ status: "p2p_review", reason: "AI unavailable — queued for human review" });
   }
 
@@ -451,7 +452,7 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
   const dbProfileStatus    = profileStatusMap[decision.decision] ?? "pending_kyc";
 
   // ── Write AI review metadata to submission ─────────────────────────────
-  await adminSb.from("kyc_submissions").update({
+  const { error: subUpdateErr } = await adminSb.from("kyc_submissions").update({
     status:              dbSubmissionStatus,
     ai_recommendation:   dbAiRec,
     ai_confidence_score: decision.confidence,
@@ -463,22 +464,21 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
     reviewed_at:         new Date().toISOString(),
     updated_at:          new Date().toISOString(),
   }).eq("user_id", userId);
+  if (subUpdateErr) console.error("[ARIA SUB UPDATE ERROR]", subUpdateErr);
 
-  // ── Sync kyc_status to profiles (RPC can't be called with service role) ─
-  await adminSb.from("profiles")
+  // ── Sync kyc_status to profiles ────────────────────────────────────────
+  const { error: profUpdateErr } = await adminSb.from("profiles")
     .update({ kyc_status: dbProfileStatus, updated_at: new Date().toISOString() })
     .eq("id", userId);
+  if (profUpdateErr) console.error("[ARIA PROFILE UPDATE ERROR]", profUpdateErr);
 
-  // ── Override the generic in-app notification with ARIA's user message ──
-  await adminSb.from("notifications")
-    .update({
-      message:    `ARIA Review: ${decision.user_message}`,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", userId)
-    .eq("type", "system")
-    .order("created_at", { ascending: false })
-    .limit(1);
+  // ── Insert ARIA decision notification ──────────────────────────────────
+  await adminSb.from("notifications").insert({
+    user_id: userId,
+    type:    "system",
+    read:    false,
+    message: `ARIA Review: ${decision.user_message}`,
+  });
 
   // ── Send email ─────────────────────────────────────────────────────────
   if (userEmail) {

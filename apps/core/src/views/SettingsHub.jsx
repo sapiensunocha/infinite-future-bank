@@ -394,12 +394,24 @@ export default function SettingsHub({
                   <Fingerprint className="text-blue-600" size={20}/> 
                   Global Regulatory Verification (Tier 1)
                 </h3>
-                {profile?.kyc_status === 'verified' && (
+                {(profile?.kyc_status === 'verified' || profile?.kyc_status === 'approved') && (
                   <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg flex items-center gap-1"><ShieldCheck size={12}/> Verified</span>
                 )}
               </div>
 
-              {profile?.kyc_status === 'needs_more_info' && !showKycWizard ? (
+              {profile?.kyc_status === 'needs_more_info' && showKycWizard ? (
+                <div>
+                  <button onClick={() => setShowKycWizard(false)} className="mb-4 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 font-bold">
+                    ← Back to feedback
+                  </button>
+                  <KYCWizard
+                    session={session}
+                    profile={profile}
+                    triggerNotification={triggerNotification}
+                    onComplete={() => { setShowKycWizard(false); fetchAllData(); }}
+                  />
+                </div>
+              ) : profile?.kyc_status === 'needs_more_info' ? (
                 <div>
                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-4">
                     <div className="flex items-start gap-3 mb-4">
@@ -447,7 +459,7 @@ export default function SettingsHub({
                   <p className="text-sm text-slate-500 max-w-sm mx-auto mb-4">Your KYC application could not be approved. Please contact our compliance team for assistance.</p>
                   <a href="mailto:compliance@infinitefuturebank.org" className="inline-block px-6 py-3 bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-700 transition-all">Contact Compliance</a>
                 </div>
-              ) : profile?.kyc_status === 'pending_kyc' ? (
+              ) : profile?.kyc_status === 'pending_kyc' || profile?.kyc_status === 'ai_reviewing' ? (
                 <div className="py-8 text-center">
                   <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <RefreshCw size={24} className="animate-spin"/>
@@ -468,21 +480,8 @@ export default function SettingsHub({
                   session={session}
                   profile={profile}
                   triggerNotification={triggerNotification}
-                  onComplete={() => { setShowKycWizard(false); fetchAllData(); }}
+                  onComplete={fetchAllData}
                 />
-              )}
-              {showKycWizard && profile?.kyc_status === 'needs_more_info' && (
-                <div className="mt-4">
-                  <button onClick={() => setShowKycWizard(false)} className="mb-4 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 font-bold">
-                    ← Back to feedback
-                  </button>
-                  <KYCWizard
-                    session={session}
-                    profile={profile}
-                    triggerNotification={triggerNotification}
-                    onComplete={() => { setShowKycWizard(false); fetchAllData(); }}
-                  />
-                </div>
               )}
             </div>
 

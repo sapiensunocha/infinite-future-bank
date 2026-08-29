@@ -478,7 +478,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
       const submission = {
         user_id: userId,
-        status: 'ai_reviewing',
+        status: 'pending',
         legal_first_name: form.legal_first_name,
         legal_middle_name: form.legal_middle_name,
         legal_last_name: form.legal_last_name,
