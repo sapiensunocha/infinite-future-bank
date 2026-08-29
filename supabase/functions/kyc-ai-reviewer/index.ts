@@ -432,7 +432,7 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
       .update({ status: "p2p_review", updated_at: new Date().toISOString() })
       .eq("user_id", userId);
     await adminSb.from("profiles")
-      .update({ kyc_status: "pending_kyc", updated_at: new Date().toISOString() })
+      .update({ kyc_status: "pending_kyc" })
       .eq("id", userId);
     await adminSb.from("notifications").insert({
       user_id: userId, type: "system", read: false,
@@ -478,21 +478,22 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
     reviewed_at:         new Date().toISOString(),
     updated_at:          new Date().toISOString(),
   }).eq("user_id", userId);
-  if (subUpdateErr) console.error("[ARIA SUB UPDATE ERROR]", subUpdateErr);
-
   // ── Sync kyc_status to profiles ────────────────────────────────────────
   const { error: profUpdateErr } = await adminSb.from("profiles")
-    .update({ kyc_status: dbProfileStatus, updated_at: new Date().toISOString() })
+    .update({ kyc_status: dbProfileStatus })
     .eq("id", userId);
-  if (profUpdateErr) console.error("[ARIA PROFILE UPDATE ERROR]", profUpdateErr);
 
   // ── Insert ARIA decision notification ──────────────────────────────────
-  await adminSb.from("notifications").insert({
+  const { error: notifErr } = await adminSb.from("notifications").insert({
     user_id: userId,
     type:    "system",
     read:    false,
     message: `ARIA Review: ${decision.user_message}`,
   });
+
+  if (subUpdateErr)  console.error("[ARIA SUB ERROR]",   subUpdateErr);
+  if (profUpdateErr) console.error("[ARIA PROF ERROR]",  profUpdateErr);
+  if (notifErr)      console.error("[ARIA NOTIF ERROR]", notifErr);
 
   // ── Send email ─────────────────────────────────────────────────────────
   if (userEmail) {
