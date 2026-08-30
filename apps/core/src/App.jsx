@@ -373,10 +373,22 @@ function MainApp() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailValue.trim().toLowerCase(), {
-        redirectTo: `${APP_URL}/auth/callback?type=recovery`,
-      });
-      if (error) throw error;
+      // Use Resend instead of Supabase's rate-limited default mailer.
+      // admin.generateLink({type:'recovery'}) creates the token; we send the email.
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-password-reset-email`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ email: emailValue.trim().toLowerCase() }),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Failed to send reset email');
       showMessage('Recovery link dispatched to your inbox.', 'success');
       setCurrentView('check_email');
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
