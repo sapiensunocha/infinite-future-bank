@@ -103,14 +103,25 @@ function kycNeedsMoreInfoHtml(firstName: string, notes: string, missing: string[
   );
 }
 
-function kycRejectedHtml(firstName: string, notes: string): string {
+function kycRejectedHtml(firstName: string, notes: string, flags: string[], missing: string[]): string {
+  const flagList = flags.length
+    ? `<p style="margin:12px 0 6px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#ef4444;">Issues found</p>
+       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${flags.map(f =>
+         `<span style="background:#7f1d1d;color:#fca5a5;font-size:10px;font-weight:900;padding:3px 8px;border-radius:6px;text-transform:uppercase;">${f.replace(/_/g," ")}</span>`
+       ).join("")}</div>`
+    : "";
+  const missingList = missing.length
+    ? `<p style="margin:12px 0 6px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#ef4444;">What to correct on resubmission</p>
+       <ul style="margin:0;padding-left:18px;color:#fca5a5;font-size:13px;line-height:2;">${missing.map(m => `<li>${m}</li>`).join("")}</ul>`
+    : "";
   return emailHtml(
-    "KYC Unsuccessful", "#ef4444",
-    `${firstName}, we were unable to verify your identity.`,
-    `<p>After a thorough review, our compliance team was unable to approve your KYC application at this time.</p>
+    "KYC Not Approved", "#ef4444",
+    `${firstName}, your application needs corrections.`,
+    `<p>Our compliance system reviewed your application and could not approve it at this time. The details below explain why — you can correct these and resubmit directly from the app.</p>
      ${notes ? `<p style="background:#1e293b;padding:16px;border-radius:10px;color:#cbd5e1;font-size:13px;">${notes}</p>` : ""}
-     <p>If you believe this decision is incorrect or have questions, please contact our compliance team directly at <a href="mailto:compliance@infinitefuturebank.org" style="color:#60a5fa;">compliance@infinitefuturebank.org</a>.</p>`,
-    "Contact Support"
+     ${flagList}${missingList}
+     <p style="margin-top:16px;">Log in and go to <strong>Settings → Identity &amp; Legal</strong> to resubmit with corrections. If you need help, contact <a href="mailto:compliance@infinitefuturebank.org" style="color:#60a5fa;">compliance@infinitefuturebank.org</a>.</p>`,
+    "Correct &amp; Resubmit"
   );
 }
 
@@ -120,6 +131,7 @@ async function sendKycEmail(
   decision: "approved" | "needs_more_info" | "rejected",
   notes: string,
   missing: string[],
+  flags: string[] = [],
 ) {
   if (!RESEND_KEY) return;
   const firstName = toName?.split(" ")[0] || "there";
@@ -127,12 +139,12 @@ async function sendKycEmail(
   const subjects: Record<string, string> = {
     approved:        "Your IFB account is verified ✓",
     needs_more_info: "Action required — complete your KYC",
-    rejected:        "IFB KYC — application update",
+    rejected:        "IFB KYC — your application needs corrections",
   };
   const htmlMap: Record<string, string> = {
     approved:        kycApprovedHtml(firstName),
     needs_more_info: kycNeedsMoreInfoHtml(firstName, notes, missing),
-    rejected:        kycRejectedHtml(firstName, notes),
+    rejected:        kycRejectedHtml(firstName, notes, flags, missing),
   };
 
   try {
@@ -337,6 +349,30 @@ Deno.serve(async (req: Request) => {
     .update({ status: "ai_reviewing", updated_at: new Date().toISOString() })
     .eq("user_id", userId);
 
+  // ── Send "received" confirmation immediately — before ARIA runs ────────
+  const earlyEmail = (sub as Record<string, unknown>).email_primary as string | undefined;
+  const earlyName  = ((sub as Record<string, unknown>).legal_full_name as string
+    || (sub as Record<string, unknown>).legal_first_name as string
+    || "there").split(" ")[0];
+  if (earlyEmail && RESEND_KEY) {
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_KEY}` },
+      body: JSON.stringify({
+        from:    FROM,
+        to:      earlyEmail,
+        subject: "Your KYC application has been received — IFB",
+        html:    emailHtml(
+          "Application Received", "#3b82f6",
+          `${earlyName}, your application is in.`,
+          `<p>Your KYC application has been submitted and ARIA, our compliance AI, is now reviewing it. You will receive a decision within <strong>24–48 hours</strong>.</p>
+           <p>If you need to make changes before a decision is reached, you can withdraw and resubmit directly from <strong>Settings → Identity &amp; Legal</strong>.</p>`,
+          "View Application Status"
+        ),
+      }),
+    }).catch(() => {});
+  }
+
   // ── Build prompt ───────────────────────────────────────────────────────
   const dossier = buildPrompt(sub as Record<string, unknown>);
 
@@ -349,28 +385,35 @@ INTERNATIONAL CONTEXT — READ CAREFULLY:
 - Tax returns are NOT required for individuals in countries with informal or low-documentation tax systems (most of sub-Saharan Africa, parts of MENA, South Asia). Do not flag their absence as a red flag.
 - Bank statements may be unavailable for users who primarily use mobile money (M-Pesa, MTN Mobile Money, Airtel Money, OPay, etc.). Mobile money account statements or screenshots are acceptable alternatives.
 - Credit scores / credit bureau reports do not exist in most of our target markets. Never require them.
-- FATCA applies ONLY to US persons (US citizens, green card holders, or US tax residents). For non-US users, FATCA fields being empty or false is CORRECT — do not flag this.
+- FATCA applies ONLY to US persons (US citizens, green card holders, or US tax residents). For non-US users, FATCA fields being empty or false is CORRECT — do not flag this. If a non-US user marked FATCA as applicable, treat it as a data entry error and ignore it entirely — do NOT penalise them.
 - CRS applies broadly but self-certification by the user is sufficient for standard-risk accounts. Missing formal CRS paperwork alone is not a rejection reason.
 - Document scan quality may be lower for older national IDs, passports from certain countries, or photos taken on low-resolution phones. Do NOT fail a submission purely on AI scan confidence < 70 if the identity fields are internally consistent and there are no fraud signals.
 - Employment letters and formal payslips are rare in informal economies. Accept self-employment declarations, business ownership descriptions, or verbal income descriptions supported by reasonable asset/income figures.
 - Proof of address: utility bills, tenancy agreements, mobile money statements showing a residential address, or a signed declaration are all acceptable for users in countries without formal postal addresses.
 
+INCOME DOCUMENT RULES — CRITICAL FOR AFRICAN USERS:
+- Proof of income is NEVER required for accounts with expected monthly deposits ≤ USD 5,000. Do NOT request it and do NOT flag its absence.
+- Most people in sub-Saharan Africa, MENA, and South/Southeast Asia do not have payslips, tax returns, or formal income statements. This is normal — not suspicious.
+- If income figures look inconsistent (e.g. monthly vs annual mismatch), assume it is a data-entry error by the user, NOT fraud. Use "needs_more_info" to ask for clarification — never reject solely on income figure inconsistency.
+- Stated source of funds ("salary", "business", "savings", "family support") is sufficient for retail accounts without corroboration. Accept it at face value unless there is a specific fraud signal.
+- A "years_at_address" value that equals a year (e.g. 1999, 2005) is almost certainly a data entry error — the user typed their birth year or join year. Do not flag it.
+
 DECISION FRAMEWORK:
-- "approved": Core identity confirmed (name, DOB, nationality consistent), minimum ID document present (ID front or passport), selfie or selfie-with-ID present, no active fraud signals, income/deposit figures are plausible given the user's country and context, AML/PEP clear or manageable.
-- "needs_more_info": Submission is genuine but has addressable gaps — a key document is missing that the user can realistically provide, or a specific field needs clarification. Only request documents that actually exist in the user's country.
-- "rejected": Active fraud indicators (tampered documents, face mismatch confirmed, contradictory identity claims), FATF-blacklisted country with no mitigating context, criminal record involving financial crimes with no explanation, or severe implausible inconsistencies suggesting deliberate deception.
+- "approved": Core identity confirmed (name, DOB, nationality consistent), minimum ID document present (ID front or passport), selfie or selfie-with-ID present, no active fraud signals, AML/PEP clear or manageable.
+- "needs_more_info": Submission is genuine but has addressable gaps — a key document is missing, a field needs clarification, or figures seem inconsistent and the user should confirm. Use this for income inconsistencies, garbled/reversed name fields (likely data-entry errors), missing selfie, expired ID, or missing proof of address in countries where it is realistic to obtain. Only request documents that actually exist in the user's country.
+- "rejected": ONLY use this for confirmed fraud — tampered or forged documents, confirmed face mismatch between selfie and ID, multiple contradictory identity claims showing deliberate deception, FATF-blacklisted country with no mitigating context, or criminal record involving financial crimes. Income issues, missing documents, and form errors are NEVER rejection reasons — they are always "needs_more_info".
 
 MINIMUM REQUIREMENTS FOR APPROVAL (flexible, risk-based):
 1. At least one government-issued ID (front) — passport, national ID, driver's license, voter ID.
 2. At least one photo of the person (selfie OR selfie-with-ID). Both preferred but not mandatory.
-3. Name and date of birth present and internally consistent.
-4. A plausible source of funds for the stated transaction volume — does not need to be formally documented for low-value accounts.
-5. No active PEP flags without context, no confirmed fraud signals.
+3. Name and date of birth present and broadly consistent (minor spelling variations are fine).
+4. A stated source of funds — formal documentation is NOT required for accounts with expected deposits ≤ USD 5,000/month.
+5. No confirmed fraud signals.
 
 ONLY request the following if genuinely missing AND the user is in a country where it is realistic to obtain:
 - Proof of address: only if the user's country has formal addressing systems AND the account risk warrants it.
-- Bank statement: only if the user does not use mobile money and the income claim needs corroboration.
-- Proof of income: only for high-value accounts (expected monthly deposits > USD 5,000) or when the income claim is implausible for the user's stated country/profession.
+- Bank statement: only if the user does not use mobile money and the income claim is implausible for high-value accounts (> USD 5,000/month).
+- Proof of income: ONLY for accounts with expected monthly deposits > USD 5,000. Never request it for smaller accounts.
 - Corporate docs: only if is_corporate = true.
 
 RISK RATING:
@@ -438,6 +481,24 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
       user_id: userId, type: "system", read: false,
       message: "Your KYC is being reviewed by our compliance team. We'll update you within 24–48 hours.",
     });
+    if (userEmail && RESEND_KEY) {
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_KEY}` },
+        body: JSON.stringify({
+          from:    FROM,
+          to:      userEmail,
+          subject: "Your KYC application is under manual review — IFB",
+          html:    emailHtml(
+            "Manual Review", "#f59e0b",
+            `${userName.split(" ")[0]}, your application is being reviewed.`,
+            `<p>Our compliance team is reviewing your KYC application manually. You will receive a decision within <strong>24–48 hours</strong>.</p>
+             <p>If you need to make any changes, log in to <strong>Settings → Identity &amp; Legal</strong> to withdraw and resubmit.</p>`,
+            "View Application Status"
+          ),
+        }),
+      }).catch(() => {});
+    }
     return json({ status: "p2p_review", reason: "AI unavailable — queued for human review" });
   }
 
@@ -508,6 +569,7 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
         ...(decision.missing_fields ?? []),
         ...(decision.missing_documents ?? []),
       ],
+      decision.flags ?? [],
     );
   }
 

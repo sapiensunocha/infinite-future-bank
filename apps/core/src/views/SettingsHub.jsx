@@ -49,7 +49,7 @@ export default function SettingsHub({
   const [showKycWizard, setShowKycWizard] = useState(false);
 
   useEffect(() => {
-    if (profile?.kyc_status === 'needs_more_info' && session?.user?.id) {
+    if ((profile?.kyc_status === 'needs_more_info' || profile?.kyc_status === 'rejected') && session?.user?.id) {
       supabase
         .from('kyc_submissions')
         .select('reviewer_notes, ai_flags, ai_confidence_score, risk_rating, aria_missing_fields, aria_missing_documents')
@@ -481,14 +481,99 @@ export default function SettingsHub({
                     <FileWarning size={14}/> Complete My KYC Application
                   </button>
                 </div>
+              ) : profile?.kyc_status === 'rejected' && showKycWizard ? (
+                <div>
+                  <button onClick={() => setShowKycWizard(false)} className="mb-4 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 font-bold">
+                    ← Back to feedback
+                  </button>
+                  <KYCWizard
+                    session={session}
+                    profile={profile}
+                    triggerNotification={triggerNotification}
+                    onComplete={() => { setShowKycWizard(false); fetchAllData(); }}
+                  />
+                </div>
               ) : profile?.kyc_status === 'rejected' ? (
-                <div className="py-8 text-center">
-                  <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <XCircle size={24}/>
+                <div>
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-4">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0">
+                        <XCircle size={20}/>
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-800 text-base mb-1">Application Not Approved</h4>
+                        <p className="text-sm text-slate-600">Our compliance system reviewed your application and could not approve it at this time. You can correct the issues below and resubmit.</p>
+                      </div>
+                    </div>
+                    {ariaFeedback?.reviewer_notes && (
+                      <div className="bg-white border border-red-200 rounded-xl p-4 mb-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-2">What went wrong</p>
+                        <p className="text-sm text-slate-700 leading-relaxed">{ariaFeedback.reviewer_notes}</p>
+                      </div>
+                    )}
+                    {ariaFeedback?.ai_flags?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {ariaFeedback.ai_flags.map(flag => (
+                          <span key={flag} className="text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 border border-red-200 px-2 py-1 rounded-lg">
+                            {flag.replace(/_/g, ' ')}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {(ariaFeedback?.aria_missing_fields?.length > 0 || ariaFeedback?.aria_missing_documents?.length > 0) && (
+                      <div className="bg-white border border-red-200 rounded-xl p-4 mb-4">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-3">What to fix on resubmission</p>
+                        {ariaFeedback.aria_missing_fields?.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1.5">Missing Information</p>
+                            <ul className="space-y-1.5">
+                              {ariaFeedback.aria_missing_fields.map(f => (
+                                <li key={f} className="text-xs text-slate-700 flex items-center gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0"/>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {ariaFeedback.aria_missing_documents?.length > 0 && (
+                          <div>
+                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1.5">Documents to Upload</p>
+                            <ul className="space-y-1.5">
+                              {ariaFeedback.aria_missing_documents.map(d => (
+                                <li key={d} className="text-xs text-slate-700 flex items-center gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0"/>
+                                  {d}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Shield size={12}/>
+                      <span>Confidence: {ariaFeedback?.ai_confidence_score ?? '—'}% · Risk: {(ariaFeedback?.risk_rating || '—').toUpperCase()}</span>
+                    </div>
                   </div>
-                  <h4 className="font-black text-slate-800 text-base mb-2">Application Unsuccessful</h4>
-                  <p className="text-sm text-slate-500 max-w-sm mx-auto mb-4">Your KYC application could not be approved. Please contact our compliance team for assistance.</p>
-                  <a href="mailto:compliance@infinitefuturebank.org" className="inline-block px-6 py-3 bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-700 transition-all">Contact Compliance</a>
+                  <button
+                    onClick={() => setShowKycWizard(true)}
+                    className="w-full py-4 bg-slate-800 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    <FileWarning size={14}/> Correct &amp; Resubmit Application
+                  </button>
+                </div>
+              ) : (profile?.kyc_status === 'pending_kyc' || profile?.kyc_status === 'ai_reviewing') && showKycWizard ? (
+                <div>
+                  <button onClick={() => setShowKycWizard(false)} className="mb-4 text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 font-bold">
+                    ← Cancel resubmission
+                  </button>
+                  <KYCWizard
+                    session={session}
+                    profile={profile}
+                    triggerNotification={triggerNotification}
+                    onComplete={() => { setShowKycWizard(false); fetchAllData(); }}
+                  />
                 </div>
               ) : profile?.kyc_status === 'pending_kyc' || profile?.kyc_status === 'ai_reviewing' ? (
                 <div className="py-8 text-center">
@@ -496,7 +581,13 @@ export default function SettingsHub({
                     <RefreshCw size={24} className="animate-spin"/>
                   </div>
                   <h4 className="font-black text-slate-800 text-base mb-2">Under Review</h4>
-                  <p className="text-sm text-slate-500 max-w-sm mx-auto">Your KYC application has been submitted and is being reviewed by our compliance team. This typically takes 24–48 hours.</p>
+                  <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">Your KYC application has been submitted and is being reviewed by our compliance team. This typically takes 24–48 hours.</p>
+                  <button
+                    onClick={() => setShowKycWizard(true)}
+                    className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
+                  >
+                    Need to make changes? Withdraw &amp; resubmit your application
+                  </button>
                 </div>
               ) : profile?.kyc_status === 'verified' || profile?.kyc_status === 'approved' ? (
                 <div className="text-center py-10 bg-slate-50 border border-slate-100 rounded-2xl">
