@@ -48,7 +48,9 @@ export default function App() {
   }, [session]);
 
   if (session === undefined) return <Spinner />;
-  if (!session) { const _coreUrl = window.location.hostname === 'localhost' ? 'http://localhost:5173' : 'https://app.infinitefuturebank.org'; const _rt = encodeURIComponent(window.location.href.split('#')[0]); window.location.href = `${_coreUrl}?return_to=${_rt}`; return null; }
+  // Don't redirect if we're mid-SSO return (hash contains the bridged tokens)
+  if (!session && !window.location.hash.includes('access_token')) { const _coreUrl = window.location.hostname === 'localhost' ? 'http://localhost:5173' : 'https://app.infinitefuturebank.org'; const _rt = encodeURIComponent(window.location.href.split('#')[0]); window.location.href = `${_coreUrl}?return_to=${_rt}`; return null; }
+  if (!session) return <Spinner />;
 
   return (
     <Router>
