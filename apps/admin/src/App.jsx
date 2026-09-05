@@ -4,11 +4,11 @@ import { supabase } from './services/supabaseClient';
 import AppSwitcher from '@core/components/AppSwitcher';
 import { Sparkles, LogOut, Home, Users, FileText, ShieldCheck, BarChart3 } from 'lucide-react';
 
-const AdminKYCPortal   = lazy(() => import('@core/features/kyc/AdminKYCPortal'));
-const KYCWizard        = lazy(() => import('@core/features/kyc/KYCWizard'));
-const IFBAudit         = lazy(() => import('@core/features/audit/IFBAudit'));
-const AdminDashboard   = lazy(() => import('@core/AdminDashboard'));
-const AdminSupportDesk = lazy(() => import('@core/AdminSupportDesk'));
+const AdminKYCPortal   = lazy(() => import('./features/kyc/AdminKYCPortal'));
+const KYCWizard        = lazy(() => import('./features/kyc/KYCWizard'));
+const IFBAudit         = lazy(() => import('./features/audit/IFBAudit'));
+const AdminDashboard   = lazy(() => import('./AdminDashboard'));
+const AdminSupportDesk = lazy(() => import('./AdminSupportDesk'));
 
 const Spinner = () => (
   <div className="min-h-screen bg-slate-50 flex items-center justify-center">
