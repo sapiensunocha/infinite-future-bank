@@ -13,6 +13,45 @@ import {
 } from 'lucide-react';
 
 const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
+
+async function sendKycStatusEmail(toEmail, userName, status, notes) {
+  if (!toEmail || !RESEND_KEY) return;
+  const first = (userName || 'there').split(' ')[0];
+  const subjects = {
+    approved:        'Your KYC application has been approved — IFB',
+    rejected:        'Your KYC application — action required — IFB',
+    needs_more_info: 'Action required: additional KYC information needed — IFB',
+  };
+  const bodies = {
+    approved: `<h2 style="color:#10b981">Identity Verified ✓</h2>
+      <p>Hi ${first},</p>
+      <p>Your KYC application has been <strong>approved</strong> by our compliance team. You now have full access to IFB services.</p>
+      <p>Log in to your account to get started.</p>`,
+    rejected: `<h2 style="color:#ef4444">Application Not Approved</h2>
+      <p>Hi ${first},</p>
+      <p>After reviewing your KYC application, our compliance team was unable to approve it at this time.</p>
+      ${notes ? `<p><strong>Reason:</strong> ${notes}</p>` : ''}
+      <p>You may correct your information and resubmit via <strong>Settings → Identity &amp; Legal</strong>.</p>`,
+    needs_more_info: `<h2 style="color:#f59e0b">Additional Information Required</h2>
+      <p>Hi ${first},</p>
+      <p>Our compliance team needs additional information to complete your KYC review.</p>
+      ${notes ? `<p><strong>What's needed:</strong> ${notes}</p>` : ''}
+      <p>Please log in and go to <strong>Settings → Identity &amp; Legal</strong> to update your application.</p>`,
+  };
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+      body: JSON.stringify({
+        from: 'IFB Compliance <noreply@infinitefuturebank.org>',
+        to: toEmail,
+        subject: subjects[status] || 'Your KYC status has been updated — IFB',
+        html: bodies[status] || `<p>Your KYC status has been updated to <strong>${status}</strong>.</p>`,
+      }),
+    });
+  } catch (_) {}
+}
+
 async function sendStatusEmail(toEmail, orderShortId, status, notes, tracking) {
   const statusLabel = {
     sourcing: 'We are sourcing your item', processing: 'Your order is being processed',
@@ -425,6 +464,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
   // KYC actions
   const [kycNote, setKycNote] = useState('');
+  const [resettingStuck, setResettingStuck] = useState(false);
+
   const handleKycAction = async (userId, status, note = '') => {
     try {
       const { error } = await supabase.rpc('admin_update_kyc', {
@@ -433,9 +474,27 @@ export default function AdminDashboard({ session, profile, onClose }) {
         p_notes: note || null,
       });
       if (error) throw error;
-      notify(`KYC ${status} successfully`);
+      // Send branded email notification — admin_update_kyc only creates in-app notification
+      const target = kycQueue.find(s => s.user_id === userId);
+      const email = target?.profiles?.email || target?.email_primary;
+      const name  = target?.profiles?.full_name || target?.legal_full_name;
+      if (['approved', 'rejected', 'needs_more_info'].includes(status)) {
+        await sendKycStatusEmail(email, name, status, note);
+      }
+      notify(`KYC ${status.replace(/_/g, ' ')} — email sent`);
       loadKyc();
     } catch (e) { notify(e.message, 'error'); }
+  };
+
+  const handleResetStuck = async () => {
+    setResettingStuck(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_reset_stuck_kyc');
+      if (error) throw error;
+      notify(`Re-triggered ARIA for ${data} stuck submission${data !== 1 ? 's' : ''}`);
+      setTimeout(loadKyc, 3000);
+    } catch (e) { notify(e.message, 'error'); }
+    finally { setResettingStuck(false); }
   };
 
   // VentureX company status update
@@ -1185,7 +1244,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           { status: 'needs_more_info', label: 'Needs More Info', icon: AlertTriangle, cls: 'bg-orange-700 hover:bg-orange-600 text-white' },
                           { status: 'ai_reviewing', label: 'Send to AI Review', icon: Zap, cls: 'bg-blue-700 hover:bg-blue-600 text-white' },
                           { status: 'rejected', label: 'Reject KYC', icon: Ban, cls: 'bg-red-900/70 hover:bg-red-800 border border-red-700/40 text-red-300' },
-                        ].filter(a => a.status !== selectedUser.kyc_status).map(({ status, label, icon: Icon, cls }) => (
+                        ].filter(a => a.status !== selectedUser.kyc_status || a.status === 'ai_reviewing').map(({ status, label, icon: Icon, cls }) => (
                           <button key={status}
                             onClick={async () => {
                               try {
@@ -1219,11 +1278,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── KYC REVIEW ─── */}
           {activeTab === 'kyc' && (
             <div className="space-y-6 animate-in fade-in">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <h2 className="text-2xl font-black text-white">KYC Review Queue</h2>
-                <button onClick={loadKyc} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
-                  <RefreshCw size={12}/> Refresh
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleResetStuck}
+                    disabled={resettingStuck}
+                    title="Re-trigger ARIA for all submissions stuck at ai_reviewing for > 30 min"
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-700 hover:bg-violet-600 disabled:opacity-50 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                    {resettingStuck ? <Loader2 size={12} className="animate-spin"/> : <Zap size={12}/>}
+                    Reset Stuck
+                  </button>
+                  <button onClick={loadKyc} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                    <RefreshCw size={12}/> Refresh
+                  </button>
+                </div>
               </div>
 
               {/* ── KYC STATISTICS DASHBOARD ── */}
@@ -1551,6 +1620,20 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           placeholder="Reviewer notes / rejection reason (optional)"
                           id={`kyc-note-${sub.id}`}
                         />
+                        {sub.status === 'ai_reviewing' && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                const { error } = await supabase.rpc('admin_set_kyc_status', { p_user_id: sub.user_id, p_status: 'ai_reviewing' });
+                                if (error) throw error;
+                                notify('Re-triggering ARIA…');
+                                setTimeout(loadKyc, 3000);
+                              } catch (e) { notify(e.message, 'error'); }
+                            }}
+                            className="px-5 py-2.5 bg-violet-700/30 hover:bg-violet-700/60 border border-violet-600/40 text-violet-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                            <Zap size={13}/> Re-trigger ARIA
+                          </button>
+                        )}
                         <button onClick={() => handleKycAction(sub.user_id, 'approved', document.getElementById(`kyc-note-${sub.id}`)?.value)}
                           className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
                           <CheckCircle size={13}/> Approve

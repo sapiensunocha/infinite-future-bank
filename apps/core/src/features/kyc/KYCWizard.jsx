@@ -381,9 +381,9 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const setFile = (key, val) => setFiles(f => ({ ...f, [key]: val }));
 
-  // W1: Pre-populate from existing submission when resubmitting after needs_more_info
+  // W1: Pre-populate from existing submission when resubmitting (needs_more_info OR rejected)
   useEffect(() => {
-    if (profile?.kyc_status !== 'needs_more_info' || !session?.user?.id) return;
+    if (!['needs_more_info', 'rejected'].includes(profile?.kyc_status) || !session?.user?.id) return;
     supabase
       .from('kyc_submissions')
       .select('*')

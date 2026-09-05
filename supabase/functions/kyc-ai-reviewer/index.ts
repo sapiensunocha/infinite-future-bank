@@ -440,9 +440,12 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
   let decision: ReviewDecision | null = null;
 
   try {
+    const controller = new AbortController();
+    const groqTimeout = setTimeout(() => controller.abort(), 120_000);
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+      signal: controller.signal,
       body: JSON.stringify({
         model: "openai/gpt-oss-120b",
         temperature: 0,
@@ -452,6 +455,7 @@ RESPONSE FORMAT: Return ONLY a valid JSON object, no markdown, no explanation ou
         ],
       }),
     });
+    clearTimeout(groqTimeout);
     const groqData = await res.json();
     if (!res.ok) throw new Error(`Groq ${res.status}: ${JSON.stringify(groqData?.error)}`);
     const rawText = groqData?.choices?.[0]?.message?.content ?? "";
