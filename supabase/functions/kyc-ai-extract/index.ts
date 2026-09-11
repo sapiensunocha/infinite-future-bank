@@ -4,6 +4,38 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+async function uploadToGeminiFiles(blob: Blob, mime: string, name: string): Promise<string | null> {
+  const initRes = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${Deno.env.get("GEMINI_API_KEY")}`,
+    {
+      method: "POST",
+      headers: {
+        "X-Goog-Upload-Protocol": "resumable",
+        "X-Goog-Upload-Command": "start",
+        "X-Goog-Upload-Header-Content-Length": String(blob.size),
+        "X-Goog-Upload-Header-Content-Type": mime,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ file: { displayName: name } }),
+    }
+  );
+  if (!initRes.ok) return null;
+  const uploadUrl = initRes.headers.get("X-Goog-Upload-URL");
+  if (!uploadUrl) return null;
+  const uploadRes = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      "Content-Length": String(blob.size),
+      "X-Goog-Upload-Offset": "0",
+      "X-Goog-Upload-Command": "upload, finalize",
+    },
+    body: blob,
+  });
+  if (!uploadRes.ok) return null;
+  const info = await uploadRes.json();
+  return info?.file?.uri ?? null;
+}
+
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY")!;
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -98,28 +130,36 @@ Deno.serve(async (req: Request) => {
     updated_at: new Date().toISOString(),
   }).eq("id", submissionId);
 
-  // Fetch document as base64 for Gemini Vision
-  let imageBase64 = "";
+  // Download document from private storage, upload to Gemini File API, then run inference
+  let fileUri: string | null = null;
   let mimeType = "image/jpeg";
   try {
-    const imgRes = await fetch(body.document_url);
-    const imgBuf = await imgRes.arrayBuffer();
-    const bytes = new Uint8Array(imgBuf);
-    const binStr = bytes.reduce((acc, b) => acc + String.fromCharCode(b), "");
-    imageBase64 = btoa(binStr);
-    const ct = imgRes.headers.get("content-type") || "image/jpeg";
-    if (ct.includes("png")) mimeType = "image/png";
-    else if (ct.includes("pdf")) mimeType = "application/pdf";
-    else if (ct.includes("webp")) mimeType = "image/webp";
-  } catch {
-    return new Response(JSON.stringify({ error: "Could not fetch document" }), { status: 400, headers: corsHeaders });
+    const storagePathMatch = body.document_url.match(/\/object\/(?:public\/|sign\/)?kyc_documents\/(.+?)(?:\?|$)/);
+    if (storagePathMatch) {
+      const storagePath = storagePathMatch[1];
+      const { data: fileData, error: dlErr } = await adminSb.storage
+        .from("kyc_documents")
+        .download(storagePath);
+      if (dlErr || !fileData) throw new Error(dlErr?.message ?? "download failed");
+      const lower = storagePath.toLowerCase();
+      if (lower.endsWith(".png")) mimeType = "image/png";
+      else if (lower.endsWith(".pdf")) mimeType = "application/pdf";
+      else if (lower.endsWith(".webp")) mimeType = "image/webp";
+      fileUri = await uploadToGeminiFiles(fileData, mimeType, `doc_${submissionId}`);
+    }
+  } catch (e: any) {
+    return new Response(JSON.stringify({ error: `Could not fetch document: ${e.message}` }), { status: 400, headers: corsHeaders });
   }
 
-  // Call Gemini Vision API
+  if (!fileUri) {
+    return new Response(JSON.stringify({ error: "Could not upload document to Gemini" }), { status: 400, headers: corsHeaders });
+  }
+
+  // Call Gemini Vision API with file URI (lightweight inference request)
   let extracted: Record<string, unknown> = {};
   try {
     const gemRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -127,15 +167,16 @@ Deno.serve(async (req: Request) => {
           contents: [{
             parts: [
               { text: KYC_EXTRACTION_PROMPT },
-              { inline_data: { mime_type: mimeType, data: imageBase64 } }
+              { file_data: { mime_type: mimeType, file_uri: fileUri } },
             ]
           }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 2000 }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
         })
       }
     );
     const gemData = await gemRes.json();
-    const rawText = gemData?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    const outParts: any[] = gemData?.candidates?.[0]?.content?.parts ?? [];
+    const rawText = outParts.map((p: any) => p.text ?? "").join("") || "{}";
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (jsonMatch) extracted = JSON.parse(jsonMatch[0]);
   } catch (e) {
@@ -161,7 +202,7 @@ Deno.serve(async (req: Request) => {
     ai_flags: extracted.ai_flags ?? [],
     ai_recommendation: extracted.ai_recommendation ?? "manual_review",
     ai_reviewed_at: new Date().toISOString(),
-    ai_model_version: "gemini-1.5-flash",
+    ai_model_version: "gemini-3.5-flash",
     updated_at: new Date().toISOString(),
   };
 

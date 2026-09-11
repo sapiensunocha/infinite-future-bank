@@ -135,6 +135,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const [adminRole, setAdminRole] = useState(null);
   const [checkingRole, setCheckingRole] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [kycStatusFilter, setKycStatusFilter] = useState(null);
+  const [kycRiskFilter, setKycRiskFilter] = useState(null);
 
   // Data states
   const [stats, setStats] = useState(null);
@@ -345,15 +347,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
     } finally { setLoading(false); }
   }, []);
 
-  // Load KYC queue
+  // Load KYC queue — all statuses via SECURITY DEFINER to bypass RLS
   const loadKyc = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await supabase.from('kyc_submissions')
-        .select('*, profiles(full_name, email, country)')
-        .in('status', ['pending', 'p2p_review', 'ai_reviewing', 'needs_more_info'])
-        .order('created_at', { ascending: true })
-        .limit(50);
+      const { data } = await supabase.rpc('admin_get_kyc_queue', { p_limit: 200 });
       setKycQueue(data || []);
     } finally { setLoading(false); }
   }, []);
@@ -1298,38 +1296,45 @@ export default function AdminDashboard({ session, profile, onClose }) {
               {/* ── KYC STATISTICS DASHBOARD ── */}
               {stats && (
                 <div className="space-y-4">
-                  {/* Row 1 — Key numbers */}
+                  {/* Row 1 — Key numbers (clickable → filter queue) */}
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {[
-                      { label: 'Total Submissions', value: fmtNum((stats.kyc_total)||0), color: 'text-blue-400', bg: 'bg-blue-900/20 border-blue-700/30' },
-                      { label: 'Pending Review', value: fmtNum((stats.kyc_pending)||0), color: 'text-amber-400', bg: 'bg-amber-900/20 border-amber-700/30' },
-                      { label: 'Approved', value: fmtNum((stats.kyc_approved)||0), color: 'text-emerald-400', bg: 'bg-emerald-900/20 border-emerald-700/30' },
-                      { label: 'Rejected', value: fmtNum((stats.kyc_rejected)||0), color: 'text-red-400', bg: 'bg-red-900/20 border-red-700/30' },
-                      { label: 'AI Reviewing', value: fmtNum((stats.kyc_ai_reviewing)||0), color: 'text-purple-400', bg: 'bg-purple-900/20 border-purple-700/30' },
-                      { label: 'Needs Info', value: fmtNum((stats.kyc_needs_info)||0), color: 'text-orange-400', bg: 'bg-orange-900/20 border-orange-700/30' },
-                    ].map(s => (
-                      <div key={s.label} className={`rounded-2xl border p-4 ${s.bg}`}>
-                        <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{s.label}</p>
-                      </div>
-                    ))}
+                      { label: 'Total Submissions', value: fmtNum(stats.kyc_total||0),       color: 'text-blue-400',   bg: 'bg-blue-900/20 border-blue-700/30',     filter: null },
+                      { label: 'Pending Review',    value: fmtNum(stats.kyc_pending||0),     color: 'text-amber-400',  bg: 'bg-amber-900/20 border-amber-700/30',   filter: 'pending' },
+                      { label: 'Approved',          value: fmtNum(stats.kyc_approved||0),    color: 'text-emerald-400',bg: 'bg-emerald-900/20 border-emerald-700/30',filter: 'approved' },
+                      { label: 'Rejected',          value: fmtNum(stats.kyc_rejected||0),    color: 'text-red-400',    bg: 'bg-red-900/20 border-red-700/30',       filter: 'rejected' },
+                      { label: 'AI Reviewing',      value: fmtNum(stats.kyc_ai_reviewing||0),color: 'text-purple-400', bg: 'bg-purple-900/20 border-purple-700/30', filter: 'ai_reviewing' },
+                      { label: 'Needs Info',        value: fmtNum(stats.kyc_needs_info||0),  color: 'text-orange-400', bg: 'bg-orange-900/20 border-orange-700/30', filter: 'needs_more_info' },
+                    ].map(s => {
+                      const isActive = kycStatusFilter === s.filter;
+                      return (
+                        <button key={s.label}
+                          onClick={() => { setKycStatusFilter(isActive ? null : s.filter); setKycRiskFilter(null); }}
+                          className={`rounded-2xl border p-4 text-left transition-all hover:scale-[1.02] active:scale-100 ${s.bg} ${isActive ? 'ring-2 ring-white/30' : ''}`}>
+                          <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{s.label}</p>
+                          {isActive && <p className="text-[9px] text-white/40 mt-1">▲ filtered below</p>}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Row 2 — Visual charts */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                    {/* Approval Rate donut-style */}
+                    {/* Approval Rate — click segments to filter */}
                     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Approval Rate</p>
                       {(() => {
-                        const total = (stats.kyc_approved||0) + (stats.kyc_rejected||0) + (stats.kyc_pending||0) + (stats.kyc_ai_reviewing||0) + (stats.kyc_needs_info||0);
-                        const appRate = total > 0 ? Math.round(((stats.kyc_approved||0) / total) * 100) : 0;
-                        const rejRate = total > 0 ? Math.round(((stats.kyc_rejected||0) / total) * 100) : 0;
+                        const total = (stats.kyc_approved||0)+(stats.kyc_rejected||0)+(stats.kyc_pending||0)+(stats.kyc_ai_reviewing||0)+(stats.kyc_needs_info||0);
+                        const appRate  = total > 0 ? Math.round(((stats.kyc_approved||0)/total)*100) : 0;
+                        const rejRate  = total > 0 ? Math.round(((stats.kyc_rejected||0)/total)*100) : 0;
                         const pendRate = 100 - appRate - rejRate;
                         return (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-4xl font-black text-emerald-400">{appRate}%</span>
+                              <button onClick={() => { setKycStatusFilter(f => f==='approved'?null:'approved'); setKycRiskFilter(null); }}
+                                className="text-4xl font-black text-emerald-400 hover:text-emerald-300 transition-colors">{appRate}%</button>
                               <span className="text-xs text-slate-500">of all submissions</span>
                             </div>
                             <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden flex">
@@ -1337,17 +1342,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <div className="bg-red-500 h-full transition-all" style={{width:`${rejRate}%`}}/>
                               <div className="bg-amber-500 h-full transition-all" style={{width:`${pendRate}%`}}/>
                             </div>
-                            <div className="flex gap-3 text-[10px] font-bold">
-                              <span className="text-emerald-400">● Approved {appRate}%</span>
-                              <span className="text-red-400">● Rejected {rejRate}%</span>
-                              <span className="text-amber-400">● Pending {pendRate}%</span>
+                            <div className="flex gap-3 text-[10px] font-bold flex-wrap">
+                              <button onClick={() => { setKycStatusFilter(f => f==='approved'?null:'approved'); setKycRiskFilter(null); }} className="text-emerald-400 hover:text-emerald-300">● Approved {appRate}%</button>
+                              <button onClick={() => { setKycStatusFilter(f => f==='rejected'?null:'rejected'); setKycRiskFilter(null); }} className="text-red-400 hover:text-red-300">● Rejected {rejRate}%</button>
+                              <button onClick={() => { setKycStatusFilter(f => f==='pending'?null:'pending'); setKycRiskFilter(null); }} className="text-amber-400 hover:text-amber-300">● Pending {pendRate}%</button>
                             </div>
                           </div>
                         );
                       })()}
                     </div>
 
-                    {/* AI Confidence + Risk breakdown */}
+                    {/* AI Confidence + Risk — click risk rows to filter */}
                     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">AI Confidence & Risk</p>
                       <div className="space-y-3">
@@ -1362,71 +1367,103 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         </div>
                         <div className="pt-2 space-y-2">
                           {[
-                            { label: 'Low Risk', val: stats.kyc_risk_low||0, color: 'bg-emerald-500', text: 'text-emerald-400' },
-                            { label: 'Medium Risk', val: stats.kyc_risk_medium||0, color: 'bg-amber-500', text: 'text-amber-400' },
-                            { label: 'High Risk', val: stats.kyc_risk_high||0, color: 'bg-red-500', text: 'text-red-400' },
+                            { label: 'Low Risk',    riskKey: 'low',    val: stats.kyc_risk_low||0,    color: 'bg-emerald-500', text: 'text-emerald-400' },
+                            { label: 'Medium Risk', riskKey: 'medium', val: stats.kyc_risk_medium||0, color: 'bg-amber-500',   text: 'text-amber-400'   },
+                            { label: 'High Risk',   riskKey: 'high',   val: stats.kyc_risk_high||0,   color: 'bg-red-500',     text: 'text-red-400'     },
                           ].map(r => {
                             const riskTotal = (stats.kyc_risk_low||0)+(stats.kyc_risk_medium||0)+(stats.kyc_risk_high||0);
                             const pct = riskTotal > 0 ? Math.round((r.val/riskTotal)*100) : 0;
+                            const isActive = kycRiskFilter === r.riskKey;
                             return (
-                              <div key={r.label}>
+                              <button key={r.label} className={`w-full text-left rounded-lg p-1.5 transition-all hover:bg-slate-800 ${isActive?'bg-slate-800 ring-1 ring-white/20':''}`}
+                                onClick={() => { setKycRiskFilter(isActive ? null : r.riskKey); setKycStatusFilter(null); }}>
                                 <div className="flex justify-between text-[10px] font-bold mb-1">
                                   <span className={r.text}>{r.label}</span>
-                                  <span className="text-slate-400">{r.val} · {pct}%</span>
+                                  <span className="text-slate-400">{r.val} · {pct}%{isActive?' ▲':''}</span>
                                 </div>
                                 <div className="w-full bg-slate-800 rounded-full h-1.5">
                                   <div className={`${r.color} h-full rounded-full`} style={{width:`${pct}%`}}/>
                                 </div>
-                              </div>
+                              </button>
                             );
                           })}
                         </div>
                       </div>
                     </div>
 
-                    {/* User verification funnel */}
+                    {/* Verification Funnel — click to navigate */}
                     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Verification Funnel</p>
                       <div className="space-y-3">
                         {[
-                          { label: 'Total Users', val: stats.total_users||0, color: 'bg-slate-600', pct: 100 },
-                          { label: 'KYC Submitted', val: stats.kyc_total||0, color: 'bg-blue-600', pct: stats.total_users > 0 ? Math.round(((stats.kyc_total||0)/stats.total_users)*100) : 0 },
-                          { label: 'Verified', val: stats.verified_users||0, color: 'bg-emerald-600', pct: stats.total_users > 0 ? Math.round(((stats.verified_users||0)/stats.total_users)*100) : 0 },
+                          { label: 'Total Users',   val: stats.total_users||0,   color: 'bg-slate-600', pct: 100,
+                            onClick: () => setActiveTab('users') },
+                          { label: 'KYC Submitted', val: stats.kyc_total||0,     color: 'bg-blue-600',
+                            pct: stats.total_users > 0 ? Math.round(((stats.kyc_total||0)/stats.total_users)*100) : 0,
+                            onClick: () => { setKycStatusFilter(null); setKycRiskFilter(null); } },
+                          { label: 'Verified',      val: stats.verified_users||0, color: 'bg-emerald-600',
+                            pct: stats.total_users > 0 ? Math.round(((stats.verified_users||0)/stats.total_users)*100) : 0,
+                            onClick: () => setActiveTab('users') },
                         ].map(f => (
-                          <div key={f.label}>
+                          <button key={f.label} onClick={f.onClick} className="w-full text-left group hover:bg-slate-800 rounded-lg p-1.5 -mx-1.5 transition-all">
                             <div className="flex justify-between text-[10px] font-bold mb-1">
-                              <span className="text-slate-300">{f.label}</span>
+                              <span className="text-slate-300 group-hover:text-white transition-colors">{f.label} →</span>
                               <span className="text-slate-400">{fmtNum(f.val)} ({f.pct}%)</span>
                             </div>
                             <div className="w-full bg-slate-800 rounded-full h-2">
                               <div className={`${f.color} h-full rounded-full`} style={{width:`${f.pct}%`}}/>
                             </div>
-                          </div>
+                          </button>
                         ))}
-                        <div className="pt-2 border-t border-slate-800">
-                          <div className="flex justify-between">
-                            <span className="text-[10px] text-slate-500 font-bold">New Users (7d)</span>
+                        <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                          <button onClick={() => setActiveTab('users')} className="w-full flex justify-between hover:bg-slate-800 rounded-lg px-1.5 py-1 transition-all group">
+                            <span className="text-[10px] text-slate-500 font-bold group-hover:text-slate-300">New Users (7d) →</span>
                             <span className="text-[10px] text-blue-400 font-black">+{fmtNum(stats.new_users_7d||0)}</span>
-                          </div>
-                          <div className="flex justify-between mt-1">
-                            <span className="text-[10px] text-slate-500 font-bold">Failed Ops (24h)</span>
-                            <span className={`text-[10px] font-black ${(stats.failed_ops_24h||0) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmtNum(stats.failed_ops_24h||0)}</span>
-                          </div>
-                          <div className="flex justify-between mt-1">
-                            <span className="text-[10px] text-slate-500 font-bold">30d Txn Volume</span>
+                          </button>
+                          <button onClick={() => setActiveTab('transactions')} className="w-full flex justify-between hover:bg-slate-800 rounded-lg px-1.5 py-1 transition-all group">
+                            <span className="text-[10px] text-slate-500 font-bold group-hover:text-slate-300">Failed Ops (24h) →</span>
+                            <span className={`text-[10px] font-black ${(stats.failed_ops_24h||0)>0?'text-red-400':'text-emerald-400'}`}>{fmtNum(stats.failed_ops_24h||0)}</span>
+                          </button>
+                          <button onClick={() => setActiveTab('transactions')} className="w-full flex justify-between hover:bg-slate-800 rounded-lg px-1.5 py-1 transition-all group">
+                            <span className="text-[10px] text-slate-500 font-bold group-hover:text-slate-300">30d Txn Volume →</span>
                             <span className="text-[10px] text-amber-400 font-black">{fmtUSD(stats.txn_volume||0)}</span>
-                          </div>
+                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
+              {(kycStatusFilter || kycRiskFilter) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Filtering by:</span>
+                  {kycStatusFilter && (
+                    <button onClick={() => setKycStatusFilter(null)}
+                      className="flex items-center gap-1 px-3 py-1 bg-blue-900/40 border border-blue-700/40 rounded-full text-[10px] font-black text-blue-300 hover:bg-blue-900/60">
+                      Status: {kycStatusFilter} ✕
+                    </button>
+                  )}
+                  {kycRiskFilter && (
+                    <button onClick={() => setKycRiskFilter(null)}
+                      className="flex items-center gap-1 px-3 py-1 bg-amber-900/40 border border-amber-700/40 rounded-full text-[10px] font-black text-amber-300 hover:bg-amber-900/60">
+                      Risk: {kycRiskFilter} ✕
+                    </button>
+                  )}
+                </div>
+              )}
               {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
                 <div className="space-y-4">
-                  {kycQueue.length === 0 ? (
-                    <div className="text-center py-20 text-slate-500 font-bold">No pending KYC submissions.</div>
-                  ) : kycQueue.map(sub => {
+                  {(() => {
+                    const filtered = kycQueue.filter(s =>
+                      (!kycStatusFilter || s.status === kycStatusFilter) &&
+                      (!kycRiskFilter   || s.risk_rating === kycRiskFilter)
+                    );
+                    if (filtered.length === 0) return (
+                      <div className="text-center py-20 text-slate-500 font-bold">
+                        {kycStatusFilter || kycRiskFilter ? `No submissions match this filter.` : 'No KYC submissions.'}
+                      </div>
+                    );
+                    return filtered.map(sub => {
                     const conf = sub.ai_confidence_score;
                     const confPct = conf != null ? Math.round(conf) : null;
                     const confColor = confPct == null ? 'slate' : confPct >= 80 ? 'emerald' : confPct >= 60 ? 'amber' : 'red';
@@ -1648,7 +1685,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         </button>
                       </div>
                     </div>
-                  );})}
+                  );});
+                  })()}
                 </div>
               )}
             </div>

@@ -34,7 +34,8 @@ const ExecutiveCrm     = lazyLoad(() => import('./ExecutiveCrm'));
 const PublicEventPage  = lazyLoad(() => import('./PublicEventPage'));
 const CompanyGuide     = lazyLoad(() => import('./features/guide/CompanyGuide'));
 const GuideHub         = lazyLoad(() => import('./features/guide/GuideHub'));
-const AdminKYCPortal   = lazyLoad(() => import('./features/kyc/AdminKYCPortal'));
+const AdminKYCPortal      = lazyLoad(() => import('./features/kyc/AdminKYCPortal'));
+const ProcessorDashboard  = lazyLoad(() => import('./ProcessorDashboard'));
 
 // --- MODALS ---
 import InfoModal from './components/modals/InfoModal';
@@ -115,6 +116,11 @@ function MainApp() {
     const ref = urlParams.get('ref');
     if (ref) sessionStorage.setItem('ifb_ref_code', ref);
 
+    // Persist return_to so the SSO redirect survives even if the URL changes
+    const rt = urlParams.get('return_to');
+    if (rt) sessionStorage.setItem('sso_return_to', rt);
+    else sessionStorage.removeItem('sso_return_to');
+
     const hash = window.location.hash;
     if (hash && (hash.includes('type=invite') || hash.includes('type=recovery'))) {
       setCurrentView('update_password');
@@ -176,9 +182,12 @@ function MainApp() {
 
       setSession(currentSession);
 
-      // If a scaffold app redirected here for cross-app SSO, bridge the session back
-      const returnTo = new URLSearchParams(window.location.search).get('return_to');
+      // If a scaffold app redirected here for cross-app SSO, bridge the session back.
+      // Read from sessionStorage as fallback in case the URL query string was cleaned up.
+      const returnTo = new URLSearchParams(window.location.search).get('return_to')
+                    || sessionStorage.getItem('sso_return_to');
       if (returnTo) {
+        sessionStorage.removeItem('sso_return_to');
         try {
           const params = new URLSearchParams({
             access_token: currentSession.access_token,
@@ -186,9 +195,9 @@ function MainApp() {
             expires_in: '3600',
             token_type: 'bearer',
           });
-          const target = new URL(decodeURIComponent(returnTo));
+          const target = new URL(returnTo);
           target.hash = params.toString();
-          window.location.replace(target.toString());
+          window.location.href = target.toString();
           return;
         } catch (_) {}
       }
@@ -841,7 +850,8 @@ export default function App() {
         <Route path="/hq" element={<HqGateway />} />
         <Route path="/events/:id" element={<PublicEventPage />} />
         <Route path="/guide" element={<CompanyGuide />} />
-        <Route path="/kyc-admin" element={<AdminKYCPortal />} />
+        <Route path="/kyc-admin"   element={<AdminKYCPortal />} />
+        <Route path="/processor"  element={<ProcessorDashboard session={session} />} />
         <Route
           path="/FeedbackForm"
           element={

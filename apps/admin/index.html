@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IFB Admin</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script>
+    // Runs before ANY module JS — captures the SSO hash before Supabase
+    // detectSessionInUrl can call history.replaceState and wipe it.
+    if (window.location.hash.includes('access_token')) {
+      sessionStorage.setItem('sso_in_progress', '1');
+    }
+  </script>
 </head>
 <body>
   <div id="root"></div>

@@ -1,14 +1,16 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
-import AppSwitcher from '@core/components/AppSwitcher';
-import { Sparkles, LogOut, Home, Users, FileText, ShieldCheck, BarChart3 } from 'lucide-react';
+import AppSwitcher from './components/AppSwitcher';
+import { Sparkles, LogOut, Home, Users, FileText, ShieldCheck, BarChart3, Wifi } from 'lucide-react';
+
 
 const AdminKYCPortal   = lazy(() => import('./features/kyc/AdminKYCPortal'));
 const KYCWizard        = lazy(() => import('./features/kyc/KYCWizard'));
 const IFBAudit         = lazy(() => import('./features/audit/IFBAudit'));
 const AdminDashboard   = lazy(() => import('./AdminDashboard'));
 const AdminSupportDesk = lazy(() => import('./AdminSupportDesk'));
+const StockManager     = lazy(() => import('./features/processors/StockManager'));
 
 const Spinner = () => (
   <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -17,11 +19,12 @@ const Spinner = () => (
 );
 
 const navItems = [
-  { path: '/dashboard',  icon: Home,        label: 'Dashboard'  },
-  { path: '/kyc',        icon: Users,       label: 'KYC Portal' },
-  { path: '/kyc-wizard', icon: FileText,    label: 'KYC Wizard' },
-  { path: '/audit',      icon: ShieldCheck, label: 'IFB Audit'  },
-  { path: '/support',    icon: BarChart3,   label: 'Support Desk'},
+  { path: '/dashboard',  icon: Home,        label: 'Dashboard'   },
+  { path: '/kyc',        icon: Users,       label: 'KYC Portal'  },
+  { path: '/kyc-wizard', icon: FileText,    label: 'KYC Wizard'  },
+  { path: '/audit',      icon: ShieldCheck, label: 'IFB Audit'   },
+  { path: '/support',    icon: BarChart3,   label: 'Support Desk' },
+  { path: '/processors', icon: Wifi,        label: 'Processors'  },
 ];
 
 export default function App() {
@@ -30,8 +33,28 @@ export default function App() {
   const [balances, setBalances] = useState({});
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    // Always listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+
+    // Check for SSO token bridge: tokens arrive via URL hash from another IFB app.
+    // detectSessionInUrl is disabled so Supabase won't race to clear the hash — we
+    // parse it manually and call setSession() ourselves.
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const access_token  = hashParams.get('access_token');
+    const refresh_token = hashParams.get('refresh_token');
+
+    if (access_token && refresh_token) {
+      supabase.auth.setSession({ access_token, refresh_token })
+        .then(({ data }) => {
+          setSession(data?.session ?? null);
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          sessionStorage.removeItem('sso_in_progress');
+        })
+        .catch(() => setSession(null));
+    } else {
+      supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    }
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -40,7 +63,7 @@ export default function App() {
     const uid = session.user.id;
     Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
-      supabase.from('accounts_balance').select('*').eq('user_id', uid).maybeSingle(),
+      supabase.from('balances').select('*').eq('user_id', uid).maybeSingle(),
     ]).then(([p, b]) => {
       if (p.data) setProfile(p.data);
       if (b.data) setBalances(b.data);
@@ -48,8 +71,15 @@ export default function App() {
   }, [session]);
 
   if (session === undefined) return <Spinner />;
-  // Don't redirect if we're mid-SSO return (hash contains the bridged tokens)
-  if (!session && !window.location.hash.includes('access_token')) { const _coreUrl = window.location.hostname === 'localhost' ? 'http://localhost:5173' : 'https://app.infinitefuturebank.org'; const _rt = encodeURIComponent(window.location.href.split('#')[0]); window.location.href = `${_coreUrl}?return_to=${_rt}`; return null; }
+
+  // sso_in_progress is set by the inline <script> in index.html before any JS runs —
+  // it means we're waiting for setSession() to process the hash tokens.
+  if (!session && !sessionStorage.getItem('sso_in_progress')) {
+    const _coreUrl = window.location.hostname === 'localhost' ? 'http://localhost:5173' : 'https://app.infinitefuturebank.org';
+    const _rt = encodeURIComponent(window.location.href.split('#')[0]);
+    window.location.href = `${_coreUrl}?return_to=${_rt}`;
+    return null;
+  }
   if (!session) return <Spinner />;
 
   return (
@@ -107,6 +137,7 @@ export default function App() {
                 <Route path="/kyc-wizard" element={<KYCWizard session={session} profile={profile} />} />
                 <Route path="/audit"      element={<IFBAudit session={session} balances={balances} />} />
                 <Route path="/support"    element={<AdminSupportDesk session={session} adminProfile={profile} />} />
+                <Route path="/processors" element={<StockManager />} />
               </Routes>
             </Suspense>
           </main>

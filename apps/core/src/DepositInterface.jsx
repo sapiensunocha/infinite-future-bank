@@ -4,7 +4,7 @@ import { APP_URL } from './config/constants';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from './services/supabaseClient';
 import { useTranslation } from './i18n/useTranslation';
-import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine, History, Clock, Activity, FileText, MapPin, Navigation, Map } from 'lucide-react';
+import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine, History, Clock, Activity, FileText, MapPin, Navigation, Map, Zap, ExternalLink } from 'lucide-react';
 
 const ProcessorMap = lazy(() => import('./features/cot/ProcessorMap'));
 
@@ -71,9 +71,14 @@ export default function DepositInterface({ session, onClose }) {
   const [selectedProcessor, setSelectedProcessor] = useState(null);
   const [receiptFile, setReceiptFile] = useState(null);
   
+  // Flutterwave mobile money deposit state
+  const [flwLink, setFlwLink] = useState(null);
+  const [flwTxRef, setFlwTxRef] = useState(null);
+  const [isFlwLoading, setIsFlwLoading] = useState(false);
+
   // AI Scanning States
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState(null); 
+  const [scanResult, setScanResult] = useState(null);
   const [isP2pProcessing, setIsP2pProcessing] = useState(false);
 
   // History State
@@ -141,6 +146,25 @@ export default function DepositInterface({ session, onClose }) {
       () => setLocationStatus('denied'),
       { enableHighAccuracy: true, timeout: 8000 }
     );
+  };
+
+  const handleFlwMobileMoneyDeposit = async () => {
+    if (!amount || parseFloat(amount) <= 0) return;
+    setIsFlwLoading(true);
+    setFlwLink(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('flutterwave-collect', {
+        body: { amount: parseFloat(amount), currency: 'USD' },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setFlwLink(data.link);
+      setFlwTxRef(data.tx_ref);
+    } catch (err) {
+      alert(err.message || 'Could not generate payment link. Please try again.');
+    } finally {
+      setIsFlwLoading(false);
+    }
   };
 
   const handleFindProcessors = async () => {
@@ -393,10 +417,21 @@ export default function DepositInterface({ session, onClose }) {
                     </div>
                   </button>
 
+                  {/* Flutterwave Mobile Money — instant, no card needed */}
+                  <button disabled={!amount || amount <= 0} onClick={() => { setRoutingMethod('flw'); handleFlwMobileMoneyDeposit(); }} className="w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-amber-500 text-black text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest">Instant</div>
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors shadow-[0_0_15px_rgba(245,158,11,0.2)]"><Zap size={24}/></div>
+                    <div>
+                      <h4 className="font-black text-white">Mobile Money (Flutterwave)</h4>
+                      <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest mt-1">MTN · M-Pesa · Orange · Wave · Airtel</p>
+                      <p className="text-[10px] font-bold text-slate-400 mt-0.5">No card needed · Pan-Africa</p>
+                    </div>
+                  </button>
+
                   <button disabled={!amount || amount <= 0} onClick={() => setRoutingMethod('p2p')} className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left">
                     <div className="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors shadow-[0_0_15px_rgba(16,185,129,0.2)]"><Users size={24}/></div>
                     <div>
-                      <h4 className="font-black text-white">Community of Trust</h4>
+                      <h4 className="font-black text-white">Community of Trust (P2P)</h4>
                       <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1 flex flex-wrap gap-2">
                         <span>1% IFB Fee</span> <span className="text-white/20">|</span> <span>2% Processor Reward</span>
                       </p>
@@ -404,6 +439,67 @@ export default function DepositInterface({ session, onClose }) {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'NEW' && routingMethod === 'flw' && (
+            <div className="space-y-6 animate-in fade-in zoom-in-95">
+              <button onClick={() => { setRoutingMethod(null); setFlwLink(null); }} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
+                <ArrowLeft size={14}/> Back
+              </button>
+
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                  <Smartphone size={32}/>
+                </div>
+                <h3 className="text-xl font-black text-white mb-1">Mobile Money Deposit</h3>
+                <p className="text-xs font-bold text-slate-400">Powered by Flutterwave · Pan-Africa</p>
+              </div>
+
+              {isFlwLoading && (
+                <div className="py-10 text-center flex flex-col items-center gap-4">
+                  <Loader2 className="animate-spin text-amber-500" size={36}/>
+                  <p className="text-xs font-black uppercase tracking-widest text-slate-400">Generating Payment Link...</p>
+                </div>
+              )}
+
+              {!isFlwLoading && flwLink && (
+                <div className="space-y-4 animate-in fade-in">
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">Amount</p>
+                    <p className="text-3xl font-black text-white">${parseFloat(amount).toFixed(2)}</p>
+                  </div>
+
+                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">How it works</p>
+                    <ol className="space-y-1">
+                      {["Tap the button below to open Flutterwave's secure checkout", "Select your mobile money network (MTN, M-Pesa, Orange, Wave...)", "Complete payment on your phone", "Funds appear in your IFB wallet within minutes — no receipt needed"].map((step, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs font-bold text-slate-300">
+                          <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-[9px] font-black shrink-0 mt-0.5">{i+1}</span>
+                          {step}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  <a href={flwLink} target="_blank" rel="noopener noreferrer"
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all flex items-center justify-center gap-2 hover:-translate-y-1"
+                  >
+                    <Zap size={18}/> Pay ${parseFloat(amount).toFixed(2)} via Mobile Money <ExternalLink size={14}/>
+                  </a>
+
+                  <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                    <p className="text-[9px] font-bold text-slate-500 text-center">Reference: <span className="font-mono text-slate-400">{flwTxRef}</span></p>
+                    <p className="text-[9px] font-bold text-slate-500 text-center mt-1">Your balance updates automatically after payment. No action needed.</p>
+                  </div>
+                </div>
+              )}
+
+              {!isFlwLoading && !flwLink && (
+                <button onClick={handleFlwMobileMoneyDeposit} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black text-sm uppercase tracking-widest p-5 rounded-2xl transition-all flex items-center justify-center gap-2">
+                  <Zap size={18}/> Generate Payment Link
+                </button>
+              )}
             </div>
           )}
 

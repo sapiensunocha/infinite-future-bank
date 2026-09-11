@@ -1,8 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check } from 'lucide-react';
+import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check, Zap } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
 const WITHDRAWAL_FEE_PCT = 0.005; // 0.5% IFB routing fee
+
+// Flutterwave-supported mobile money networks per country
+const FLW_NETWORKS = {
+  "MTN":     ["GH","UG","RW","ZM","CM","CI","BJ","SN"],
+  "Airtel":  ["UG","KE","TZ","MW","ZM"],
+  "M-Pesa":  ["KE","TZ","MZ"],
+  "Orange":  ["CM","SN","CI","ML","GN","BF","MG"],
+  "Wave":    ["SN","CI","ML","BF","GN","GM"],
+  "Vodacom": ["TZ","CD"],
+  "Moov":    ["TG","BJ","CI","ML","SN"],
+  "TNM":     ["MW"],
+};
+
+const COUNTRY_OPTIONS = [
+  { code:"GH", label:"Ghana" },      { code:"NG", label:"Nigeria" },
+  { code:"KE", label:"Kenya" },      { code:"TZ", label:"Tanzania" },
+  { code:"UG", label:"Uganda" },     { code:"RW", label:"Rwanda" },
+  { code:"SN", label:"Senegal" },    { code:"CI", label:"Côte d'Ivoire" },
+  { code:"CM", label:"Cameroon" },   { code:"ZM", label:"Zambia" },
+  { code:"MW", label:"Malawi" },     { code:"MZ", label:"Mozambique" },
+  { code:"ML", label:"Mali" },       { code:"BF", label:"Burkina Faso" },
+  { code:"GN", label:"Guinea" },     { code:"TG", label:"Togo" },
+  { code:"BJ", label:"Benin" },      { code:"CD", label:"DR Congo" },
+  { code:"MG", label:"Madagascar" }, { code:"GM", label:"Gambia" },
+];
 
 export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuccess }) {
   const [activeTab, setActiveTab] = useState('NEW'); // 'NEW' or 'HISTORY'
@@ -12,6 +37,12 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Flutterwave Mobile Money state
+  const [flwNetwork, setFlwNetwork] = useState('MTN');
+  const [flwCountry, setFlwCountry] = useState('GH');
+  const [flwPhone, setFlwPhone] = useState('');
+  const [flwResult, setFlwResult] = useState(null);
 
   // Unified P2P/Escrow State
   const [p2pFiatMethod, setP2pFiatMethod] = useState('Local Bank Transfer');
@@ -83,6 +114,45 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     if (withdrawalTotal > userBalance) return showToast(`Insufficient funds. Need $${withdrawalTotal.toFixed(2)} ($${numAmount.toFixed(2)} + $${withdrawalFee.toFixed(2)} routing fee).`, true);
     setStep(2);
   };
+
+  const handleFlwMobileMoney = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!flwPhone) return showToast('Enter your mobile number.', true);
+    if (withdrawalTotal > userBalance) return showToast(`Insufficient funds. Need $${withdrawalTotal.toFixed(2)}.`, true);
+
+    setIsProcessing(true);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('flutterwave-transfer', {
+        body: { amount: parseFloat(amount), network: flwNetwork, country: flwCountry, phone: flwPhone },
+      });
+
+      if (fnErr) throw fnErr;
+
+      if (data?.flw_supported === false) {
+        // Network not supported in this country — fall through to human processor
+        showToast(`${flwNetwork} in ${flwCountry} not yet automated. Routing to Community of Trust.`, false);
+        setP2pFiatMethod('Mobile Money');
+        setP2pReceivingDetails(`${flwNetwork} — ${flwPhone}`);
+        await handleFindProcessors('Mobile Money', `${flwNetwork} — ${flwPhone}`);
+        return;
+      }
+
+      if (data?.error) throw new Error(data.error);
+
+      setFlwResult(data);
+      setStep(5); // go straight to success
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      showToast(err.message || 'Flutterwave transfer failed. Please try again.', true);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const availableNetworksForCountry = Object.entries(FLW_NETWORKS)
+    .filter(([, countries]) => countries.includes(flwCountry))
+    .map(([network]) => network);
 
   const handleFindProcessors = async (overrideMethod = null, overrideDetails = null) => {
     const currentMethod = overrideMethod || p2pFiatMethod;
@@ -667,12 +737,68 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                   </div>
                 </div>
 
-                {p2pFiatMethod !== 'Physical Cash Pickup' && (
+                {/* Mobile Money → Instant FLW payout form */}
+                {p2pFiatMethod === 'Mobile Money' && (
+                  <form onSubmit={handleFlwMobileMoney} className="animate-in fade-in slide-in-from-bottom-2 space-y-4">
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
+                      <Zap size={14} className="text-emerald-600 shrink-0"/>
+                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wide">Instant via Flutterwave — no human processor needed</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Country</label>
+                      <select
+                        value={flwCountry} onChange={(e) => { setFlwCountry(e.target.value); setFlwNetwork(Object.entries(FLW_NETWORKS).find(([, c]) => c.includes(e.target.value))?.[0] ?? 'MTN'); }}
+                        className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-emerald-500 transition-colors"
+                      >
+                        {COUNTRY_OPTIONS.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Network</label>
+                      {availableNetworksForCountry.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {availableNetworksForCountry.map(n => (
+                            <button key={n} type="button"
+                              onClick={() => setFlwNetwork(n)}
+                              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${flwNetwork === n ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                            >{n}</button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 p-3 rounded-xl">
+                          No automated mobile money networks for this country. Routing to Community of Trust instead.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Recipient Mobile Number</label>
+                      <input
+                        type="tel" required value={flwPhone} onChange={(e) => setFlwPhone(e.target.value)}
+                        placeholder="+233XXXXXXXXX (international format)"
+                        className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-emerald-500 transition-colors"
+                      />
+                      <p className="text-[10px] text-slate-400 font-bold mt-1">Include country code, e.g. +233 for Ghana.</p>
+                    </div>
+
+                    <button
+                      type="submit" disabled={isProcessing || availableNetworksForCountry.length === 0}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:-translate-y-1 disabled:opacity-50"
+                    >
+                      {isProcessing ? <Loader2 className="animate-spin" size={16} /> : <><Zap size={16}/> Send ${amount} via {flwNetwork} Instantly</>}
+                    </button>
+                  </form>
+                )}
+
+                {/* All other methods (Local Bank, Digital Wallet, Cash) → human P2P processor */}
+                {p2pFiatMethod !== 'Mobile Money' && p2pFiatMethod !== 'Physical Cash Pickup' && (
                   <div className="animate-in fade-in slide-in-from-bottom-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
                       Your {p2pFiatMethod} Details
                     </label>
-                    <textarea 
+                    <textarea
                       value={p2pReceivingDetails}
                       onChange={(e) => setP2pReceivingDetails(e.target.value)}
                       placeholder={`E.g. Bank Name, Account Number, or Mobile Money Number...`}
@@ -701,13 +827,15 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                   </div>
                 )}
 
-                <button 
-                  onClick={() => handleFindProcessors()} 
-                  disabled={isLoadingBankers}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:-translate-y-1"
-                >
-                  {isLoadingBankers ? <Loader2 className="animate-spin" size={16} /> : 'Match With Routing Node'}
-                </button>
+                {p2pFiatMethod !== 'Mobile Money' && (
+                  <button
+                    onClick={() => handleFindProcessors()}
+                    disabled={isLoadingBankers}
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:-translate-y-1"
+                  >
+                    {isLoadingBankers ? <Loader2 className="animate-spin" size={16} /> : 'Match With Routing Node'}
+                  </button>
+                )}
               </div>
             )}
 
@@ -779,16 +907,32 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
             {/* STEP 5: SUCCESS */}
             {step === 5 && (
               <div className="py-10 text-center space-y-4 animate-in zoom-in-95 duration-300">
-                <div className="mx-auto w-24 h-24 bg-emerald-50 border-8 border-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                  <CheckCircle size={40} strokeWidth={3} />
+                <div className={`mx-auto w-24 h-24 border-8 rounded-full flex items-center justify-center mb-6 shadow-inner ${flwResult ? 'bg-emerald-50 border-emerald-100 text-emerald-500' : 'bg-emerald-50 border-emerald-100 text-emerald-500'}`}>
+                  {flwResult ? <Zap size={40} strokeWidth={3} /> : <CheckCircle size={40} strokeWidth={3} />}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800 mb-2">Withdrawal Escrow Initiated</h3>
-                  <p className="text-slate-500 font-bold text-sm leading-relaxed px-4">
-                    Your digital funds are locked in Escrow. <strong>{selectedProcessor?.full_name}</strong> has been notified to send {parseFloat(amount).toFixed(2)} USD equivalent to your provided details.
-                  </p>
+                  {flwResult ? (
+                    <>
+                      <h3 className="text-2xl font-black text-slate-800 mb-2">Sent Instantly via Flutterwave</h3>
+                      <p className="text-slate-500 font-bold text-sm leading-relaxed px-4">
+                        <strong>${parseFloat(amount).toFixed(2)}</strong> is being delivered to <strong>{flwPhone}</strong> via <strong>{flwNetwork}</strong>. No human processor needed.
+                      </p>
+                      <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-left space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Transaction Reference</p>
+                        <p className="font-mono text-xs font-bold text-slate-700 break-all">{flwResult.reference}</p>
+                        <p className="text-[10px] text-slate-400 font-bold">Funds typically arrive within 1–5 minutes.</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-2xl font-black text-slate-800 mb-2">Withdrawal Escrow Initiated</h3>
+                      <p className="text-slate-500 font-bold text-sm leading-relaxed px-4">
+                        Your digital funds are locked in Escrow. <strong>{selectedProcessor?.full_name}</strong> has been notified to send {parseFloat(amount).toFixed(2)} USD equivalent to your provided details.
+                      </p>
+                    </>
+                  )}
                 </div>
-                <button onClick={() => { setActiveTab('HISTORY'); setStep(1); setAmount(''); }} className="mt-8 w-full bg-slate-900 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-colors shadow-lg">
+                <button onClick={() => { setActiveTab('HISTORY'); setStep(1); setAmount(''); setFlwResult(null); }} className="mt-8 w-full bg-slate-900 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-colors shadow-lg">
                   Track Status in History
                 </button>
               </div>

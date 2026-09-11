@@ -59,13 +59,12 @@ Deno.serve(async (req: Request) => {
     for (const pi of intents.data) {
       checked++;
 
-      // FIXED: use correct column name "transaction_type" (was "type" — always returned null)
-      // Double guard: check both transaction_type AND description containing the PI id
+      // Use "type" — matches what stripe-webhook inserts
       const { data: existing } = await adminSupabase
         .from("transactions")
         .select("id")
         .eq("user_id", user.id)
-        .eq("transaction_type", "stripe_deposit")
+        .eq("type", "stripe_deposit")
         .ilike("description", `%${pi.id}%`)
         .maybeSingle();
 
@@ -95,14 +94,13 @@ Deno.serve(async (req: Request) => {
           .eq("user_id", user.id);
       }
 
-      // Record with correct column name
       await adminSupabase.from("transactions").insert([{
-        user_id: user.id,
-        transaction_type: "stripe_deposit",
-        amount: amountUsd,
+        user_id:     user.id,
+        type:        "stripe_deposit",
+        amount:      amountUsd,
         description: `Stripe deposit — ${pi.id}`,
-        status: "completed",
-        metadata: { stripe_payment_intent_id: pi.id },
+        status:      "completed",
+        metadata:    { stripe_payment_intent_id: pi.id },
       }]);
 
       credited++;
