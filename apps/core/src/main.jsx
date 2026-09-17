@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 // Register AFR Network Node service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    navigator.serviceWorker.register('/deus-sw.js', { scope: '/' })
       .catch(() => {}); // silent — SW is enhancement, not requirement
   });
 }

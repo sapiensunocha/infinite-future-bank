@@ -3,6 +3,11 @@
   Service-Worker-Allowed: /
   Content-Type: application/javascript
 
+/deus-sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Service-Worker-Allowed: /
+  Content-Type: application/javascript
+
 /manifest.json
   Cache-Control: no-cache, no-store, must-revalidate
   Content-Type: application/manifest+json
