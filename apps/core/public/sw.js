@@ -1,8 +1,10 @@
 // DEUS AFR Network Node — Service Worker
 // Turns every installed device into a sovereign light node on the AFR chain.
 
-const CACHE_NAME = 'deus-afr-v2';
-const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/favicon.svg'];
+const CACHE_NAME = 'deus-afr-v3';
+// Never cache index.html — it references hashed chunks that change on every deploy.
+// Serving a stale index.html causes chunk 404s → "Something went wrong" crash.
+const STATIC_ASSETS = ['/manifest.json', '/favicon.svg'];
 const IDB_NAME = 'deus-afr-node';
 const IDB_VERSION = 1;
 const STORE_PENDING_TXS = 'pending_txs';
@@ -88,7 +90,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets — cache first
+  // Navigation requests (HTML) — always network-first so index.html is never stale.
+  // A stale index.html references old chunk hashes → 404 → app crash on every deploy.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/index.html').then(r => r || new Response('', { status: 503 })))
+    );
+    return;
+  }
+
+  // Hashed JS/CSS chunks — cache-first (content-addressed, safe to cache forever).
+  // Everything else — cache-first with network fallback.
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

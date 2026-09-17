@@ -1,7 +1,7 @@
 import React from 'react';
 import { supabase } from '../services/supabaseClient';
 
-const APP_SCHEMA_VERSION = '2.5.0';
+const APP_SCHEMA_VERSION = '2.6.0';
 const SCHEMA_KEY = 'deus_schema_v';
 const CRASH_KEY = 'deus_crash_count';
 const FORCE_KEY = 'deus_force_reset_v';
