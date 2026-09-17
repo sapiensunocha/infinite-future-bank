@@ -8,7 +8,7 @@ import {
   CheckCircle2, Circle, User, CreditCard, Ticket
 } from 'lucide-react';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+const stripePromise = loadStripe('pk_live_51QlhX1DV4GGUfngRRIJi02QYB2pTZg2bbX9T4xwM0i6FflEPt2FtV7ydZfNks9I9vOAcmwsLGM1U7tzbpmaP454C00qsme0XJ8');
 
 // ==========================================
 // EMBEDDED STRIPE CHECKOUT FORM (EXTERNAL USERS)
@@ -188,11 +188,18 @@ export default function PaymentPortal({ session }) {
     if (!session) {
       setIsProcessing(true);
       try {
-        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: { userId: receiver.id, amount: numAmount, description: txDescription, eventId: eventIdContext }
+        // Use public endpoint — no JWT required for guest payments
+        const { data, error } = await supabase.functions.invoke('create-guest-payment-intent', {
+          body: {
+            receiver_id: receiver.id,
+            amount:      numAmount,
+            description: txDescription,
+            event_id:    eventIdContext || undefined,
+          }
         });
-        
+
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         if (data?.clientSecret) {
           setClientSecret(data.clientSecret);
         } else {
@@ -204,7 +211,7 @@ export default function PaymentPortal({ session }) {
       } finally {
         setIsProcessing(false);
       }
-      return; 
+      return;
     }
 
     // --- INTERNAL FLOW (AFR / USD / IFB CARD) ---

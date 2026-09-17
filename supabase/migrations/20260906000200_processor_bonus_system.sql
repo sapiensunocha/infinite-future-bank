@@ -39,13 +39,16 @@ CREATE INDEX IF NOT EXISTS idx_proc_earnings_month     ON public.processor_earni
 
 ALTER TABLE public.processor_earnings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "admin_earnings"     ON public.processor_earnings FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
-
-CREATE POLICY "processor_own_earnings" ON public.processor_earnings FOR SELECT
-  USING (processor_id IN (
-    SELECT id FROM public.processor_profiles WHERE user_id = auth.uid()
-  ));
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_earnings' AND policyname='admin_earnings') THEN
+    CREATE POLICY "admin_earnings" ON public.processor_earnings FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_earnings' AND policyname='processor_own_earnings') THEN
+    CREATE POLICY "processor_own_earnings" ON public.processor_earnings FOR SELECT
+      USING (processor_id IN (SELECT id FROM public.processor_profiles WHERE user_id = auth.uid()));
+  END IF;
+END $$;
 
 -- ============================================================
 -- RPC: calculate_commission

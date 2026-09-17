@@ -123,18 +123,20 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
         if (!iso2) iso2 = profile?.country || 'US';
 
         const CATEGORIES = ['environmental','security','financial','food+security','epidemic','infrastructure','micro'];
-        const mHeaders = { 'X-API-Key': MICHAEL_KEY };
 
-        // Fetch all in parallel: weather + country risk + 5 category event slices
+        const michaelFetch = async (path, params = {}) => {
+          try {
+            const { data, error } = await supabase.functions.invoke('michael-proxy', { body: { path, params } });
+            return error ? null : data;
+          } catch { return null; }
+        };
+
+        // Fetch all in parallel: weather + country risk + category event slices
         const [weatherRes, riskRes, ...catResults] = await Promise.all([
           fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&temperature_unit=fahrenheit`)
             .then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(`${MICHAEL_BASE}/api/v1/risk/country/${ISO2_TO_ISO3[iso2] || 'USA'}`, { headers: mHeaders })
-            .then(r => r.ok ? r.json() : null).catch(() => null),
-          ...CATEGORIES.map(cat =>
-            fetch(`${MICHAEL_BASE}/api/v1/events?category=${cat}&limit=40`, { headers: mHeaders })
-              .then(r => r.ok ? r.json() : null).catch(() => null)
-          ),
+          michaelFetch(`/api/v1/risk/country/${ISO2_TO_ISO3[iso2] || 'USA'}`),
+          ...CATEGORIES.map(cat => michaelFetch('/api/v1/events', { category: cat, limit: '40' })),
         ]);
 
         if (weatherRes?.current_weather) {

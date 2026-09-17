@@ -4,11 +4,11 @@
 // BUG FIX: was using .eq("type",...) but column is "transaction_type"
 //          + now uses stripe_payment_intent_id column for atomic dedup
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "npm:stripe@14";
+import Stripe from "npm:stripe@17";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2024-06-20",
 });
 
 const corsHeaders = {
@@ -59,13 +59,13 @@ Deno.serve(async (req: Request) => {
     for (const pi of intents.data) {
       checked++;
 
-      // Use "type" — matches what stripe-webhook inserts
+      // Dedup check: use stripe_payment_intent_id column (most reliable)
       const { data: existing } = await adminSupabase
         .from("transactions")
         .select("id")
         .eq("user_id", user.id)
-        .eq("type", "stripe_deposit")
-        .ilike("description", `%${pi.id}%`)
+        .eq("transaction_type", "stripe_deposit")
+        .eq("stripe_payment_intent_id", pi.id)
         .maybeSingle();
 
       if (existing) continue; // already credited — skip
@@ -95,12 +95,13 @@ Deno.serve(async (req: Request) => {
       }
 
       await adminSupabase.from("transactions").insert([{
-        user_id:     user.id,
-        type:        "stripe_deposit",
-        amount:      amountUsd,
-        description: `Stripe deposit — ${pi.id}`,
-        status:      "completed",
-        metadata:    { stripe_payment_intent_id: pi.id },
+        user_id:                  user.id,
+        transaction_type:         "stripe_deposit",
+        amount:                   amountUsd,
+        description:              `Stripe deposit — ${pi.id}`,
+        status:                   "completed",
+        stripe_payment_intent_id: pi.id,
+        metadata:                 { stripe_payment_intent_id: pi.id },
       }]);
 
       credited++;

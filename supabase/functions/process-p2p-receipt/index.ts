@@ -179,12 +179,12 @@ serve(async (req) => {
 
   // 3. Record user transaction
   await sb.from("transactions").insert([{
-    user_id:     order.user_id,
-    type:        "p2p_deposit",
-    amount:      amountUsd,
-    description: `P2P deposit via ${order.network ?? order.payment_method} — confirmed by processor`,
-    status:      "completed",
-    metadata:    { order_id, processor_id: user.id, network: order.network },
+    user_id:          order.user_id,
+    transaction_type: "p2p_deposit",
+    amount:           amountUsd,
+    description:      `P2P deposit via ${order.network ?? order.payment_method} — confirmed by processor`,
+    status:           "completed",
+    metadata:         { order_id, processor_id: user.id, network: order.network },
   }]);
 
   // 4. Record processor commission

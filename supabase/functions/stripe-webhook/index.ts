@@ -2,11 +2,11 @@
 // Listens for payment_intent.succeeded → credits user's liquid_usd balance
 // Register this URL in your Stripe dashboard: https://<project>.supabase.co/functions/v1/stripe-webhook
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "npm:stripe@14";
+import Stripe from "npm:stripe@17";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2024-06-20",
 });
 
 const supabase = createClient(
@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
     const { data: existing } = await supabase
       .from("transactions")
       .select("id")
-      .eq("type", "stripe_deposit")
+      .eq("transaction_type", "stripe_deposit")
       .ilike("description", `%${pi.id}%`)
       .maybeSingle();
 
@@ -76,11 +76,12 @@ Deno.serve(async (req: Request) => {
 
     // Log the inflow as a transaction
     await supabase.from("transactions").insert([{
-      user_id: userId,
-      type: "stripe_deposit",
-      amount: amountUsd,
-      description: `Stripe deposit — ${pi.id}`,
-      status: "completed",
+      user_id:              userId,
+      transaction_type:     "stripe_deposit",
+      amount:               amountUsd,
+      description:          `Stripe deposit — ${pi.id}`,
+      status:               "completed",
+      stripe_payment_intent_id: pi.id,
     }]);
 
     // Telemetry

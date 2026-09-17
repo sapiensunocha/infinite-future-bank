@@ -50,8 +50,11 @@ serve(async (req) => {
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
-    // txRef format we set: IFB-COLLECT-{userId}-{timestamp}
-    const userIdFromRef = txRef?.split("-")[2] ?? null;
+    // txRef format: IFB.COLLECT.{userId}.{timestamp} (dots separate segments, UUID is always 36 chars)
+    const PREFIX = "IFB.COLLECT.";
+    const userIdFromRef = txRef?.startsWith(PREFIX)
+      ? txRef.substring(PREFIX.length, PREFIX.length + 36)
+      : null;
     if (!userIdFromRef) {
       console.warn("FLW charge.completed: cannot parse user_id from tx_ref:", txRef);
       return new Response(JSON.stringify({ received: true }), { status: 200 });

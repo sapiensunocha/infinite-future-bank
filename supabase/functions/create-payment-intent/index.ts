@@ -3,11 +3,11 @@
 // Creates a Stripe PaymentIntent with user_id in metadata
 // → Webhook (stripe-webhook) credits liquid_usd on payment_intent.succeeded
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "npm:stripe@14";
+import Stripe from "npm:stripe@17";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2024-06-20",
 });
 
 const corsHeaders = {

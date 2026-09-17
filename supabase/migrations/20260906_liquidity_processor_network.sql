@@ -87,38 +87,45 @@ ALTER TABLE public.processor_stock    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stock_refills      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.processor_ratings  ENABLE ROW LEVEL SECURITY;
 
--- Admin full access
-CREATE POLICY "admin_processor_profiles" ON public.processor_profiles FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
-
-CREATE POLICY "admin_processor_stock" ON public.processor_stock FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
-
-CREATE POLICY "admin_stock_refills" ON public.stock_refills FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
-
-CREATE POLICY "admin_processor_ratings" ON public.processor_ratings FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
-
--- Processor reads own profile + stock
-CREATE POLICY "processor_own_profile" ON public.processor_profiles FOR SELECT
-  USING (user_id = auth.uid());
-
-CREATE POLICY "processor_own_stock" ON public.processor_stock FOR SELECT
-  USING (processor_id IN (
-    SELECT id FROM public.processor_profiles WHERE user_id = auth.uid()
-  ));
-
--- All authenticated users can see active processors (routing)
-CREATE POLICY "users_active_processors" ON public.processor_profiles FOR SELECT
-  USING (status = 'active' AND auth.uid() IS NOT NULL);
-
-CREATE POLICY "users_processor_stock" ON public.processor_stock FOR SELECT
-  USING (auth.uid() IS NOT NULL);
-
--- Users can rate
-CREATE POLICY "users_insert_ratings" ON public.processor_ratings FOR INSERT
-  WITH CHECK (rated_by = auth.uid());
+-- Admin full access (idempotent)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_profiles' AND policyname='admin_processor_profiles') THEN
+    CREATE POLICY "admin_processor_profiles" ON public.processor_profiles FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_stock' AND policyname='admin_processor_stock') THEN
+    CREATE POLICY "admin_processor_stock" ON public.processor_stock FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='stock_refills' AND policyname='admin_stock_refills') THEN
+    CREATE POLICY "admin_stock_refills" ON public.stock_refills FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_ratings' AND policyname='admin_processor_ratings') THEN
+    CREATE POLICY "admin_processor_ratings" ON public.processor_ratings FOR ALL
+      USING (EXISTS (SELECT 1 FROM public.admin_roles WHERE user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_profiles' AND policyname='processor_own_profile') THEN
+    CREATE POLICY "processor_own_profile" ON public.processor_profiles FOR SELECT
+      USING (user_id = auth.uid());
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_stock' AND policyname='processor_own_stock') THEN
+    CREATE POLICY "processor_own_stock" ON public.processor_stock FOR SELECT
+      USING (processor_id IN (SELECT id FROM public.processor_profiles WHERE user_id = auth.uid()));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_profiles' AND policyname='users_active_processors') THEN
+    CREATE POLICY "users_active_processors" ON public.processor_profiles FOR SELECT
+      USING (status = 'active' AND auth.uid() IS NOT NULL);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_stock' AND policyname='users_processor_stock') THEN
+    CREATE POLICY "users_processor_stock" ON public.processor_stock FOR SELECT
+      USING (auth.uid() IS NOT NULL);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='processor_ratings' AND policyname='users_insert_ratings') THEN
+    CREATE POLICY "users_insert_ratings" ON public.processor_ratings FOR INSERT
+      WITH CHECK (rated_by = auth.uid());
+  END IF;
+END $$;
 
 -- =================================================================
 -- RPC: route_p2p_order

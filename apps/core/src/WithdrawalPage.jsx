@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import MobileMoneyAccounts from './components/MobileMoneyAccounts';
 import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check, Zap } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
@@ -743,6 +744,17 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                     <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
                       <Zap size={14} className="text-emerald-600 shrink-0"/>
                       <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wide">Instant via Flutterwave — no human processor needed</p>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                      <MobileMoneyAccounts
+                        userId={userId}
+                        onSelectAccount={(acc) => {
+                          if (acc.network) setFlwNetwork(acc.network);
+                          if (acc.country) setFlwCountry(acc.country);
+                          if (acc.phone) setFlwPhone(acc.phone);
+                        }}
+                      />
                     </div>
 
                     <div>
