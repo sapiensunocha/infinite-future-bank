@@ -49,15 +49,61 @@ jobs:
         working-directory: apps/core/android
         run: chmod +x gradlew
 
-      - name: Build Release Bundle (.aab) & APKs
+      - name: Configure Release Keystore & Signing
+        working-directory: apps/core/android
+        run: |
+          # Generate persistent upload signing key
+          keytool -genkeypair -v \
+            -keystore app/release.keystore \
+            -alias ifb \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass ifb_play_store_2026 \
+            -keypass ifb_play_store_2026 \
+            -dname "CN=Infinite Future Bank, OU=Mobile, O=IFB, L=New York, ST=NY, C=US"
+
+          cat << 'EOF' > keystore.properties
+          storeFile=release.keystore
+          storePassword=ifb_play_store_2026
+          keyAlias=ifb
+          keyPassword=ifb_play_store_2026
+          EOF
+
+          # Export public certificate and SHA256 fingerprints
+          keytool -export -rfc \
+            -keystore app/release.keystore \
+            -alias ifb \
+            -storepass ifb_play_store_2026 \
+            -file app/upload_certificate.pem
+
+          keytool -list -v \
+            -keystore app/release.keystore \
+            -alias ifb \
+            -storepass ifb_play_store_2026 > app/signing_fingerprints.txt
+
+      - name: Build Signed Release Bundle (.aab) & APKs
         working-directory: apps/core/android
         run: |
           ./gradlew bundleRelease assembleRelease assembleDebug --stacktrace
 
-      - name: Upload Android App Bundle (.aab for Google Play Console)
+      - name: Sign & Verify Android App Bundle (.aab)
+        working-directory: apps/core/android
+        run: |
+          AAB_FILE=$(ls app/build/outputs/bundle/release/*.aab | head -n 1)
+          echo "Target AAB: $AAB_FILE"
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore app/release.keystore \
+            -storepass ifb_play_store_2026 \
+            -keypass ifb_play_store_2026 \
+            "$AAB_FILE" ifb
+          echo "Verifying AAB Signature:"
+          jarsigner -verify "$AAB_FILE"
+
+      - name: Upload Signed Android App Bundle (.aab for Google Play Console)
         uses: actions/upload-artifact@v4
         with:
-          name: ifb-playstore-bundle-aab
+          name: ifb-signed-playstore-aab
           path: apps/core/android/app/build/outputs/bundle/release/*.aab
 
       - name: Upload Installable APKs (Debug & Release)
@@ -67,3 +113,13 @@ jobs:
           path: |
             apps/core/android/app/build/outputs/apk/release/*.apk
             apps/core/android/app/build/outputs/apk/debug/*.apk
+
+      - name: Upload Signing Keystore & Certificates (Save for future updates)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifb-signing-keystore-credentials
+          path: |
+            apps/core/android/app/release.keystore
+            apps/core/android/app/upload_certificate.pem
+            apps/core/android/app/signing_fingerprints.txt
+            apps/core/android/keystore.properties
