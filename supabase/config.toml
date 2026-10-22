@@ -1,0 +1,74 @@
+
+[auth]
+site_url = "https://app.infinitefuturebank.org"
+additional_redirect_urls = [
+  "https://app.infinitefuturebank.org/**",
+  "https://admin.infinitefuturebank.org/**",
+  "https://ventures.infinitefuturebank.org/**",
+  "https://npo.infinitefuturebank.org/**",
+  "https://tickets.infinitefuturebank.org/**",
+  "https://business.infinitefuturebank.org/**",
+  "https://wealth.infinitefuturebank.org/**",
+  "https://michael.worlddisastercenter.org/**",
+  "https://michael-api-382117221028.us-central1.run.app/**",
+  "https://skyhol.com",
+  "https://skyhol.com/*",
+  "https://www.skyhol.com",
+  "https://www.skyhol.com/*",
+  "https://skylink-navy.vercel.app",
+  "https://skylink-navy.vercel.app/*",
+  "https://skylink-*-wdc-1.vercel.app/*"
+]
+
+[auth.email]
+enable_confirmations = true
+
+[functions.process-p2p-receipt]
+enabled = true
+verify_jwt = true
+import_map = "./functions/process-p2p-receipt/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/process-p2p-receipt/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/process-p2p-receipt/*.html" ]
+
+[functions.kyc-admin-auth]
+verify_jwt = false
+
+[functions.kyc-list-projects]
+verify_jwt = false
+
+[functions.kyc-register-project]
+verify_jwt = false
+
+[functions.kyc-update-project]
+verify_jwt = false
+
+[functions.kyc-record-payment]
+verify_jwt = false
+
+[functions.kyc-get-upload-url]
+verify_jwt = false
+
+[functions.kyc-create-payment-intent]
+verify_jwt = false
+
+[functions.analyze-receipt-ocr]
+verify_jwt = true
+
+[functions.dispatch-task]
+verify_jwt = true
+
+[functions.market-engine]
+verify_jwt = true
+
+[functions.issue-ifb-card]
+verify_jwt = true
+
+[functions.send-otp]
+verify_jwt = true
+
+[functions.verify-otp]
+verify_jwt = true

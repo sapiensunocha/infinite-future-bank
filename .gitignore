@@ -1,0 +1,64 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+**/dist
+**/.turbo
+
+# Env files — NEVER commit real keys
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# Netlify
+.netlify
+**/.netlify
+
+# Apple / macOS
+.DS_Store
+**/.DS_Store
+
+# Capacitor / Mobile native projects
+apps/core/ios
+apps/core/android
+apps/core/electron
+apps/admin/ios
+apps/admin/android
+apps/wealth/ios
+apps/wealth/android
+apps/business/ios
+apps/business/android
+apps/events/ios
+apps/events/android
+apps/npo/ios
+apps/npo/android
+apps/ventures/ios
+apps/ventures/android
+
+# Large APK / desktop build artifacts — host on GitHub Releases instead
+apps/core/*.apk
+apps/core/*.dmg
+apps/core/*.exe
+apps/core/public/*.apk
+
+# Android signing keys and credentials — NEVER commit
+apps/core/*.jks
+apps/core/*.keystore
+apps/core/android/keystore.properties
+**/keystore.properties
+
+# Database backups — NEVER commit
+apps/core/*.backup
+apps/core/*.dump
+apps/core/*.sql.gz
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode
+*.code-workspace

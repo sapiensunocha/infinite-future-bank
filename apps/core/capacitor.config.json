@@ -1,0 +1,19 @@
+{
+  "appId": "org.infinitefuturebank.deus",
+  "appName": "DEUS",
+  "webDir": "dist",
+  "plugins": {
+    "Camera": {
+      "permissions": ["camera", "photos"]
+    },
+    "NativeBiometric": {
+      "faceIdUsageDescription": "Use Face ID to securely authenticate and access your DEUS accounts."
+    }
+  },
+  "ios": {
+    "contentInset": "always"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

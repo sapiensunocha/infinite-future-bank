@@ -1,0 +1,149 @@
+import { useEffect, useState, lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { supabase } from './services/supabaseClient';
+import AppSwitcher from './components/AppSwitcher';
+import { Sparkles, LogOut, Home, Users, FileText, ShieldCheck, BarChart3, Wifi } from 'lucide-react';
+
+
+const AdminKYCPortal   = lazy(() => import('./features/kyc/AdminKYCPortal'));
+const KYCWizard        = lazy(() => import('./features/kyc/KYCWizard'));
+const IFBAudit         = lazy(() => import('./features/audit/IFBAudit'));
+const AdminDashboard   = lazy(() => import('./AdminDashboard'));
+const AdminSupportDesk = lazy(() => import('./AdminSupportDesk'));
+const StockManager     = lazy(() => import('./features/processors/StockManager'));
+
+const Spinner = () => (
+  <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+  </div>
+);
+
+const navItems = [
+  { path: '/dashboard',  icon: Home,        label: 'Dashboard'   },
+  { path: '/kyc',        icon: Users,       label: 'KYC Portal'  },
+  { path: '/kyc-wizard', icon: FileText,    label: 'KYC Wizard'  },
+  { path: '/audit',      icon: ShieldCheck, label: 'IFB Audit'   },
+  { path: '/support',    icon: BarChart3,   label: 'Support Desk' },
+  { path: '/processors', icon: Wifi,        label: 'Processors'  },
+];
+
+export default function App() {
+  const [session, setSession] = useState(undefined);
+  const [profile, setProfile] = useState(null);
+  const [balances, setBalances] = useState({});
+
+  useEffect(() => {
+    // Always listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+
+    // Check for SSO token bridge: tokens arrive via URL hash from another IFB app.
+    // detectSessionInUrl is disabled so Supabase won't race to clear the hash — we
+    // parse it manually and call setSession() ourselves.
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const access_token  = hashParams.get('access_token');
+    const refresh_token = hashParams.get('refresh_token');
+
+    if (access_token && refresh_token) {
+      supabase.auth.setSession({ access_token, refresh_token })
+        .then(({ data }) => {
+          setSession(data?.session ?? null);
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          sessionStorage.removeItem('sso_in_progress');
+        })
+        .catch(() => setSession(null));
+    } else {
+      supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    }
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    const uid = session.user.id;
+    Promise.all([
+      supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
+      supabase.from('balances').select('*').eq('user_id', uid).maybeSingle(),
+    ]).then(([p, b]) => {
+      if (p.data) setProfile(p.data);
+      if (b.data) setBalances(b.data);
+    });
+  }, [session]);
+
+  if (session === undefined) return <Spinner />;
+
+  // sso_in_progress is set by the inline <script> in index.html before any JS runs —
+  // it means we're waiting for setSession() to process the hash tokens.
+  if (!session && !sessionStorage.getItem('sso_in_progress')) {
+    const _coreUrl = window.location.hostname === 'localhost' ? 'http://localhost:5173' : 'https://app.infinitefuturebank.org';
+    const _rt = encodeURIComponent(window.location.href.split('#')[0]);
+    window.location.href = `${_coreUrl}?return_to=${_rt}`;
+    return null;
+  }
+  if (!session) return <Spinner />;
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 relative">
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/20 rounded-full blur-[120px]" />
+        </div>
+        <div className="flex h-screen overflow-hidden max-w-7xl mx-auto">
+
+          <aside className="w-64 bg-slate-100/90 backdrop-blur-xl border-r border-slate-200/60 flex flex-col shrink-0">
+            <div className="p-6 shrink-0">
+              <div className="flex items-center gap-1">
+                <span className="text-4xl font-black text-[#4285F4]">D</span>
+                <span className="text-4xl font-black text-[#EA4335]">E</span>
+                <span className="text-4xl font-black text-[#FBBC04]">U</span>
+                <span className="text-4xl font-black text-[#34A853]">S</span>
+                <Sparkles size={18} className="text-blue-500 ml-1" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">admin</p>
+            </div>
+
+            <nav className="flex-1 overflow-y-auto py-2 px-4 space-y-1 no-scrollbar">
+              {navItems.map(({ path, icon: Icon, label }) => (
+                <NavLink key={path} to={path}
+                  className={({ isActive }) => `w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                    isActive
+                      ? 'bg-blue-600/10 text-blue-600 shadow-inner'
+                      : 'text-slate-500 hover:bg-white/60 hover:text-slate-800 active:bg-white/80'
+                  }`}>
+                  <Icon size={18} className="shrink-0" />
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+
+            <div className="px-4 pb-2">
+              <AppSwitcher currentApp="admin" supabase={supabase} light />
+            </div>
+            <div className="p-4 border-t border-slate-200/60 shrink-0">
+              <button onClick={() => supabase.auth.signOut()}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-200/60 hover:text-slate-800 transition-all">
+                <LogOut size={16} /> Sign Out
+              </button>
+            </div>
+          </aside>
+
+          <main className="flex-1 overflow-y-auto p-6 no-scrollbar">
+            <Suspense fallback={<Spinner />}>
+              <Routes>
+                <Route path="/"           element={<AdminDashboard session={session} profile={profile} />} />
+                <Route path="/dashboard"  element={<AdminDashboard session={session} profile={profile} />} />
+                <Route path="/kyc"        element={<AdminKYCPortal />} />
+                <Route path="/kyc-wizard" element={<KYCWizard session={session} profile={profile} />} />
+                <Route path="/audit"      element={<IFBAudit session={session} balances={balances} />} />
+                <Route path="/support"    element={<AdminSupportDesk session={session} adminProfile={profile} />} />
+                <Route path="/processors" element={<StockManager />} />
+              </Routes>
+            </Suspense>
+          </main>
+
+        </div>
+      </div>
+    </Router>
+  );
+}

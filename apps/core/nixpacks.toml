@@ -1,0 +1,11 @@
+[phases.install]
+cmds = ["npm ci --ignore-scripts"]
+
+[phases.build]
+cmds = ["NODE_OPTIONS='--max-old-space-size=4096' npm run build"]
+
+[start]
+cmd = "node server.cjs"
+
+[variables]
+NIXPACKS_NODE_VERSION = "22"

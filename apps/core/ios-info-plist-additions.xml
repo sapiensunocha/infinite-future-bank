@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- 
+  Add these keys to your iOS App's Info.plist in Xcode (App/Info.plist)
+  to satisfy Apple App Store Guideline 5.1.1 (Privacy and Data Collection).
+  Missing any of these keys will trigger an immediate Transporter/App Store Connect rejection.
+-->
+<plist version="1.0">
+<dict>
+    <!-- Camera for KYC identity document verification -->
+    <key>NSCameraUsageDescription</key>
+    <string>DEUS requires camera access to scan government-issued IDs and complete identity verification (KYC).</string>
+
+    <!-- Biometrics / Face ID -->
+    <key>NSFaceIDUsageDescription</key>
+    <string>DEUS uses Face ID to securely authenticate and authorize financial transactions.</string>
+
+    <!-- Photo Library for uploading documents/receipts -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>DEUS requires photo library access to upload identity documents and verification proofs.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>DEUS needs permission to save generated transaction receipts to your photo library.</string>
+
+    <!-- Bluetooth for Stripe Terminal / Card Readers -->
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>DEUS uses Bluetooth to connect with authorized payment card readers.</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>DEUS uses Bluetooth to communicate with payment terminals.</string>
+
+    <!-- Location for Point of Sale payments -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>DEUS verifies device location to ensure point-of-sale card transactions comply with financial regulations.</string>
+</dict>
+</plist>
