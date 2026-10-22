@@ -46,8 +46,8 @@ if [ -z "$ANDROID_HOME" ]; then
 fi
 
 if ! command -v java >/dev/null 2>&1; then
-  echo "⚠️  Java (JDK 17+) is not installed or not in PATH."
-  echo "    To build Android binaries locally on this PC, install JDK and Android Studio,"
+  echo "⚠️  Java (JDK 21+) is not installed or not in PATH."
+  echo "    To build Android binaries locally on this PC, install JDK 21 and Android Studio,"
   echo "    or use GitHub Actions to build the .aab automatically."
   exit 1
 fi
