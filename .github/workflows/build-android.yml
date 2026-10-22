@@ -5,9 +5,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'apps/core/**'
-      - '.github/workflows/build-android.yml'
 
 jobs:
   build:
@@ -21,26 +18,28 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: 'apps/core/package-lock.json'
 
       - name: Install dependencies
         working-directory: apps/core
-        run: npm ci --legacy-peer-deps || npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build Web Assets (Vite)
         working-directory: apps/core
         run: npm run build
+
+      - name: Strip web-only assets
+        working-directory: apps/core
+        run: |
+          rm -rf dist/models dist/kyc-admin.html dist/kyc-admin.html.br dist/kyc-admin.html.gz dist/serve.json
+          find dist -name "*.br" -delete
+          find dist -name "*.gz" -delete
 
       - name: Sync Capacitor to Android
         working-directory: apps/core
@@ -50,20 +49,21 @@ jobs:
         working-directory: apps/core/android
         run: chmod +x gradlew
 
-      - name: Build Release AAB & APK
+      - name: Build Release Bundle (.aab) & APKs
         working-directory: apps/core/android
-        run: ./gradlew assembleRelease bundleRelease --stacktrace
+        run: |
+          ./gradlew bundleRelease assembleRelease assembleDebug --stacktrace
 
-      - name: Upload Android App Bundle (.aab for Google Play)
+      - name: Upload Android App Bundle (.aab for Google Play Console)
         uses: actions/upload-artifact@v4
         with:
-          name: ifb-release-aab
+          name: ifb-playstore-bundle-aab
           path: apps/core/android/app/build/outputs/bundle/release/*.aab
-          if-no-files-found: warn
 
-      - name: Upload Release APK (.apk for Direct Testing)
+      - name: Upload Installable APKs (Debug & Release)
         uses: actions/upload-artifact@v4
         with:
-          name: ifb-release-apk
-          path: apps/core/android/app/build/outputs/apk/release/*.apk
-          if-no-files-found: warn
+          name: ifb-installable-apks
+          path: |
+            apps/core/android/app/build/outputs/apk/release/*.apk
+            apps/core/android/app/build/outputs/apk/debug/*.apk

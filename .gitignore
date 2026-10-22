@@ -23,8 +23,11 @@ node_modules
 
 # Capacitor / Mobile native projects
 apps/core/ios
-apps/core/android
 apps/core/electron
+**/android/.gradle
+**/android/app/build
+**/android/local.properties
+**/android/app/src/main/assets/public
 apps/admin/ios
 apps/admin/android
 apps/wealth/ios
