@@ -33,7 +33,31 @@ npx @capacitor/cli sync android
 
 echo "▶ Building release APK and AAB (for Google Play)..."
 cd android
-ANDROID_HOME=~/Library/Android/sdk ./gradlew assembleRelease bundleRelease
+
+# Auto-detect Android SDK if not already set
+if [ -z "$ANDROID_HOME" ]; then
+  if [ -d "$HOME/Library/Android/sdk" ]; then
+    export ANDROID_HOME="$HOME/Library/Android/sdk"
+  elif [ -n "$LOCALAPPDATA" ] && [ -d "$LOCALAPPDATA/Android/Sdk" ]; then
+    export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"
+  elif [ -d "/c/Users/$USER/AppData/Local/Android/Sdk" ]; then
+    export ANDROID_HOME="/c/Users/$USER/AppData/Local/Android/Sdk"
+  fi
+fi
+
+if ! command -v java >/dev/null 2>&1; then
+  echo "⚠️  Java (JDK 17+) is not installed or not in PATH."
+  echo "    To build Android binaries locally on this PC, install JDK and Android Studio,"
+  echo "    or use GitHub Actions to build the .aab automatically."
+  exit 1
+fi
+
+GRADLE_CMD="./gradlew"
+if [ ! -x "./gradlew" ] && [ -f "./gradlew.bat" ]; then
+  GRADLE_CMD="./gradlew.bat"
+fi
+
+$GRADLE_CMD assembleRelease bundleRelease
 cd ..
 
 APK_SRC="android/app/build/outputs/apk/release/app-release.apk"
