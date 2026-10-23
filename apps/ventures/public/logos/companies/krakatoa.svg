@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100">
+  <!-- Silver/grey back peak (right) -->
+  <polygon points="52,8 88,88 70,88 46,28" fill="#9aa0b5"/>
+  <!-- Gold front peak (left) -->
+  <polygon points="18,88 44,8 70,88 52,88" fill="#c8922a"/>
+  <!-- Inner highlight on gold peak -->
+  <polygon points="44,18 52,8 58,28 46,28" fill="#e8b84a" opacity="0.6"/>
+  <!-- Inner highlight on silver peak -->
+  <polygon points="72,28 88,88 80,88 66,38" fill="#c0c8d8" opacity="0.5"/>
+</svg>

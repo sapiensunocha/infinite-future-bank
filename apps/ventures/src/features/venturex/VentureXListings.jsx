@@ -37,6 +37,7 @@ const FLAGS = {
   'Kenya':'🇰🇪','Ethiopia':'🇪🇹','Senegal':'🇸🇳','Gabon':'🇬🇦','Rwanda':'🇷🇼',
   'Egypt':'🇪🇬','Peru':'🇵🇪','Brazil':'🇧🇷','Chile':'🇨🇱','Australia':'🇦🇺',
   'Venezuela':'🇻🇪','Mauritania':'🇲🇷',
+  'Somalia':'🇸🇴','Canada':'🇨🇦','Georgia':'🇬🇪','UAE':'🇦🇪','India':'🇮🇳',
 };
 
 const SECTORS = ['All','Mining','Energy','Agriculture','FinTech','Infrastructure','Healthcare','Real Estate'];
@@ -68,6 +69,7 @@ const fmt = (n) => {
 };
 
 const ticker = (name) => name.replace(/[^A-Z]/g,'').slice(0,4) || name.slice(0,4).toUpperCase();
+const vtxCode = (c) => c.extended_info?.vtx_code || c.extended_info?.ticker_symbol || c.ticker_symbol || ticker(c.name);
 
 // ════════════════════════════════════════════════════════════
 export default function VentureXListings({ session }) {
@@ -241,7 +243,7 @@ export default function VentureXListings({ session }) {
               const meta = SECTOR_META[c.sector]||SECTOR_META['Mining'];
               return (
                 <span key={i} className="inline-flex items-center gap-2 text-[10px] font-black shrink-0">
-                  <span className="text-slate-400 font-mono">{ticker(c.name)}</span>
+                  <span className="text-slate-400 font-mono">{vtxCode(c)}</span>
                   <span style={{color: meta.color}}>{FLAGS[c.country]||'🌍'}</span>
                   <span className="text-white/60">{fmt(c.raise_amount_usd)}</span>
                   <span className="text-slate-700">·</span>
@@ -380,12 +382,15 @@ export default function VentureXListings({ session }) {
                   return (
                     <tr key={c.id} onClick={()=>{setSelected(c);setActiveTab('overview');setInterestForm({range:'',message:''});}}
                       className="hover:bg-blue-50/50 cursor-pointer transition-colors group">
-                      <td className="px-4 py-3 font-mono font-black text-slate-800 text-[10px]">{ticker(c.name)}</td>
+                      <td className="px-4 py-3 font-mono font-black text-slate-800 text-[10px]">{vtxCode(c)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black shrink-0" style={{backgroundColor:c.logo_color||'#3b82f6'}}>
-                            {c.name.charAt(0)}
-                          </div>
+                          {c.extended_info?.logo_url
+                            ? <img src={c.extended_info.logo_url} alt={c.name} className="w-7 h-7 rounded-lg object-contain bg-white p-0.5 border border-slate-100 shrink-0"/>
+                            : <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-black shrink-0" style={{backgroundColor:c.logo_color||'#3b82f6'}}>
+                                {c.name.charAt(0)}
+                              </div>
+                          }
                           <div>
                             <p className="font-black text-slate-900 text-xs leading-none whitespace-nowrap">{c.name}</p>
                             {c.ifb_verified && <span className="text-[8px] font-black text-blue-600">✓ Verified</span>}
@@ -438,13 +443,16 @@ export default function VentureXListings({ session }) {
               <div className="bg-[#0a0f1e] rounded-t-[2.5rem] p-6">
                 <div className="flex items-start justify-between gap-4 mb-5">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-lg shrink-0"
-                      style={{backgroundColor:selected.logo_color||'#3b82f6'}}>
-                      {selected.name.charAt(0)}
-                    </div>
+                    {selected.extended_info?.logo_url
+                      ? <img src={selected.extended_info.logo_url} alt={selected.name} className="w-14 h-14 rounded-2xl object-contain bg-white p-1.5 border border-white/10 shadow-lg shrink-0"/>
+                      : <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-lg shrink-0"
+                          style={{backgroundColor:selected.logo_color||'#3b82f6'}}>
+                          {selected.name.charAt(0)}
+                        </div>
+                    }
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-slate-500 text-xs">{ticker(selected.name)}</span>
+                        <span className="font-mono text-slate-500 text-xs">{vtxCode(selected)}</span>
                         <h3 className="text-white font-black text-lg leading-tight">{selected.name}</h3>
                         {selected.ifb_verified && (
                           <span className="flex items-center gap-1 text-[9px] font-black text-blue-300 bg-blue-900/40 border border-blue-700/40 px-2 py-0.5 rounded-full">
@@ -1126,13 +1134,16 @@ function ExchangeCard({ c, myInterests, onOpen }) {
         {/* Header row */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-base shrink-0 shadow-sm"
-              style={{backgroundColor:c.logo_color||'#3b82f6'}}>
-              {c.name.charAt(0)}
-            </div>
+            {c.extended_info?.logo_url
+              ? <img src={c.extended_info.logo_url} alt={c.name} className="w-10 h-10 rounded-xl object-contain bg-white p-1 border border-slate-100 shrink-0 shadow-sm"/>
+              : <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-base shrink-0 shadow-sm"
+                  style={{backgroundColor:c.logo_color||'#3b82f6'}}>
+                  {c.name.charAt(0)}
+                </div>
+            }
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[9px] text-slate-400 font-bold">{ticker(c.name)}</span>
+                <span className="font-mono text-[9px] text-slate-400 font-bold">{vtxCode(c)}</span>
                 {c.is_featured && <Star size={10} className="text-amber-500 fill-amber-500"/>}
               </div>
               <h3 className="font-black text-slate-900 text-sm leading-tight line-clamp-1">{c.name}</h3>

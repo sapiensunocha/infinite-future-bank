@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Circular gold background -->
+  <circle cx="50" cy="50" r="46" fill="#1a1a2e"/>
+  <!-- Gold mountain / chevron -->
+  <polygon points="50,18 78,72 62,72 50,42 38,72 22,72" fill="#c8922a"/>
+  <!-- Inner lighter gold highlight -->
+  <polygon points="50,28 62,58 56,58 50,38 44,58 38,58" fill="#e8b84a" opacity="0.5"/>
+  <!-- IG monogram below mountain -->
+  <text x="50" y="92" font-family="Arial, sans-serif" font-size="11" font-weight="800" letter-spacing="2" fill="#c8922a" text-anchor="middle">IMBERA GOLD</text>
+</svg>
