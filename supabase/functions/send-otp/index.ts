@@ -46,15 +46,16 @@ Deno.serve(async (req: Request) => {
     );
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to send OTP");
+    console.log("TWILIO_SEND_RESPONSE", JSON.stringify({ httpStatus: res.status, body: data }));
+    if (!res.ok) throw new Error(`Twilio ${res.status}: ${data.message || data.detail || JSON.stringify(data)}`);
 
-    return new Response(JSON.stringify({ ok: true }), {
+    return new Response(JSON.stringify({ ok: true, sid: data.sid, status: data.status }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
+    return new Response(JSON.stringify({ ok: false, error: err.message }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

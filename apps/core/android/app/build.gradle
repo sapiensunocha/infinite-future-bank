@@ -14,8 +14,8 @@ android {
         applicationId "org.infinitefuturebank.deus"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 19
-        versionName "1.4.8"
+        versionCode 25
+        versionName "1.5.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             // Exclude compressed variants — Android WebView serves assets directly, doesn't need .gz/.br
@@ -46,6 +46,11 @@ android {
             }
         }
     }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 repositories {
@@ -69,8 +74,7 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
-    implementation 'com.stripe:stripeterminal:3.10.2'
-    implementation 'com.stripe:stripeterminal-localmobile:3.10.2'
+    implementation 'com.stripe:stripeterminal:5.8.2'
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

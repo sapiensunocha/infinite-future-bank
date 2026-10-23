@@ -6,11 +6,12 @@ import {
   Lock, Plus, Globe, UploadCloud, FileCheck, AlertTriangle,
   TrendingUp, Users, Briefcase, ArrowRightLeft, CheckCircle2,
   Building, MapPin, DollarSign, FileWarning, ScanFace, XCircle,
-  Leaf, Sun, Droplets, Recycle, Truck, TreePine, Ban, Trash2
+  Leaf, Sun, Droplets, Recycle, Truck, TreePine, Ban, Smartphone
 } from 'lucide-react';
 import FaceAuthManager from '../features/auth/FaceAuthManager';
 import { useFaceAuth } from '../features/auth/useFaceAuth';
 import KYCWizard from '../features/kyc/KYCWizard';
+import PhoneField from '../components/PhoneField';
 
 export default function SettingsHub({
   session, profile, subTab, setSubTab, setActiveTab,
@@ -23,6 +24,7 @@ export default function SettingsHub({
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
   const [mfaState, setMfaState] = useState({ qrCode: '', secret: '', verifyCode: '', factorId: '', step: 'init' });
+  const [phoneEdit, setPhoneEdit] = useState({ number: profile?.phone_number || '', otp: '', channel: 'sms', step: 'idle' });
   const fileInputRef = useRef(null);
 
   // CoT Application States
@@ -70,32 +72,6 @@ export default function SettingsHub({
     system_alerts: profile?.pref_notif_system ?? true,
     market_loans: profile?.pref_notif_loans ?? true
   });
-
-  // Account Deletion State (Apple Guideline 5.1.1(v) & Google Play compliance)
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
-
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'DELETE') {
-      setDeleteError('Please type DELETE to confirm.');
-      return;
-    }
-    setIsDeletingAccount(true);
-    setDeleteError('');
-    try {
-      const { data, error } = await supabase.functions.invoke('delete-account');
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      triggerNotification?.('info', 'Your account has been deleted.');
-      if (onSignOut) onSignOut();
-      else window.location.href = '/';
-    } catch (err) {
-      setDeleteError(err.message || 'Failed to delete account.');
-      setIsDeletingAccount(false);
-    }
-  };
 
   const [previewAccess, setPreviewAccess] = useState({ 
     theme: profile?.theme_preference || 'system', 
@@ -358,11 +334,44 @@ export default function SettingsHub({
     triggerNotification('success', 'Display preferences applied and saved.');
   };
 
+  const handleSendPhoneOTP = async () => {
+    if (!phoneEdit.number.trim()) { triggerNotification('error', 'Enter a phone number first.'); return; }
+    setPhoneEdit(p => ({ ...p, step: 'sending' }));
+    try {
+      const { error } = await supabase.functions.invoke('send-otp', {
+        body: { phoneNumber: phoneEdit.number.trim(), channel: phoneEdit.channel },
+      });
+      if (error) throw error;
+      setPhoneEdit(p => ({ ...p, step: 'verify', otp: '' }));
+      triggerNotification('success', 'Verification code sent.');
+    } catch (err) {
+      triggerNotification('error', err.message);
+      setPhoneEdit(p => ({ ...p, step: 'idle' }));
+    }
+  };
+
+  const handleVerifyPhoneOTP = async () => {
+    setPhoneEdit(p => ({ ...p, step: 'verifying' }));
+    try {
+      const { error } = await supabase.functions.invoke('verify-otp', {
+        body: { phoneNumber: phoneEdit.number.trim(), code: phoneEdit.otp.trim(), userId: session.user.id },
+      });
+      if (error) throw new Error(error.message);
+      setPhoneEdit(p => ({ ...p, step: 'idle' }));
+      triggerNotification('success', 'Phone number verified and saved.');
+      fetchAllData();
+    } catch (err) {
+      triggerNotification('error', err.message);
+      setPhoneEdit(p => ({ ...p, step: 'verify' }));
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
       <div className="md:col-span-1 space-y-2 bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm h-fit">
         {[
           { id: 'PROFILE', label: 'Identity & Legal', icon: <User size={18} /> },
+          { id: 'PHONE', label: 'Phone Verification', icon: <Smartphone size={18} /> },
           { id: 'SECURITY', label: 'Security & Access', icon: <Shield size={18} /> },
           { id: 'TRUST_NETWORK', label: 'Community of Trust', icon: <ShieldCheck size={18} /> },
           { id: 'NOTIFICATIONS', label: 'Notifications', icon: <Bell size={18} /> },
@@ -417,7 +426,7 @@ export default function SettingsHub({
             <div className="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-sm">
               <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                 <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                  <Fingerprint className="text-blue-600" size={20}/> 
+                  <Fingerprint className="text-blue-600" size={20}/>
                   Global Regulatory Verification (Tier 1)
                 </h3>
                 {(profile?.kyc_status === 'verified' || profile?.kyc_status === 'approved') && (
@@ -752,6 +761,81 @@ export default function SettingsHub({
         )}
         
         {/* =======================
+            PHONE VERIFICATION TAB
+        =========================*/}
+        {subTab === 'PHONE' && (
+          <div className="space-y-8 max-w-xl">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 mb-2">Phone Verification</h2>
+              <p className="text-xs text-slate-500">Your verified phone number is used for SMS/WhatsApp login codes and mobile money transactions.</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-sm space-y-6">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                  <Smartphone className="text-blue-600" size={18}/> Mobile Number
+                </h3>
+                {profile?.phone_verified
+                  ? <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg flex items-center gap-1"><ShieldCheck size={11}/> Verified</span>
+                  : <span className="text-[10px] font-black uppercase text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg">Not verified</span>
+                }
+              </div>
+
+              {profile?.phone_verified && profile?.phone_number && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4 flex items-center gap-3">
+                  <ShieldCheck className="text-emerald-500 shrink-0" size={20}/>
+                  <div>
+                    <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-0.5">Current verified number</p>
+                    <p className="text-lg font-black text-slate-800">{profile.phone_number}</p>
+                  </div>
+                </div>
+              )}
+
+              {phoneEdit.step !== 'verify' ? (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-500">{profile?.phone_verified ? 'To change your number, enter the new one and send a code.' : 'Enter your phone number to receive a verification code.'}</p>
+                  <div className="flex rounded-2xl overflow-hidden border border-slate-200">
+                    <button type="button" onClick={() => setPhoneEdit(p => ({ ...p, channel: 'sms' }))} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${phoneEdit.channel === 'sms' ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>SMS</button>
+                    <button type="button" onClick={() => setPhoneEdit(p => ({ ...p, channel: 'whatsapp' }))} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${phoneEdit.channel === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>WhatsApp</button>
+                  </div>
+                  <PhoneField
+                    value={phoneEdit.number}
+                    onChange={(v) => setPhoneEdit(p => ({ ...p, number: v }))}
+                    focusColor="blue"
+                  />
+                  <button
+                    onClick={handleSendPhoneOTP}
+                    disabled={phoneEdit.step === 'sending' || !phoneEdit.number.trim()}
+                    className="w-full py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {phoneEdit.step === 'sending' ? <RefreshCw size={12} className="animate-spin"/> : 'Send Verification Code'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-500">Enter the 6-digit code sent to <span className="font-bold text-slate-700">{phoneEdit.number}</span> via <span className="font-bold text-slate-700">{phoneEdit.channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</span>.</p>
+                  <input
+                    type="text" inputMode="numeric" maxLength={6}
+                    value={phoneEdit.otp}
+                    onChange={(e) => setPhoneEdit(p => ({ ...p, otp: e.target.value.replace(/\D/g, '') }))}
+                    placeholder="000000"
+                    className="w-full bg-white border border-slate-200 rounded-xl p-4 font-black text-3xl text-center tracking-[0.5em] text-slate-800 outline-none focus:border-emerald-500 transition-all"
+                  />
+                  <button
+                    onClick={handleVerifyPhoneOTP}
+                    disabled={phoneEdit.step === 'verifying' || phoneEdit.otp.length !== 6}
+                    className="w-full py-4 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {phoneEdit.step === 'verifying' ? <><RefreshCw size={14} className="animate-spin"/> Verifying...</> : 'Confirm & Verify'}
+                  </button>
+                  <button onClick={() => setPhoneEdit(p => ({ ...p, step: 'idle' }))} className="w-full text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 transition-colors">← Change number</button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* =======================
             SECURITY TAB
         =========================*/}
         {subTab === 'SECURITY' && (
@@ -900,64 +984,6 @@ export default function SettingsHub({
               )}
             </div>
             {/* ─── END FACE LOGIN ─────────────────────────────────────────── */}
-
-            {/* ─── DANGER ZONE: ACCOUNT DELETION (Apple 5.1.1(v) & Google Play) ─ */}
-            <div className="bg-red-50/50 border border-red-200 p-8 rounded-3xl shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-black uppercase tracking-widest text-red-700 flex items-center gap-2">
-                  <Trash2 size={16} className="text-red-600" /> Delete Account
-                </h3>
-                <span className="text-[10px] font-black uppercase tracking-widest text-red-700 bg-red-100 px-3 py-1 rounded-lg">Danger Zone</span>
-              </div>
-              <p className="text-xs text-slate-600 mb-6 leading-relaxed">
-                Permanently delete your account and personal identifiable information. In accordance with Apple and Google Play policies, this removes all credentials, documents, and private profile data immediately.
-              </p>
-
-              {!showDeleteModal ? (
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-md shadow-red-200 flex items-center gap-2"
-                >
-                  <Trash2 size={14} /> Request Account Deletion
-                </button>
-              ) : (
-                <div className="bg-white border border-red-200 rounded-2xl p-6 space-y-4 animate-in fade-in">
-                  <p className="text-xs font-bold text-red-700">
-                    Are you sure? This action cannot be undone. Type <span className="font-black">DELETE</span> below to confirm.
-                  </p>
-                  {deleteError && (
-                    <p className="text-xs font-bold text-red-600 bg-red-50 p-2 rounded-lg">{deleteError}</p>
-                  )}
-                  <input
-                    type="text"
-                    value={deleteConfirmText}
-                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                    placeholder="DELETE"
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-black text-red-600 tracking-widest outline-none focus:border-red-500"
-                  />
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      disabled={isDeletingAccount || deleteConfirmText !== 'DELETE'}
-                      onClick={handleDeleteAccount}
-                      className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2"
-                    >
-                      {isDeletingAccount ? <RefreshCw size={12} className="animate-spin" /> : <Trash2 size={14} />}
-                      Confirm Delete
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isDeletingAccount}
-                      onClick={() => { setShowDeleteModal(false); setDeleteConfirmText(''); setDeleteError(''); }}
-                      className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Web face enrolment camera modal */}
             {showFaceEnroll && (

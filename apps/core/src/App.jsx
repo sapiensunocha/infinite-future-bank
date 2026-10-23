@@ -4,6 +4,7 @@ import { TranslationProvider } from './i18n/TranslationContext';
 import { supabase, supabaseUrl, supabaseAnonKey } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
 import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, Monitor, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap, Building2 } from 'lucide-react';
+import PhoneField from './components/PhoneField';
 
 // When a chunk 404s (stale browser cache after a new deploy), force a full reload
 // so the browser fetches the new index.html with correct chunk references.
@@ -73,6 +74,43 @@ const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLen
   </div>
 );
 
+const PW_RULES = [
+  { label: 'At least 8 characters', test: (p) => p.length >= 8 },
+  { label: 'Uppercase letter (A–Z)',  test: (p) => /[A-Z]/.test(p) },
+  { label: 'Lowercase letter (a–z)',  test: (p) => /[a-z]/.test(p) },
+  { label: 'Number (0–9)',            test: (p) => /\d/.test(p) },
+];
+
+const PasswordStrength = ({ value }) => {
+  if (!value) return null;
+  const passed = PW_RULES.filter(r => r.test(value)).length;
+  const pct = (passed / PW_RULES.length) * 100;
+  const bar = pct <= 25 ? 'bg-red-400' : pct <= 50 ? 'bg-orange-400' : pct <= 75 ? 'bg-yellow-400' : 'bg-emerald-500';
+  return (
+    <div className="px-1 space-y-2 animate-in fade-in duration-200">
+      <div className="flex gap-1 h-1">
+        {PW_RULES.map((_, i) => (
+          <div key={i} className={`flex-1 rounded-full transition-all duration-300 ${i < passed ? bar : 'bg-slate-200'}`} />
+        ))}
+      </div>
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-1">
+        {PW_RULES.map(r => {
+          const ok = r.test(value);
+          return (
+            <li key={r.label} className={`flex items-center gap-1.5 text-[10px] font-bold transition-colors ${ok ? 'text-emerald-600' : 'text-slate-400'}`}>
+              <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 ${ok ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                {ok ? <svg viewBox="0 0 10 10" className="w-2 h-2"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                    : <span className="w-1 h-1 rounded-full bg-slate-400 block"/>}
+              </span>
+              {r.label}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
 const formatCount = (num) => {
   if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
   if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -104,11 +142,15 @@ function MainApp() {
   const [phoneValue, setPhoneValue] = useState('');
   const [otpValue, setOtpValue] = useState('');
   const [otpChannel, setOtpChannel] = useState('sms');
+  const [loginMethod, setLoginMethod] = useState('email'); // 'email' | 'phone'
   const [message, setMessage] = useState({ text: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const pendingSessionRef = useRef(null);
+  const otpAutoSentRef = useRef(false);
+  const lastOtpSentRef = useRef(0);
   const [mobileOS, setMobileOS] = useState(null); // 'android' | 'ios' | null
+  const [androidBannerDismissed, setAndroidBannerDismissed] = useState(false);
   const [showAcademy, setShowAcademy] = useState(false);
   const [showGuideHub, setShowGuideHub] = useState(false);
 
@@ -245,8 +287,13 @@ function MainApp() {
             pendingSessionRef.current = currentSession;
             setPhoneValue(profile.phone_number || '');
             if (profile.phone_number) {
-              // Auto-send OTP to stored number
-              await supabase.functions.invoke('send-otp', { body: { phoneNumber: profile.phone_number } });
+              // Guard: only auto-send once per app session to prevent Twilio from
+              // cancelling an active verification on repeated SIGNED_IN events.
+              if (!otpAutoSentRef.current) {
+                otpAutoSentRef.current = true;
+                lastOtpSentRef.current = Date.now();
+                await supabase.functions.invoke('send-otp', { body: { phoneNumber: profile.phone_number } });
+              }
               setCurrentView('verify_otp_sms');
             } else {
               setCurrentView('verify_phone');
@@ -319,8 +366,8 @@ function MainApp() {
       if (error) throw error;
     } catch (error) {
       const msg = error.message?.toLowerCase() ?? '';
-      // Unconfirmed account — silently resend confirmation instead of showing raw error
-      if (msg.includes('not confirmed') || msg.includes('email') || msg.includes('confirm')) {
+      if (msg.includes('not confirmed') || msg.includes('email not confirmed')) {
+        // Account exists but unconfirmed — send a magic-link confirmation email
         await handleResend();
         return;
       }
@@ -352,10 +399,12 @@ function MainApp() {
       if (authData?.user) {
         // Phone OTP is the primary verification — skip email confirmation flow
         pendingSessionRef.current = authData.session || { user: authData.user, _pendingUserId: authData.user.id };
-        const { error: otpErr } = await supabase.functions.invoke('send-otp', {
+        const { data: otpData, error: otpErr } = await supabase.functions.invoke('send-otp', {
           body: { phoneNumber: phoneValue.trim(), channel: otpChannel },
         });
-        if (otpErr) throw otpErr;
+        if (otpErr) throw new Error(otpErr.message);
+        if (otpData?.error) throw new Error(otpData.error);
+        lastOtpSentRef.current = Date.now();
         setOtpValue('');
         setCurrentView('verify_otp_sms');
         showMessage('Verification code sent to your phone.', 'success');
@@ -429,14 +478,38 @@ function MainApp() {
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
-  const handleSendOTP = async (e) => {
+  const handleSendLoginOTP = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     setIsLoading(true);
     try {
       const phone = phoneValue.trim();
       if (!phone) throw new Error('Phone number required');
-      const { error } = await supabase.functions.invoke('send-otp', { body: { phoneNumber: phone, channel: otpChannel } });
-      if (error) throw error;
+      const { data: otpRes, error } = await supabase.functions.invoke('send-otp', { body: { phoneNumber: phone, channel: otpChannel } });
+      if (error) throw new Error(error.message);
+      if (otpRes?.error) throw new Error(otpRes.error);
+      pendingSessionRef.current = { _loginMode: true };
+      lastOtpSentRef.current = Date.now();
+      setOtpValue('');
+      setCurrentView('verify_otp_sms');
+      showMessage('Verification code sent to your phone.', 'success');
+    } catch (err) { showMessage(err.message, 'error'); } finally { setIsLoading(false); }
+  };
+
+  const handleSendOTP = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    const cooldown = 30_000;
+    if (Date.now() - lastOtpSentRef.current < cooldown) {
+      showMessage('Please wait 30 seconds before requesting another code.', 'error');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const phone = phoneValue.trim();
+      if (!phone) throw new Error('Phone number required');
+      const { data: otpRes2, error } = await supabase.functions.invoke('send-otp', { body: { phoneNumber: phone, channel: otpChannel } });
+      if (error) throw new Error(error.message);
+      if (otpRes2?.error) throw new Error(otpRes2.error);
+      lastOtpSentRef.current = Date.now();
       setOtpValue('');
       setCurrentView('verify_otp_sms');
       showMessage('Verification code sent to your phone.', 'success');
@@ -448,15 +521,33 @@ function MainApp() {
     setIsLoading(true);
     try {
       const pending = pendingSessionRef.current;
+      const isLoginMode = pending?._loginMode === true;
       const userId = pending?.user?.id;
-      const { error } = await supabase.functions.invoke('verify-otp', {
-        body: { phoneNumber: phoneValue.trim(), code: otpValue.trim(), userId },
+
+      const { data: result, error } = await supabase.functions.invoke('verify-otp', {
+        body: {
+          phoneNumber: phoneValue.trim(),
+          code: otpValue.trim(),
+          userId: isLoginMode ? undefined : userId,
+          mode: isLoginMode ? 'login' : 'register',
+        },
       });
       if (error) throw new Error(error.message);
+      if (result?.error) throw new Error(result.error);
+
       pendingSessionRef.current = null;
       setOtpValue('');
-      // Re-initialize with the pending session — profile now has phone_verified = true
-      if (pending) {
+
+      if (result?.hashed_token) {
+        // Always prefer a real session via hashed_token (login + register both return one now)
+        const { error: otpErr } = await supabase.auth.verifyOtp({
+          token_hash: result.hashed_token,
+          type: 'magiclink',
+        });
+        if (otpErr) throw otpErr;
+        // onAuthStateChange fires SIGNED_IN → initializeUser handles the rest
+      } else if (pending && !isLoginMode) {
+        // Phone-gate with existing real session (pending = currentSession from initializeUser)
         setSession(pending);
         setIsAppReady(true);
       }
@@ -484,7 +575,36 @@ function MainApp() {
 
   return (
     <div className="min-h-[100dvh] bg-slate-50/80 text-slate-800 relative flex flex-col items-center justify-center p-6 py-12 overflow-y-auto">
-      
+
+      {/* ── Sticky Android Play Store banner ── */}
+      {mobileOS === 'android' && !androidBannerDismissed && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[#202124] border-b border-white/10 px-4 py-2.5 flex items-center gap-3 shadow-lg">
+          <div className="w-8 h-8 flex-shrink-0 p-1.5 rounded-lg bg-white/10">
+            <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+              <path d="M3.18 23.76c.28.16.6.2.9.12l11.46-11.45L12 9l-8.82 14.76z" fill="#EA4335"/>
+              <path d="M22.82 10.5l-3.06-1.74L16.2 12l3.56 3.56 3.06-1.74c.87-.5.87-1.82 0-2.32z" fill="#FBBC04"/>
+              <path d="M3.18.24C2.85.04 2.46.02 2.1.24 1.74.46 1.5.86 1.5 1.3v21.4c0 .44.24.84.6 1.06.36.22.75.2 1.08 0L15.63 12 3.18.24z" fill="#4285F4"/>
+              <path d="M4.08.12L15.63 12l3.56-3.56L7.72.18C7.38-.02 6.96-.06 6.6.12L4.08.12z" fill="#34A853"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-black leading-none">Better on the Android app</p>
+            <p className="text-slate-400 text-[10px] leading-none mt-0.5">Free on Google Play</p>
+          </div>
+          <a
+            href="https://play.google.com/store/apps/details?id=org.infinitefuturebank.deus"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 bg-[#4285F4] text-white text-[11px] font-black px-4 py-1.5 rounded-full hover:bg-[#5a95f5] transition-colors"
+          >
+            Install
+          </a>
+          <button onClick={() => setAndroidBannerDismissed(true)} className="flex-shrink-0 text-slate-500 hover:text-slate-300 transition-colors p-1">
+            <svg viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg>
+          </button>
+        </div>
+      )}
+
       <InfoModal activeModal={activeModal} onClose={() => setActiveModal(null)} />
 
       <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none"></div>
@@ -528,24 +648,52 @@ function MainApp() {
             <div className="animate-in fade-in duration-300 text-center">
               <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Access Portal</h2>
               {sessionChecking && (
-                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest flex items-center justify-center gap-1 mb-6">
+                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest flex items-center justify-center gap-1 mb-4">
                   <RefreshCw size={10} className="animate-spin" /> Connecting to network...
                 </p>
               )}
-              {!sessionChecking && <div className="mb-8" />}
-              <form onSubmit={handleCheckEmail} className="space-y-4">
-                <div className="relative group">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                  <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
-                </div>
-                <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
-                    {isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Continue'}
-                    {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
-                  </div>
+              {!sessionChecking && <div className="mb-4" />}
+
+              {/* Login method toggle */}
+              <div className="flex rounded-2xl overflow-hidden border border-white/60 mb-6 shadow-inner">
+                <button type="button" onClick={() => setLoginMethod('email')} className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'email' ? 'bg-blue-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>
+                  <Mail size={12} className="inline mr-1.5 -mt-0.5" />Email
                 </button>
-              </form>
+                <button type="button" onClick={() => setLoginMethod('phone')} className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-blue-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>
+                  <Smartphone size={12} className="inline mr-1.5 -mt-0.5" />Phone
+                </button>
+              </div>
+
+              {loginMethod === 'email' ? (
+                <form onSubmit={handleCheckEmail} className="space-y-4">
+                  <div className="relative group">
+                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+                    <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
+                  </div>
+                  <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
+                      {isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Continue'}
+                      {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
+                    </div>
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleSendLoginOTP} className="space-y-4">
+                  <PhoneField value={phoneValue} onChange={setPhoneValue} autoFocus focusColor="blue" />
+                  <div className="flex rounded-2xl overflow-hidden border border-white/60 shadow-inner">
+                    <button type="button" onClick={() => setOtpChannel('sms')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'sms' ? 'bg-blue-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>SMS</button>
+                    <button type="button" onClick={() => setOtpChannel('whatsapp')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>WhatsApp</button>
+                  </div>
+                  <button type="submit" disabled={isLoading || !phoneValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
+                      {isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Send Code'}
+                      {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
+                    </div>
+                  </button>
+                </form>
+              )}
             </div>
           )}
 
@@ -601,21 +749,14 @@ function MainApp() {
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
                   <input type="text" required autoFocus value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder="Given Name" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
                 </div>
-                <div className="relative group">
-                  <Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
-                  <input
-                    type="tel" required value={phoneValue}
-                    onChange={(e) => setPhoneValue(e.target.value)}
-                    placeholder="+1 234 567 8900"
-                    className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60"
-                  />
-                </div>
+                <PhoneField value={phoneValue} onChange={setPhoneValue} focusColor="emerald" />
                 <div className="flex rounded-2xl overflow-hidden border border-white/60 shadow-inner">
                   <button type="button" onClick={() => setOtpChannel('sms')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'sms' ? 'bg-emerald-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>SMS</button>
                   <button type="button" onClick={() => setOtpChannel('whatsapp')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>WhatsApp</button>
                 </div>
-                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Set Password" minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                <button type="submit" disabled={isLoading || !nameValue || !phoneValue || !passwordValue} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group">
+                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Set Password" minLength={8} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
+                <PasswordStrength value={passwordValue} />
+                <button type="submit" disabled={isLoading || !nameValue || !phoneValue || !PW_RULES.every(r => r.test(passwordValue))} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group">
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
                     {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Creating Account...</> : 'Register Identity'}
@@ -638,15 +779,7 @@ function MainApp() {
                 <button type="button" onClick={() => setOtpChannel('whatsapp')} className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${otpChannel === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>WhatsApp</button>
               </div>
               <form onSubmit={handleSendOTP} className="space-y-4">
-                <div className="relative group">
-                  <Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                  <input
-                    type="tel" required autoFocus value={phoneValue}
-                    onChange={(e) => setPhoneValue(e.target.value)}
-                    placeholder="+1 234 567 8900"
-                    className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60"
-                  />
-                </div>
+                <PhoneField value={phoneValue} onChange={setPhoneValue} autoFocus focusColor="blue" />
                 <button type="submit" disabled={isLoading || !phoneValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
@@ -738,30 +871,33 @@ function MainApp() {
         {showGuideHub && <Suspense fallback={<PageLoader />}><GuideHub onClose={() => setShowGuideHub(false)} /></Suspense>}
 
 
-        {/* ── ANDROID: APK download ── */}
+        {/* ── ANDROID: Play Store download ── */}
         {mobileOS === 'android' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
             <a
-              href="/DEUS-latest.apk"
-              download="DEUS.apk"
+              href="https://play.google.com/store/apps/details?id=org.infinitefuturebank.deus"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-emerald-400 group-hover:text-emerald-300 transition-colors shadow-inner border border-slate-700/50">
-                  <Smartphone size={24} />
+                <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center shadow-inner border border-slate-700/50 p-2.5">
+                  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+                    <path d="M3.18 23.76c.28.16.6.2.9.12l11.46-11.45L12 9l-8.82 14.76z" fill="#EA4335"/>
+                    <path d="M22.82 10.5l-3.06-1.74L16.2 12l3.56 3.56 3.06-1.74c.87-.5.87-1.82 0-2.32z" fill="#FBBC04"/>
+                    <path d="M3.18.24C2.85.04 2.46.02 2.1.24 1.74.46 1.5.86 1.5 1.3v21.4c0 .44.24.84.6 1.06.36.22.75.2 1.08 0L15.63 12 3.18.24z" fill="#4285F4"/>
+                    <path d="M4.08.12L15.63 12l3.56-3.56L7.72.18C7.38-.02 6.96-.06 6.6.12L4.08.12z" fill="#34A853"/>
+                  </svg>
                 </div>
                 <div className="text-left">
-                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Install Android App</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Signed · v{__APP_VERSION__} · Free</p>
+                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Get the Android App</p>
+                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Google Play · v{__APP_VERSION__} · Free</p>
                 </div>
               </div>
               <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-500/30">
                 <DownloadCloud size={18} />
               </div>
             </a>
-            <p className="mt-2 text-center text-[10px] text-slate-400 font-medium">
-              Allow <span className="font-bold text-slate-300">Install unknown apps</span> in Android settings if prompted.
-            </p>
           </div>
         )}
 

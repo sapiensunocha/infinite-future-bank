@@ -7,7 +7,6 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 
 import com.stripe.stripeterminal.Terminal
-import com.stripe.stripeterminal.TerminalApplicationDelegate
 import com.stripe.stripeterminal.external.callable.Callback
 import com.stripe.stripeterminal.external.callable.Cancelable
 import com.stripe.stripeterminal.external.callable.ConnectionTokenCallback
@@ -20,9 +19,10 @@ import com.stripe.stripeterminal.external.models.ConnectionConfiguration
 import com.stripe.stripeterminal.external.models.ConnectionTokenException
 import com.stripe.stripeterminal.external.models.DiscoveryConfiguration
 import com.stripe.stripeterminal.external.models.PaymentIntent
-import com.stripe.stripeterminal.log.LogLevel
 import com.stripe.stripeterminal.external.models.Reader
+import com.stripe.stripeterminal.external.models.TapUseCase
 import com.stripe.stripeterminal.external.models.TerminalException
+import com.stripe.stripeterminal.log.LogLevel
 
 @CapacitorPlugin(name = "StripeTerminal")
 class StripeTerminalPlugin : Plugin() {
@@ -46,9 +46,8 @@ class StripeTerminalPlugin : Plugin() {
         activity.runOnUiThread {
             try {
                 if (!Terminal.isInitialized()) {
-                    Terminal.initTerminal(activity, LogLevel.VERBOSE, tokenProvider, object : TerminalListener {
-                        override fun onUnexpectedReaderDisconnect(reader: Reader) {}
-                    })
+                    // v5: Terminal.init replaces Terminal.initTerminal; null = no offline listener
+                    Terminal.init(activity, LogLevel.VERBOSE, tokenProvider, object : TerminalListener {}, null)
                 }
                 call.resolve(JSObject().put("success", true))
             } catch (e: Exception) {
@@ -62,7 +61,8 @@ class StripeTerminalPlugin : Plugin() {
         call.setKeepAlive(true)
         val locationId = call.getString("locationId")
             ?: return call.reject("locationId is required — set STRIPE_TERMINAL_LOCATION_ID in Supabase secrets")
-        val config = DiscoveryConfiguration.LocalMobileDiscoveryConfiguration(isSimulated = false)
+        // v5: LocalMobileDiscoveryConfiguration → TapToPayDiscoveryConfiguration
+        val config = DiscoveryConfiguration.TapToPayDiscoveryConfiguration(isSimulated = false)
         discoveryCancelable = Terminal.getInstance().discoverReaders(config, object : DiscoveryListener {
             override fun onUpdateDiscoveredReaders(readers: List<Reader>) {
                 val reader = readers.firstOrNull() ?: return
@@ -70,8 +70,10 @@ class StripeTerminalPlugin : Plugin() {
                     override fun onSuccess() {}
                     override fun onFailure(e: TerminalException) {}
                 })
-                val connConfig = ConnectionConfiguration.LocalMobileConnectionConfiguration(locationId)
-                Terminal.getInstance().connectLocalMobileReader(reader, connConfig, object : ReaderCallback {
+                // v5: locationId moves inside TapUseCase.Pay()
+                val connConfig = ConnectionConfiguration.TapToPayConnectionConfiguration(TapUseCase.Pay(locationId))
+                // v5: connectLocalMobileReader → connectReader (unified method)
+                Terminal.getInstance().connectReader(reader, connConfig, object : ReaderCallback {
                     override fun onSuccess(r: Reader) {
                         call.resolve(JSObject().put("readerId", r.serialNumber ?: "local").put("label", r.label ?: "Tap to Pay"))
                     }
