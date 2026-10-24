@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import MobileMoneyAccounts from './components/MobileMoneyAccounts';
 import { loadStripe } from '@stripe/stripe-js';
-import { APP_URL } from './config/constants';
+import { APP_URL, STRIPE_PUBLIC_KEY } from './config/constants';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from './services/supabaseClient';
 import { useTranslation } from './i18n/useTranslation';
@@ -17,7 +17,7 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-const stripePromise = loadStripe('pk_live_51QlhX1DV4GGUfngRRIJi02QYB2pTZg2bbX9T4xwM0i6FflEPt2FtV7ydZfNks9I9vOAcmwsLGM1U7tzbpmaP454C00qsme0XJ8');
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
 const CheckoutForm = ({ amount, onBack }) => {
   const stripe = useStripe();

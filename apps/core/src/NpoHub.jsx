@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from './services/supabaseClient';
+import { STRIPE_PUBLIC_KEY } from './config/constants';
 import {
   HeartHandshake, ShieldCheck, Loader2, CheckCircle2, ArrowRight,
   Globe2, BrainCircuit, XCircle, ChevronRight, Building2, Users,
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const STRIPE_PK = 'pk_live_51QlhX1DV4GGUfngRRIJi02QYB2pTZg2bbX9T4xwM0i6FflEPt2FtV7ydZfNks9I9vOAcmwsLGM1U7tzbpmaP454C00qsme0XJ8';
+const STRIPE_PK = STRIPE_PUBLIC_KEY;
 
 const TIERS = {
   EMERGING: 'Emerging_Academy', CLUSTER: 'Cluster_Partner',

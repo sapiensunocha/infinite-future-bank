@@ -217,21 +217,39 @@ ${IFB_KNOWLEDGE}
 If you don't know the answer, say so honestly and suggest they contact support@infinitefuturebank.org or submit a ticket via the chat.`;
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction,
-    });
+    let text = "";
+    try {
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        systemInstruction,
+      });
 
-    const history = messages.slice(0, -1).map((m) => ({
-      role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.text }],
-    }));
+      const history = messages.slice(0, -1).map((m) => ({
+        role: m.role === "user" ? "user" : "model",
+        parts: [{ text: m.text }],
+      }));
 
-    const lastMessage = messages[messages.length - 1]?.text || "";
+      const lastMessage = messages[messages.length - 1]?.text || "";
+      const chat = model.startChat({ history });
+      const result = await chat.sendMessage(lastMessage);
+      text = result.response.text();
+    } catch (_modelErr) {
+      // Fallback to gemini-1.5-flash
+      const fallbackModel = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        systemInstruction,
+      });
 
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(lastMessage);
-    const text = result.response.text();
+      const history = messages.slice(0, -1).map((m) => ({
+        role: m.role === "user" ? "user" : "model",
+        parts: [{ text: m.text }],
+      }));
+
+      const lastMessage = messages[messages.length - 1]?.text || "";
+      const chat = fallbackModel.startChat({ history });
+      const result = await chat.sendMessage(lastMessage);
+      text = result.response.text();
+    }
 
     return new Response(JSON.stringify({ text }), {
       status: 200,

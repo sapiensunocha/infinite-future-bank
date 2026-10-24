@@ -13,7 +13,7 @@ const USD_RATES: Record<string, number> = {
   KES: 0.00775, GHS: 0.065, ZAR: 0.054, CAD: 0.74, AUD: 0.65,
 }
 
-Deno.Deno.serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { apiVersion: '2023-10-16' })

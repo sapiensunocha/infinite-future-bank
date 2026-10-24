@@ -16,7 +16,7 @@ function verifyAdminToken(token: string | null): { email: string; name: string }
   } catch { return null }
 }
 
-Deno.Deno.serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const token = req.headers.get('x-kyc-admin-token')

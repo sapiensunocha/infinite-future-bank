@@ -128,7 +128,7 @@ async function sendOnboardingEmail(founderEmail: string, founderName: string, pr
   }).catch((err) => console.error('Resend error:', err))
 }
 
-Deno.Deno.serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const token = req.headers.get('x-kyc-admin-token')

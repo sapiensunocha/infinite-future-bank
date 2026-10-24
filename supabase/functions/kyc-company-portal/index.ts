@@ -129,7 +129,7 @@ async function sendConfirmationEmail(email: string, founderName: string) {
   }).catch((err) => console.error('Resend confirm error:', err))
 }
 
-Deno.Deno.serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {

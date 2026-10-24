@@ -232,7 +232,7 @@ async function updateGrandTotal(db: ReturnType<typeof createClient>) {
 }
 
 // ── Main handler ──────────────────────────────────────────────────────────────
-Deno.Deno.serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
   const db = createClient(SUPABASE_URL, SUPABASE_SVC_KEY);

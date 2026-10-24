@@ -94,7 +94,7 @@ function buildEmail(name: string): string {
 </html>`
 }
 
-Deno.Deno.serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   const sb = createClient(SUPABASE_URL, SERVICE_KEY, {
