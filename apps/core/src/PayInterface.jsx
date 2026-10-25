@@ -53,14 +53,20 @@ export default function PayInterface() {
           throw new Error('SELF_SCAN');
         }
 
-        // 3. Fetch Receiver's Public Info
-        const { data: receiverData, error: receiverError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, active_tier')
-          .eq('id', targetId)
-          .single();
-
-        if (receiverError || !receiverData) throw new Error('Beneficiary not found on the IFB Network.');
+        // 3. Fetch Receiver's Public Info (Secure RPC or Profile query)
+        let receiverData = null;
+        const { data: rpcProfile, error: rpcErr } = await supabase.rpc('get_public_profile', { p_user_id: targetId });
+        if (!rpcErr && rpcProfile?.id) {
+          receiverData = rpcProfile;
+        } else {
+          const { data: directProfile, error: directErr } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, active_tier')
+            .eq('id', targetId)
+            .single();
+          if (directErr || !directProfile) throw new Error('Beneficiary not found on the IFB Network.');
+          receiverData = directProfile;
+        }
 
         setReceiver(receiverData);
       } catch (err) {
@@ -126,46 +132,39 @@ export default function PayInterface() {
     setExecutionPlan({ isActive: true, steps: [...steps], currentDetail: "Initiating...", progressPct: 15 });
 
     try {
-      // Step 1: deduct sender balance
-      const balanceField = asset === 'AFR' ? 'afr_balance' : 'liquid_usd';
-      const currentBal = asset === 'AFR' ? (balances?.afr_balance || 0) : (balances?.liquid_usd || 0);
-      const { error: deductErr } = await supabase.from('balances')
-        .update({ [balanceField]: currentBal - numAmount })
-        .eq('user_id', session.user.id);
-      if (deductErr) throw deductErr;
+      // Execute atomic, server-verified P2P transfer RPC
+      const { data: p2pRes, error: p2pErr } = await supabase.rpc('p2p_transfer', {
+        sender_id: session.user.id,
+        receiver_id: receiver.id,
+        transfer_amount: numAmount,
+        p_asset: asset
+      });
 
-      steps[0].status = "completed"; steps[1].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Crediting receiver...", progressPct: 45 }));
-
-      // Step 2: credit receiver balance
-      const { data: recvBal } = await supabase.from('balances').select(balanceField).eq('user_id', receiver.id).maybeSingle();
-      if (recvBal) {
-        await supabase.from('balances').update({ [balanceField]: (recvBal[balanceField] || 0) + numAmount }).eq('user_id', receiver.id);
-      } else {
-        await supabase.from('balances').insert([{ user_id: receiver.id, liquid_usd: asset === 'USD' ? numAmount : 0, afr_balance: asset === 'AFR' ? numAmount : 0 }]);
+      if (p2pErr) {
+        // Fallback for legacy RPC signature (3 args: sender_id, receiver_id, transfer_amount)
+        const { data: legacyRes, error: legacyErr } = await supabase.rpc('p2p_transfer', {
+          sender_id: session.user.id,
+          receiver_id: receiver.id,
+          transfer_amount: numAmount
+        });
+        if (legacyErr) throw legacyErr;
+        if (legacyRes && !legacyRes.success) throw new Error(legacyRes.error || 'P2P transfer declined.');
+      } else if (p2pRes && !p2pRes.success) {
+        throw new Error(p2pRes.error || 'P2P transfer declined.');
       }
 
-      steps[1].status = "completed"; steps[2].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Recording on IFB ledger...", progressPct: 70 }));
+      steps[0].status = "completed"; steps[1].status = "completed"; steps[2].status = "completed"; steps[3].status = "active";
+      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Recording on IFB ledger...", progressPct: 85 }));
 
-      // Step 3: log both sides
+      // Redundant notification in case RPC notifications table conflict
       const txRef = `P2P-${Date.now()}-${session.user.id.slice(0,6)}`;
-      await supabase.from('market_transactions').insert([
-        { user_id: session.user.id, asset, side: 'P2P_SEND', execution_price: 1.00, quantity: numAmount, status: 'COMPLETED', blockchain_sig: txRef },
-        { user_id: receiver.id, asset, side: 'P2P_RECEIVE', execution_price: 1.00, quantity: numAmount, status: 'COMPLETED', blockchain_sig: txRef }
-      ]);
-
-      steps[2].status = "completed"; steps[3].status = "active";
-      setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Complete.", progressPct: 95 }));
-
-      // Step 4: notify receiver
       await supabase.from('notifications').insert([{
         user_id: receiver.id,
         type: 'payment_received',
         title: `${asset} ${numAmount.toFixed(2)} received`,
         body: `From ${session.user.email} · Ref: ${txRef}`,
         read: false,
-      }]);
+      }]).catch(() => {});
 
       steps[3].status = "completed";
       setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Capital successfully transferred.", progressPct: 100 }));

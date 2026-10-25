@@ -187,56 +187,70 @@ export default function TicketGate({ session, balances, fetchAllData }) {
       const currentBalance = balances?.liquid_usd || 0;
       const newBalance = parseFloat((currentBalance - price).toFixed(2));
 
-      // 1. Deduct buyer balance — atomic with .gte() guard to prevent overdraft
-      if (price > 0) {
-        const { data: balUpdate, error: balErr } = await supabase
-          .from('balances')
-          .update({ liquid_usd: newBalance })
-          .eq('user_id', session.user.id)
-          .gte('liquid_usd', price)
-          .select('liquid_usd');
-        if (balErr || !balUpdate || balUpdate.length === 0) throw new Error('Insufficient balance or concurrent transaction detected.');
-      }
+      // Try atomic server-side RPC first
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('purchase_event_ticket', {
+        p_event_id: buyModal.id,
+        p_tier_id: tier?.id || null,
+        p_price: price,
+        p_qr_hash: qrHash
+      });
 
-      // 2. Create ticket with tier info
-      const { error: ticketError } = await supabase.from('ifb_tickets').insert([{
-        event_id: buyModal.id,
-        buyer_email: session.user.email,
-        qr_code_hash: qrHash,
-        status: 'active',
-        purchased_at: new Date().toISOString(),
-        tier_id: tier?.id || null,
-        tier_name: tier?.tier_name || null,
-        price_paid: price,
-      }]);
-      if (ticketError) {
-        if (price > 0) await supabase.from('balances').update({ liquid_usd: currentBalance }).eq('user_id', session.user.id);
-        throw ticketError;
-      }
+      if (!rpcErr && rpcRes?.success) {
+        if (tier) {
+          setTiersCache(prev => { const n = { ...prev }; delete n[buyModal.id]; return n; });
+        }
+      } else {
+        // Fallback: Legacy client-side orchestration
+        // 1. Deduct buyer balance — atomic with .gte() guard to prevent overdraft
+        if (price > 0) {
+          const { data: balUpdate, error: balErr } = await supabase
+            .from('balances')
+            .update({ liquid_usd: newBalance })
+            .eq('user_id', session.user.id)
+            .gte('liquid_usd', price)
+            .select('liquid_usd');
+          if (balErr || !balUpdate || balUpdate.length === 0) throw new Error('Insufficient balance or concurrent transaction detected.');
+        }
 
-      // 3. Increment counts
-      if (tier) {
-        await supabase.from('ifb_ticket_tiers').update({ tickets_sold: tierSold + 1 }).eq('id', tier.id);
-        // Invalidate cache so next open re-fetches
-        setTiersCache(prev => { const n = { ...prev }; delete n[buyModal.id]; return n; });
-      }
-      const overallSold = (buyModal.tickets_sold || 0) + 1;
-      await supabase.from('ifb_events').update({ tickets_sold: overallSold }).eq('id', buyModal.id);
-
-      // 4. Transaction records
-      if (price > 0) {
-        await supabase.from('transactions').insert([{
-          user_id: session.user.id, type: 'event_ticket', amount: -price,
-          description: `Ticket: ${buyModal.event_name}${tier ? ` (${tier.tier_name})` : ''}`, status: 'completed'
+        // 2. Create ticket with tier info
+        const { error: ticketError } = await supabase.from('ifb_tickets').insert([{
+          event_id: buyModal.id,
+          buyer_email: session.user.email,
+          qr_code_hash: qrHash,
+          status: 'active',
+          purchased_at: new Date().toISOString(),
+          tier_id: tier?.id || null,
+          tier_name: tier?.tier_name || null,
+          price_paid: price,
         }]);
-        const organizerCut = parseFloat((price * 0.95).toFixed(2));
-        const { data: orgBal } = await supabase.from('balances').select('liquid_usd').eq('user_id', buyModal.organizer_id).single();
-        if (orgBal) {
-          await supabase.from('balances').update({ liquid_usd: orgBal.liquid_usd + organizerCut }).eq('user_id', buyModal.organizer_id);
+        if (ticketError) {
+          if (price > 0) await supabase.from('balances').update({ liquid_usd: currentBalance }).eq('user_id', session.user.id);
+          throw ticketError;
+        }
+
+        // 3. Increment counts
+        if (tier) {
+          await supabase.from('ifb_ticket_tiers').update({ tickets_sold: tierSold + 1 }).eq('id', tier.id);
+          setTiersCache(prev => { const n = { ...prev }; delete n[buyModal.id]; return n; });
+        }
+        const overallSold = (buyModal.tickets_sold || 0) + 1;
+        await supabase.from('ifb_events').update({ tickets_sold: overallSold }).eq('id', buyModal.id);
+
+        // 4. Transaction records
+        if (price > 0) {
           await supabase.from('transactions').insert([{
-            user_id: buyModal.organizer_id, type: 'event_revenue', amount: organizerCut,
-            description: `Ticket sold: ${buyModal.event_name}${tier ? ` (${tier.tier_name})` : ''}`, status: 'completed'
+            user_id: session.user.id, type: 'event_ticket', amount: -price,
+            description: `Ticket: ${buyModal.event_name}${tier ? ` (${tier.tier_name})` : ''}`, status: 'completed'
           }]);
+          const organizerCut = parseFloat((price * 0.95).toFixed(2));
+          const { data: orgBal } = await supabase.from('balances').select('liquid_usd').eq('user_id', buyModal.organizer_id).single();
+          if (orgBal) {
+            await supabase.from('balances').update({ liquid_usd: orgBal.liquid_usd + organizerCut }).eq('user_id', buyModal.organizer_id);
+            await supabase.from('transactions').insert([{
+              user_id: buyModal.organizer_id, type: 'event_revenue', amount: organizerCut,
+              description: `Ticket sold: ${buyModal.event_name}${tier ? ` (${tier.tier_name})` : ''}`, status: 'completed'
+            }]);
+          }
         }
       }
 

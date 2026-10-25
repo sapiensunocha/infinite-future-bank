@@ -851,12 +851,23 @@ export default function FirstCustomerEngine({ session, balances, profile }) {
     if ((balances?.liquid_usd || 0) < UNLOCK_FEE) { notify(`Insufficient balance. Need ${fmt(UNLOCK_FEE)}.`, 'error'); return; }
     setUnlocking(true);
     try {
-      const { data: upd, error: balErr } = await supabase.from('balances').update({ liquid_usd: balances.liquid_usd - UNLOCK_FEE }).eq('user_id', session.user.id).gte('liquid_usd', UNLOCK_FEE).select('liquid_usd');
-      if (balErr || !upd?.length) throw new Error('Balance update failed.');
-      await supabase.from('transactions').insert({ user_id: session.user.id, transaction_type: 'first_customer_program', amount: UNLOCK_FEE, status: 'completed', description: 'First Customer Engine — Full Program Unlock' });
-      await supabase.from('first_customer_programs').update({ is_unlocked: true, amount_paid: UNLOCK_FEE }).eq('id', program.id);
-      setProgram(p => ({ ...p, is_unlocked: true, amount_paid: UNLOCK_FEE }));
-      notify('All 7 phases unlocked! Let\'s build your customer engine.');
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc('unlock_first_customer_program', {
+        p_program_id: program.id,
+        p_fee: UNLOCK_FEE
+      });
+
+      if (!rpcErr && rpcRes?.success) {
+        setProgram(p => ({ ...p, is_unlocked: true, amount_paid: UNLOCK_FEE }));
+        notify('All 7 phases unlocked! Let\'s build your customer engine.');
+      } else {
+        // Fallback: direct update
+        const { data: upd, error: balErr } = await supabase.from('balances').update({ liquid_usd: balances.liquid_usd - UNLOCK_FEE }).eq('user_id', session.user.id).gte('liquid_usd', UNLOCK_FEE).select('liquid_usd');
+        if (balErr || !upd?.length) throw new Error(rpcErr?.message || balErr?.message || 'Balance update failed.');
+        await supabase.from('transactions').insert({ user_id: session.user.id, transaction_type: 'first_customer_program', amount: UNLOCK_FEE, status: 'completed', description: 'First Customer Engine — Full Program Unlock' });
+        await supabase.from('first_customer_programs').update({ is_unlocked: true, amount_paid: UNLOCK_FEE }).eq('id', program.id);
+        setProgram(p => ({ ...p, is_unlocked: true, amount_paid: UNLOCK_FEE }));
+        notify('All 7 phases unlocked! Let\'s build your customer engine.');
+      }
     } catch (err) { notify(err.message, 'error'); }
     finally { setUnlocking(false); }
   };
