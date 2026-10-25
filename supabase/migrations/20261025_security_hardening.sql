@@ -100,7 +100,7 @@ CREATE POLICY "profiles_admin_update" ON public.profiles
 
 
 -- ------------------------------------------------------------------------------
--- 4. HARDEN SYSTEM AUDIT LEDGER & SENSITIVE LOGS
+-- 4. HARDEN SYSTEM AUDIT LEDGER, SENSITIVE LOGS & REVOKE EXPOSED RPCS
 -- ------------------------------------------------------------------------------
 ALTER TABLE IF EXISTS public.system_audit_ledger ENABLE ROW LEVEL SECURITY;
 
@@ -120,6 +120,10 @@ REVOKE ALL ON public.kyc_admin_passcodes FROM anon, authenticated;
 -- KYC portal OTPs
 ALTER TABLE IF EXISTS public.kyc_portal_otps ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.kyc_portal_otps FROM anon;
+
+-- CRITICAL FIX: Revoke public access to mass email extraction RPC
+REVOKE EXECUTE ON FUNCTION public.get_confirmed_user_emails(integer) FROM anon, authenticated, public;
+GRANT EXECUTE ON FUNCTION public.get_confirmed_user_emails(integer) TO service_role;
 
 
 -- ------------------------------------------------------------------------------
