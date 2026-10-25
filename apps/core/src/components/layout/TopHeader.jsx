@@ -20,13 +20,11 @@ export default function TopHeader({
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); setIsSidebarOpen(true); }}
-          className="md:hidden flex items-center gap-1 -ml-1"
+          className="md:hidden flex items-center gap-1.5 -ml-1"
           aria-label="Open menu"
         >
-          <span className="text-2xl font-black text-[#4285F4]">D</span>
-          <span className="text-2xl font-black text-[#EA4335]">E</span>
-          <span className="text-2xl font-black text-[#FBBC04]">U</span>
-          <span className="text-2xl font-black text-[#34A853]">S</span>
+          <span className="text-xl font-black text-slate-900 tracking-tight">DEUS</span>
+          <span className="px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider rounded bg-blue-100 text-blue-700">OS</span>
         </button>
         <h2 className="hidden md:block font-black text-lg text-slate-800 tracking-tight">
           {tabTitles[activeTab]}

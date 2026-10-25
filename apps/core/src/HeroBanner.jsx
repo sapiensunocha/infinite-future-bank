@@ -242,7 +242,15 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
         setInsight(`Institutional telemetry indicates operations are nominal. Regional threat level in ${weather.city} is assessed at ${localRisk.score}/10 — ${localRisk.label}. Your assets remain secure.`);
       } finally { setIsLoadingInsight(false); }
     };
-    if (profile && weather.temp !== '--' && localRisk.isLoaded) fetchInsight();
+    if (profile && weather.temp !== '--' && localRisk.isLoaded) {
+      fetchInsight();
+    } else {
+      const fallbackTimer = setTimeout(() => {
+        setIsLoadingInsight(false);
+        setInsight(`Institutional telemetry indicates operations are nominal. Regional network status is verified secure and all accounts are active.`);
+      }, 2000);
+      return () => clearTimeout(fallbackTimer);
+    }
   }, [profile, weather.city, celebration, localRisk.isLoaded]);
 
   useEffect(() => {

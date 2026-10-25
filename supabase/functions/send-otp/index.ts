@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
           "Authorization": `Basic ${btoa(`${accountSid}:${authToken}`)}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ To: phoneNumber, Channel: channel }),
+        body: new URLSearchParams({ To: cleanPhone, Channel: channel }),
       }
     );
 

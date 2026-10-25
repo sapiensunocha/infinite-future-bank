@@ -52,35 +52,49 @@ jobs:
       - name: Configure Release Keystore & Signing
         working-directory: apps/core/android
         run: |
-          # Generate persistent upload signing key
-          keytool -genkeypair -v \
-            -keystore app/release.keystore \
-            -alias ifb \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass ifb_play_store_2026 \
-            -keypass ifb_play_store_2026 \
-            -dname "CN=Infinite Future Bank, OU=Mobile, O=IFB, L=New York, ST=NY, C=US"
+          # Priority:
+          # 1. Base64 keystore from GitHub Secrets (ANDROID_KEYSTORE_BASE64 or IFB_RELEASE_KEY_BASE64)
+          # 2. Existing key in app/ifb-release-key.jks or app/ifb-upload-key.jks
+          # 3. Generate key using exact release credentials
+          KEYSTORE_FILE="app/ifb-release-key.jks"
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$KEYSTORE_FILE"
+          elif [ -n "${{ secrets.IFB_RELEASE_KEY_BASE64 }}" ]; then
+            echo "${{ secrets.IFB_RELEASE_KEY_BASE64 }}" | base64 -d > "$KEYSTORE_FILE"
+          elif [ -f "app/ifb-upload-key.jks" ]; then
+            KEYSTORE_FILE="app/ifb-upload-key.jks"
+          elif [ ! -f "$KEYSTORE_FILE" ]; then
+            keytool -genkeypair -v \
+              -keystore "$KEYSTORE_FILE" \
+              -alias ifb-key \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
+              -keypass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
+              -dname "CN=Infinite Future Bank, OU=Mobile, O=IFB, L=New York, ST=NY, C=US"
+          fi
 
-          cat << 'EOF' > keystore.properties
-          storeFile=release.keystore
-          storePassword=ifb_play_store_2026
-          keyAlias=ifb
-          keyPassword=ifb_play_store_2026
+          KEYSTORE_NAME=$(basename "$KEYSTORE_FILE")
+
+          cat << EOF > keystore.properties
+          storeFile=$KEYSTORE_NAME
+          storePassword=zhSybFaaBp5aPZrPZL5kskQYi8IZ
+          keyAlias=ifb-key
+          keyPassword=zhSybFaaBp5aPZrPZL5kskQYi8IZ
           EOF
 
           # Export public certificate and SHA256 fingerprints
           keytool -export -rfc \
-            -keystore app/release.keystore \
-            -alias ifb \
-            -storepass ifb_play_store_2026 \
+            -keystore "$KEYSTORE_FILE" \
+            -alias ifb-key \
+            -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
             -file app/upload_certificate.pem
 
           keytool -list -v \
-            -keystore app/release.keystore \
-            -alias ifb \
-            -storepass ifb_play_store_2026 > app/signing_fingerprints.txt
+            -keystore "$KEYSTORE_FILE" \
+            -alias ifb-key \
+            -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ > app/signing_fingerprints.txt
 
       - name: Build Signed Release Bundle (.aab) & APKs
         working-directory: apps/core/android
@@ -92,11 +106,15 @@ jobs:
         run: |
           AAB_FILE=$(ls app/build/outputs/bundle/release/*.aab | head -n 1)
           echo "Target AAB: $AAB_FILE"
+          KEYSTORE_FILE="app/ifb-release-key.jks"
+          if [ ! -f "$KEYSTORE_FILE" ] && [ -f "app/ifb-upload-key.jks" ]; then
+            KEYSTORE_FILE="app/ifb-upload-key.jks"
+          fi
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore app/release.keystore \
-            -storepass ifb_play_store_2026 \
-            -keypass ifb_play_store_2026 \
-            "$AAB_FILE" ifb
+            -keystore "$KEYSTORE_FILE" \
+            -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
+            -keypass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
+            "$AAB_FILE" ifb-key
           echo "Verifying AAB Signature:"
           jarsigner -verify "$AAB_FILE"
 
@@ -119,7 +137,7 @@ jobs:
         with:
           name: ifb-signing-keystore-credentials
           path: |
-            apps/core/android/app/release.keystore
+            apps/core/android/app/*.jks
             apps/core/android/app/upload_certificate.pem
             apps/core/android/app/signing_fingerprints.txt
             apps/core/android/keystore.properties

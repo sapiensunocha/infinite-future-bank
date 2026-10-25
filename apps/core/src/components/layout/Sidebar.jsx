@@ -46,12 +46,9 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
       `}>
         {/* Brand header */}
         <div className="p-6 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-1">
-            <span className="text-4xl font-black text-[#4285F4]">D</span>
-            <span className="text-4xl font-black text-[#EA4335]">E</span>
-            <span className="text-4xl font-black text-[#FBBC04]">U</span>
-            <span className="text-4xl font-black text-[#34A853]">S</span>
-            <Sparkles size={18} className="text-blue-500 ml-1" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-3xl font-black text-slate-900 tracking-tight">DEUS</span>
+            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-blue-100 text-blue-700">OS</span>
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}

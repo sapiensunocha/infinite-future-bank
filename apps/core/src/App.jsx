@@ -52,8 +52,8 @@ const PageLoader = () => (
 // REUSABLE COMPONENTS
 // ==========================================
 const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLength, showPassword, togglePassword }) => (
-  <div className="relative group">
-    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+  <div className="relative group w-full">
+    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors pointer-events-none" size={18} />
     <input 
       type={showPassword ? "text" : "password"} 
       required 
@@ -62,14 +62,14 @@ const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLen
       value={value} 
       onChange={onChange} 
       placeholder={placeholder} 
-      className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" 
+      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-11 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all" 
     />
     <button 
       type="button"
       onClick={togglePassword}
-      className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
     >
-      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
     </button>
   </div>
 );
@@ -392,7 +392,44 @@ function MainApp() {
       if (authError) {
         const msg = authError.message?.toLowerCase() ?? '';
         const isAlreadyRegistered = msg.includes('already registered') || msg.includes('already been registered') || authError.status === 422;
-        if (isAlreadyRegistered) { showMessage('This email is already registered. Please log in.', 'error'); return; }
+        if (isAlreadyRegistered) {
+          showMessage('This email is already registered. Please log in.', 'error');
+          setCurrentView('welcome_back');
+          return;
+        }
+
+        // If Supabase internal SMTP failed (e.g. 500 "Error sending confirmation email"),
+        // fallback to send-confirmation-email edge function which creates the user via Admin API
+        // and sends the activation email reliably via Resend.
+        if (msg.includes('confirmation email') || msg.includes('unexpected_failure') || authError.status === 500) {
+          const res = await fetch(`${supabaseUrl}/functions/v1/send-confirmation-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseAnonKey,
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+            },
+            body: JSON.stringify({
+              email: emailValue.trim().toLowerCase(),
+              password: passwordValue,
+              name: nameValue,
+              redirectTo: `${APP_URL}/auth/callback`,
+            }),
+          });
+          const json = await res.json();
+          if (res.ok) {
+            if (phoneValue.trim()) {
+              try {
+                await supabase.functions.invoke('send-otp', {
+                  body: { phoneNumber: phoneValue.trim(), channel: otpChannel },
+                });
+              } catch (_) { /* non-fatal */ }
+            }
+            setCurrentView('check_email');
+            showMessage('Account created! Confirmation link sent to your email.', 'success');
+            return;
+          }
+        }
         throw authError;
       }
 
@@ -607,90 +644,106 @@ function MainApp() {
 
       <InfoModal activeModal={activeModal} onClose={() => setActiveModal(null)} />
 
-      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none"></div>
-      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-200/30 to-teal-300/10 blur-3xl pointer-events-none"></div>
-      
-      <div className="relative z-10 w-full max-w-[480px]">
-        <div className="flex flex-col items-center mb-8 cursor-pointer group" onClick={() => setCurrentView('enter_email')}>
-          <div className="flex items-center gap-1 transition-transform duration-300 group-hover:scale-105">
-            {['D','E','U','S'].map((letter, i) => (
-              <span
-                key={letter}
-                className="text-6xl font-black drop-shadow-sm"
-                style={{
-                  color: ['#1E40AF','#2563EB','#0D9488','#10B981'][i],
-                  animation: `loginLetterPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both`,
-                  animationDelay: `${i * 0.08}s`
-                }}
-              >{letter}</span>
-            ))}
-            <Sparkles className="text-blue-500 ml-3 drop-shadow-md" size={28} style={{ animation: 'loginLetterPop 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.36s both' }} />
+      <div className="relative z-10 w-full max-w-[440px]">
+        {/* INSTITUTIONAL BRAND HEADER & SPOTLIGHT */}
+        <div className="flex flex-col items-center mb-6 cursor-pointer select-none" onClick={() => setCurrentView('enter_email')}>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-900 text-white mb-3 shadow-sm border border-slate-800">
+            <Building2 size={22} className="text-blue-400" />
           </div>
-          <style>{`
-            @keyframes loginLetterPop {
-              from { opacity:0; transform: translateY(16px) scale(0.8); }
-              to   { opacity:1; transform: translateY(0) scale(1); }
-            }
-          `}</style>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">DEUS</h1>
+            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-blue-50 text-blue-700 border border-blue-200">Institutional</span>
+          </div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500 mt-1">Infinite Future Bank</p>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">Sovereign Treasury & Impact Operating System</p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 relative overflow-hidden">
-          
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-50"></div>
+        <div className="w-full bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 sm:p-8 relative">
 
           {message.text && (
-            <div className={`p-4 mb-6 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center border backdrop-blur-md ${message.type === 'error' ? 'bg-red-50/80 text-red-600 border-red-200/50' : 'bg-green-50/80 text-green-600 border-green-200/50'}`}>
+            <div className={`p-3.5 mb-5 rounded-xl text-xs font-semibold flex items-center justify-center border ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
               {message.text}
             </div>
           )}
 
           {currentView === 'enter_email' && (
-            <div className="animate-in fade-in duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Access Portal</h2>
-              {sessionChecking && (
-                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest flex items-center justify-center gap-1 mb-4">
-                  <RefreshCw size={10} className="animate-spin" /> Connecting to network...
+            <div className="animate-in fade-in duration-200 text-center">
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Access Portal</h2>
+              {sessionChecking ? (
+                <p className="text-xs text-blue-600 font-medium flex items-center justify-center gap-1.5 mb-5">
+                  <RefreshCw size={12} className="animate-spin" /> Verifying secure session...
                 </p>
+              ) : (
+                <p className="text-xs text-slate-500 mb-5">Sign in to manage your treasury, cards, and capital</p>
               )}
-              {!sessionChecking && <div className="mb-4" />}
 
               {/* Login method toggle */}
-              <div className="flex rounded-2xl overflow-hidden border border-white/60 mb-6 shadow-inner">
-                <button type="button" onClick={() => setLoginMethod('email')} className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'email' ? 'bg-blue-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>
-                  <Mail size={12} className="inline mr-1.5 -mt-0.5" />Email
+              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl mb-5">
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod('email')}
+                  className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMethod === 'email' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  <Mail size={13} /> Email
                 </button>
-                <button type="button" onClick={() => setLoginMethod('phone')} className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${loginMethod === 'phone' ? 'bg-blue-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>
-                  <Smartphone size={12} className="inline mr-1.5 -mt-0.5" />Phone
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod('phone')}
+                  className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${loginMethod === 'phone' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  <Smartphone size={13} /> Phone
                 </button>
               </div>
 
               {loginMethod === 'email' ? (
                 <form onSubmit={handleCheckEmail} className="space-y-4">
-                  <div className="relative group">
-                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                    <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
+                  <div className="relative group w-full text-left">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors pointer-events-none" size={18} />
+                    <input
+                      type="email"
+                      required
+                      autoFocus
+                      value={emailValue}
+                      onChange={(e) => setEmailValue(e.target.value)}
+                      placeholder="banker@deus.com"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all"
+                    />
                   </div>
-                  <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
-                      {isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Continue'}
-                      {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
-                    </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !emailValue}
+                    className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Continue'}
+                    {!isLoading && <ChevronRight size={16} />}
                   </button>
                 </form>
               ) : (
                 <form onSubmit={handleSendLoginOTP} className="space-y-4">
                   <PhoneField value={phoneValue} onChange={setPhoneValue} autoFocus focusColor="blue" />
-                  <div className="flex rounded-2xl overflow-hidden border border-white/60 shadow-inner">
-                    <button type="button" onClick={() => setOtpChannel('sms')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'sms' ? 'bg-blue-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>SMS</button>
-                    <button type="button" onClick={() => setOtpChannel('whatsapp')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>WhatsApp</button>
+                  <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setOtpChannel('sms')}
+                      className={`py-2 text-xs font-bold rounded-lg transition-all ${otpChannel === 'sms' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                      SMS
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOtpChannel('whatsapp')}
+                      className={`py-2 text-xs font-bold rounded-lg transition-all ${otpChannel === 'whatsapp' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                      WhatsApp
+                    </button>
                   </div>
-                  <button type="submit" disabled={isLoading || !phoneValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
-                      {isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Send Code'}
-                      {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
-                    </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !phoneValue}
+                    className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Send Verification Code'}
+                    {!isLoading && <ChevronRight size={16} />}
                   </button>
                 </form>
               )}
@@ -698,153 +751,299 @@ function MainApp() {
           )}
 
           {currentView === 'welcome_back' && (
-            <div className="animate-in slide-in-from-right-4 duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Welcome Back</h2>
-              <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-8">{emailValue}</p>
-              <form onSubmit={handleLogin}>
-                <div className="space-y-2">
-                  <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Password" autoFocus={true} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                  <div className="flex justify-end px-2">
-                    <button type="button" onClick={() => setCurrentView('forgot_password')} className="text-[10px] font-black text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest py-2">
-                      Forgot Vault Key?
-                    </button>
-                  </div>
+            <div className="animate-in slide-in-from-right-4 duration-200 text-center">
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Welcome Back</h2>
+              <p className="text-xs font-semibold text-blue-600 mb-5">{emailValue}</p>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <PasswordInput
+                  value={passwordValue}
+                  onChange={(e) => setPasswordValue(e.target.value)}
+                  placeholder="Password"
+                  autoFocus={true}
+                  showPassword={showPassword}
+                  togglePassword={() => setShowPassword(!showPassword)}
+                />
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('forgot_password')}
+                    className="text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
                 </div>
                 
-                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full mt-4 bg-blue-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                   <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? 'Authenticating...' : 'Confirm Access'}</span>
+                <button
+                  type="submit"
+                  disabled={isLoading || !passwordValue}
+                  className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Authenticating...</> : 'Sign In'}
                 </button>
               </form>
-              <div className="mt-6 flex flex-col gap-3">
-                <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Switch Account</button>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('identify_yourself')}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  Don't have an account? Sign Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('enter_email')}
+                  className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Use a different email or phone
+                </button>
               </div>
             </div>
           )}
 
           {currentView === 'forgot_password' && (
-            <div className="animate-in slide-in-from-left-4 duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Vault Recovery</h2>
-              <p className="text-xs font-bold text-slate-500 mb-8">Confirm your email to receive a secure reset link.</p>
-              <form onSubmit={handleResetPassword} className="space-y-6">
-                <div className="relative group">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                  <input type="email" required autoFocus value={emailValue} onChange={(e) => setEmailValue(e.target.value)} placeholder="banker@deus.com" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
+            <div className="animate-in slide-in-from-left-4 duration-200 text-center">
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Reset Password</h2>
+              <p className="text-xs text-slate-500 mb-5">Enter your email to receive password reset instructions.</p>
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="relative group w-full text-left">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors pointer-events-none" size={18} />
+                  <input
+                    type="email"
+                    required
+                    autoFocus
+                    value={emailValue}
+                    onChange={(e) => setEmailValue(e.target.value)}
+                    placeholder="banker@deus.com"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all"
+                  />
                 </div>
-                <button type="submit" disabled={isLoading || !emailValue} className="relative w-full overflow-hidden bg-slate-900 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-slate-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group">
-                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">{isLoading ? <RefreshCw size={18} className="animate-spin" /> : 'Dispatch Recovery Key'}</span>
+                <button
+                  type="submit"
+                  disabled={isLoading || !emailValue}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Send Reset Link'}
                 </button>
               </form>
-              <div className="mt-8 flex flex-col gap-3">
-                <button onClick={() => setCurrentView('welcome_back')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Return to Login</button>
+              <div className="mt-5 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('welcome_back')}
+                  className="text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+                >
+                  Return to Sign In
+                </button>
               </div>
             </div>
           )}
 
           {currentView === 'identify_yourself' && (
-            <div className="animate-in slide-in-from-right-4 duration-300 text-center">
-              <h2 className="text-2xl font-black tracking-tight mb-8 text-slate-800">Identify Yourself</h2>
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="relative group">
-                  <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
-                  <input type="text" required autoFocus value={nameValue} onChange={(e) => setNameValue(e.target.value)} placeholder="Given Name" className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-6 py-5 text-lg font-black outline-none focus:border-emerald-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" />
+            <div className="animate-in slide-in-from-right-4 duration-200 text-center">
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Create Account</h2>
+              <p className="text-xs text-slate-500 mb-5">Register your institutional identity</p>
+              <form onSubmit={handleRegister} className="space-y-3.5 text-left">
+                <div className="relative group w-full">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors pointer-events-none" size={18} />
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    value={nameValue}
+                    onChange={(e) => setNameValue(e.target.value)}
+                    placeholder="Full Legal Name"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all"
+                  />
                 </div>
-                <PhoneField value={phoneValue} onChange={setPhoneValue} focusColor="emerald" />
-                <div className="flex rounded-2xl overflow-hidden border border-white/60 shadow-inner">
-                  <button type="button" onClick={() => setOtpChannel('sms')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'sms' ? 'bg-emerald-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>SMS</button>
-                  <button type="button" onClick={() => setOtpChannel('whatsapp')} className={`flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${otpChannel === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>WhatsApp</button>
+                <PhoneField value={phoneValue} onChange={setPhoneValue} focusColor="blue" />
+                <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setOtpChannel('sms')}
+                    className={`py-2 text-xs font-bold rounded-lg transition-all ${otpChannel === 'sms' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                  >
+                    SMS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOtpChannel('whatsapp')}
+                    className={`py-2 text-xs font-bold rounded-lg transition-all ${otpChannel === 'whatsapp' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                  >
+                    WhatsApp
+                  </button>
                 </div>
-                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="Set Password" minLength={8} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
+                <PasswordInput
+                  value={passwordValue}
+                  onChange={(e) => setPasswordValue(e.target.value)}
+                  placeholder="Set Password (min 8 chars)"
+                  minLength={8}
+                  showPassword={showPassword}
+                  togglePassword={() => setShowPassword(!showPassword)}
+                />
                 <PasswordStrength value={passwordValue} />
-                <button type="submit" disabled={isLoading || !nameValue || !phoneValue || !PW_RULES.every(r => r.test(passwordValue))} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                    {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Creating Account...</> : 'Register Identity'}
-                  </span>
+                <button
+                  type="submit"
+                  disabled={isLoading || !nameValue || !phoneValue || !PW_RULES.every(r => r.test(passwordValue))}
+                  className="w-full mt-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Creating Account...</> : 'Create Identity'}
                 </button>
               </form>
+              <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('welcome_back')}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  Already have an account? Log In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('enter_email')}
+                  className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Switch Email
+                </button>
+              </div>
             </div>
           )}
 
-
           {currentView === 'verify_phone' && (
-            <div className="animate-in slide-in-from-right-4 duration-300 text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-6 shadow-inner">
-                <Smartphone size={40} />
+            <div className="animate-in slide-in-from-right-4 duration-200 text-center">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-4">
+                <Smartphone size={26} />
               </div>
-              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Secure Your Account</h2>
-              <p className="text-xs text-slate-500 font-medium mb-6 px-4">Enter your phone number to receive a verification code.</p>
-              <div className="flex rounded-2xl overflow-hidden border border-white/60 mb-6 shadow-inner">
-                <button type="button" onClick={() => setOtpChannel('sms')} className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${otpChannel === 'sms' ? 'bg-blue-600 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>SMS</button>
-                <button type="button" onClick={() => setOtpChannel('whatsapp')} className={`flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all ${otpChannel === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-white/40 text-slate-500 hover:bg-white/60'}`}>WhatsApp</button>
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Phone Verification</h2>
+              <p className="text-xs text-slate-500 mb-5">Enter your phone number to receive your one-time verification code.</p>
+              <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl mb-4">
+                <button
+                  type="button"
+                  onClick={() => setOtpChannel('sms')}
+                  className={`py-2 text-xs font-bold rounded-lg transition-all ${otpChannel === 'sms' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  SMS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOtpChannel('whatsapp')}
+                  className={`py-2 text-xs font-bold rounded-lg transition-all ${otpChannel === 'whatsapp' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  WhatsApp
+                </button>
               </div>
               <form onSubmit={handleSendOTP} className="space-y-4">
                 <PhoneField value={phoneValue} onChange={setPhoneValue} autoFocus focusColor="blue" />
-                <button type="submit" disabled={isLoading || !phoneValue} className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                    {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Send Code'}
-                    {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
-                  </span>
+                <button
+                  type="submit"
+                  disabled={isLoading || !phoneValue}
+                  className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Send Code'}
+                  {!isLoading && <ChevronRight size={16} />}
                 </button>
               </form>
             </div>
           )}
 
           {currentView === 'verify_otp_sms' && (
-            <div className="animate-in slide-in-from-right-4 duration-300 text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-6 shadow-inner animate-pulse">
-                <Smartphone size={40} />
+            <div className="animate-in slide-in-from-right-4 duration-200 text-center">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
+                <Smartphone size={26} />
               </div>
-              <h2 className="text-2xl font-black tracking-tight mb-2 text-slate-800">Enter Your Code</h2>
-              <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-2">{phoneValue}</p>
-              <p className="text-xs text-slate-500 font-medium mb-8 px-4">We sent a 6-digit code via <span className="font-bold text-slate-700">{otpChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</span>. Enter it below.</p>
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Enter Verification Code</h2>
+              <p className="text-xs font-semibold text-blue-600 mb-1">{phoneValue}</p>
+              <p className="text-xs text-slate-500 mb-5">
+                We sent a 6-digit code via <span className="font-bold text-slate-800">{otpChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</span>. Enter it below.
+              </p>
               <form onSubmit={handleVerifyOTP} className="space-y-4">
                 <input
-                  type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} required autoFocus
-                  value={otpValue} onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  required
+                  autoFocus
+                  value={otpValue}
+                  onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
-                  className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl px-6 py-5 text-3xl font-black text-center tracking-[0.5em] outline-none focus:border-emerald-400 focus:bg-white/80 transition-all shadow-inner"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-2xl font-black text-center tracking-[0.4em] font-mono outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15 transition-all text-slate-900"
                 />
-                <button type="submit" disabled={isLoading || otpValue.length !== 6} className="relative w-full overflow-hidden bg-emerald-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-0.5">
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                    {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Verify Identity'}
-                    {!isLoading && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
-                  </span>
+                <button
+                  type="submit"
+                  disabled={isLoading || otpValue.length !== 6}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Verifying...</> : 'Verify & Access'}
+                  {!isLoading && <ChevronRight size={16} />}
                 </button>
               </form>
-              <button onClick={handleSendOTP} disabled={isLoading} className="mt-6 text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">
-                Resend Code
-              </button>
+              <div className="mt-4 flex items-center justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={handleSendOTP}
+                  disabled={isLoading}
+                  className="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors"
+                >
+                  Resend Code
+                </button>
+                <span className="text-slate-300">•</span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('enter_email')}
+                  className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 
           {currentView === 'check_email' && (
-            <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 animate-pulse mb-6 shadow-inner"><Mail size={40}/></div>
-              <h2 className="text-2xl font-black mb-2 text-slate-800">Check Your Inbox</h2>
-              <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-2">{emailValue}</p>
-              <p className="text-xs text-slate-500 font-medium mb-8 px-4">We sent a confirmation link. Click it to activate your account. Check your <span className="font-bold text-slate-700">Spam</span> or <span className="font-bold text-slate-700">Junk</span> folder if you don't see it.</p>
+            <div className="animate-in slide-in-from-bottom-4 duration-200 text-center">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-4">
+                <Mail size={26}/>
+              </div>
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Check Your Inbox</h2>
+              <p className="text-xs font-semibold text-blue-600 mb-2">{emailValue}</p>
+              <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+                We sent a confirmation link. Click it to activate your account. Check your <span className="font-semibold text-slate-700">Spam</span> folder if you don't see it within a minute.
+              </p>
               <button
                 onClick={handleResend}
                 disabled={isLoading}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all mb-4">
-                {isLoading ? <RefreshCw size={14} className="animate-spin"/> : <Mail size={14}/>}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-all mb-3 cursor-pointer shadow-xs"
+              >
+                {isLoading ? <RefreshCw size={16} className="animate-spin"/> : <Mail size={16}/>}
                 {isLoading ? 'Sending…' : 'Resend Confirmation Email'}
               </button>
-              <button onClick={() => setCurrentView('enter_email')} className="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors">Back to Login</button>
+              <button
+                onClick={() => setCurrentView('enter_email')}
+                className="text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+              >
+                Back to Sign In
+              </button>
             </div>
           )}
 
           {currentView === 'update_password' && (
-            <div className="animate-in slide-in-from-bottom-4 duration-300 text-center">
-              <h2 className="text-2xl font-black mb-8 text-slate-800">New Vault Key</h2>
-              <form onSubmit={handleUpdatePassword} className="space-y-6">
-                <PasswordInput value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} placeholder="New Password" autoFocus={true} minLength={6} showPassword={showPassword} togglePassword={() => setShowPassword(!showPassword)} />
-                <button type="submit" disabled={isLoading || !passwordValue} className="relative w-full bg-blue-600 rounded-2xl p-5 shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 group overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                  <span className="relative z-10 text-white font-black text-sm uppercase tracking-widest">Save Password</span>
+            <div className="animate-in slide-in-from-bottom-4 duration-200 text-center">
+              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Update Password</h2>
+              <p className="text-xs text-slate-500 mb-5">Enter your new secure account password</p>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <PasswordInput
+                  value={passwordValue}
+                  onChange={(e) => setPasswordValue(e.target.value)}
+                  placeholder="New Password"
+                  autoFocus={true}
+                  minLength={6}
+                  showPassword={showPassword}
+                  togglePassword={() => setShowPassword(!showPassword)}
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !passwordValue}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50"
+                >
+                  Save New Password
                 </button>
               </form>
             </div>

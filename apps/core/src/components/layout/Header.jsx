@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Search } from 'lucide-react';
+import { ShieldCheck, Search, Bot } from 'lucide-react';
 
 export default function Header({ activeFeature, setActiveFeature }) {
   
@@ -23,7 +23,7 @@ export default function Header({ activeFeature, setActiveFeature }) {
             <span className="text-5xl font-black text-ifb-logoI">I</span>
             <span className="text-5xl font-black text-ifb-logoF">F</span>
             <span className="text-5xl font-black text-ifb-logoB">B</span>
-            <Sparkles className="text-ifb-logoG ml-3 drop-shadow-md" size={32} />
+            <ShieldCheck className="text-emerald-500 ml-2" size={28} />
           </div>
           <span className="text-sm font-bold text-slate-500 uppercase tracking-widest ml-1">DEUS CORE BANKING</span>
         </div>
@@ -55,7 +55,7 @@ export default function Header({ activeFeature, setActiveFeature }) {
           onClick={() => setActiveFeature('ai-banker')}
           className="bg-ifb-blue/90 text-white px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-ifb-blue hover:shadow-lg transition-all border border-white/30"
         >
-          <Sparkles size={14} /> Wake DEUS AI
+          <Bot size={15} /> DEUS AI Advisor
         </button>
 
       </div>

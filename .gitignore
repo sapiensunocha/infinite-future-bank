@@ -22,7 +22,7 @@ node_modules
 **/.DS_Store
 
 # Capacitor / Mobile native projects
-apps/core/ios
+# apps/core/ios tracked for App Store builds (see apps/core/ios/.gitignore for iOS exclusions)
 apps/core/electron
 **/android/.gradle
 **/android/app/build
@@ -48,10 +48,14 @@ apps/core/*.exe
 apps/core/public/*.apk
 
 # Android signing keys and credentials — NEVER commit
-apps/core/*.jks
-apps/core/*.keystore
+*.jks
+*.keystore
+**/*.jks
+**/*.keystore
 apps/core/android/keystore.properties
 **/keystore.properties
+*play-store*.json
+**/*play-store*.json
 
 # Database backups — NEVER commit
 apps/core/*.backup
