@@ -52,31 +52,27 @@ jobs:
       - name: Configure Release Keystore & Signing
         working-directory: apps/core/android
         run: |
-          # Priority:
-          # 1. Base64 keystore from GitHub Secrets (ANDROID_KEYSTORE_BASE64 or IFB_RELEASE_KEY_BASE64)
-          # 2. Existing key in app/ifb-release-key.jks or app/ifb-upload-key.jks
-          # 3. Generate key using exact release credentials
           STORE_PASS="${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'zhSybFaaBp5aPZrPZL5kskQYi8IZ' }}"
           KEY_PASS="${{ secrets.ANDROID_KEY_PASSWORD || 'zhSybFaaBp5aPZrPZL5kskQYi8IZ' }}"
           KEY_ALIAS="${{ secrets.ANDROID_KEY_ALIAS || 'ifb-key' }}"
 
           KEYSTORE_FILE="app/ifb-release-key.jks"
-          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+          if [ -f "ifb-release-key.b64" ]; then
+            echo "Decoding embedded release signing keystore..."
+            base64 -d < ifb-release-key.b64 > "$KEYSTORE_FILE"
+          elif [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$KEYSTORE_FILE"
           elif [ -n "${{ secrets.IFB_RELEASE_KEY_BASE64 }}" ]; then
             echo "${{ secrets.IFB_RELEASE_KEY_BASE64 }}" | base64 -d > "$KEYSTORE_FILE"
           elif [ -f "app/ifb-upload-key.jks" ]; then
             KEYSTORE_FILE="app/ifb-upload-key.jks"
-          elif [ ! -f "$KEYSTORE_FILE" ]; then
-            keytool -genkeypair -v \
-              -keystore "$KEYSTORE_FILE" \
-              -alias "$KEY_ALIAS" \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass "$STORE_PASS" \
-              -keypass "$KEY_PASS" \
-              -dname "CN=Infinite Future Bank, OU=Mobile, O=IFB, L=New York, ST=NY, C=US"
+          fi
+
+          if [ -f "play-store-key.b64" ]; then
+            echo "Decoding Google Play service account key..."
+            base64 -d < play-store-key.b64 > play-store-key.json
+          elif [ -n "${{ secrets.PLAY_STORE_JSON_KEY }}" ]; then
+            echo "${{ secrets.PLAY_STORE_JSON_KEY }}" > play-store-key.json
           fi
 
           KEYSTORE_NAME=$(basename "$KEYSTORE_FILE")
@@ -151,10 +147,10 @@ jobs:
             apps/core/android/keystore.properties
 
       - name: Deploy to Google Play Console (Internal Track)
-        if: ${{ secrets.PLAY_STORE_JSON_KEY != '' }}
+        if: ${{ hashFiles('apps/core/android/play-store-key.json') != '' || secrets.PLAY_STORE_JSON_KEY != '' }}
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
+          serviceAccountJson: apps/core/android/play-store-key.json
           packageName: org.infinitefuturebank.deus
           releaseFiles: apps/core/android/app/build/outputs/bundle/release/*.aab
           track: internal

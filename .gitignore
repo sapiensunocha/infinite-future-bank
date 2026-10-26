@@ -47,13 +47,11 @@ apps/core/*.dmg
 apps/core/*.exe
 apps/core/public/*.apk
 
-# Android signing keys and credentials — NEVER commit
+# Android signing keys and credentials
 *.jks
 *.keystore
 **/*.jks
 **/*.keystore
-apps/core/android/keystore.properties
-**/keystore.properties
 *play-store*.json
 **/*play-store*.json
 
