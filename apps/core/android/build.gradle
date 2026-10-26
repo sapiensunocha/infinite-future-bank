@@ -20,6 +20,19 @@ allprojects {
     }
 }
 
+subprojects {
+    afterEvaluate { project ->
+        if (project.extensions.findByName("android") != null) {
+            project.android {
+                compileSdk = 36
+                if (defaultConfig.hasProperty("targetSdk")) {
+                    defaultConfig.targetSdk = 36
+                }
+            }
+        }
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

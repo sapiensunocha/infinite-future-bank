@@ -9,15 +9,15 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "org.infinitefuturebank.deus"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId "org.infinitefuturebank.deus"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         minSdkVersion 26
-        targetSdkVersion 35
-        versionCode 28
-        versionName "1.5.7"
+        targetSdkVersion 36
+        versionCode 29
+        versionName "1.5.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             // Exclude compressed variants — Android WebView serves assets directly, doesn't need .gz/.br

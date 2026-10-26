@@ -127,11 +127,17 @@ jobs:
 
           echo "=== PRE-FLIGHT RELEASE INSPECTION ==="
           APK_FILE=$(ls app/build/outputs/apk/release/*.apk 2>/dev/null | head -n 1)
-          if [ -n "$ANDROID_HOME" ] && [ -f "$APK_FILE" ]; then
+          AAB_FILE=$(ls app/build/outputs/bundle/release/*.aab 2>/dev/null | head -n 1)
+          if [ -n "$ANDROID_HOME" ]; then
             AAPT_BIN=$(find $ANDROID_HOME/build-tools -name aapt 2>/dev/null | sort -V | tail -n 1)
-            if [ -x "$AAPT_BIN" ]; then
-              echo "Inspecting package badging:"
+            APKANALYZER_BIN=$(find $ANDROID_HOME/cmdline-tools $ANDROID_HOME/tools -name apkanalyzer 2>/dev/null | sort -V | tail -n 1)
+            if [ -x "$AAPT_BIN" ] && [ -f "$APK_FILE" ]; then
+              echo "Inspecting APK Badging:"
               $AAPT_BIN dump badging "$APK_FILE" | grep -E "package:|sdkVersion:|targetSdkVersion:"
+            fi
+            if [ -x "$APKANALYZER_BIN" ]; then
+              [ -f "$APK_FILE" ] && echo "APK Target SDK: $($APKANALYZER_BIN manifest target-sdk "$APK_FILE" 2>/dev/null || true)"
+              [ -f "$AAB_FILE" ] && echo "AAB Target SDK: $($APKANALYZER_BIN manifest target-sdk "$AAB_FILE" 2>/dev/null || true)"
             fi
           fi
 
