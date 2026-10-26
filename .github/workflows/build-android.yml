@@ -125,6 +125,16 @@ jobs:
           echo "Verifying AAB Signature:"
           jarsigner -verify "$AAB_FILE"
 
+          echo "=== PRE-FLIGHT RELEASE INSPECTION ==="
+          APK_FILE=$(ls app/build/outputs/apk/release/*.apk 2>/dev/null | head -n 1)
+          if [ -n "$ANDROID_HOME" ] && [ -f "$APK_FILE" ]; then
+            AAPT_BIN=$(find $ANDROID_HOME/build-tools -name aapt 2>/dev/null | sort -V | tail -n 1)
+            if [ -x "$AAPT_BIN" ]; then
+              echo "Inspecting package badging:"
+              $AAPT_BIN dump badging "$APK_FILE" | grep -E "package:|sdkVersion:|targetSdkVersion:"
+            fi
+          fi
+
       - name: Upload Signed Android App Bundle (.aab for Google Play Console)
         uses: actions/upload-artifact@v4
         with:
