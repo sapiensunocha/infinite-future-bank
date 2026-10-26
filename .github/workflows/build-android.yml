@@ -100,7 +100,6 @@ jobs:
         working-directory: apps/core/android
         env:
           GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC"
-          ANDROID_VERSION_CODE: ${{ 10 + github.run_number }}
         run: |
           ./gradlew bundleRelease --stacktrace
           ./gradlew assembleRelease --stacktrace

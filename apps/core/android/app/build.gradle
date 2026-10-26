@@ -7,7 +7,8 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
-def appVersionCode = System.getenv("ANDROID_VERSION_CODE") ? Integer.parseInt(System.getenv("ANDROID_VERSION_CODE")) : 30
+def runNumber = System.getenv("GITHUB_RUN_NUMBER") ? Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER")) : 0
+def appVersionCode = runNumber > 0 ? (runNumber + 10) : (System.getenv("ANDROID_VERSION_CODE") ? Integer.parseInt(System.getenv("ANDROID_VERSION_CODE")) : 30)
 
 android {
     namespace = "org.infinitefuturebank.deus"
