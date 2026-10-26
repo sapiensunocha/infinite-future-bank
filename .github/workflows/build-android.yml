@@ -156,3 +156,4 @@ jobs:
           releaseFiles: apps/core/android/app/build/outputs/bundle/release/*.aab
           track: internal
           status: completed
+          changesNotSentForReview: true
