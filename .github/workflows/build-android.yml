@@ -96,10 +96,13 @@ jobs:
             -alias "$KEY_ALIAS" \
             -storepass "$STORE_PASS" > app/signing_fingerprints.txt
 
-      - name: Build Signed Release Bundle (.aab) & APKs
+      - name: Build Signed Release Bundle (.aab) & APK
         working-directory: apps/core/android
+        env:
+          GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC"
         run: |
-          ./gradlew bundleRelease assembleRelease assembleDebug --stacktrace
+          ./gradlew bundleRelease --stacktrace
+          ./gradlew assembleRelease --stacktrace
 
       - name: Sign & Verify Android App Bundle (.aab)
         working-directory: apps/core/android
@@ -128,13 +131,11 @@ jobs:
           name: ifb-signed-playstore-aab
           path: apps/core/android/app/build/outputs/bundle/release/*.aab
 
-      - name: Upload Installable APKs (Debug & Release)
+      - name: Upload Installable APK (Release)
         uses: actions/upload-artifact@v4
         with:
-          name: ifb-installable-apks
-          path: |
-            apps/core/android/app/build/outputs/apk/release/*.apk
-            apps/core/android/app/build/outputs/apk/debug/*.apk
+          name: ifb-installable-release-apk
+          path: apps/core/android/app/build/outputs/apk/release/*.apk
 
       - name: Upload Signing Keystore & Certificates (Save for future updates)
         uses: actions/upload-artifact@v4
