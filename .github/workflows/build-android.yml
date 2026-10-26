@@ -147,7 +147,7 @@ jobs:
             apps/core/android/keystore.properties
 
       - name: Deploy to Google Play Console (Internal Track)
-        if: ${{ hashFiles('apps/core/android/play-store-key.json') != '' || secrets.PLAY_STORE_JSON_KEY != '' }}
+        if: ${{ hashFiles('apps/core/android/play-store-key.b64') != '' }}
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJson: apps/core/android/play-store-key.json
