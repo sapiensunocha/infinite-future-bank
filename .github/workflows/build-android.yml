@@ -56,6 +56,10 @@ jobs:
           # 1. Base64 keystore from GitHub Secrets (ANDROID_KEYSTORE_BASE64 or IFB_RELEASE_KEY_BASE64)
           # 2. Existing key in app/ifb-release-key.jks or app/ifb-upload-key.jks
           # 3. Generate key using exact release credentials
+          STORE_PASS="${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'zhSybFaaBp5aPZrPZL5kskQYi8IZ' }}"
+          KEY_PASS="${{ secrets.ANDROID_KEY_PASSWORD || 'zhSybFaaBp5aPZrPZL5kskQYi8IZ' }}"
+          KEY_ALIAS="${{ secrets.ANDROID_KEY_ALIAS || 'ifb-key' }}"
+
           KEYSTORE_FILE="app/ifb-release-key.jks"
           if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$KEYSTORE_FILE"
@@ -66,12 +70,12 @@ jobs:
           elif [ ! -f "$KEYSTORE_FILE" ]; then
             keytool -genkeypair -v \
               -keystore "$KEYSTORE_FILE" \
-              -alias ifb-key \
+              -alias "$KEY_ALIAS" \
               -keyalg RSA \
               -keysize 2048 \
               -validity 10000 \
-              -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
-              -keypass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
+              -storepass "$STORE_PASS" \
+              -keypass "$KEY_PASS" \
               -dname "CN=Infinite Future Bank, OU=Mobile, O=IFB, L=New York, ST=NY, C=US"
           fi
 
@@ -79,22 +83,22 @@ jobs:
 
           cat << EOF > keystore.properties
           storeFile=$KEYSTORE_NAME
-          storePassword=zhSybFaaBp5aPZrPZL5kskQYi8IZ
-          keyAlias=ifb-key
-          keyPassword=zhSybFaaBp5aPZrPZL5kskQYi8IZ
+          storePassword=$STORE_PASS
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASS
           EOF
 
           # Export public certificate and SHA256 fingerprints
           keytool -export -rfc \
             -keystore "$KEYSTORE_FILE" \
-            -alias ifb-key \
-            -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
+            -alias "$KEY_ALIAS" \
+            -storepass "$STORE_PASS" \
             -file app/upload_certificate.pem
 
           keytool -list -v \
             -keystore "$KEYSTORE_FILE" \
-            -alias ifb-key \
-            -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ > app/signing_fingerprints.txt
+            -alias "$KEY_ALIAS" \
+            -storepass "$STORE_PASS" > app/signing_fingerprints.txt
 
       - name: Build Signed Release Bundle (.aab) & APKs
         working-directory: apps/core/android
@@ -104,6 +108,10 @@ jobs:
       - name: Sign & Verify Android App Bundle (.aab)
         working-directory: apps/core/android
         run: |
+          STORE_PASS="${{ secrets.ANDROID_KEYSTORE_PASSWORD || 'zhSybFaaBp5aPZrPZL5kskQYi8IZ' }}"
+          KEY_PASS="${{ secrets.ANDROID_KEY_PASSWORD || 'zhSybFaaBp5aPZrPZL5kskQYi8IZ' }}"
+          KEY_ALIAS="${{ secrets.ANDROID_KEY_ALIAS || 'ifb-key' }}"
+
           AAB_FILE=$(ls app/build/outputs/bundle/release/*.aab | head -n 1)
           echo "Target AAB: $AAB_FILE"
           KEYSTORE_FILE="app/ifb-release-key.jks"
@@ -112,9 +120,9 @@ jobs:
           fi
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore "$KEYSTORE_FILE" \
-            -storepass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
-            -keypass zhSybFaaBp5aPZrPZL5kskQYi8IZ \
-            "$AAB_FILE" ifb-key
+            -storepass "$STORE_PASS" \
+            -keypass "$KEY_PASS" \
+            "$AAB_FILE" "$KEY_ALIAS"
           echo "Verifying AAB Signature:"
           jarsigner -verify "$AAB_FILE"
 
@@ -141,3 +149,13 @@ jobs:
             apps/core/android/app/upload_certificate.pem
             apps/core/android/app/signing_fingerprints.txt
             apps/core/android/keystore.properties
+
+      - name: Deploy to Google Play Console (Internal Track)
+        if: ${{ secrets.PLAY_STORE_JSON_KEY != '' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_JSON_KEY }}
+          packageName: org.infinitefuturebank.deus
+          releaseFiles: apps/core/android/app/build/outputs/bundle/release/*.aab
+          track: internal
+          status: completed
