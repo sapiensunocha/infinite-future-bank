@@ -97,32 +97,18 @@ export default function TransactionModal({
             status: 'pending',
           }]);
           triggerGlobalActionNotification('success', `Transfer of ${formatCurrency(amount)} scheduled for ${new Date(scheduleDate).toLocaleDateString()}.`);
-        } else if (targetUserId) {
-          // Real IFB-to-IFB transfer via RPC (updates both balances + logs both transactions)
-          const { error } = await supabase.rpc('send_usd_v2', {
-            p_sender_id: session.user.id,
-            p_recipient_user_id: targetUserId,
-            p_amount: amount,
-            p_description: `Transfer to ${recipientName}`,
-          });
-          if (error) throw error;
-          triggerGlobalActionNotification('success', `${formatCurrency(amount)} sent to ${recipientName}.`);
         } else {
-          // Recipient not linked to an IFB account — debit sender first, then log
-          const { data: deducted, error: extBalErr } = await supabase
-            .from('balances')
-            .update({ liquid_usd: (balances?.liquid_usd || 0) - amount })
-            .eq('user_id', session.user.id)
-            .gte('liquid_usd', amount)
-            .select('liquid_usd');
-          if (extBalErr || !deducted?.length) throw new Error('Insufficient balance.');
-          await supabase.from('transactions').insert([{
-            user_id: session.user.id,
-            amount: -amount,
-            transaction_type: 'send',
-            description: `External transfer to ${recipientName}`,
-            status: 'completed',
-          }]);
+          // Real IFB-to-IFB transfer via hardened p2p_transfer RPC (atomic balance updates + dual transaction logs)
+          const targetId = targetUserId || recipientRecord?.id;
+          const { data: p2pRes, error: p2pErr } = await supabase.rpc('p2p_transfer', {
+            sender_id: session.user.id,
+            receiver_id: targetId,
+            transfer_amount: amount,
+            p_asset: 'USD'
+          });
+
+          if (p2pErr) throw p2pErr;
+          if (p2pRes && p2pRes.success === false) throw new Error(p2pRes.error || 'Transfer could not be processed.');
           triggerGlobalActionNotification('success', `${formatCurrency(amount)} sent to ${recipientName}.`);
         }
         await fetchAllData();

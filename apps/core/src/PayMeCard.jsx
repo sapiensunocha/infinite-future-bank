@@ -64,14 +64,21 @@ export default function PayMeCard({ profile, onClose }) {
     if (!text) return;
     // Support both formats: /pay?to=UUID and legacy /pay/UUID
     if (text.includes('/pay')) {
-      let url = text;
-      // Convert legacy /pay/UUID format to /pay?to=UUID
+      let targetPath = '/pay';
       const legacyMatch = text.match(/\/pay\/([a-f0-9-]{36})/i);
+      const queryMatch = text.match(/\/pay\?to=([a-f0-9-]{36})/i);
       if (legacyMatch) {
-        url = `${APP_URL}/pay?to=${legacyMatch[1]}`;
+        targetPath = `/pay?to=${legacyMatch[1]}`;
+      } else if (queryMatch) {
+        targetPath = `/pay?to=${queryMatch[1]}`;
+      } else if (text.startsWith('http')) {
+        try {
+          const parsed = new URL(text);
+          targetPath = parsed.pathname + parsed.search;
+        } catch {}
       }
-      // Navigate within app so session is preserved
-      window.location.href = url;
+      window.history.pushState(null, '', targetPath);
+      window.dispatchEvent(new PopStateEvent('popstate'));
       onClose();
     } else {
       setScanError('Not a valid DEUS payment code');

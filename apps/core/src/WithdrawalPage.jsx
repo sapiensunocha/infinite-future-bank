@@ -259,21 +259,15 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
         throw rpcError;
       }
 
-      // Deduct 0.5% routing fee separately (atomic guard)
-      const { error: feeErr } = await supabase
-        .from('balances')
-        .update({ liquid_usd: userBalance - withdrawalFee })
-        .eq('user_id', userId)
-        .gte('liquid_usd', withdrawalFee);
-
-      if (!feeErr && withdrawalFee > 0) {
+      // Log 0.5% routing fee in transaction ledger
+      if (withdrawalFee > 0) {
         await supabase.from('transactions').insert({
           user_id: userId,
           transaction_type: 'withdrawal_fee',
-          amount: withdrawalFee,
+          amount: -withdrawalFee,
           status: 'completed',
           description: `Withdrawal Routing Fee (0.5%) — $${parseFloat(amount).toFixed(2)} via ${p2pFiatMethod}`,
-        });
+        }).catch(() => {});
       }
 
       await supabase.from('notifications').insert([{

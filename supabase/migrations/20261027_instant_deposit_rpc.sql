@@ -95,3 +95,86 @@ $$;
 
 -- Grant execution to authenticated users
 GRANT EXECUTE ON FUNCTION public.instant_deposit(NUMERIC, TEXT) TO authenticated;
+
+-- ==============================================================================
+-- Process Internal Transfers Between User Sub-Accounts (Liquid, Vault, AFR)
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.process_internal_transfer(
+  p_user_id UUID,
+  p_from TEXT,
+  p_to TEXT,
+  p_amount NUMERIC
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_uid UUID;
+  v_amt NUMERIC;
+  v_source_bal NUMERIC;
+BEGIN
+  v_uid := auth.uid();
+  IF v_uid IS NULL OR v_uid != p_user_id THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Unauthorized caller.');
+  END IF;
+
+  v_amt := ROUND(p_amount::numeric, 2);
+  IF v_amt <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Amount must be greater than zero.');
+  END IF;
+
+  -- 1. Check & debit source balance
+  IF p_from = 'liquid_usd' OR p_from = 'USD' OR p_from = 'checking' THEN
+    SELECT liquid_usd INTO v_source_bal FROM public.balances WHERE user_id = v_uid FOR UPDATE;
+    IF v_source_bal IS NULL OR v_source_bal < v_amt THEN
+      RETURN jsonb_build_object('success', false, 'error', 'Insufficient liquid funds.');
+    END IF;
+    UPDATE public.balances SET liquid_usd = liquid_usd - v_amt, updated_at = NOW() WHERE user_id = v_uid;
+  ELSIF p_from = 'mysafe_digital_usd' OR p_from = 'savings' OR p_from = 'vault' THEN
+    SELECT mysafe_digital_usd INTO v_source_bal FROM public.balances WHERE user_id = v_uid FOR UPDATE;
+    IF v_source_bal IS NULL OR v_source_bal < v_amt THEN
+      RETURN jsonb_build_object('success', false, 'error', 'Insufficient vault funds.');
+    END IF;
+    UPDATE public.balances SET mysafe_digital_usd = mysafe_digital_usd - v_amt, updated_at = NOW() WHERE user_id = v_uid;
+  ELSIF p_from = 'afr_balance' OR p_from = 'AFR' THEN
+    SELECT afr_balance INTO v_source_bal FROM public.balances WHERE user_id = v_uid FOR UPDATE;
+    IF v_source_bal IS NULL OR v_source_bal < v_amt THEN
+      RETURN jsonb_build_object('success', false, 'error', 'Insufficient AFR funds.');
+    END IF;
+    UPDATE public.balances SET afr_balance = afr_balance - v_amt, updated_at = NOW() WHERE user_id = v_uid;
+  ELSE
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid source account.');
+  END IF;
+
+  -- 2. Credit destination balance
+  IF p_to = 'liquid_usd' OR p_to = 'USD' OR p_to = 'checking' THEN
+    UPDATE public.balances SET liquid_usd = COALESCE(liquid_usd, 0) + v_amt, updated_at = NOW() WHERE user_id = v_uid;
+  ELSIF p_to = 'mysafe_digital_usd' OR p_to = 'savings' OR p_to = 'vault' THEN
+    UPDATE public.balances SET mysafe_digital_usd = COALESCE(mysafe_digital_usd, 0) + v_amt, updated_at = NOW() WHERE user_id = v_uid;
+  ELSIF p_to = 'afr_balance' OR p_to = 'AFR' THEN
+    UPDATE public.balances SET afr_balance = COALESCE(afr_balance, 0) + (v_amt * 100), updated_at = NOW() WHERE user_id = v_uid;
+  ELSIF p_to = 'alpha_equity_usd' OR p_to = 'invest' THEN
+    UPDATE public.balances SET alpha_equity_usd = COALESCE(alpha_equity_usd, 0) + v_amt, updated_at = NOW() WHERE user_id = v_uid;
+  ELSE
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid destination account.');
+  END IF;
+
+  -- 3. Log internal transfer
+  INSERT INTO public.transactions (
+    user_id, amount, transaction_type, description, status, created_at
+  ) VALUES (
+    v_uid,
+    0,
+    'transfer_internal',
+    'Internal transfer of $' || v_amt || ' from ' || p_from || ' to ' || p_to,
+    'completed',
+    NOW()
+  );
+
+  RETURN jsonb_build_object('success', true, 'amount', v_amt);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.process_internal_transfer(UUID, TEXT, TEXT, NUMERIC) TO authenticated;
