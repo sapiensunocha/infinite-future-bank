@@ -4,6 +4,9 @@
 -- without external webpage redirects.
 -- ==============================================================================
 
+DROP FUNCTION IF EXISTS public.instant_deposit(NUMERIC, TEXT);
+DROP FUNCTION IF EXISTS public.instant_deposit(NUMERIC);
+
 CREATE OR REPLACE FUNCTION public.instant_deposit(
   p_amount NUMERIC,
   p_asset TEXT DEFAULT 'USD'
@@ -99,6 +102,9 @@ GRANT EXECUTE ON FUNCTION public.instant_deposit(NUMERIC, TEXT) TO authenticated
 -- ==============================================================================
 -- Process Internal Transfers Between User Sub-Accounts (Liquid, Vault, AFR)
 -- ==============================================================================
+DROP FUNCTION IF EXISTS public.process_internal_transfer(UUID, TEXT, TEXT, NUMERIC);
+DROP FUNCTION IF EXISTS public.process_internal_transfer;
+
 CREATE OR REPLACE FUNCTION public.process_internal_transfer(
   p_user_id UUID,
   p_from TEXT,
