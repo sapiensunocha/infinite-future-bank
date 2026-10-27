@@ -65,7 +65,7 @@ const CheckoutForm = ({ amount, onBack, onComplete }) => {
   );
 };
 
-export default function DepositInterface({ session, onClose }) {
+export default function DepositInterface({ session, onClose, onSuccess }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('NEW'); // 'NEW' or 'HISTORY'
   const [amount, setAmount] = useState('');
@@ -109,12 +109,13 @@ export default function DepositInterface({ session, onClose }) {
         p_asset: 'USD'
       });
       if (error) {
-        console.warn("RPC instant_deposit call:", error);
+        throw new Error(error.message || 'Deposit failed');
       }
       setInstantSuccess({ amount: val, newBalance: data?.new_balance });
+      onSuccess?.();
     } catch (err) {
-      console.warn("Direct deposit fallback:", err);
-      setInstantSuccess({ amount: val, newBalance: null });
+      console.error("Direct deposit error:", err);
+      setInstantError(err.message || "Failed to process direct deposit. Please try again.");
     } finally {
       setIsInstantLoading(false);
     }
@@ -524,6 +525,7 @@ export default function DepositInterface({ session, onClose }) {
                   setInstantSuccess(null);
                   setRoutingMethod(null);
                   setAmount('');
+                  onSuccess?.();
                   onClose();
                 }}
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest py-4 px-6 rounded-2xl shadow-lg transition-all"

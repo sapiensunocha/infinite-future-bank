@@ -505,7 +505,7 @@ export default function Dashboard({ session, onSignOut }) {
                 <X size={20} /> Close Terminal
              </button>
              <div className="w-full bg-white rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/20">
-               <DepositInterface session={session} onClose={() => setShowDepositUI(false)} />
+               <DepositInterface session={session} onClose={() => setShowDepositUI(false)} onSuccess={fetchAllData} />
              </div>
            </div>
         </div>
