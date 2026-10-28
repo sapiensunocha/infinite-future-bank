@@ -61,15 +61,20 @@ export default function TopHeader({
             className="w-full pl-10 pr-4 py-2 bg-white/50 border border-white/60 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/50 transition-all text-sm font-medium text-slate-700 shadow-sm"
           />
           {isSearchExpanded && searchQuery.length > 0 && (
-            <div className="absolute top-full mt-2 left-0 w-80 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Search Results</p>
-              {searchResults.transactions.length > 0 && (
-                <div className="mb-3">
-                  <span className="text-xs font-bold text-slate-600">Transactions</span>
+            <div className="absolute top-full mt-2 left-0 w-80 bg-white border border-slate-200 shadow-xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Search Results</p>
+              {searchResults.transactions.length > 0 ? (
+                <div className="space-y-1">
+                  <span className="text-[11px] font-semibold text-slate-500">Transactions</span>
                   {searchResults.transactions.slice(0, 3).map(t => (
-                    <div key={t.id} className="text-sm text-slate-800 py-1 hover:text-blue-600 cursor-pointer">{t.transaction_type} • {formatCurrency(Math.abs(t.amount))}</div>
+                    <div key={t.id} className="text-xs text-slate-800 py-1.5 px-2 rounded-lg hover:bg-slate-50 hover:text-blue-600 cursor-pointer flex justify-between">
+                      <span className="font-medium capitalize">{t.transaction_type}</span>
+                      <span className="font-bold">{formatCurrency(Math.abs(t.amount))}</span>
+                    </div>
                   ))}
                 </div>
+              ) : (
+                <p className="text-xs text-slate-400 py-2">No matching transactions</p>
               )}
             </div>
           )}

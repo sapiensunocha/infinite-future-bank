@@ -150,40 +150,40 @@ export default function NetPositionHome({
       />
 
       {/* ════════════════════════════════════════════════ */}
-      {/* MOBILE — Revolut-style horizontal action strip  */}
+      {/* MOBILE — Clean Action Strip                     */}
       {/* ════════════════════════════════════════════════ */}
-      <div className="md:hidden bg-white/80 backdrop-blur-xl border border-white/60 rounded-[2rem] shadow-xl p-5">
-        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-1">
-          {quickActions.map(({ id, icon: Icon, label, color, action }) => (
-            <button key={id} onClick={action} className="flex flex-col items-center gap-2 shrink-0 active:scale-90 transition-transform">
-              <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center text-white shadow-md`}>
-                <Icon size={22} />
+      <div className="md:hidden bg-white border border-slate-200/80 rounded-2xl shadow-sm p-4">
+        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1">
+          {quickActions.map(({ id, icon: Icon, label, action }) => (
+            <button key={id} onClick={action} className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95 transition-transform group">
+              <div className="w-12 h-12 rounded-xl bg-slate-50 group-hover:bg-blue-50/60 border border-slate-200/70 flex items-center justify-center text-slate-700 group-hover:text-blue-600 transition-colors">
+                <Icon size={20} />
               </div>
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-wide whitespace-nowrap">{label}</span>
+              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide whitespace-nowrap">{label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* ════════════════════════════════════════════ */}
-      {/* DESKTOP — original grid quick actions        */}
+      {/* DESKTOP — Grid quick actions                 */}
       {/* ════════════════════════════════════════════ */}
-      <div id="tour-quick-actions" className="hidden md:block bg-white/40 backdrop-blur-2xl border border-white/60 p-5 rounded-[2.5rem] shadow-2xl">
-        <div className="grid grid-cols-7 gap-3">
-          {quickActions.map(({ id, icon: Icon, label, color, action }) => (
+      <div id="tour-quick-actions" className="hidden md:block bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm">
+        <div className="grid grid-cols-7 gap-2.5">
+          {quickActions.map(({ id, icon: Icon, label, action }) => (
             <button
               key={id}
               onClick={action}
-              className={`flex flex-col items-center justify-center gap-3 py-6 rounded-[2.2rem] transition-all duration-300 group border relative overflow-hidden ${
+              className={`flex flex-col items-center justify-center gap-2 py-3.5 px-2 rounded-xl transition-all group border ${
                 id === 'ANALYTICS' && showAnalytics
-                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-2xl scale-95'
-                  : 'bg-white/60 text-slate-700 border-white/80 hover:bg-white hover:shadow-xl hover:scale-105 active:scale-95'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-sm'
               }`}
             >
-              <div className={`transition-transform duration-300 group-hover:-translate-y-1 ${id === 'ANALYTICS' && showAnalytics ? 'text-white' : ''}`}>
-                <Icon size={22} />
+              <div className={`${id === 'ANALYTICS' && showAnalytics ? 'text-white' : 'text-slate-600 group-hover:text-blue-600'}`}>
+                <Icon size={20} />
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest text-center ${id === 'ANALYTICS' && showAnalytics ? 'text-indigo-50' : 'text-slate-500'}`}>
+              <span className={`text-[10px] font-bold uppercase tracking-wider text-center ${id === 'ANALYTICS' && showAnalytics ? 'text-white' : 'text-slate-600'}`}>
                 {label}
               </span>
             </button>
@@ -313,14 +313,13 @@ export default function NetPositionHome({
               <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
               <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
             </button>
-            <button type="button" className="text-left bg-gradient-to-br from-blue-900 to-blue-700 rounded-2xl p-5 md:p-6 border border-blue-500/30 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full active:scale-98" onClick={() => setActiveTab('ACCOUNTS')}>
+            <button type="button" className="text-left bg-white rounded-2xl p-5 md:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full active:scale-98" onClick={() => setActiveTab('ACCOUNTS')}>
               <div className="flex justify-between items-start mb-3 w-full">
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-200 bg-blue-800/50 px-2 py-1 rounded-full border border-blue-500/30">AFR</span>
-                <span className="text-[9px] font-black uppercase tracking-widest text-blue-300/70">Chain 2026</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-100">AFR</span>
+                <span className="text-[10px] font-semibold text-slate-400">Network Token</span>
               </div>
-              <p className="text-blue-200 font-medium text-sm mb-1">AFR Tokens</p>
-              <p className="text-2xl font-black text-white">{(balances.afr_balance || 0).toLocaleString()} <span className="text-sm text-blue-300">AFR</span></p>
-              <p className="text-[10px] text-blue-400 mt-1">{((balances.afr_balance || 0) * 1_000_000).toLocaleString()} uAFR</p>
+              <p className="text-slate-500 font-medium text-sm mb-1">AFR Tokens</p>
+              <p className="text-2xl font-black text-slate-800">{(balances.afr_balance || 0).toLocaleString()} <span className="text-sm font-semibold text-slate-400">AFR</span></p>
             </button>
           </div>
         )}
@@ -331,84 +330,84 @@ export default function NetPositionHome({
       {/* ════════════════════════════════════════════ */}
       {setActiveAppPopup && (
         <div className="space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Financial Protection</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Services & Protection</h3>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setActiveAppPopup('PENSION_FUND')}
-              className="flex flex-col items-start gap-3 p-5 rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-md active:scale-95 transition-all"
+              className="flex flex-col items-start gap-2.5 p-4 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-sm text-slate-800 transition-all text-left shadow-xs"
             >
-              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
-                <TrendingUp size={20} />
+              <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center border border-blue-100/60">
+                <TrendingUp size={18} />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-wide">IFB Pension</p>
-                <p className="text-[10px] text-blue-200 mt-0.5">7% annual growth</p>
+                <p className="text-xs font-bold text-slate-900">IFB Pension</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Retirement & growth</p>
               </div>
             </button>
             <button
               onClick={() => setActiveAppPopup('AGRI_SHIELD')}
-              className="flex flex-col items-start gap-3 p-5 rounded-[1.5rem] bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-md active:scale-95 transition-all"
+              className="flex flex-col items-start gap-2.5 p-4 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-sm text-slate-800 transition-all text-left shadow-xs"
             >
-              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
-                <Leaf size={20} />
+              <div className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center border border-emerald-100/60">
+                <Leaf size={18} />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-wide">AgriShield</p>
-                <p className="text-[10px] text-emerald-200 mt-0.5">Farm insurance</p>
+                <p className="text-xs font-bold text-slate-900">AgriShield</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Agricultural protection</p>
               </div>
             </button>
           </div>
           <button
             onClick={() => setActiveAppPopup('DEUS_MARKET')}
-            className="w-full flex items-center gap-4 p-5 rounded-[1.5rem] bg-gradient-to-r from-slate-900 to-blue-900 text-white shadow-md active:scale-95 transition-all"
+            className="w-full flex items-center gap-3.5 p-4 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-sm text-slate-800 transition-all shadow-xs"
           >
-            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-              <ShoppingBag size={20} />
+            <div className="w-9 h-9 bg-slate-50 text-slate-700 rounded-lg flex items-center justify-center border border-slate-200/70">
+              <ShoppingBag size={18} />
             </div>
-            <div className="text-left">
-              <p className="text-xs font-black uppercase tracking-wide">DEUS Market</p>
-              <p className="text-[10px] text-slate-300 mt-0.5">Shop & get delivered anywhere</p>
+            <div className="text-left flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-900">DEUS Marketplace</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Verified products & direct merchant checkout</p>
             </div>
-            <ChevronRight size={16} className="text-slate-400 ml-auto" />
+            <ChevronRight size={16} className="text-slate-400" />
           </button>
         </div>
       )}
 
       {/* ════════════════════════════════════════════ */}
-      {/* MOBILE — Recent Activity feed (Revolut-style)*/}
+      {/* MOBILE — Recent Activity feed                */}
       {/* ════════════════════════════════════════════ */}
       {recentTxs.length > 0 && (
-        <div className="md:hidden bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-700">{t('home.recentActivity')}</h3>
+        <div className="md:hidden bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
+            <h3 className="text-xs font-bold text-slate-900">{t('home.recentActivity')}</h3>
             <button
               onClick={() => setActiveTab('TRANSACTIONS')}
-              className="flex items-center gap-1 text-blue-600 text-[10px] font-black uppercase tracking-widest"
+              className="flex items-center gap-1 text-blue-600 text-xs font-semibold"
             >
               {t('home.seeAll')} <ChevronRight size={13} />
             </button>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-slate-100">
             {recentTxs.map((tx) => {
               const { Icon, color } = txIcon(tx);
               const isPos = tx.amount > 0;
               const label = tx.description || tx.transaction_type || 'Transaction';
               const dateStr = new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
               return (
-                <div key={tx.id} className="flex items-center gap-4 px-5 py-3.5 active:bg-slate-50 transition-colors">
-                  <div className={`w-11 h-11 rounded-2xl ${color} flex items-center justify-center shrink-0`}>
-                    <Icon size={18} />
+                <div key={tx.id} className="flex items-center gap-3 px-4 py-3 active:bg-slate-50 transition-colors">
+                  <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center shrink-0`}>
+                    <Icon size={16} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-800 capitalize truncate">{label}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{dateStr}</p>
+                    <p className="text-xs font-bold text-slate-800 capitalize truncate">{label}</p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">{dateStr}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={`text-sm font-black ${isPos ? 'text-emerald-600' : 'text-slate-800'}`}>
+                    <p className={`text-xs font-bold ${isPos ? 'text-emerald-600' : 'text-slate-900'}`}>
                       {isPos ? '+' : ''}{formatCurrency(tx.amount)}
                     </p>
-                    <div className={`text-[8px] font-black uppercase tracking-wide mt-0.5 ${
-                      tx.status === 'completed' ? 'text-emerald-400' : tx.status === 'pending' ? 'text-amber-400' : 'text-red-400'
+                    <div className={`text-[8px] font-bold uppercase tracking-wider mt-0.5 ${
+                      tx.status === 'completed' ? 'text-emerald-500' : tx.status === 'pending' ? 'text-amber-500' : 'text-red-500'
                     }`}>{tx.status}</div>
                   </div>
                 </div>

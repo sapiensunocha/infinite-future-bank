@@ -319,7 +319,7 @@ export default function Dashboard({ session, onSignOut }) {
           isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}
           activeTab={activeTab} setActiveTab={setActiveTab}
           onSignOut={onSignOut} t={t} commercialProfile={commercialProfile}
-          onOpenAdmin={() => setShowAdmin(true)}
+          onOpenAdmin={['admin', 'admin_l3', 'superadmin'].includes(profile?.role) ? () => setShowAdmin(true) : null}
           supabase={supabase}
         />
         
@@ -504,7 +504,7 @@ export default function Dashboard({ session, onSignOut }) {
              >
                 <X size={20} /> Close Terminal
              </button>
-             <div className="w-full bg-white rounded-[3.5rem] shadow-2xl overflow-hidden border border-white/20">
+             <div className="w-full bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-800">
                <DepositInterface session={session} onClose={() => setShowDepositUI(false)} onSuccess={fetchAllData} />
              </div>
            </div>
@@ -613,7 +613,7 @@ export default function Dashboard({ session, onSignOut }) {
 
       {/* Admin Dashboard */}
       <Suspense fallback={null}>
-        {showAdmin && (
+        {showAdmin && ['admin', 'admin_l3', 'superadmin'].includes(profile?.role) && (
           <AdminDashboard
             session={session}
             profile={profile}

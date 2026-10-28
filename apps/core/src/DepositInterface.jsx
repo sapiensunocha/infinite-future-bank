@@ -391,7 +391,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-[#0B0F19] rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-white/10 p-8 flex flex-col max-h-[95vh]">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-[#0B0F19] rounded-2xl shadow-xl overflow-hidden relative border border-slate-800 p-6 flex flex-col max-h-[90vh]">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/20 blur-[60px] pointer-events-none"></div>
         <button onClick={(e) => { e.preventDefault(); onClose(); }} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors bg-white/5 p-2 rounded-xl border border-white/10 z-50 cursor-pointer">
           <X size={20} />

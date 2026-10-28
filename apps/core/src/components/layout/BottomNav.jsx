@@ -66,12 +66,12 @@ export default function BottomNav({
         <div className="flex flex-col items-center justify-end pb-2 px-3" style={{ marginBottom: 0 }}>
           <button
             onClick={() => setShowTapToPay && setShowTapToPay(true)}
-            className="w-14 h-14 -mt-6 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-900/40 flex items-center justify-center active:scale-90 transition-transform border-4 border-white"
-            style={{ marginTop: '-20px' }}
+            className="w-13 h-13 -mt-6 rounded-full bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 flex items-center justify-center active:scale-95 transition-transform border-4 border-white"
+            style={{ marginTop: '-18px' }}
           >
-            <CreditCard size={22} className="text-white" />
+            <CreditCard size={21} className="text-white" />
           </button>
-          <span className="text-[9px] font-black uppercase tracking-wide text-violet-500 mt-1 leading-none">Tap Card</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 mt-1 leading-none">Pay Card</span>
         </div>
 
         {right.map(item => <NavBtn key={item.id} {...item} />)}

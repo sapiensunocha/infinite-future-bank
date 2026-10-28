@@ -365,55 +365,45 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
       {/* ══════════════════════════════════════════════════════════ */}
       {/*  MOBILE HERO                                               */}
       {/* ══════════════════════════════════════════════════════════ */}
-      <div className="md:hidden relative w-full rounded-[2.2rem] overflow-hidden mb-5 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900" />
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-indigo-300/15 rounded-full blur-2xl" />
-        </div>
-        <div className="relative z-10 p-6 pt-7 pb-6">
+      <div className="md:hidden relative w-full rounded-2xl overflow-hidden mb-5 shadow-md bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 border border-blue-500/30">
+        <div className="relative z-10 p-5 pt-6 pb-5">
           {/* Top row */}
-          <div className="flex items-start justify-between mb-5">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-1.5 mb-1">
                 <TimeIcon size={13} className={iconColor} />
-                <p className="text-blue-200/80 text-[10px] font-black uppercase tracking-[0.18em]">{greeting}</p>
+                <p className="text-blue-200 text-[10px] font-bold uppercase tracking-wider">{greeting}</p>
               </div>
-              <h1 className="text-white text-2xl font-black tracking-tight leading-none">{firstName}</h1>
+              <h1 className="text-white text-xl font-bold tracking-tight leading-none">{firstName}</h1>
             </div>
-            <div className="flex flex-col items-end gap-1.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowBalances(!showBalances)}
-                className="w-10 h-10 bg-white/15 rounded-2xl flex items-center justify-center active:scale-90 transition-transform border border-white/20 shadow-sm"
+                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center active:scale-95 transition-all border border-white/15"
+                aria-label="Toggle balance visibility"
               >
-                {showBalances ? <Eye size={17} className="text-white" /> : <EyeOff size={17} className="text-white" />}
+                {showBalances ? <Eye size={16} className="text-white" /> : <EyeOff size={16} className="text-white" />}
               </button>
-              {localRisk.isLoaded && (
-                <div className={`flex items-center gap-1.5 ${localRisk.bgGlow} border ${localRisk.colorBorder} px-2.5 py-1 rounded-full`}>
-                  <ShieldAlert size={10} className={localRisk.colorText} />
-                  <span className={`text-[9px] font-black uppercase tracking-widest ${localRisk.colorText}`}>{localRisk.label}</span>
-                </div>
-              )}
             </div>
           </div>
 
           {/* Balance */}
-          <div className="mb-2">
-            <p className="text-blue-200/60 text-[9px] font-black uppercase tracking-widest mb-1">Total Portfolio</p>
-            <p className="text-white font-black tracking-tight leading-none" style={{ fontSize: '2.6rem' }}>
+          <div className="mb-3">
+            <p className="text-blue-200/80 text-[10px] font-semibold uppercase tracking-wider mb-1">Total Balance</p>
+            <p className="text-white font-extrabold tracking-tight leading-none text-4xl">
               {showBalances
                 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(totalPortfolio)
                 : '••••••'}
             </p>
           </div>
 
-          {/* Celebration + date */}
-          <div className="flex items-center gap-2 mb-5">
-            <div className="flex items-center gap-1.5 bg-white/15 border border-white/20 px-2.5 py-1 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[9px] font-black text-white uppercase tracking-widest">{celebration}</span>
+          {/* Account status + date */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-1.5 bg-white/10 border border-white/15 px-2.5 py-0.5 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-[9px] font-bold text-white uppercase tracking-wider">Account Active</span>
             </div>
-            <span className="text-blue-200/50 text-[9px] font-bold">
+            <span className="text-blue-200/70 text-[10px] font-medium">
               {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
           </div>
@@ -421,13 +411,13 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
           {/* Balance pills */}
           <div className="flex gap-2">
             {[
-              { label: t('home.cash'),     val: balances?.liquid_usd || 0,         gradient: 'from-white/20 to-white/8' },
-              { label: t('home.invested'), val: balances?.alpha_equity_usd || 0,   gradient: 'from-blue-400/30 to-blue-400/8' },
-              { label: t('home.vault'),    val: balances?.mysafe_digital_usd || 0, gradient: 'from-indigo-400/30 to-indigo-400/8' },
-            ].map(({ label, val, gradient }) => (
-              <div key={label} className={`flex-1 bg-gradient-to-b ${gradient} backdrop-blur-sm rounded-2xl p-3 border border-white/10`}>
-                <p className="text-blue-200/70 text-[8px] font-black uppercase tracking-wide mb-1">{label}</p>
-                <p className="text-white text-sm font-black leading-tight">{fmtCompact(val)}</p>
+              { label: t('home.cash'),     val: balances?.liquid_usd || 0 },
+              { label: t('home.invested'), val: balances?.alpha_equity_usd || 0 },
+              { label: t('home.vault'),    val: balances?.mysafe_digital_usd || 0 },
+            ].map(({ label, val }) => (
+              <div key={label} className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 border border-white/15">
+                <p className="text-blue-200 text-[9px] font-bold uppercase tracking-wider mb-0.5">{label}</p>
+                <p className="text-white text-sm font-bold leading-tight">{fmtCompact(val)}</p>
               </div>
             ))}
           </div>
@@ -437,7 +427,7 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
       {/* ══════════════════════════════════════════════════════════ */}
       {/*  DESKTOP HERO                                              */}
       {/* ══════════════════════════════════════════════════════════ */}
-      <div className="hidden md:block relative w-full rounded-[3rem] overflow-hidden shadow-2xl mb-8 bg-slate-900 border border-white/10 animate-in fade-in zoom-in-95 duration-700">
+      <div className="hidden md:block relative w-full rounded-2xl overflow-hidden shadow-md mb-8 bg-slate-900 border border-slate-800 animate-in fade-in duration-300">
         <div className="absolute inset-0 z-0 bg-slate-900">
           <img src={finalImage} alt={celebration} className="w-full h-full object-cover opacity-80 scale-105 transition-opacity duration-1000"
             crossOrigin="anonymous"

@@ -46,40 +46,41 @@ export default function ProfileDropdown({
               setIsProfileMenuOpen(false); 
             }}
           ></div>
-          <div className="absolute top-full mt-2 right-0 w-64 bg-white/90 backdrop-blur-2xl border border-white/60 shadow-2xl rounded-3xl p-2 z-50 animate-in fade-in slide-in-from-top-4 origin-top-right">
-            <div className="p-4 flex items-center gap-4 border-b border-slate-100 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-slate-200 overflow-hidden flex items-center justify-center">
+          <div className="absolute top-full mt-2 right-0 w-64 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 origin-top-right">
+            <div className="p-3.5 flex items-center gap-3 border-b border-slate-100 mb-1.5">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden flex items-center justify-center shrink-0 border border-slate-200">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="font-black text-slate-400 text-xl">
-                    {profile?.full_name?.charAt(0).toUpperCase() || <User size={24} />}
+                  <span className="font-bold text-slate-500 text-base">
+                    {profile?.full_name?.charAt(0).toUpperCase() || <User size={18} />}
                   </span>
                 )}
               </div>
-              <div>
-                <p className="font-black text-slate-800">{userName}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-sm text-slate-900 truncate">{userName}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   {profile?.active_tier || 'Personal'}
                 </p>
               </div>
             </div>
             
-            <div className="space-y-1">
-              <button onClick={() => { setActiveTab('COMMERCIAL_HUB'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-50 transition-all">
-                <Briefcase size={16} /> Switch to Commercial
+            <div className="space-y-0.5">
+              <button onClick={() => { setActiveTab('COMMERCIAL_HUB'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                <Briefcase size={15} className="text-slate-400" /> Switch to Commercial
               </button>
-              <button onClick={() => { setActiveTab('ACCOUNTS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:bg-indigo-50 transition-all">
-                <Users size={16} /> Link Joint Account
+              <button onClick={() => { setActiveTab('ACCOUNTS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                <Users size={15} className="text-slate-400" /> Link Joint Account
               </button>
-              <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all">
-                <Settings size={16} /> Identity & Legal
+              <button onClick={() => { setActiveTab('SETTINGS'); setSubTab('PROFILE'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                <Settings size={15} className="text-slate-400" /> Settings & Identity
               </button>
-              <button onClick={() => { setActiveTab('SOS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 hover:text-red-600 transition-all">
-                <ShieldCheck size={16} /> Emergency SOS
+              <button onClick={() => { setActiveTab('SOS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                <ShieldCheck size={15} className="text-red-500" /> Emergency SOS
               </button>
-              <button onClick={onSignOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
-                <LogOut size={16} /> Secure Exit
+              <div className="border-t border-slate-100 my-1"></div>
+              <button onClick={onSignOut} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                <LogOut size={15} className="text-slate-400" /> Sign Out
               </button>
             </div>
           </div>
