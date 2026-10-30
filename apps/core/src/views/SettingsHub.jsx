@@ -353,10 +353,11 @@ export default function SettingsHub({
   const handleVerifyPhoneOTP = async () => {
     setPhoneEdit(p => ({ ...p, step: 'verifying' }));
     try {
-      const { error } = await supabase.functions.invoke('verify-otp', {
-        body: { phoneNumber: phoneEdit.number.trim(), code: phoneEdit.otp.trim(), userId: session.user.id },
+      const { data, error } = await supabase.functions.invoke('verify-otp', {
+        body: { phoneNumber: phoneEdit.number.trim(), code: phoneEdit.otp.trim(), mode: 'settings' },
       });
       if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
       setPhoneEdit(p => ({ ...p, step: 'idle' }));
       triggerNotification('success', 'Phone number verified and saved.');
       fetchAllData();

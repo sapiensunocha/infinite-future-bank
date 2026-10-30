@@ -9,7 +9,7 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 // Railway's CDN handles gzip automatically; local server.cjs serves .gz/.br for self-hosted.
 const isRailway = !!process.env.RAILWAY_ENVIRONMENT;
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     ...(!isRailway ? [
@@ -19,6 +19,12 @@ export default defineConfig({
   ],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+  },
+
+  // Strip console.* and debugger from production bundles so PII (emails, balances,
+  // tokens) logged during development never reaches end-user browser consoles.
+  esbuild: {
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
 
   resolve: {
@@ -42,4 +48,4 @@ export default defineConfig({
       external: ['puppeteer'],
     },
   },
-});
+}));

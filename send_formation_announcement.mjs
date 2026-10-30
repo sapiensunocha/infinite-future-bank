@@ -6,7 +6,11 @@
 
 import { execSync } from 'child_process';
 
-const RESEND_KEY = 're_Xhui4Sma_6C33MU1cWQ3sA8USVMTJPgHr';
+const RESEND_KEY = process.env.RESEND_API_KEY;
+if (!RESEND_KEY) {
+  console.error('ERROR: RESEND_API_KEY environment variable is not set. Aborting.');
+  process.exit(1);
+}
 const FROM       = 'IFB <sapiens@infinitefuturebank.org>';
 const DELAY_MS   = 300;
 

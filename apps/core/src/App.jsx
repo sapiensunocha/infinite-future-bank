@@ -433,9 +433,17 @@ function MainApp() {
         throw authError;
       }
 
+      if (authData?.user && !authData.session) {
+        // Email confirmation required: phone is verified after first sign-in (phone gate),
+        // because verify-otp needs an authenticated session.
+        setCurrentView('check_email');
+        showMessage('Account created! Confirm your email, then sign in to verify your phone.', 'success');
+        return;
+      }
+
       if (authData?.user) {
-        // Phone OTP is the primary verification — skip email confirmation flow
-        pendingSessionRef.current = authData.session || { user: authData.user, _pendingUserId: authData.user.id };
+        // Phone OTP verification with the fresh session
+        pendingSessionRef.current = authData.session;
         const { data: otpData, error: otpErr } = await supabase.functions.invoke('send-otp', {
           body: { phoneNumber: phoneValue.trim(), channel: otpChannel },
         });
@@ -559,13 +567,12 @@ function MainApp() {
     try {
       const pending = pendingSessionRef.current;
       const isLoginMode = pending?._loginMode === true;
-      const userId = pending?.user?.id;
 
+      // Register mode is authenticated by the session JWT (sent automatically by invoke).
       const { data: result, error } = await supabase.functions.invoke('verify-otp', {
         body: {
           phoneNumber: phoneValue.trim(),
           code: otpValue.trim(),
-          userId: isLoginMode ? undefined : userId,
           mode: isLoginMode ? 'login' : 'register',
         },
       });
@@ -576,7 +583,7 @@ function MainApp() {
       setOtpValue('');
 
       if (result?.hashed_token) {
-        // Always prefer a real session via hashed_token (login + register both return one now)
+        // Login mode returns a hashed_token to exchange for a session
         const { error: otpErr } = await supabase.auth.verifyOtp({
           token_hash: result.hashed_token,
           type: 'magiclink',

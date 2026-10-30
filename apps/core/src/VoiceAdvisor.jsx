@@ -1,6 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, ShieldCheck, Sparkles, Mic, Zap } from 'lucide-react';
 
+// SECURITY: Gemini Live used to be opened directly from the browser with
+// VITE_GEMINI_API_KEY in the WebSocket URL, which ships the key to every user.
+// TODO(security): build a server-side streaming bridge (e.g. a Cloud Run / edge
+// WebSocket relay that authenticates the Supabase session and holds the Gemini
+// key) and point VITE_VOICE_BRIDGE_URL at it. Until then voice is disabled.
+const VOICE_BRIDGE_URL = import.meta.env.VITE_VOICE_BRIDGE_URL || null;
+
 export default function VoiceAdvisor({ session, balances, profile, onClose }) {
   const [isLive, setIsLive] = useState(false);
   const [volume, setVolume] = useState(0);
@@ -54,6 +61,10 @@ export default function VoiceAdvisor({ session, balances, profile, onClose }) {
 
   // 🎙️ THE SATELLITE CONNECTION (Gemini Live API)
   const startVoiceLink = async () => {
+    if (!VOICE_BRIDGE_URL) {
+      setStatus('Voice AI is currently unavailable.');
+      return;
+    }
     try {
       setStatus('Accessing Satellite Rails...');
       
@@ -79,13 +90,7 @@ export default function VoiceAdvisor({ session, balances, profile, onClose }) {
       sourceRef.current.connect(workletNodeRef.current);
 
       // 2. Establish WebSocket to Gemini Live
-      const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!API_KEY) {
-        setStatus('Voice link requires server-side streaming bridge.');
-        setIsConnecting(false);
-        return;
-      }
-      const URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
+      const URL = VOICE_BRIDGE_URL;
       
       socketRef.current = new WebSocket(URL);
 

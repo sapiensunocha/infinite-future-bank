@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 // ─── Gemini ──────────────────────────────────────────────────────────────────
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// Gemini is reached only via the `agent-chat` edge function; the API key stays server-side.
 
 async function callGemini(prompt) {
   try {
@@ -24,27 +24,9 @@ async function callGemini(prompt) {
     }
   } catch {}
 
-  if (!GEMINI_KEY) return { raw: 'Strategic assessment generated.' };
-
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
-        }),
-      }
-    );
-    const data = await res.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const match = raw.match(/```json\s*([\s\S]*?)```/) || raw.match(/\{[\s\S]*\}/);
-    try { return JSON.parse(match ? (match[1] || match[0]) : raw); } catch { return { raw }; }
-  } catch (err) {
-    return { raw: 'Analysis complete.' };
-  }
+  // SECURITY: the client-side Gemini fallback (VITE_GEMINI_API_KEY) was removed — any VITE_* value
+  // is shipped to every browser. If agent-chat is unavailable, degrade gracefully.
+  return { raw: 'Strategic assessment generated.' };
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────

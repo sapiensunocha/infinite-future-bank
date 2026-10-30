@@ -274,7 +274,7 @@ export default function AccountHub({ session, balances, profile, showBalances })
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('issue-ifb-card', {
-        body: { userId: profile.id, cardName: newCardName, theme: newCardTheme },
+        body: { cardName: newCardName, theme: newCardTheme },
         headers: { Authorization: `Bearer ${session?.access_token}` }
       });
 
@@ -455,7 +455,7 @@ export default function AccountHub({ session, balances, profile, showBalances })
                                {showCardDetails && (
                                  <div className="flex justify-center gap-10 mt-4">
                                     <div><p className="text-[8px] font-black uppercase text-slate-500 mb-1">Expiry</p><p className="text-sm font-black font-mono text-white">{activeCard.expiry}</p></div>
-                                    <div><p className="text-[8px] font-black uppercase text-slate-500 mb-1">CVV</p><p className="text-sm font-black font-mono text-white">{activeCard.cvv}</p></div>
+                                    <div><p className="text-[8px] font-black uppercase text-slate-500 mb-1">CVV</p><p className="text-sm font-black font-mono text-white">{activeCard.cvv || '•••'}</p></div>
                                  </div>
                                )}
                              </div>

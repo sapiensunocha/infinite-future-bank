@@ -1,32 +1,30 @@
 /**
  * face-auth Edge Function
  *
- * Two modes:
- *  - native: verifies SHA-256(rawToken) against profiles.face_auth_token_hash
- *  - web:    trusts client-side descriptor match (comparison done in FaceAuthManager),
- *            issues session for confirmed email
+ * Native mode only: the device sends the raw token from its biometric-protected
+ * keychain; we SHA-256 it and constant-time compare to profiles.face_auth_token_hash.
+ * Web mode is unsupported (a browser-side descriptor match cannot be trusted).
  *
  * On success: calls auth.admin.generateLink({ type:'magiclink', email })
  * Returns:    { token_hash } — client calls supabase.auth.verifyOtp({ token_hash, type:'magiclink' })
  */
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, sha256Hex, timingSafeEqualStr } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' } });
+  // Uniform failure so the endpoint can't be used to probe accounts / enrollment.
+  const denied = () => json({ error: 'Face login failed.' }, 401);
 
   try {
-    const { mode, email, tokenHash } = await req.json();
+    const { mode, email, token } = await req.json();
 
-    if (!mode || !email) {
-      return new Response(JSON.stringify({ error: 'Missing mode or email.' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    if (mode !== 'native') return json({ error: 'unsupported' }, 400);
+    if (typeof email !== 'string' || !email || typeof token !== 'string' || token.length < 32) {
+      return json({ error: 'Missing email or token.' }, 400);
     }
 
     const supabaseAdmin = createClient(
@@ -35,80 +33,39 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // ── NATIVE MODE: verify token hash ────────────────────────────────────────
-    if (mode === 'native') {
-      if (!tokenHash) {
-        return new Response(JSON.stringify({ error: 'Missing tokenHash for native mode.' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, face_login_enabled, face_auth_token_hash')
+      .eq('email_lower', email.toLowerCase())
+      .maybeSingle();
 
-      // Look up the profile by email_lower and verify the hash
-      const { data: profile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('id, face_login_enabled, face_auth_token_hash')
-        .eq('email_lower', email.toLowerCase())
-        .maybeSingle();
-
-      if (profileError || !profile) {
-        return new Response(JSON.stringify({ error: 'Account not found.' }), {
-          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      if (!profile.face_login_enabled) {
-        return new Response(JSON.stringify({ error: 'Face login is not enabled for this account.' }), {
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      if (profile.face_auth_token_hash !== tokenHash) {
-        return new Response(JSON.stringify({ error: 'Biometric token mismatch. Access denied.' }), {
-          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
+    const presentedHash = await sha256Hex(token);
+    if (profileError || !profile || !profile.face_login_enabled || !profile.face_auth_token_hash ||
+        !timingSafeEqualStr(presentedHash, String(profile.face_auth_token_hash).toLowerCase())) {
+      return denied();
     }
 
-    // ── WEB MODE: trust client-side descriptor match, verify face is enabled ──
-    if (mode === 'web') {
-      const { data: profile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('face_login_enabled')
-        .eq('email_lower', email.toLowerCase())
-        .maybeSingle();
+    // Issue the link for the account's own email (from auth), not the request value.
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.admin.getUserById(profile.id);
+    if (userErr || !userData?.user?.email) return denied();
 
-      if (profileError || !profile || !profile.face_login_enabled) {
-        return new Response(JSON.stringify({ error: 'Face login not enabled for this account.' }), {
-          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
-    // ── Generate magic-link session token for the verified user ───────────────
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
-      email: email.toLowerCase(),
+      email: userData.user.email,
       options: {
         redirectTo: Deno.env.get('APP_URL') || 'https://deus.infinitefuturebank.org',
       }
     });
 
     if (linkError || !linkData?.properties?.hashed_token) {
-      console.error('generateLink error:', linkError);
-      return new Response(JSON.stringify({ error: 'Failed to generate secure session.' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      console.error('generateLink error:', linkError?.message);
+      return json({ error: 'Failed to generate secure session.' }, 500);
     }
 
-    return new Response(
-      JSON.stringify({ token_hash: linkData.properties.hashed_token }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return json({ token_hash: linkData.properties.hashed_token });
 
   } catch (err) {
-    console.error('face-auth error:', err);
-    return new Response(JSON.stringify({ error: 'Internal server error.' }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    console.error('face-auth error:', err instanceof Error ? err.message : err);
+    return json({ error: 'Internal server error.' }, 500);
   }
 });

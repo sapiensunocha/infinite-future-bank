@@ -1,20 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { corsHeaders, verifyAdminToken } from "../_shared/auth.ts"
 
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kyc-admin-token',
-}
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
-
-function verifyAdminToken(token: string | null): { email: string; name: string } | null {
-  if (!token) return null
-  try {
-    const payload = JSON.parse(atob(token))
-    if (payload.exp < Date.now()) return null
-    return { email: payload.email, name: payload.name }
-  } catch { return null }
-}
+const json = (req: Request, data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' } })
 
 async function sendOnboardingEmail(founderEmail: string, founderName: string, projectId: string, sector: string) {
   const resendKey = Deno.env.get('RESEND_API_KEY')
@@ -129,11 +117,16 @@ async function sendOnboardingEmail(founderEmail: string, founderName: string, pr
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) })
 
   const token = req.headers.get('x-kyc-admin-token')
-  const admin = verifyAdminToken(token)
-  if (!admin) return json({ error: 'Unauthorized' }, 401)
+  let admin
+  try {
+    admin = await verifyAdminToken(token)
+  } catch {
+    return json(req, { error: 'KYC admin auth not configured' }, 500)
+  }
+  if (!admin) return json(req, { error: 'Unauthorized' }, 401)
 
   try {
     const body = await req.json()
@@ -145,7 +138,7 @@ Deno.serve(async (req) => {
     } = body
 
     if (!founder_email || !founder_name || !project_type || !sector || !business_description || !stage) {
-      return json({ error: 'Missing required fields' }, 400)
+      return json(req, { error: 'Missing required fields' }, 400)
     }
 
     const supabase = createClient(
@@ -195,7 +188,7 @@ Deno.serve(async (req) => {
       .select()
       .single()
 
-    if (projectError) return json({ error: projectError.message }, 500)
+    if (projectError) return json(req, { error: projectError.message }, 500)
 
     // Audit log
     await supabase.from('kyc_admin_audit').insert({
@@ -209,9 +202,9 @@ Deno.serve(async (req) => {
     // Always send branded onboarding email to founder via Resend
     await sendOnboardingEmail(founder_email, founder_name, project.id, sector)
 
-    return json({ success: true, project })
+    return json(req, { success: true, project })
   } catch (err) {
     console.error('kyc-register-project error:', err)
-    return json({ error: 'Server error' }, 500)
+    return json(req, { error: 'Server error' }, 500)
   }
 })

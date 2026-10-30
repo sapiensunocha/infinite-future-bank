@@ -10,24 +10,20 @@ import {
 } from 'lucide-react';
 
 // ─── Gemini ──────────────────────────────────────────────────────────────────
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// Gemini is reached only via the `agent-chat` edge function; the API key stays server-side.
 
 async function callGemini(prompt) {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
-      }),
+  try {
+    const { data, error } = await supabase.functions.invoke('agent-chat', {
+      body: { message: prompt, agentName: 'GTM Strategist' }
+    });
+    if (!error && data?.text) {
+      const raw = data.text;
+      const match = raw.match(/```json\s*([\s\S]*?)```/) || raw.match(/\{[\s\S]*\}/);
+      try { return JSON.parse(match ? (match[1] || match[0]) : raw); } catch { return { raw }; }
     }
-  );
-  const data = await res.json();
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  const match = raw.match(/```json\s*([\s\S]*?)```/) || raw.match(/\{[\s\S]*\}/);
-  try { return JSON.parse(match ? (match[1] || match[0]) : raw); } catch { return { raw }; }
+  } catch {}
+  return { raw: 'AI analysis is temporarily unavailable. Please try again shortly.' };
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────

@@ -36,7 +36,6 @@ const CardForm = ({ session, onClose, onSuccess }) => {
     try {
       const { data, error: backendError } = await supabase.functions.invoke('link-external-card', {
         body: { 
-          userId: session.user.id, 
           stripeToken: token.id,
           last4: token.card.last4,
           brand: token.card.brand

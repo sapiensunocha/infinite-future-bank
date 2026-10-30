@@ -15,8 +15,8 @@ const FALLBACK_BACKGROUNDS = [
   "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&q=80&w=2000"
 ];
 
-const MICHAEL_BASE = 'https://michael-api-382117221028.us-central1.run.app';
-const MICHAEL_KEY  = import.meta.env.VITE_MICHAEL_API_KEY || 'xeltis-prod-key-2026';
+// MICHAEL API is reached only through the `michael-proxy` edge function (see
+// michaelFetch below). The API key lives server-side; never ship it to the client.
 
 // ISO-2 → ISO-3 mapping for MICHAEL API country risk endpoint
 const ISO2_TO_ISO3 = {

@@ -5,36 +5,22 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "npm:stripe@14";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders as buildCors, getAuthedUser } from "../_shared/auth.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2023-10-16",
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 Deno.serve(async (req: Request) => {
+  const corsHeaders = buildCors(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
-  if (authErr || !user) {
+  let user;
+  try {
+    user = await getAuthedUser(req);
+  } catch {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -75,7 +61,13 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const amountUsd = pi.amount / 100;
+  if (pi.currency !== "usd") {
+    return new Response(JSON.stringify({ error: "Unsupported currency" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const amountUsd = pi.amount_received / 100;
 
   // Use service role for balance writes (same as webhook)
   const adminSupabase = createClient(
@@ -83,46 +75,26 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // Idempotency — don't double-credit if webhook already fired
-  const { data: existing } = await adminSupabase
-    .from("transactions")
-    .select("id, amount")
-    .eq("type", "stripe_deposit")
-    .ilike("description", `%${piId}%`)
-    .maybeSingle();
-
-  if (existing) {
+  // Atomic + idempotent credit keyed by PaymentIntent id (shared with stripe-webhook)
+  const { data: credited, error: creditErr } = await adminSupabase.rpc("credit_deposit", {
+    p_user_id: user.id,
+    p_amount: amountUsd,
+    p_currency: "USD",
+    p_external_id: piId,
+    p_source: "stripe",
+  });
+  if (creditErr) {
+    console.error("credit_deposit failed:", piId, creditErr.message);
+    return new Response(JSON.stringify({ error: "Could not credit deposit" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (!credited) {
     return new Response(
-      JSON.stringify({ credited: existing.amount, already_credited: true }),
+      JSON.stringify({ credited: amountUsd, already_credited: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-
-  // Credit balance — upsert handles first-time users
-  const { data: bal } = await adminSupabase
-    .from("balances")
-    .select("liquid_usd")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (bal) {
-    await adminSupabase
-      .from("balances")
-      .update({ liquid_usd: (bal.liquid_usd || 0) + amountUsd })
-      .eq("user_id", user.id);
-  } else {
-    await adminSupabase
-      .from("balances")
-      .insert([{ user_id: user.id, liquid_usd: amountUsd, afr_balance: 0 }]);
-  }
-
-  await adminSupabase.from("transactions").insert([{
-    user_id: user.id,
-    type: "stripe_deposit",
-    amount: amountUsd,
-    description: `Stripe deposit — ${piId}`,
-    status: "completed",
-  }]);
 
   await adminSupabase.from("app_telemetry").insert([{
     event: "stripe_deposit_confirmed_client",

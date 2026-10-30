@@ -1,22 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from "https://esm.sh/stripe@12.0.0?target=deno"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.14.0"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders, getAuthedUser, HttpError, jsonResponse, errorResponse } from "../_shared/auth.ts"
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2022-11-15',
   httpClient: Stripe.createFetchHttpClient(),
 })
 
+function clientIpFrom(req: Request): string | null {
+  const raw = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || ''
+  const ip = raw.split(',')[0].trim()
+  if (!ip || ip === '127.0.0.1' || ip === '::1') return null
+  return ip
+}
+
 serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) })
 
   try {
-    const { userId, stripeToken, last4, brand } = await req.json()
+    // Identity from the JWT; any userId in the body is ignored.
+    const user = await getAuthedUser(req)
+    const { stripeToken, last4, brand } = await req.json()
+    if (typeof stripeToken !== 'string' || !stripeToken.startsWith('tok_')) {
+      throw new HttpError(400, 'Invalid card token')
+    }
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -26,39 +34,30 @@ serve(async (req: Request) => {
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('stripe_account_id, email, full_name')
-      .eq('id', userId)
+      .eq('id', user.id)
       .single()
 
     let stripeAccountId = profile?.stripe_account_id
 
     // IF THEY DON'T HAVE A STRIPE IDENTITY, CREATE IT WITH COMPLIANCE DATA
     if (!stripeAccountId) {
-      // 1. Robust IP Extraction
-      let clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '';
-      
-      // If it's a list of IPs, grab the first one
-      if (clientIp.includes(',')) {
-        clientIp = clientIp.split(',')[0].trim();
-      }
-      
-      // If no valid public IP is found, use a safe fallback to pass strict regex
-      if (!clientIp || clientIp === '127.0.0.1' || clientIp === '::1') {
-        clientIp = '198.51.100.1'; 
-      }
+      // ToS acceptance must carry the user's real IP — never a fabricated fallback.
+      const clientIp = clientIpFrom(req)
+      if (!clientIp) throw new HttpError(400, 'Unable to record Terms of Service acceptance (no client IP).')
 
       const account = await stripe.accounts.create({
         type: 'custom',
         country: 'US',
-        email: profile?.email,
+        email: profile?.email ?? user.email,
         business_profile: { name: profile?.full_name || 'DEUS Member' },
         capabilities: {
           transfers: { requested: true },
         },
-        // 2. Terms of Service Acceptance
         tos_acceptance: {
           date: Math.floor(Date.now() / 1000),
           ip: clientIp,
         },
+        metadata: { user_id: user.id },
       })
       
       stripeAccountId = account.id
@@ -66,7 +65,7 @@ serve(async (req: Request) => {
       await supabaseAdmin
         .from('profiles')
         .update({ stripe_account_id: stripeAccountId })
-        .eq('id', userId)
+        .eq('id', user.id)
     }
 
     // ATTACH THE CARD
@@ -75,27 +74,20 @@ serve(async (req: Request) => {
       { external_account: stripeToken }
     )
 
-    // RECORD IN DEUS
+    // RECORD IN DEUS (use Stripe's view of the card, not client-supplied values)
+    const ext = externalAccount as { brand?: string; last4?: string }
     await supabaseAdmin
       .from('linked_cards')
       .insert({
-        user_id: userId,
+        user_id: user.id,
         stripe_external_account_id: externalAccount.id,
-        brand: brand,
-        last4: last4
+        brand: ext.brand ?? brand,
+        last4: ext.last4 ?? last4
       })
 
-    return new Response(JSON.stringify({ success: true, cardId: externalAccount.id }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    return jsonResponse(req, { success: true, cardId: externalAccount.id })
 
   } catch (error) {
-    console.error("Card Vaulting Error:", error)
-    const errorMessage = error instanceof Error ? error.message : "Failed to securely vault card"
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+    return errorResponse(req, error)
   }
 })

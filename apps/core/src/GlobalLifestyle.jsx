@@ -32,7 +32,7 @@ export default function GlobalLifestyle({ session, profile, balances }) {
   // --- REQUIREMENT: GLOBAL NOTIFICATION RULE ---
   const triggerGlobalActionNotification = (type, message) => {
     setNotification({ type, text: message });
-    console.log(`System Event: ${message}. Dispatching In-App Alert and Email to ${session?.user?.email}`);
+    console.log(`System Event: ${message}. Dispatching In-App Alert and Email to user.`);
     setTimeout(() => setNotification(null), 6000);
   };
 

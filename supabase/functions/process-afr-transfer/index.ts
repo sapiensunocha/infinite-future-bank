@@ -1,55 +1,59 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { corsHeaders, getAuthedUser, parseAmount, HttpError, jsonResponse, errorResponse } from "../_shared/auth.ts"
 
-// CORS Headers allow your Deus App (Next.js/React) to call this function securely
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
+// AFR transfer. Rules:
+//  - identity from the JWT, amount validated by parseAmount
+//  - the AIVS node must accept the tx; if it is unreachable / rejects, NOTHING is committed
+//  - internal receivers: the locked p2p_transfer(sender, receiver, amount, 'AFR') RPC
+//  - external receivers: guarded compare-and-swap debit of the sender's afr_balance
 Deno.serve(async (req) => {
-  // 1. Handle CORS Preflight request from the browser
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders(req) })
   }
 
   try {
+    const user = await getAuthedUser(req)
     const { receiver_address, amount } = await req.json()
-    const transferAmount = parseFloat(amount)
+    const transferAmount = parseAmount(amount)
+    if (typeof receiver_address !== 'string' || !/^[A-Za-z0-9:._-]{8,128}$/.test(receiver_address)) {
+      throw new HttpError(400, 'Invalid receiver address')
+    }
 
-    // 2. Initialize Supabase Admin Client (Required to securely update balances)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
-
-    // 3. Authenticate the User making the request
-    const authHeader = req.headers.get('Authorization')!
-    const supabaseAuth = createClient(
+    // User-scoped client so p2p_transfer's auth.uid() check applies
+    const supabaseUser = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     )
-    
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser()
-    if (userError || !user) throw new Error("Institutional Access Denied: Invalid Auth Token")
 
-    // 4. Verify Sender's Balance and Wallet
+    // Verify Sender's Balance and Wallet
     const { data: senderData, error: senderError } = await supabaseAdmin
       .from('balances')
       .select('afr_wallet_address, afr_balance')
       .eq('user_id', user.id)
       .single()
 
-    if (senderError || !senderData.afr_wallet_address) {
-      throw new Error("Sender AFR Wallet not initialized")
+    if (senderError || !senderData?.afr_wallet_address) {
+      throw new HttpError(400, "Sender AFR Wallet not initialized")
     }
-    if (senderData.afr_balance < transferAmount) {
-      throw new Error("Insufficient AFR Liquidity")
+    if (Number(senderData.afr_balance) < transferAmount) {
+      throw new HttpError(400, "Insufficient AFR Liquidity")
+    }
+    if (receiver_address === senderData.afr_wallet_address) {
+      throw new HttpError(400, "Cannot transfer to your own wallet")
     }
 
-    // ====================================================================
-    // 5. THE SOVEREIGN BRIDGE: Send Transaction to the Go Node
-    // ====================================================================
+    const { data: receiverData } = await supabaseAdmin
+      .from('balances')
+      .select('user_id')
+      .eq('afr_wallet_address', receiver_address)
+      .maybeSingle()
+
+    // THE SOVEREIGN BRIDGE: node must confirm before we commit anything
     const txPayload = {
         from: senderData.afr_wallet_address,
         to: receiver_address,
@@ -57,57 +61,51 @@ Deno.serve(async (req) => {
         token: "AFR",
         memo: "Deus App Transfer - Institutional Edge"
     }
-
-    let nodeSynced = false;
+    let nodeOk = false
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 3500);
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 5000)
       const nodeResponse = await fetch('http://35.238.28.158:8545', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(txPayload),
           signal: controller.signal
-      });
-      clearTimeout(timer);
-      if (nodeResponse.ok) {
-        nodeSynced = true;
-      } else {
-        console.warn("External AIVS node non-200 response, falling back to sovereign DB consensus");
-      }
+      })
+      clearTimeout(timer)
+      nodeOk = nodeResponse.ok
     } catch (nodeErr) {
-      console.warn("External AIVS node unreachable/timed out, falling back to sovereign DB consensus:", nodeErr?.message || nodeErr);
+      console.warn("AIVS node unreachable:", nodeErr instanceof Error ? nodeErr.message : nodeErr)
+    }
+    if (!nodeOk) throw new HttpError(503, "AFR network unavailable. No funds were moved; please retry later.")
+
+    if (receiverData?.user_id) {
+      const { data: result, error: rpcError } = await supabaseUser.rpc('p2p_transfer', {
+        sender_id: user.id,
+        receiver_id: receiverData.user_id,
+        transfer_amount: transferAmount,
+        p_asset: 'AFR',
+      })
+      if (rpcError || !result?.success) {
+        console.error('CRITICAL: node accepted AFR tx but DB transfer failed', rpcError?.message ?? result?.error)
+        throw new HttpError(409, result?.error ?? 'Transfer failed')
+      }
+    } else {
+      // External address: compare-and-swap so concurrent requests can't double-spend
+      const current = Number(senderData.afr_balance)
+      const { data: updated, error: updError } = await supabaseAdmin
+        .from('balances')
+        .update({ afr_balance: Math.round((current - transferAmount) * 1e6) / 1e6 })
+        .eq('user_id', user.id)
+        .eq('afr_balance', senderData.afr_balance)
+        .gte('afr_balance', transferAmount)
+        .select('user_id')
+      if (updError || !updated?.length) {
+        console.error('CRITICAL: node accepted AFR tx but guarded debit failed', updError?.message)
+        throw new HttpError(409, 'Balance changed during transfer; please retry')
+      }
     }
 
-    // Generate a cryptographic receipt hash for the database
     const txHash = "0x" + crypto.randomUUID().replace(/-/g, '')
-
-    // ====================================================================
-    // 6. UPDATE THE ACCOUNTING DASHBOARD (Supabase)
-    // ====================================================================
-    
-    // Deduct from Sender
-    const newSenderBalance = parseFloat(senderData.afr_balance) - transferAmount
-    await supabaseAdmin
-      .from('balances')
-      .update({ afr_balance: newSenderBalance })
-      .eq('user_id', user.id)
-      
-    // Find Receiver and Add Balance (if they exist in your DB)
-    const { data: receiverData } = await supabaseAdmin
-      .from('balances')
-      .select('user_id, afr_balance')
-      .eq('afr_wallet_address', receiver_address)
-      .single()
-      
-    if (receiverData) {
-        const newReceiverBalance = parseFloat(receiverData.afr_balance) + transferAmount
-        await supabaseAdmin
-          .from('balances')
-          .update({ afr_balance: newReceiverBalance })
-          .eq('user_id', receiverData.user_id)
-    }
-
-    // Log the transaction for the UI History
     await supabaseAdmin.from('afr_transactions').insert({
         sender_id: user.id,
         receiver_address: receiver_address,
@@ -116,20 +114,13 @@ Deno.serve(async (req) => {
         status: 'CONFIRMED'
     })
 
-    // 7. Return Success to Deus App
-    return new Response(
-      JSON.stringify({ 
-          status: 'SUCCESS', 
-          message: 'AFR Transfer Confirmed on Mainnet',
-          tx_hash: txHash 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    )
+    return jsonResponse(req, {
+        status: 'SUCCESS',
+        message: 'AFR Transfer Confirmed on Mainnet',
+        tx_hash: txHash
+    })
 
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+    return errorResponse(req, error)
   }
 })

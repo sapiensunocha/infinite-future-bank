@@ -7,7 +7,7 @@ import {
   BarChart2, Users, DollarSign, Target
 } from 'lucide-react';
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// Gemini is reached only via the `agent-chat` edge function; the API key stays server-side.
 
 const SECTORS = [
   { id: 'Tech',            icon: '💻', color: 'blue'   },
@@ -79,22 +79,9 @@ Respond in plain text, no markdown, no bullet points.`;
     if (!error && data?.text) return data.text;
   } catch {}
 
-  if (!GEMINI_KEY) return null;
-
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      }
-    );
-    const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-  } catch {
-    return null;
-  }
+  // SECURITY: the client-side Gemini fallback (VITE_GEMINI_API_KEY) was removed — any VITE_* value
+  // is shipped to every browser. If agent-chat is unavailable, degrade gracefully.
+  return null;
 }
 
 // ── Application Form ──────────────────────────────────────────────────────────

@@ -8,15 +8,15 @@
 //   5. Sends confirmation email to the user
 //   6. Marks the order as completed
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders as buildCors, getAuthedUser } from "../_shared/auth.ts";
 
 const SUPABASE_URL  = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const RESEND_KEY    = Deno.env.get("EMAIL_API_KEY") ?? "";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// Proof images must be a path inside our receipts bucket — never an arbitrary URL.
+const RECEIPTS_BUCKET = Deno.env.get("RECEIPTS_BUCKET") ?? "receipts";
+const SAFE_PATH = /^[A-Za-z0-9_\-]+(\/[A-Za-z0-9_\-]+)*\.(png|jpe?g|webp|pdf)$/i;
 
 async function sendConfirmEmail(to: string, name: string, amount: number, network: string) {
   if (!RESEND_KEY || !to) return;
@@ -48,22 +48,14 @@ async function sendConfirmEmail(to: string, name: string, amount: number, networ
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCors(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-  const userSb = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
-    global: { headers: { Authorization: authHeader } },
-  });
 
-  const { data: { user }, error: authErr } = await userSb.auth.getUser();
-  if (authErr || !user) {
+  let user;
+  try { user = await getAuthedUser(req); }
+  catch {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -76,6 +68,11 @@ Deno.serve(async (req) => {
   const { order_id, proof_image_url, notes } = body;
   if (!order_id) {
     return new Response(JSON.stringify({ error: "order_id required" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (proof_image_url && (!SAFE_PATH.test(proof_image_url) || proof_image_url.includes(".."))) {
+    return new Response(JSON.stringify({ error: "proof_image_url must be a path in the receipts bucket" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -143,16 +140,27 @@ Deno.serve(async (req) => {
   const totalCommissionPct = commissionPct + tierBonus;
   const commissionUsd      = parseFloat((amountUsd * totalCommissionPct / 100).toFixed(4));
 
-  // 1. Credit user's liquid_usd balance
-  const { data: bal } = await sb.from("balances").select("liquid_usd, afr_balance").eq("user_id", order.user_id).maybeSingle();
-  if (bal) {
-    await sb.from("balances")
-      .update({ liquid_usd: (bal.liquid_usd ?? 0) + amountUsd })
-      .eq("user_id", order.user_id);
-  } else {
-    await sb.from("balances")
-      .insert([{ user_id: order.user_id, liquid_usd: amountUsd, afr_balance: 0 }]);
+  // 1. Credit user's liquid_usd balance — atomic + idempotent per order, so a
+  //    double-click / concurrent confirm can't credit twice.
+  const { data: credited, error: creditErr } = await sb.rpc("credit_deposit", {
+    p_user_id: order.user_id,
+    p_amount: amountUsd,
+    p_currency: "USD",
+    p_external_id: `p2p:${order_id}`,
+    p_source: "p2p_processor",
+  });
+  if (creditErr) {
+    console.error("credit_deposit failed:", order_id, creditErr.message);
+    return new Response(JSON.stringify({ error: "Could not credit deposit" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
+  if (!credited) {
+    return new Response(JSON.stringify({ error: "Order already completed" }), {
+      status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: bal } = await sb.from("balances").select("afr_balance").eq("user_id", order.user_id).maybeSingle();
 
   // 2. Auto-mint AFR tokens
   try {
@@ -176,15 +184,7 @@ Deno.serve(async (req) => {
     console.warn("AFR mint error (non-blocking):", e);
   }
 
-  // 3. Record user transaction
-  await sb.from("transactions").insert([{
-    user_id:          order.user_id,
-    transaction_type: "p2p_deposit",
-    amount:           amountUsd,
-    description:      `P2P deposit via ${order.network ?? order.payment_method} — confirmed by processor`,
-    status:           "completed",
-    metadata:         { order_id, processor_id: user.id, network: order.network },
-  }]);
+  // 3. (user transaction is recorded by credit_deposit)
 
   // 4. Record processor commission
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -219,12 +219,16 @@ Deno.serve(async (req) => {
     })
     .eq("user_id", user.id);
 
-  // Also credit processor commission to their liquid_usd
-  const { data: procBal } = await sb.from("balances").select("liquid_usd").eq("user_id", user.id).maybeSingle();
-  if (procBal) {
-    await sb.from("balances")
-      .update({ liquid_usd: (procBal.liquid_usd ?? 0) + commissionUsd })
-      .eq("user_id", user.id);
+  // Also credit processor commission to their liquid_usd (idempotent per order)
+  if (commissionUsd > 0) {
+    const { error: commErr } = await sb.rpc("credit_deposit", {
+      p_user_id: user.id,
+      p_amount: Math.round(commissionUsd * 100) / 100,
+      p_currency: "USD",
+      p_external_id: `p2p-commission:${order_id}`,
+      p_source: "p2p_commission",
+    });
+    if (commErr) console.error("commission credit failed:", order_id, commErr.message);
   }
 
   // 6. Mark order as completed
@@ -234,7 +238,7 @@ Deno.serve(async (req) => {
     response_time_s: responseTimeSec,
     commission_pct:  totalCommissionPct,
     commission_usd:  commissionUsd,
-    ...(proof_image_url ? { proof_image_url } : {}),
+    ...(proof_image_url ? { proof_image_url: `${RECEIPTS_BUCKET}/${proof_image_url}` } : {}),
     ai_verification_status: "verified",
   }).eq("id", order_id);
 
