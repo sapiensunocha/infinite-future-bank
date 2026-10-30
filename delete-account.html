@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delete Account — DEUS | Infinite Future Bank</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e8;
+      line-height: 1.7;
+    }
+    header {
+      background: #12121a;
+      border-bottom: 1px solid #2a2a3a;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header .logo {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+    header .logo span:nth-child(1) { color: #1E40AF; }
+    header .logo span:nth-child(2) { color: #2563EB; }
+    header .logo span:nth-child(3) { color: #0D9488; }
+    header .logo span:nth-child(4) { color: #10B981; }
+    header .sub {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #aaaacc;
+      letter-spacing: 0.02em;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+    .meta {
+      font-size: 0.875rem;
+      color: #7070a0;
+      margin-bottom: 36px;
+    }
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #c0c0e8;
+      margin-top: 36px;
+      margin-bottom: 10px;
+    }
+    p { margin-bottom: 14px; color: #b0b0c8; }
+    ul { margin: 10px 0 14px 20px; color: #b0b0c8; }
+    ul li { margin-bottom: 6px; }
+    a { color: #7b7bff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .steps {
+      counter-reset: steps;
+      list-style: none;
+      margin-left: 0;
+      padding: 0;
+    }
+    .steps li {
+      counter-increment: steps;
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      color: #b0b0c8;
+    }
+    .steps li::before {
+      content: counter(steps);
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      background: #1e1e38;
+      border: 1px solid #3a3a5a;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem;
+      color: #9090d8;
+      margin-top: 2px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 0.9rem;
+    }
+    .table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: #14141f;
+      color: #9090c0;
+      border-bottom: 1px solid #2a2a3a;
+      font-weight: 600;
+    }
+    .table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1e1e2e;
+      color: #b0b0c8;
+      vertical-align: top;
+    }
+    .table tr:last-child td { border-bottom: none; }
+    .deleted { color: #f44; }
+    .kept    { color: #fa0; }
+
+    .cta {
+      display: inline-block;
+      margin-top: 8px;
+      background: #1e1e38;
+      border: 1px solid #3a3a5a;
+      border-radius: 10px;
+      padding: 16px 22px;
+      font-size: 0.95rem;
+      color: #c0c0e8;
+      line-height: 1.8;
+    }
+    .cta strong { color: #ffffff; }
+
+    footer {
+      text-align: center;
+      padding: 32px;
+      font-size: 0.8rem;
+      color: #505070;
+      border-top: 1px solid #1a1a28;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>D</span><span>E</span><span>U</span><span>S</span>
+  </div>
+  <div class="sub">— Infinite Future Bank</div>
+</header>
+
+<div class="container">
+  <h1>Delete Your Account</h1>
+  <p class="meta">DEUS by World Disaster Center WDC Inc. &nbsp;|&nbsp; Last updated: September 28, 2026</p>
+
+  <p>
+    You have the right to request deletion of your DEUS account and the personal data
+    associated with it. Please read the steps below and review which data will be deleted
+    or retained before submitting your request.
+  </p>
+
+  <div style="background: rgba(37,99,235,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 20px; margin: 24px 0;">
+    <h3 style="color: #60a5fa; font-size: 1rem; margin-bottom: 8px;">Instant In-App Self-Service Deletion</h3>
+    <p style="font-size: 0.9rem; margin-bottom: 14px;">If you have active account credentials, you can delete your account immediately without waiting for manual processing:</p>
+    <a href="/delete-account" style="display: inline-block; background: #dc2626; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; text-decoration: none;">Delete Account Directly In DEUS</a>
+  </div>
+
+  <h2>How to Request Account Deletion via Email</h2>
+
+  <ul class="steps">
+    <li>
+      <div>
+        <strong>Send an email to <a href="mailto:office@worlddisastercenter.org">office@worlddisastercenter.org</a></strong>
+        with the subject line: <em>"DEUS Account Deletion Request"</em>.
+      </div>
+    </li>
+    <li>
+      <div>
+        Include your <strong>full name</strong> and the <strong>email address</strong>
+        registered to your DEUS account so we can locate and verify your identity.
+      </div>
+    </li>
+    <li>
+      <div>
+        We will confirm receipt within <strong>5 business days</strong> and complete
+        the deletion within <strong>30 days</strong>, except where legal retention
+        obligations apply (see table below).
+      </div>
+    </li>
+  </ul>
+
+  <div class="cta">
+    <strong>Email:</strong> <a href="mailto:office@worlddisastercenter.org">office@worlddisastercenter.org</a><br />
+    <strong>Subject:</strong> DEUS Account Deletion Request<br />
+    <strong>Include:</strong> Your full name + registered email address
+  </div>
+
+  <h2>What Data Is Deleted vs. Retained</h2>
+  <p>
+    Some data must be retained for a period after deletion due to applicable financial
+    regulations and anti-money-laundering (AML) laws.
+  </p>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Data Type</th>
+        <th>Action</th>
+        <th>Retention Period</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Account profile (name, email, phone)</td>
+        <td class="deleted">Deleted</td>
+        <td>None — deleted upon request</td>
+      </tr>
+      <tr>
+        <td>Device &amp; usage data (IP, app activity)</td>
+        <td class="deleted">Deleted</td>
+        <td>None — deleted upon request</td>
+      </tr>
+      <tr>
+        <td>Support messages and in-app communications</td>
+        <td class="deleted">Deleted</td>
+        <td>None — deleted upon request</td>
+      </tr>
+      <tr>
+        <td>KYC / identity documents (passport, national ID)</td>
+        <td class="kept">Retained</td>
+        <td>Up to 7 years (AML / regulatory requirement)</td>
+      </tr>
+      <tr>
+        <td>Transaction history and financial records</td>
+        <td class="kept">Retained</td>
+        <td>Minimum 5 years (financial regulation requirement)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    After the mandatory retention period expires, all remaining data will be
+    permanently deleted. You will receive email confirmation once deletion is complete.
+  </p>
+
+  <h2>Questions</h2>
+  <p>
+    For any questions about your data or this process, contact us at
+    <a href="mailto:office@worlddisastercenter.org">office@worlddisastercenter.org</a>.
+    We will respond within 30 days as required by applicable data protection law.
+  </p>
+</div>
+
+<footer>
+  &copy; 2026 World Disaster Center WDC Inc. — Infinite Future Bank. All rights reserved.
+</footer>
+
+</body>
+</html>

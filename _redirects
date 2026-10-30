@@ -1,0 +1,6 @@
+# DEUS SPA redirect rules
+# All HTML routes served via React Router — index.html handles routing
+
+/delete-account   /delete-account.html  200
+/privacy          /index.html           200
+/*                /index.html           200
