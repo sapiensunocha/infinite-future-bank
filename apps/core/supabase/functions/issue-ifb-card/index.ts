@@ -1,26 +1,31 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { corsHeaders, getAuthedUser, HttpError, jsonResponse, errorResponse } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// SECURITY: the CVV is NEVER stored.
+// TODO(PCI): move issuing to Stripe Issuing and store only last4 + the issuer's card
+// token. The PAN is still stored because ifb-charge-card and the card UI depend on it.
 
-// 🛡️ Cryptographically Secure Number Generator
+// 🛡️ Cryptographically Secure Number Generator (rejection sampling, no modulo bias)
 function generateSecureDigits(length: number): string {
-  const randomValues = new Uint32Array(length);
-  crypto.getRandomValues(randomValues);
-  return Array.from(randomValues, num => (num % 10).toString()).join('');
+  const out: string[] = [];
+  while (out.length < length) {
+    const buf = crypto.getRandomValues(new Uint8Array(length));
+    for (const b of buf) if (b < 250 && out.length < length) out.push(String(b % 10));
+  }
+  return out.join('');
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
 
   try {
-    const { userId, cardName, theme } = await req.json();
+    // Identity from the JWT; any userId in the body is ignored.
+    const user = await getAuthedUser(req);
+    const { cardName, theme } = await req.json();
 
-    if (!userId || !cardName) {
-      throw new Error("Missing required telemetry for card issuance.");
+    if (!cardName) {
+      throw new HttpError(400, "Missing required telemetry for card issuance.");
     }
 
     const supabaseAdmin = createClient(
@@ -30,52 +35,43 @@ serve(async (req) => {
 
     // 1. Generate PAN (16 digits: 4092 + 12 secure random digits)
     const bin = "4092"; 
-    const secureAccountNum = generateSecureDigits(12);
-    const pan = `${bin}${secureAccountNum}`;
+    const pan = `${bin}${generateSecureDigits(12)}`;
 
-    // 2. Generate Expiry (Between 3 and 5 years from today)
-    const currentYear = new Date().getFullYear();
-    const expiryYear = currentYear + 3 + (crypto.getRandomValues(new Uint8Array(1))[0] % 3);
-    const expiryMonth = (1 + (crypto.getRandomValues(new Uint8Array(1))[0] % 12)).toString().padStart(2, '0');
-    const expiry = `${expiryMonth}/${expiryYear.toString().slice(-2)}`;
+    // 2. Expiry: now + 4 years
+    const exp = new Date();
+    exp.setUTCFullYear(exp.getUTCFullYear() + 4);
+    const expiry = `${String(exp.getUTCMonth() + 1).padStart(2, '0')}/${String(exp.getUTCFullYear()).slice(-2)}`;
 
-    // 3. Generate CVV (3 secure digits)
-    const cvv = generateSecureDigits(3);
-
-    // 4. Generate Internal Network ID
+    // 3. Generate Internal Network ID
     const networkId = `IFB-USR-${pan.slice(-4)}-${generateSecureDigits(4)}`;
 
-    // 5. Securely Insert into Ledger
+    // 4. Insert (no CVV stored)
     const { error: insertError } = await supabaseAdmin
       .from('virtual_cards')
       .insert([{
-        user_id: userId,
+        user_id: user.id,
         network_id: networkId,
         pan: pan,
         expiry: expiry,
-        cvv: cvv,
         name: cardName,
         theme: theme || 'obsidian',
         status: 'ACTIVE'
       }]);
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      console.error('issue-ifb-card insert error:', insertError.message);
+      throw new HttpError(500, 'Card provisioning failed');
+    }
 
     // Return success (We do NOT return the full PAN here for security, only the Network ID and last 4)
-    return new Response(JSON.stringify({ 
-      success: true, 
+    return jsonResponse(req, {
+      success: true,
       networkId: networkId,
       last4: pan.slice(-4),
-      message: "Card provisioned via AES-grade CSPRNG."
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      expiry,
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    return errorResponse(req, error);
   }
 });

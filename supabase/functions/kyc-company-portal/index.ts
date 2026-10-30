@@ -8,7 +8,27 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
 function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  // Rejection sampling keeps the 6-digit code uniform
+  const buf = new Uint32Array(1)
+  const limit = Math.floor(0x100000000 / 900000) * 900000
+  do { crypto.getRandomValues(buf) } while (buf[0] >= limit)
+  return (100000 + (buf[0] % 900000)).toString()
+}
+
+const MAX_OTP_REQUESTS = 3   // per email per 15 min
+const MAX_OTP_FAILURES = 5   // per email per 15 min
+
+async function recentCount(supabase: ReturnType<typeof getSupabase>, table: string, email: string, extra: Record<string, string> = {}) {
+  const since = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+  const emailCol = table === 'kyc_admin_audit' ? 'admin_email' : 'email'
+  let q = supabase.from(table).select('id', { count: 'exact', head: true }).eq(emailCol, email).gte('created_at', since)
+  for (const [k, v] of Object.entries(extra)) q = q.eq(k, v)
+  const { count } = await q
+  return count ?? 0
+}
+
+async function recordOtpFailure(supabase: ReturnType<typeof getSupabase>, email: string) {
+  await supabase.from('kyc_admin_audit').insert({ admin_email: email, action: 'portal_otp_failed', details: {} })
 }
 
 function getSupabase() {
@@ -151,7 +171,11 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (lookupErr) return json({ error: 'Database error' }, 500)
-      if (!project) return json({ error: 'No application found for this email' }, 404)
+      // Same response whether or not the email exists, so founders' emails can't be enumerated
+      if (!project) return json({ sent: true })
+      if (await recentCount(supabase, 'kyc_portal_otps', project.founder_email) >= MAX_OTP_REQUESTS) {
+        return json({ error: 'Too many requests. Try again in 15 minutes.' }, 429)
+      }
 
       // Generate and store OTP
       const code = generateOtp()
@@ -176,6 +200,9 @@ Deno.serve(async (req) => {
 
       const supabase = getSupabase()
       const now = new Date().toISOString()
+      if (await recentCount(supabase, 'kyc_admin_audit', email.trim().toLowerCase(), { action: 'portal_otp_failed' }) >= MAX_OTP_FAILURES) {
+        return json({ error: 'Too many attempts. Try again in 15 minutes.' }, 429)
+      }
 
       // Find valid OTP
       const { data: otpRow, error: otpErr } = await supabase
@@ -190,7 +217,10 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (otpErr) return json({ error: 'Database error' }, 500)
-      if (!otpRow) return json({ error: 'Invalid or expired code' }, 401)
+      if (!otpRow) {
+        await recordOtpFailure(supabase, email.trim().toLowerCase())
+        return json({ error: 'Invalid or expired code' }, 401)
+      }
 
       // Mark OTP as used
       await supabase
@@ -222,6 +252,10 @@ Deno.serve(async (req) => {
       const supabase = getSupabase()
       const now = new Date().toISOString()
 
+      if (await recentCount(supabase, 'kyc_admin_audit', email.trim().toLowerCase(), { action: 'portal_otp_failed' }) >= MAX_OTP_FAILURES) {
+        return json({ error: 'Too many attempts. Try again in 15 minutes.' }, 429)
+      }
+
       // Re-verify OTP is still within the 15 min window (code may have been marked used; check within window)
       const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
       const { data: otpRow, error: otpErr } = await supabase
@@ -235,7 +269,10 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (otpErr) return json({ error: 'Database error' }, 500)
-      if (!otpRow) return json({ error: 'Session expired. Please request a new code.' }, 401)
+      if (!otpRow) {
+        await recordOtpFailure(supabase, email.trim().toLowerCase())
+        return json({ error: 'Session expired. Please request a new code.' }, 401)
+      }
 
       // Build safe update object — only allow specific fields
       const allowedFields: Record<string, unknown> = {}
@@ -267,14 +304,15 @@ Deno.serve(async (req) => {
       if (updateErr) return json({ error: updateErr.message }, 500)
       if (!project) return json({ error: 'Project not found' }, 404)
 
-      // Audit log
-      await supabase.from('kyc_admin_audit').insert({
+      // Audit log (builder has no .catch — await the result and ignore errors)
+      const { error: auditErr } = await supabase.from('kyc_admin_audit').insert({
         admin_email: email.trim().toLowerCase(),
         action: 'company_self_update',
         resource_type: 'kyc_project',
         resource_id: project.id,
         details: { updated_fields: Object.keys(allowedFields).filter(k => k !== 'last_self_updated_at') },
-      }).catch(() => {})
+      })
+      if (auditErr) console.error('kyc-company-portal audit insert failed:', auditErr.message)
 
       // Send confirmation email
       await sendConfirmationEmail(email.trim().toLowerCase(), project.founder_name || '')

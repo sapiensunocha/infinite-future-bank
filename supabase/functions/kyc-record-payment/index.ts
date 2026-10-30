@@ -1,31 +1,24 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { corsHeaders, verifyAdminToken } from "../_shared/auth.ts"
 
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kyc-admin-token',
-}
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
-
-function verifyAdminToken(token: string | null): { email: string; name: string } | null {
-  if (!token) return null
-  try {
-    const payload = JSON.parse(atob(token))
-    if (payload.exp < Date.now()) return null
-    return { email: payload.email, name: payload.name }
-  } catch { return null }
-}
+const json = (req: Request, data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' } })
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) })
 
   const token = req.headers.get('x-kyc-admin-token')
-  const admin = verifyAdminToken(token)
-  if (!admin) return json({ error: 'Unauthorized' }, 401)
+  let admin
+  try {
+    admin = await verifyAdminToken(token)
+  } catch {
+    return json(req, { error: 'KYC admin auth not configured' }, 500)
+  }
+  if (!admin) return json(req, { error: 'Unauthorized' }, 401)
 
   try {
     const { project_id, amount, currency, tier, payment_method, reference, notes, payment_proof_url } = await req.json()
-    if (!project_id || !amount || !tier || !payment_method) return json({ error: 'Missing required fields' }, 400)
+    if (!project_id || !amount || !tier || !payment_method) return json(req, { error: 'Missing required fields' }, 400)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -46,7 +39,7 @@ Deno.serve(async (req) => {
       .select()
       .single()
 
-    if (payError) return json({ error: payError.message }, 500)
+    if (payError) return json(req, { error: payError.message }, 500)
 
     // Activate the project
     await supabase
@@ -104,8 +97,8 @@ Deno.serve(async (req) => {
       details: { amount, tier, payment_method, reference },
     })
 
-    return json({ success: true, payment })
+    return json(req, { success: true, payment })
   } catch (err) {
-    return json({ error: 'Server error' }, 500)
+    return json(req, { error: 'Server error' }, 500)
   }
 })

@@ -20,16 +20,8 @@ export const DeusAdvisor = {
         return data.text;
       }
 
-      // 2. Client-side fallback if edge function is unavailable but client key is configured
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (apiKey) {
-        const { GoogleGenerativeAI } = await import('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const result = await model.generateContent(userMessage);
-        const response = await result.response;
-        return response.text();
-      }
+      // SECURITY: the client-side Gemini fallback (VITE_GEMINI_API_KEY) was removed — any VITE_*
+      // value ships to every browser. agent-chat is the only path to the model.
 
       return data?.error || "DEUS Advisor is currently synchronizing with global markets. Please retry shortly.";
     } catch (error) {

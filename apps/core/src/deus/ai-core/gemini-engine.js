@@ -41,16 +41,7 @@ export async function askGeminiBanker(userMessage, currentPortfolio) {
       return data.text;
     }
 
-    // 2. Client fallback only if VITE_GEMINI_API_KEY is explicitly supplied in dev
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (apiKey) {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      const result = await model.generateContent(systemPrompt);
-      const response = await result.response;
-      return response.text();
-    }
+    // SECURITY: client-side Gemini fallback (VITE_GEMINI_API_KEY) removed — keys stay server-side.
 
     return "DEUS Core is analyzing market volatility. Re-establishing link momentarily.";
   } catch (error) {

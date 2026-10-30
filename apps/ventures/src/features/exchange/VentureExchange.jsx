@@ -7,7 +7,7 @@ import {
   BarChart2, Users, DollarSign, Target
 } from 'lucide-react';
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// Gemini is reached only via the `agent-chat` edge function; the API key stays server-side.
 
 const SECTORS = [
   { id: 'Tech',            icon: '💻', color: 'blue'   },
@@ -73,19 +73,12 @@ Write a concise, professional guidance note (3-5 sentences) that:
 Respond in plain text, no markdown, no bullet points.`;
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      }
-    );
-    const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-  } catch {
-    return null;
-  }
+    const { data, error } = await supabase.functions.invoke('agent-chat', {
+      body: { message: prompt, agentName: 'Venture Analyst' }
+    });
+    if (!error && data?.text) return data.text;
+  } catch {}
+  return null;
 }
 
 // ── Application Form ──────────────────────────────────────────────────────────

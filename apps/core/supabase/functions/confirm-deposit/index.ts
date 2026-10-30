@@ -1,27 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.0.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.14.0";
+import { corsHeaders, getAuthedUser, HttpError, jsonResponse, errorResponse } from "../_shared/auth.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") as string, {
   apiVersion: "2022-11-15",
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
 
   try {
+    const user = await getAuthedUser(req);
     const { payment_intent_id } = await req.json();
-    if (!payment_intent_id) throw new Error("payment_intent_id required");
-
-    // Verify auth
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Unauthorized");
+    if (typeof payment_intent_id !== "string" || !payment_intent_id.startsWith("pi_")) {
+      throw new HttpError(400, "Invalid payment_intent_id");
+    }
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -30,58 +25,31 @@ serve(async (req) => {
 
     // Get the PaymentIntent from Stripe
     const intent = await stripe.paymentIntents.retrieve(payment_intent_id);
+
+    // The PI must belong to the caller
+    const ownerId = intent.metadata?.userId ?? intent.metadata?.user_id;
+    if (ownerId !== user.id) throw new HttpError(403, "Payment does not belong to this user");
+
     if (intent.status !== "succeeded") {
-      return new Response(JSON.stringify({ credited: false, reason: "Payment not succeeded" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(req, { credited: false, reason: "Payment not succeeded" });
     }
+    if (intent.currency !== "usd") throw new HttpError(400, "Unsupported currency");
 
-    const userId = intent.metadata?.userId;
-    const depositAmount = intent.amount / 100;
+    const depositAmount = intent.amount_received / 100;
 
-    if (!userId) throw new Error("No userId in payment intent metadata");
-
-    // Idempotency check — don't credit twice for the same intent
-    const { data: existing } = await supabaseAdmin
-      .from("transactions")
-      .select("id")
-      .eq("stripe_payment_intent_id", payment_intent_id)
-      .maybeSingle();
-
-    if (existing) {
-      return new Response(JSON.stringify({ credited: false, reason: "Already credited" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Credit the balance
-    const { data: bal } = await supabaseAdmin
-      .from("balances")
-      .select("liquid_usd")
-      .eq("user_id", userId)
-      .single();
-
-    await supabaseAdmin
-      .from("balances")
-      .update({ liquid_usd: (bal?.liquid_usd || 0) + depositAmount })
-      .eq("user_id", userId);
-
-    await supabaseAdmin.from("transactions").insert({
-      user_id: userId,
-      transaction_type: "deposit",
-      amount: depositAmount,
-      status: "completed",
-      description: "Capital Injection via Secure UI",
-      stripe_payment_intent_id: payment_intent_id,
+    // Idempotent credit keyed by PaymentIntent id (shared with stripe-webhook)
+    const { data: credited, error } = await supabaseAdmin.rpc("credit_deposit", {
+      p_user_id: user.id,
+      p_amount: depositAmount,
+      p_currency: "USD",
+      p_external_id: intent.id,
+      p_source: "stripe",
     });
+    if (error) throw new Error(`credit_deposit failed: ${error.message}`);
 
-    return new Response(JSON.stringify({ credited: true, amount: depositAmount }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    if (!credited) return jsonResponse(req, { credited: false, reason: "Already credited" });
+    return jsonResponse(req, { credited: true, amount: depositAmount });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(req, err);
   }
 });

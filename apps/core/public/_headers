@@ -1,3 +1,13 @@
+# Security headers for every route. CSP is Report-Only until violations are reviewed;
+# to enforce, rename Content-Security-Policy-Report-Only -> Content-Security-Policy.
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(self), payment=(self "https://js.stripe.com")
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://js.stripe.com https://checkout.flutterwave.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://nfztdpyygfrpbjbhidxe.supabase.co https://*.stripe.com https://images.unsplash.com https://picsum.photos https://fastly.picsum.photos https://*.tile.openstreetmap.org https://unpkg.com https://www.transparenttextures.com; media-src 'self' data: blob: https://nfztdpyygfrpbjbhidxe.supabase.co; connect-src 'self' https://nfztdpyygfrpbjbhidxe.supabase.co wss://nfztdpyygfrpbjbhidxe.supabase.co https://api.stripe.com https://ifb-intelligence-core-382117221028.us-central1.run.app https://afr-blockchain-node-382117221028.us-central1.run.app https://ipapi.co https://api.open-meteo.com https://api.frankfurter.app; frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://checkout.flutterwave.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://buy.stripe.com https://checkout.flutterwave.com; frame-ancestors 'none'
+
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
   Service-Worker-Allowed: /

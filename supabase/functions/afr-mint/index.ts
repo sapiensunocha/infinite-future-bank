@@ -2,36 +2,47 @@
 // Mints AFR tokens when user deposits USD or on explicit request
 // 1 USD deposited = AFR_MINT_RATIO AFR minted (default: 100 AFR per $1)
 // All AFR tracked in balances.afr_balance + afr_ledger
+//
+// SECURITY: minting is an admin/treasury operation. Callers must be either the
+// service role (server-to-server, body.user_id = beneficiary) or an authenticated
+// admin (requireAdmin; body.user_id = beneficiary, defaults to self).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders as buildCors, getAuthedUser, requireAdmin, parseAmount, timingSafeEqualStr, HttpError } from "../_shared/auth.ts";
 
 const AFR_INTELLIGENCE_CORE = "https://ifb-intelligence-core-382117221028.us-central1.run.app";
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 Deno.serve(async (req: Request) => {
+  const corsHeaders = buildCors(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-
-  const sb = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: authHeader } } }
-  );
-  const { data: { user }, error: authErr } = await sb.auth.getUser();
-  if (authErr || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
 
   const adminSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  let body: { usd_amount?: number; reason?: string };
+  let body: { usd_amount?: number; reason?: string; user_id?: string };
   try { body = await req.json(); } catch { body = {}; }
 
-  const usdAmount = Number(body.usd_amount);
-  if (!usdAmount || usdAmount <= 0) {
+  // Authorize: service-role bearer, or an authenticated admin
+  let beneficiaryId: string;
+  const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  try {
+    if (serviceKey && bearer && timingSafeEqualStr(bearer, serviceKey)) {
+      if (!body.user_id) throw new HttpError(400, "user_id required");
+      beneficiaryId = body.user_id;
+    } else {
+      const caller = await getAuthedUser(req);
+      await requireAdmin(adminSb, caller.id);
+      beneficiaryId = body.user_id ?? caller.id;
+    }
+  } catch (e) {
+    const status = e instanceof HttpError ? e.status : 500;
+    const msg = e instanceof HttpError ? e.message : "Internal error";
+    return new Response(JSON.stringify({ error: msg }), { status, headers: corsHeaders });
+  }
+  const user = { id: beneficiaryId };
+
+  let usdAmount: number;
+  try { usdAmount = parseAmount(body.usd_amount); }
+  catch {
     return new Response(JSON.stringify({ error: "usd_amount must be positive" }), { status: 400, headers: corsHeaders });
   }
 

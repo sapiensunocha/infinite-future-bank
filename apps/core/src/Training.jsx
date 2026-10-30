@@ -265,18 +265,7 @@ export default function Training({ session }) {
         if (!error && data?.text) aiText = data.text;
       } catch {}
 
-      if (!aiText) {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (apiKey) {
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-          });
-          const data = await response.json();
-          aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        }
-      }
+      // SECURITY: client-side Gemini fallback (VITE_GEMINI_API_KEY) removed — keys must stay server-side.
 
       if (!aiText) {
         aiText = "The Institutional Mentor is actively synchronizing with curriculum nodes. Please ask again in a moment.";

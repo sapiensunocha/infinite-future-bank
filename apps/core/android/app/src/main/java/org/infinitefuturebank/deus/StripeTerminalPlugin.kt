@@ -47,7 +47,7 @@ class StripeTerminalPlugin : Plugin() {
             try {
                 if (!Terminal.isInitialized()) {
                     // v5: Terminal.init replaces Terminal.initTerminal; null = no offline listener
-                    Terminal.init(activity, LogLevel.VERBOSE, tokenProvider, object : TerminalListener {}, null)
+                    Terminal.init(activity, if (BuildConfig.DEBUG) LogLevel.VERBOSE else LogLevel.NONE, tokenProvider, object : TerminalListener {}, null)
                 }
                 call.resolve(JSObject().put("success", true))
             } catch (e: Exception) {

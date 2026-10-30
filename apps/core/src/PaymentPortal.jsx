@@ -255,9 +255,9 @@ export default function PaymentPortal({ session }) {
         const formattedPan = ifbPan.replace(/\s/g, '');
         const paymentRes = await fetch('https://nfztdpyygfrpbjbhidxe.supabase.co/functions/v1/ifb-charge-card', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
           body: JSON.stringify({
-            merchantId: receiver.id, 
+            merchantId: receiver.id,
             pan: formattedPan,
             expiry: ifbExpiry,
             cvv: ifbCvv,

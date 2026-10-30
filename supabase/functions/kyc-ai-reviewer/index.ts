@@ -4,6 +4,7 @@
 // via Groq (llama-3.3-70b-versatile), writes it back, and emails the user.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { getAuthedUser, requireAdmin, timingSafeEqualStr, HttpError } from "../_shared/auth.ts";
 
 const GROQ_KEY     = Deno.env.get("GROQ_API_KEY")!;
 const RESEND_KEY   = Deno.env.get("RESEND_API_KEY")!;
@@ -334,6 +335,18 @@ Deno.serve(async (req: Request) => {
 
   if (!body.user_id) return json({ error: "user_id required" }, 400);
   const userId = body.user_id;
+
+  // Only the pg_net trigger (service role), an admin, or the applicant for their own submission
+  const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer /, "");
+  if (!bearer || !timingSafeEqualStr(bearer, SERVICE_KEY)) {
+    try {
+      const caller = await getAuthedUser(req);
+      if (caller.id !== userId) await requireAdmin(adminSb, caller.id);
+    } catch (err) {
+      const status = err instanceof HttpError ? err.status : 401;
+      return json({ error: status === 403 ? "Forbidden" : "Unauthorized" }, status);
+    }
+  }
 
   // ── Fetch full submission ───────────────────────────────────────────────
   const { data: sub, error: fetchErr } = await adminSb

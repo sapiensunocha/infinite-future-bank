@@ -3,6 +3,7 @@
 // Called when user uploads ID, proof of address, income documents
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/auth.ts";
 
 async function uploadToGeminiFiles(blob: Blob, mime: string, name: string): Promise<string | null> {
   const initRes = await fetch(
@@ -109,8 +110,23 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ error: "document_url required" }), { status: 400, headers: corsHeaders });
   }
 
+  const isAdmin = await requireAdmin(adminSb, user.id).then(() => true, () => false);
+  const forbidden = () => new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+
+  // Documents must live in a KYC bucket, under the caller's own folder unless the caller is an admin
+  const storageMatch = body.document_url.match(/\/object\/(?:public\/|sign\/|authenticated\/)?(kyc_documents|kyc-documents)\/(.+?)(?:\?|$)/);
+  if (!storageMatch) {
+    return new Response(JSON.stringify({ error: "document_url must reference a KYC storage object" }), { status: 400, headers: corsHeaders });
+  }
+  const [, storageBucket, storagePath] = storageMatch;
+  if (!isAdmin && !decodeURIComponent(storagePath).split("/").includes(user.id)) return forbidden();
+
   // Get or create KYC submission
   let submissionId = body.kyc_submission_id;
+  if (submissionId && !isAdmin) {
+    const { data: owned } = await adminSb.from("kyc_submissions").select("id").eq("id", submissionId).eq("user_id", user.id).maybeSingle();
+    if (!owned) return forbidden();
+  }
   if (!submissionId) {
     const { data: existing } = await adminSb.from("kyc_submissions").select("id").eq("user_id", user.id).maybeSingle();
     if (existing) {
@@ -134,12 +150,10 @@ Deno.serve(async (req: Request) => {
   let fileUri: string | null = null;
   let mimeType = "image/jpeg";
   try {
-    const storagePathMatch = body.document_url.match(/\/object\/(?:public\/|sign\/)?kyc_documents\/(.+?)(?:\?|$)/);
-    if (storagePathMatch) {
-      const storagePath = storagePathMatch[1];
+    {
       const { data: fileData, error: dlErr } = await adminSb.storage
-        .from("kyc_documents")
-        .download(storagePath);
+        .from(storageBucket)
+        .download(decodeURIComponent(storagePath));
       if (dlErr || !fileData) throw new Error(dlErr?.message ?? "download failed");
       const lower = storagePath.toLowerCase();
       if (lower.endsWith(".png")) mimeType = "image/png";

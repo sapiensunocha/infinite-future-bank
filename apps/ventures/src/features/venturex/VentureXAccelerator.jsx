@@ -3,6 +3,7 @@
  * Part of DEUS / Infinite Future Bank
  */
 import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '../../services/supabaseClient';
 import {
   Rocket, Lightbulb, Code, Palette, TrendingUp, BarChart,
   CheckCircle2, AlertTriangle, ChevronRight, ChevronDown, ChevronUp,
@@ -14,19 +15,16 @@ import {
 } from 'lucide-react';
 
 // ─── Gemini helper ────────────────────────────────────────────────────────────
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// Gemini is reached only via the `agent-chat` edge function; the API key stays server-side.
 
 async function callGemini(prompt) {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-    }
-  );
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  try {
+    const { data, error } = await supabase.functions.invoke('agent-chat', {
+      body: { message: prompt, agentName: 'VentureX Accelerator Advisor' }
+    });
+    if (!error && data?.text) return data.text;
+  } catch {}
+  return '';
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────

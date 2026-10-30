@@ -1,31 +1,24 @@
 import { createClient } from "npm:@supabase/supabase-js@2"
+import { corsHeaders, verifyAdminToken } from "../_shared/auth.ts"
 
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-kyc-admin-token',
-}
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
-
-function verifyAdminToken(token: string | null): { email: string; name: string } | null {
-  if (!token) return null
-  try {
-    const payload = JSON.parse(atob(token))
-    if (payload.exp < Date.now()) return null
-    return { email: payload.email, name: payload.name }
-  } catch { return null }
-}
+const json = (req: Request, data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' } })
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) })
 
   const token = req.headers.get('x-kyc-admin-token')
-  const admin = verifyAdminToken(token)
-  if (!admin) return json({ error: 'Unauthorized' }, 401)
+  let admin
+  try {
+    admin = await verifyAdminToken(token)
+  } catch {
+    return json(req, { error: 'KYC admin auth not configured' }, 500)
+  }
+  if (!admin) return json(req, { error: 'Unauthorized' }, 401)
 
   try {
     const { project_id, doc_type, file_name, file_size } = await req.json()
-    if (!project_id || !doc_type || !file_name) return json({ error: 'Missing required fields' }, 400)
+    if (!project_id || !doc_type || !file_name) return json(req, { error: 'Missing required fields' }, 400)
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -39,7 +32,7 @@ Deno.serve(async (req) => {
       .from('kyc-documents')
       .createSignedUploadUrl(storagePath)
 
-    if (error) return json({ error: error.message }, 500)
+    if (error) return json(req, { error: error.message }, 500)
 
     // Pre-record the document entry (will be confirmed after upload)
     const { data: docRecord } = await supabase
@@ -63,13 +56,13 @@ Deno.serve(async (req) => {
       details: { doc_type, file_name },
     })
 
-    return json({
+    return json(req, {
       success: true,
       signed_url: uploadData.signedUrl,
       path: storagePath,
       doc_id: docRecord?.id,
     })
   } catch (err) {
-    return json({ error: 'Server error' }, 500)
+    return json(req, { error: 'Server error' }, 500)
   }
 })

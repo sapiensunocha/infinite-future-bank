@@ -68,9 +68,10 @@ export const AuthService = {
     return data;
   },
 
-  verifyOTP: async (phoneNumber, otpCode, userId) => {
+  // Settings/register mode: the user is identified by their session JWT, not a userId.
+  verifyOTP: async (phoneNumber, otpCode) => {
     const { data, error } = await supabase.functions.invoke('verify-otp', {
-      body: { phoneNumber, otpCode, userId }
+      body: { phoneNumber, code: otpCode, mode: 'register' }
     });
     if (error) throw error;
     return data;

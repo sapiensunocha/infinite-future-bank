@@ -294,7 +294,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
   const confirmReceipt = async (orderId) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase.rpc('finalize_p2p_trade', { p_order_id: orderId });
+      const { error } = await supabase.rpc('finalize_p2p_trade', { p_trade_id: orderId });
       if (error) throw error;
       showToast('Escrow released successfully. Transaction Complete.');
       setSelectedOrderProof(null);

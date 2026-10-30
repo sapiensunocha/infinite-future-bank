@@ -1,35 +1,25 @@
 // flutterwave-collect
 // Returns inline SDK config so the frontend can launch FLW payment modal directly on the page.
 // No redirect to external page — payment happens inline.
-// FLW fires charge.completed webhook → flutterwave-webhook credits liquid_usd.
+// FLW fires charge.completed webhook → flutterwave-webhook verifies the transaction
+// with GET /v3/transactions/{id}/verify and credits via credit_deposit (idempotent).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders as buildCors, getAuthedUser, parseAmount } from "../_shared/auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const APP_URL      = Deno.env.get("APP_URL") ?? "https://app.infinitefuturebank.org";
 const FLW_PUBLIC   = Deno.env.get("FLUTTERWAVE_PUBLIC_KEY") ?? "";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const SUPPORTED_CURRENCIES = ["GHS", "NGN", "KES", "UGX", "TZS", "RWF", "ZMW", "XOF", "XAF", "ZAR", "USD"];
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = buildCors(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const sb = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
-    global: { headers: { Authorization: authHeader } },
-  });
-
-  const { data: { user }, error: authErr } = await sb.auth.getUser();
-  if (authErr || !user) {
+  let user;
+  try { user = await getAuthedUser(req); }
+  catch {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -39,10 +29,18 @@ Deno.serve(async (req: Request) => {
   try { body = await req.json(); }
   catch { return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: corsHeaders }); }
 
-  const { amount, currency = "GHS", phone, description } = body;
+  const { currency = "GHS", phone, description } = body;
 
-  if (!amount || amount <= 0) {
-    return new Response(JSON.stringify({ error: "Amount must be greater than 0" }), {
+  // Local-currency amounts (e.g. UGX) can be large; parseAmount caps at 1,000,000.
+  let amount: number;
+  try { amount = parseAmount(body.amount); }
+  catch {
+    return new Response(JSON.stringify({ error: "Invalid amount" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (!SUPPORTED_CURRENCIES.includes(String(currency).toUpperCase())) {
+    return new Response(JSON.stringify({ error: "Unsupported currency" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -60,7 +58,7 @@ Deno.serve(async (req: Request) => {
 
   return new Response(
     JSON.stringify({
-      tx_ref,
+      tx_ref:      txRef,
       public_key:  FLW_PUBLIC,
       amount,
       currency,

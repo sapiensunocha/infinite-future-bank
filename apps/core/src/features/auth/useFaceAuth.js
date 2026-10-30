@@ -4,7 +4,7 @@
  * Handles two paths:
  *  - Native (Capacitor iOS/Android): @capgo/capacitor-native-biometric
  *    Uses Face ID / Android face recognition + device keychain for token storage.
- *  - Web: face-api.js descriptor stored in Supabase (handled by FaceAuthManager component).
+ *  - Web: face login is NOT supported (server cannot verify a browser-side match).
  *
  * The edge function `face-auth` issues a Supabase magic-link token on success.
  */
@@ -158,13 +158,10 @@ export function useFaceAuth(session) {
       server: BIOMETRIC_SERVER,
     });
 
-    // 3. Hash it so we can verify against the DB without sending the raw token over the network
-    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawToken));
-    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-    // 4. Call edge function — it verifies the hash and issues a session
+    // 3. Send the raw token over TLS; the server hashes it and compares against the
+    //    stored SHA-256 hash (sending the hash would make the DB value a password).
     const { data, error } = await supabase.functions.invoke(FACE_AUTH_FN, {
-      body: { mode: 'native', email, tokenHash },
+      body: { mode: 'native', email, token: rawToken },
     });
     if (error) throw new Error(error.message || 'Face auth server error.');
     if (!data?.token_hash) throw new Error('No session token received.');
@@ -178,20 +175,11 @@ export function useFaceAuth(session) {
     return authData;
   }, []);
 
-  // ─── WEB LOGIN (called after FaceAuthManager confirms match) ─────────────────
-  const webFaceLogin = useCallback(async (email) => {
-    const { data, error } = await supabase.functions.invoke(FACE_AUTH_FN, {
-      body: { mode: 'web', email },
-    });
-    if (error) throw new Error(error.message || 'Face auth server error.');
-    if (!data?.token_hash) throw new Error('No session token received.');
-
-    const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
-      token_hash: data.token_hash,
-      type: 'magiclink',
-    });
-    if (verifyError) throw verifyError;
-    return authData;
+  // ─── WEB LOGIN ───────────────────────────────────────────────────────────────
+  // Disabled: a client-side descriptor match cannot authenticate anyone (the server
+  // would have to trust the browser). The face-auth function rejects mode 'web'.
+  const webFaceLogin = useCallback(async () => {
+    throw new Error('Face login is only available in the mobile app. Please sign in with your password.');
   }, []);
 
   // ─── FETCH stored descriptor for web verify ──────────────────────────────────
