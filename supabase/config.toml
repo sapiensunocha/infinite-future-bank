@@ -72,3 +72,9 @@ verify_jwt = true
 
 [functions.verify-otp]
 verify_jwt = true
+
+[functions.payment-pages]
+verify_jwt = false
+
+[functions.paystack-webhook]
+verify_jwt = false

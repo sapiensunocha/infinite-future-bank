@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag, TrendingUp, Leaf, Gift } from 'lucide-react';
+import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag, TrendingUp, Leaf, Gift, Link2 } from 'lucide-react';
 
 const APPS = [
   { id: 'PAYROLL',          Icon: Users,         label: 'Payroll',            hover: 'hover:bg-slate-50 text-slate-700' },
@@ -13,6 +13,7 @@ const APPS = [
 
 const MERCHANT = [
   { id: 'MERCHANT_BILLING',  Icon: Calculator, label: 'Invoicing' },
+  { id: 'PAYMENT_PAGES',     Icon: Link2,      label: 'Payment Pages' },
   { id: 'MERCHANT_TICKETS',  Icon: Ticket,     label: 'Box Office' },
 ];
 

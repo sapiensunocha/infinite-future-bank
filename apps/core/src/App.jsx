@@ -29,6 +29,7 @@ const DEUSAcademy      = lazyLoad(() => import('./features/learning/DEUSAcademy'
 const Dashboard        = lazyLoad(() => import('./Dashboard'));
 const AuthCallback     = lazyLoad(() => import('./features/onboarding/AuthCallback'));
 const PaymentPortal    = lazyLoad(() => import('./PaymentPortal'));
+const PublicPaymentPage = lazyLoad(() => import('./features/commerce/PublicPaymentPage'));
 const FeedbackForm     = lazyLoad(() => import('./FeedbackForm'));
 const AdminSupportDesk = lazyLoad(() => import('./AdminSupportDesk'));
 const ExecutiveCrm     = lazyLoad(() => import('./ExecutiveCrm'));
@@ -1368,6 +1369,7 @@ export default function App() {
         <Route path="/" element={<MainApp />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/pay" element={<PaymentPortal session={session} />} />
+        <Route path="/p/:slug" element={<PublicPaymentPage session={session} />} />
         <Route path="/admin" element={<AdminGateway />} />
         <Route path="/hq" element={<HqGateway />} />
         <Route path="/events/:id" element={<PublicEventPage />} />
