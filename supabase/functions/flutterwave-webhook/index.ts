@@ -8,6 +8,13 @@
 // Set the same secret hash in FLW Dashboard and FLUTTERWAVE_WEBHOOK_HASH secret.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { timingSafeEqualStr } from "../_shared/auth.ts";
+import {
+  finalizePaidOrder,
+  markPageOrderPaid,
+  orderIdFromRef,
+  PAGE_ORDER_REF_PREFIX,
+  verifyFlutterwave,
+} from "../_shared/page-orders.ts";
 
 const WEBHOOK_HASH = Deno.env.get("FLUTTERWAVE_WEBHOOK_HASH");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -46,6 +53,29 @@ Deno.serve(async (req) => {
   const eventType = event.event as string;
   const data      = event.data as Record<string, unknown> ?? {};
 
+  // ── Payment Pages: charge.completed for an 'IFBPG-<order id>' tx_ref ────────
+  //    Settles the merchant's order and returns BEFORE the deposit path below
+  //    (a page payment must never credit the payer).
+  if (eventType === "charge.completed" && typeof data.tx_ref === "string" && data.tx_ref.startsWith(PAGE_ORDER_REF_PREFIX)) {
+    const orderId = orderIdFromRef(data.tx_ref);
+    if (!orderId) return new Response(JSON.stringify({ received: true }), { status: 200 });
+    let v;
+    try {
+      v = await verifyFlutterwave(data.id as string | number);
+    } catch (e) {
+      console.error("FLW page order verify failed:", e instanceof Error ? e.message : e);
+      return new Response("verification failed", { status: 500 }); // FLW retries
+    }
+    if (!v.ok || v.tx_ref !== data.tx_ref || v.currency !== "USD") {
+      console.warn("FLW page order charge not accepted:", orderId);
+      return new Response(JSON.stringify({ received: true, skipped: true }), { status: 200 });
+    }
+    const outcome = await markPageOrderPaid(sb, orderId, "flutterwave", v.ref, v.amount_cents, v.currency);
+    if (outcome === "error") return new Response("settle failed", { status: 500 });
+    if (outcome === "paid") await finalizePaidOrder(sb, orderId);
+    return new Response(JSON.stringify({ received: true, page_order: true }), { status: 200 });
+  }
+
   // ── charge.completed — mobile money / card collection succeeded ──────────────
   // The webhook body is only a hint: we re-fetch the transaction from Flutterwave
   // (GET /transactions/{id}/verify) and credit only the verified amount/currency.
@@ -78,6 +108,11 @@ Deno.serve(async (req) => {
     if (status !== "successful" || !(amountPaid > 0)) {
       console.log("charge not successful, skipping:", status);
       return new Response(JSON.stringify({ received: true }), { status: 200 });
+    }
+
+    if (txRef?.startsWith(PAGE_ORDER_REF_PREFIX)) {
+      // Payment page charge whose webhook body lacked tx_ref: never a deposit.
+      return new Response(JSON.stringify({ received: true, skipped: true }), { status: 200 });
     }
 
     // txRef format: IFB.COLLECT.{userId}.{timestamp} (dots separate segments, UUID is always 36 chars)

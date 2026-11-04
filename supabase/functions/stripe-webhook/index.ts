@@ -4,6 +4,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "npm:stripe@17";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { finalizePaidOrder, isUuid, markPageOrderPaid } from "../_shared/page-orders.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-06-20",
@@ -30,6 +31,27 @@ Deno.serve(async (req: Request) => {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("Webhook signature failed:", msg);
     return new Response("Webhook signature verification failed", { status: 400 });
+  }
+
+  // ── Payment Pages: a customer paying a merchant's page. These intents must
+  //    NEVER take the deposit path below (that would credit the payer). ────────
+  {
+    const obj = event.data.object as { metadata?: Record<string, string> | null };
+    const pageOrderId = obj?.metadata?.ifb_page_order_id;
+    if (pageOrderId) {
+      if (event.type === "payment_intent.succeeded" && isUuid(pageOrderId)) {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        const outcome = await markPageOrderPaid(
+          supabase, pageOrderId, "stripe", pi.id, pi.amount_received, String(pi.currency ?? "").toUpperCase(),
+        );
+        if (outcome === "error") return new Response("page order settle failed", { status: 500 }); // Stripe retries
+        if (outcome === "paid") await finalizePaidOrder(supabase, pageOrderId);
+      }
+      return new Response(JSON.stringify({ received: true, page_order: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   }
 
   // All crediting goes through credit_deposit(), keyed by the PaymentIntent id, so

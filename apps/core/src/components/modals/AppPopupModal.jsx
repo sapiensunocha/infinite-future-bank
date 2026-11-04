@@ -9,6 +9,7 @@ const SmartContracts  = lazy(() => import('../../SmartContracts'));
 const Loans           = lazy(() => import('../../Loans'));
 const NpoHub          = lazy(() => import('../../NpoHub'));
 const BillingTerminal = lazy(() => import('../../features/commerce/BillingTerminal'));
+const PaymentPages    = lazy(() => import('../../features/commerce/PaymentPages'));
 const TicketGate      = lazy(() => import('../../features/commerce/TicketGate'));
 const VentureExchange = lazy(() => import('../../VentureExchange'));
 const P2PExchange     = lazy(() => import('../../P2PExchange'));
@@ -33,6 +34,7 @@ const TITLES = {
   LOANS:             'Lending',
   VENTURE_EXCHANGE:  'Venture Exchange',
   MERCHANT_BILLING:  'Merchant Invoicing',
+  PAYMENT_PAGES:     'Payment Pages',
   MERCHANT_TICKETS:  'Box Office',
   CLYRIX:            'Clyrix Health',
   PRAXCI:            'Praxci Education',
@@ -83,6 +85,7 @@ export default function AppPopupModal({
             {activeAppPopup === 'LOANS'             && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
             {activeAppPopup === 'NPO'               && <NpoHub session={session} />}
             {activeAppPopup === 'MERCHANT_BILLING'  && <BillingTerminal session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {activeAppPopup === 'PAYMENT_PAGES'     && <PaymentPages session={session} profile={profile} />}
             {activeAppPopup === 'MERCHANT_TICKETS'  && <TicketGate session={session} balances={balances} fetchAllData={fetchAllData} />}
             {activeAppPopup === 'VENTURE_EXCHANGE'  && <VentureExchange session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
             {activeAppPopup === 'P2P_EXCHANGE'      && <P2PExchange session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}

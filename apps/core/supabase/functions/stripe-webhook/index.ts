@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from "https://esm.sh/stripe@12.0.0?target=deno"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.14.0"
+import { finalizePaidOrder, isUuid, markPageOrderPaid, type DbClient } from "../_shared/page-orders.ts"
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2022-11-15',
@@ -35,6 +36,24 @@ serve(async (req: Request) => {
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
+
+  // ── Payment Pages: a customer paying a merchant's page. These intents must
+  //    NEVER take the deposit path below (that would credit the payer). ────────
+  {
+    const obj = event.data.object as any
+    const pageOrderId = obj?.metadata?.ifb_page_order_id
+    if (pageOrderId) {
+      if (event.type === 'payment_intent.succeeded' && isUuid(pageOrderId)) {
+        const db = supabaseAdmin as unknown as DbClient
+        const outcome = await markPageOrderPaid(
+          db, pageOrderId, 'stripe', obj.id, obj.amount_received, String(obj.currency ?? '').toUpperCase(),
+        )
+        if (outcome === 'error') return new Response('page order settle failed', { status: 500 }) // Stripe retries
+        if (outcome === 'paid') await finalizePaidOrder(db, pageOrderId)
+      }
+      return new Response(JSON.stringify({ received: true, page_order: true }), { status: 200 })
+    }
+  }
 
   let userId: string | undefined
   let depositAmount = 0
