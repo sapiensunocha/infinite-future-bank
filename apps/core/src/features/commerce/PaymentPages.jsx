@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import QRCode from 'react-qr-code';
 import {
-  Link2, Plus, X, Loader2, Copy, QrCode, ExternalLink, Power, Pencil, ListOrdered, ShieldCheck,
-  ArrowUp, ArrowDown, Trash2, ArrowLeft, Download, ChevronDown, ChevronRight, KeyRound,
-  AlertTriangle, Plane, CalendarDays, HeartHandshake, Eye, Save, RefreshCw
+  Link2, Plus, X, Loader2, Copy, ExternalLink, Power, Pencil, ListOrdered, ShieldCheck,
+  ArrowUp, ArrowDown, Trash2, ArrowLeft, Download, ChevronRight, KeyRound,
+  AlertTriangle, Plane, CalendarDays, HeartHandshake, Eye, Save, RefreshCw, Share2, MessageCircle,
+  Mail, Wallet, ReceiptText, Check
 } from 'lucide-react';
 import { APP_URL } from '../../config/constants';
 import PaymentFormRenderer from './PaymentFormRenderer';
-import { callPaymentPages, formatCents, safeHttpsUrl, initialAnswers } from './paymentPagesApi';
+import { callPaymentPages, formatCents, safeHttpsUrl, initialAnswers, safeBrandColor, onBrandColor, initialsOf, DEFAULT_BRAND } from './paymentPagesApi';
 
 // Merchant side of Payment Pages (docs/payment-pages.md).
 // Every write goes through the `payment-pages` edge function; the server re-validates everything.
@@ -30,8 +31,9 @@ const KYC_OK = ['verified', 'approved'];
 const KYC_MESSAGE = 'Identity verification required. Complete KYC verification in your profile before publishing payment pages.';
 const ORDER_STATUSES = ['all', 'pending', 'paid', 'failed', 'expired'];
 
-const inputCls = 'w-full p-3 rounded-xl border border-slate-200 bg-white font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-colors';
-const labelCls = 'block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5';
+const inputCls = 'w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition disabled:bg-slate-50 disabled:opacity-70';
+const labelCls = 'block text-sm font-semibold text-slate-700 mb-1.5';
+const BRAND_SWATCHES = ['#2563eb', '#0f766e', '#7c3aed', '#db2777', '#ea580c', '#0f172a'];
 
 let uidCounter = 0;
 const uid = () => `k${Date.now().toString(36)}${(uidCounter++).toString(36)}`;
@@ -106,7 +108,7 @@ const blankField = (type = 'text', label = '') => ({
 const opt = (label, price = '') => ({ key: uid(), label, price, fixedValue: null });
 
 const emptyForm = () => ({
-  title: '', description: '', logo_url: '', visibility: 'public', single_use: false, max_uses: '',
+  title: '', description: '', logo_url: '', brand_color: DEFAULT_BRAND, visibility: 'public', single_use: false, max_uses: '',
   expires_at: '', success_message: '', redirect_url: '', notify_email: '', webhook_url: '',
   fields: [],
   pricing: { mode: 'fixed', base: '', quantityKey: '', min: '1.00', max: '', fee_bearer: 'merchant' },
@@ -168,6 +170,7 @@ function serializeForm(form) {
   if (!form.title.trim()) errors.push('Title is required.');
   if (form.title.trim().length > 120) errors.push('Title must be 120 characters or less.');
   if (!isHttpsOrEmpty(form.logo_url)) errors.push('Logo URL must start with https://');
+  if (form.brand_color && !/^#[0-9a-fA-F]{6}$/.test(form.brand_color)) errors.push('Brand colour must look like #1a73e8.');
   if (!isHttpsOrEmpty(form.redirect_url)) errors.push('Redirect URL must start with https://');
   if (!isHttpsOrEmpty(form.webhook_url)) errors.push('Webhook URL must start with https://');
   if (form.notify_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.notify_email.trim())) errors.push('Notification email is not valid.');
@@ -213,6 +216,7 @@ function serializeForm(form) {
     title: form.title.trim(),
     description: form.description.trim() || null,
     logo_url: form.logo_url.trim() || null,
+    brand_color: form.brand_color ? form.brand_color.toLowerCase() : null,
     visibility: form.visibility,
     single_use: !!form.single_use,
     max_uses: maxUses.value ?? null,
@@ -243,7 +247,7 @@ function pageToForm(p) {
     if (!Number.isNaN(d.getTime())) expires = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
   return {
-    title: p.title || '', description: p.description || '', logo_url: p.logo_url || '',
+    title: p.title || '', description: p.description || '', logo_url: p.logo_url || '', brand_color: safeBrandColor(p.brand_color),
     visibility: p.visibility || 'public', single_use: !!p.single_use, max_uses: p.max_uses ? String(p.max_uses) : '',
     expires_at: expires, success_message: p.success_message || '', redirect_url: p.redirect_url || '',
     notify_email: p.notify_email || '', webhook_url: p.webhook_url || '',
@@ -352,9 +356,9 @@ function answerDisplay(fieldDef, value) {
 const Modal = ({ onClose, children, title }) => (
   <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in" role="dialog" aria-modal="true">
     <div className="absolute inset-0" onClick={onClose} />
-    <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-6 animate-in zoom-in-95">
+    <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
-        <h4 className="font-black text-sm uppercase tracking-widest text-slate-800">{title}</h4>
+        <h4 className="text-lg font-bold text-slate-900">{title}</h4>
         <button onClick={onClose} className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-xl flex items-center justify-center text-slate-500" aria-label="Close"><X size={16} /></button>
       </div>
       {children}
@@ -368,7 +372,7 @@ const StatusBadge = ({ page }) => {
   let label = page.status; let cls = page.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200';
   if (page.status === 'active' && expired) { label = 'expired'; cls = 'bg-orange-50 text-orange-600 border-orange-200'; }
   else if (page.status === 'active' && usedUp) { label = 'used up'; cls = 'bg-orange-50 text-orange-600 border-orange-200'; }
-  return <span className={`text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest border ${cls}`}>{label}</span>;
+  return <span className={`text-xs font-medium px-2 py-0.5 rounded-full border capitalize ${cls}`}>{label}</span>;
 };
 
 const orderStatusCls = (s) => ({
@@ -384,6 +388,129 @@ const IconBtn = ({ title, onClick, children, tone = 'slate', disabled }) => (
     {children}
   </button>
 );
+
+// ------------------------------------------
+// Share sheet: copy, WhatsApp, email, native share, QR download
+// ------------------------------------------
+function downloadQrPng(svgEl, filename) {
+  if (!svgEl) return;
+  const xml = new XMLSerializer().serializeToString(svgEl);
+  const img = new Image();
+  const size = 1024;
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    const pad = 64;
+    ctx.drawImage(img, pad, pad, size - pad * 2, size - pad * 2);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+  };
+  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
+}
+
+function ShareSheet({ page, onClose, onCopy }) {
+  const link = pageUrl(page.slug);
+  const qrRef = useRef(null);
+  const message = `${page.title} — pay securely here: ${link}`;
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const actionCls = 'flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-sm font-medium text-slate-700 transition';
+  return (
+    <Modal title="Share your page" onClose={onClose}>
+      <div className="flex flex-col items-center">
+        <div ref={qrRef} className="bg-white p-4 rounded-2xl border border-slate-200 mb-3">
+          <QRCode value={link} size={184} bgColor="#ffffff" fgColor="#0f172a" level="M" />
+        </div>
+        <p className="font-semibold text-slate-900 text-center break-words">{page.title}</p>
+        <div className="w-full mt-3 flex items-center gap-2 p-2 pl-3 rounded-xl bg-slate-50 border border-slate-200">
+          <span className="text-sm text-slate-600 truncate flex-1 min-w-0">{link}</span>
+          <button type="button" onClick={() => onCopy(link)} className="shrink-0 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-sm font-medium flex items-center gap-1.5"><Copy size={14} /> Copy</button>
+        </div>
+        <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+          <a className={actionCls} href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer">
+            <MessageCircle size={20} className="text-emerald-600" /> WhatsApp
+          </a>
+          <a className={actionCls} href={`mailto:?subject=${encodeURIComponent(page.title)}&body=${encodeURIComponent(message)}`}>
+            <Mail size={20} className="text-blue-600" /> Email
+          </a>
+          <button type="button" className={actionCls} onClick={() => downloadQrPng(qrRef.current?.querySelector('svg'), `${page.slug}-qr.png`)}>
+            <Download size={20} className="text-slate-700" /> QR image
+          </button>
+          {canNativeShare ? (
+            <button type="button" className={actionCls} onClick={() => navigator.share({ title: page.title, text: message, url: link }).catch(() => {})}>
+              <Share2 size={20} className="text-violet-600" /> More
+            </button>
+          ) : (
+            <a className={actionCls} href={link} target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={20} className="text-violet-600" /> Open
+            </a>
+          )}
+        </div>
+        <p className="text-xs text-slate-500 text-center mt-4">Print the QR code for your shop counter, flyers or invoices.</p>
+      </div>
+    </Modal>
+  );
+}
+
+// ------------------------------------------
+// Order detail
+// ------------------------------------------
+function OrderDetail({ order, fields, onClose, onCopy }) {
+  const fmap = Object.fromEntries((fields || []).map((f) => [f.id, f]));
+  const money = (c) => formatCents(c, order.currency);
+  const row = 'flex justify-between gap-3 text-sm';
+  return (
+    <Modal title="Order details" onClose={onClose}>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="min-w-0">
+          <p className="text-[15px] font-semibold text-slate-900 truncate">{order.customer_name}</p>
+          <p className="text-sm text-slate-500 truncate">{order.customer_email}</p>
+        </div>
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border capitalize shrink-0 ${orderStatusCls(order.status)}`}>{order.status}</span>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 p-4 space-y-2 mb-4">
+        {(order.line_items || []).map((li, i) => (
+          <div key={i} className={`${row} text-slate-600`}>
+            <span className="break-words">{li.label}{li.quantity > 1 ? ` × ${li.quantity}` : ''}</span>
+            <span className="shrink-0 text-slate-800">{money(li.total_cents)}</span>
+          </div>
+        ))}
+        <div className={`${row} pt-2 border-t border-slate-200 font-semibold text-slate-900`}><span>Customer paid</span><span>{money(order.total_cents)}</span></div>
+        {Number(order.fee_cents) > 0 && <div className={`${row} text-slate-500`}><span>Platform fee</span><span>{money(order.fee_cents)}</span></div>}
+        {order.merchant_net_cents != null && <div className={`${row} font-semibold text-emerald-700`}><span>You receive</span><span>{money(order.merchant_net_cents)}</span></div>}
+      </div>
+
+      <h5 className="text-sm font-semibold text-slate-700 mb-2">Customer answers</h5>
+      {Object.keys(order.answers || {}).length === 0 ? (
+        <p className="text-sm text-slate-500 mb-4">No answers.</p>
+      ) : (
+        <dl className="divide-y divide-slate-100 rounded-xl border border-slate-200 mb-4">
+          {Object.entries(order.answers || {}).map(([k, v]) => (
+            <div key={k} className="flex justify-between gap-4 px-4 py-2.5 text-sm">
+              <dt className="text-slate-500">{fmap[k]?.label || k}</dt>
+              <dd className="text-slate-900 font-medium text-right break-words whitespace-pre-line">{answerDisplay(fmap[k], v) || '—'}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      <div className="text-xs text-slate-500 space-y-1">
+        <p>Placed {order.created_at ? new Date(order.created_at).toLocaleString() : '—'}{order.paid_at ? ` · Paid ${new Date(order.paid_at).toLocaleString()}` : ''}</p>
+        <p>Paid with <span className="capitalize">{String(order.provider || '—').replace('_', ' ')}</span></p>
+        <button type="button" onClick={() => onCopy(order.id, 'Order ID copied.')} className="font-mono break-all text-slate-500 hover:text-slate-900 text-left">ID {order.id} <Copy size={11} className="inline" /></button>
+      </div>
+    </Modal>
+  );
+}
 
 // ------------------------------------------
 // Field builder row
@@ -533,21 +660,31 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
     onSaved(data?.page, editing ? null : secret);
   };
 
+  const brand = safeBrandColor(form.brand_color);
+  const logoPreview = safeHttpsUrl(form.logo_url);
   const previewPanel = (
-    <div className="bg-slate-100 border border-slate-200 rounded-[2rem] p-4 sm:p-6">
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-1"><Eye size={12} /> Live preview</p>
-      <div className="bg-white rounded-[1.5rem] border border-slate-200 p-5 shadow-sm">
-        {safeHttpsUrl(form.logo_url) && <img src={safeHttpsUrl(form.logo_url)} alt="" referrerPolicy="no-referrer" className="w-12 h-12 rounded-xl object-cover mx-auto mb-3 border border-slate-100" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
-        <h3 className="text-lg font-black text-slate-800 text-center break-words">{form.title || 'Untitled page'}</h3>
-        {form.description && <p className="text-xs text-slate-500 text-center mt-2 whitespace-pre-line break-words">{form.description}</p>}
-        <div className="mt-5 space-y-4">
-          <div className="grid grid-cols-1 gap-3">
-            <input disabled placeholder="Full name *" className={`${inputCls} opacity-60`} />
-            <input disabled placeholder="Email *" className={`${inputCls} opacity-60`} />
+    <div className="bg-slate-100 border border-slate-200 rounded-3xl p-4 sm:p-5">
+      <p className="text-sm font-semibold text-slate-600 mb-3 flex items-center gap-1.5"><Eye size={15} /> Live preview</p>
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm" style={{ '--brand': brand }}>
+        <div className="h-16" style={{ background: `linear-gradient(135deg, ${brand}, color-mix(in srgb, ${brand} 70%, #0f172a))` }} />
+        <div className="px-5 pb-5 -mt-7">
+          {logoPreview ? (
+            <img src={logoPreview} alt="" referrerPolicy="no-referrer" className="w-14 h-14 rounded-xl object-cover border-4 border-white bg-white" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          ) : (
+            <div className="w-14 h-14 rounded-xl border-4 border-white flex items-center justify-center font-bold" style={{ background: brand, color: onBrandColor(brand) }}>{initialsOf(form.title)}</div>
+          )}
+          <h3 className="text-lg font-bold text-slate-900 mt-3 break-words">{form.title || 'Untitled page'}</h3>
+          {form.description && <p className="text-sm text-slate-600 mt-1 whitespace-pre-line break-words">{form.description}</p>}
+          <div className="mt-5 space-y-4">
+            <div className="grid grid-cols-1 gap-3">
+              <input disabled placeholder="Full name" className={inputCls} />
+              <input disabled placeholder="Email" className={inputCls} />
+            </div>
+            <PaymentFormRenderer fields={preview} values={{ ...initialAnswers(preview), ...previewValues }} onChange={(id, v) => setPreviewValues((p) => ({ ...p, [id]: v }))} idPrefix="preview" />
+            {form.pricing.mode === 'customer_amount' && <input disabled placeholder="Amount (USD)" className={inputCls} />}
+            <div className="w-full py-3 rounded-xl text-center text-sm font-semibold" style={{ background: brand, color: onBrandColor(brand) }}>Pay</div>
+            <p className="text-xs text-slate-500 text-center">Totals are calculated by IFB at checkout{form.pricing.fee_bearer === 'customer' ? ' (+1.5% fee paid by the customer)' : ''}.</p>
           </div>
-          <PaymentFormRenderer fields={preview} values={{ ...initialAnswers(preview), ...previewValues }} onChange={(id, v) => setPreviewValues((p) => ({ ...p, [id]: v }))} idPrefix="preview" />
-          {form.pricing.mode === 'customer_amount' && <input disabled placeholder="Amount (USD) *" className={`${inputCls} opacity-60`} />}
-          <div className="text-[10px] font-bold text-slate-400 text-center">Totals are calculated by IFB at checkout{form.pricing.fee_bearer === 'customer' ? ' (+1.5% fee paid by customer)' : ''}.</div>
         </div>
       </div>
     </div>
@@ -555,7 +692,7 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
 
   return (
     <div className="animate-in fade-in">
-      <button onClick={onCancel} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 flex items-center gap-2 mb-4"><ArrowLeft size={14} /> Back to pages</button>
+      <button onClick={onCancel} className="text-sm font-medium text-slate-500 hover:text-slate-900 flex items-center gap-1.5 mb-4"><ArrowLeft size={16} /> Back to pages</button>
 
       {!editing && (
         <div className="mb-6">
@@ -564,8 +701,8 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
             {TEMPLATES.map((t) => (
               <button key={t.id} type="button" onClick={() => applyTemplate(t)} className="text-left p-4 bg-white border border-slate-200 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all">
                 <t.Icon size={20} className="text-blue-600 mb-2" />
-                <p className="font-black text-sm text-slate-800">{t.label}</p>
-                <p className="text-[11px] text-slate-400 font-medium">{t.desc}</p>
+                <p className="font-semibold text-[15px] text-slate-900">{t.label}</p>
+                <p className="text-[13px] text-slate-500">{t.desc}</p>
               </button>
             ))}
           </div>
@@ -575,11 +712,30 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <form onSubmit={handleSave} className="lg:col-span-3 space-y-6">
           {/* Basics */}
-          <section className="bg-white p-5 sm:p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-4">
-            <h4 className="font-black text-sm uppercase tracking-widest text-slate-800">Page details</h4>
+          <section className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 space-y-4">
+            <h4 className="text-base font-bold text-slate-900">Page details</h4>
             <div><label className={labelCls}>Title *</label><input required maxLength={120} value={form.title} onChange={(e) => set({ title: e.target.value })} className={inputCls} /></div>
             <div><label className={labelCls}>Description</label><textarea rows={3} maxLength={2000} value={form.description} onChange={(e) => set({ description: e.target.value })} className={`${inputCls} resize-y`} /></div>
-            <div><label className={labelCls}>Logo URL (https)</label><input type="url" value={form.logo_url} onChange={(e) => set({ logo_url: e.target.value })} className={inputCls} placeholder="https://..." /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div><label className={labelCls}>Logo URL (https)</label><input type="url" value={form.logo_url} onChange={(e) => set({ logo_url: e.target.value })} className={inputCls} placeholder="https://..." /></div>
+              <div>
+                <label className={labelCls} htmlFor="pp-brand">Brand colour</label>
+                <div className="flex items-center gap-2">
+                  <input id="pp-brand" type="color" value={safeBrandColor(form.brand_color)} onChange={(e) => set({ brand_color: e.target.value })}
+                    className="w-11 h-11 rounded-xl border border-slate-300 bg-white p-1 cursor-pointer shrink-0" aria-label="Pick brand colour" />
+                  <div className="flex gap-1.5 flex-wrap">
+                    {BRAND_SWATCHES.map((c) => (
+                      <button key={c} type="button" onClick={() => set({ brand_color: c })} aria-label={`Use colour ${c}`}
+                        className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${safeBrandColor(form.brand_color) === c ? 'border-slate-900' : 'border-white shadow-sm'}`}
+                        style={{ background: c }}>
+                        {safeBrandColor(form.brand_color) === c && <Check size={13} style={{ color: onBrandColor(c) }} strokeWidth={3} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5">Used for the header and Pay button on your checkout page.</p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Visibility</label>
@@ -607,7 +763,7 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
           <section className="bg-slate-50 p-5 sm:p-6 rounded-[2rem] border border-slate-200 space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <h4 className="font-black text-sm uppercase tracking-widest text-slate-800">Form fields</h4>
+                <h4 className="text-base font-bold text-slate-900">Form fields</h4>
                 <p className="text-[11px] text-slate-400 font-medium">Customer name and email are always collected.</p>
               </div>
               <span className="text-[10px] font-black text-slate-400">{form.fields.length}/{MAX_FIELDS}</span>
@@ -624,8 +780,8 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
           </section>
 
           {/* Pricing */}
-          <section className="bg-white p-5 sm:p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-4">
-            <h4 className="font-black text-sm uppercase tracking-widest text-slate-800">Pricing (USD)</h4>
+          <section className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 space-y-4">
+            <h4 className="text-base font-bold text-slate-900">Pricing (USD)</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[{ v: 'fixed', l: 'Fixed price (with priced options)' }, { v: 'customer_amount', l: 'Customer enters amount' }].map((m) => (
                 <button key={m.v} type="button" onClick={() => setPricing({ mode: m.v })}
@@ -661,8 +817,8 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
           </section>
 
           {/* After payment */}
-          <section className="bg-white p-5 sm:p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-4">
-            <h4 className="font-black text-sm uppercase tracking-widest text-slate-800">After payment</h4>
+          <section className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 space-y-4">
+            <h4 className="text-base font-bold text-slate-900">After payment</h4>
             <div><label className={labelCls}>Success message</label><textarea rows={2} maxLength={1000} value={form.success_message} onChange={(e) => set({ success_message: e.target.value })} className={`${inputCls} resize-y`} /></div>
             <div><label className={labelCls}>Redirect URL (https, optional)</label><input type="url" value={form.redirect_url} onChange={(e) => set({ redirect_url: e.target.value })} className={inputCls} placeholder="https://..." /></div>
             <div><label className={labelCls}>Notification email</label><input type="email" value={form.notify_email} onChange={(e) => set({ notify_email: e.target.value })} className={inputCls} placeholder="orders@yourbusiness.com" /></div>
@@ -756,92 +912,78 @@ function OrdersView({ page, onBack, showToast }) {
     showToast(`Exported ${orders.length} orders.`);
   };
 
+  const copyText = async (text, msg = 'Copied.') => {
+    try { await navigator.clipboard.writeText(text); showToast(msg); } catch { showToast('Could not copy.', 'error'); }
+  };
+  const paidOrders = orders.filter((o) => o.status === 'paid');
+  const paidNet = paidOrders.reduce((n, o) => n + Number(o.merchant_net_cents || 0), 0);
+  const detail = orders.find((o) => o.id === expanded) || null;
+
   return (
-    <div className="animate-in fade-in">
-      <button onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 flex items-center gap-2 mb-4"><ArrowLeft size={14} /> Back to pages</button>
-      <div className="bg-white rounded-[2rem] p-5 sm:p-6 border border-slate-200 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-slate-100 pb-4">
+    <div className="animate-in fade-in space-y-4">
+      <button onClick={onBack} className="text-sm font-medium text-slate-500 hover:text-slate-900 flex items-center gap-1.5"><ArrowLeft size={16} /> Back to pages</button>
+      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div className="min-w-0">
-            <h3 className="font-black text-lg text-slate-800 tracking-tight truncate">{page.title}</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Orders</p>
+            <h3 className="text-xl font-bold text-slate-900 truncate">{page.title}</h3>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {orders.length ? <><span className="font-semibold text-emerald-700">{formatCents(paidNet, 'USD')}</span> from {paidOrders.length} paid {paidOrders.length === 1 ? 'order' : 'orders'} shown</> : 'Orders'}
+            </p>
           </div>
           <div className="flex gap-2">
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="p-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none focus:border-blue-500" aria-label="Filter by status">
-              {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s}</option>)}
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm outline-none focus:border-blue-500" aria-label="Filter by status">
+              {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s[0].toUpperCase() + s.slice(1)}</option>)}
             </select>
             <IconBtn title="Refresh" onClick={() => load()}><RefreshCw size={16} /></IconBtn>
-            <button onClick={exportCsv} disabled={!orders.length} className="px-3 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-40"><Download size={14} /> CSV</button>
+            <button onClick={exportCsv} disabled={!orders.length} className="px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"><Download size={15} /> Export CSV</button>
           </div>
         </div>
 
-        {error && <div role="alert" className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-600">{error}</div>}
+        {error && <div role="alert" className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
 
         {isLoading && !orders.length ? (
-          <div className="py-12 text-center text-slate-400"><Loader2 size={28} className="animate-spin mx-auto mb-2 text-blue-500" /> Loading orders...</div>
+          <div className="py-12 text-center text-slate-500"><Loader2 size={26} className="animate-spin mx-auto mb-2 text-blue-500" /> Loading orders…</div>
         ) : !orders.length ? (
-          <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-100 rounded-3xl">
-            <ListOrdered size={40} className="mx-auto mb-3 opacity-20" />
-            <p className="font-bold text-slate-600">No orders yet.</p>
+          <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-2xl">
+            <ListOrdered size={34} className="mx-auto mb-3 text-slate-300" />
+            <p className="font-semibold text-slate-800">No orders yet</p>
+            <p className="text-sm text-slate-500 mt-1">Share your page to start receiving payments.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto -mx-5 sm:mx-0">
-            <table className="w-full text-left text-xs min-w-[640px]">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full text-left text-sm min-w-[600px]">
               <thead>
-                <tr className="text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
-                  <th className="p-3 w-6"></th><th className="p-3">Date</th><th className="p-3">Customer</th><th className="p-3">Email</th>
-                  <th className="p-3 text-right">Total</th><th className="p-3">Status</th><th className="p-3">Method</th>
+                <tr className="text-xs font-semibold text-slate-500 border-b border-slate-200">
+                  <th className="px-3 py-2.5">Date</th><th className="px-3 py-2.5">Customer</th>
+                  <th className="px-3 py-2.5 text-right">Total</th><th className="px-3 py-2.5">Status</th><th className="px-3 py-2.5">Method</th><th className="px-3 py-2.5 w-6"></th>
                 </tr>
               </thead>
               <tbody>
-                {orders.map((o) => {
-                  const open = expanded === o.id;
-                  const fmap = Object.fromEntries(fieldsFor(o).map((f) => [f.id, f]));
-                  return (
-                    <React.Fragment key={o.id}>
-                      <tr className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer" onClick={() => setExpanded(open ? null : o.id)}>
-                        <td className="p-3 text-slate-400">{open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</td>
-                        <td className="p-3 font-bold text-slate-600 whitespace-nowrap">{o.created_at ? new Date(o.created_at).toLocaleString() : ''}</td>
-                        <td className="p-3 font-black text-slate-800">{o.customer_name}</td>
-                        <td className="p-3 font-bold text-slate-500 break-all">{o.customer_email}</td>
-                        <td className="p-3 font-black text-slate-900 text-right whitespace-nowrap">{formatCents(o.total_cents, o.currency)}</td>
-                        <td className="p-3"><span className={`text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest border ${orderStatusCls(o.status)}`}>{o.status}</span></td>
-                        <td className="p-3 font-bold text-slate-500 capitalize">{String(o.provider || '').replace('_', ' ')}</td>
-                      </tr>
-                      {open && (
-                        <tr className="bg-slate-50 border-b border-slate-100">
-                          <td></td>
-                          <td colSpan={6} className="p-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-                              {Object.keys(o.answers || {}).length === 0 && <p className="text-slate-400 font-bold">No answers.</p>}
-                              {Object.entries(o.answers || {}).map(([k, v]) => (
-                                <div key={k} className="min-w-0">
-                                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{fmap[k]?.label || k}</p>
-                                  <p className="font-bold text-slate-700 break-words whitespace-pre-line">{answerDisplay(fmap[k], v) || '—'}</p>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="mt-3 pt-3 border-t border-slate-200 flex flex-wrap gap-x-6 gap-y-1 text-[11px] font-bold text-slate-500">
-                              <span>Subtotal {formatCents(o.subtotal_cents, o.currency)}</span>
-                              <span>Fee {formatCents(o.fee_cents, o.currency)}</span>
-                              <span>Net {formatCents(o.merchant_net_cents, o.currency)}</span>
-                              <span className="font-mono break-all">ID {o.id}</span>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
+                {orders.map((o) => (
+                  <tr key={o.id} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer" onClick={() => setExpanded(o.id)}
+                    tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setExpanded(o.id); }}>
+                    <td className="px-3 py-3 text-slate-600 whitespace-nowrap">{o.created_at ? new Date(o.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : ''}</td>
+                    <td className="px-3 py-3 min-w-0">
+                      <p className="font-medium text-slate-900 truncate">{o.customer_name}</p>
+                      <p className="text-xs text-slate-500 truncate">{o.customer_email}</p>
+                    </td>
+                    <td className="px-3 py-3 font-semibold text-slate-900 text-right whitespace-nowrap">{formatCents(o.total_cents, o.currency)}</td>
+                    <td className="px-3 py-3"><span className={`text-xs font-medium px-2 py-0.5 rounded-full border capitalize ${orderStatusCls(o.status)}`}>{o.status}</span></td>
+                    <td className="px-3 py-3 text-slate-600 capitalize">{String(o.provider || '').replace('_', ' ')}</td>
+                    <td className="px-3 py-3 text-slate-400"><ChevronRight size={16} /></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             {hasMore && (
-              <button onClick={() => load(orders[orders.length - 1]?.created_at)} disabled={isLoading} className="mt-4 w-full py-3 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center justify-center gap-2">
-                {isLoading ? <Loader2 size={14} className="animate-spin" /> : 'Load more'}
+              <button onClick={() => load(orders[orders.length - 1]?.created_at)} disabled={isLoading} className="mt-4 w-full py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 flex items-center justify-center gap-2">
+                {isLoading ? <Loader2 size={15} className="animate-spin" /> : 'Load more'}
               </button>
             )}
           </div>
         )}
       </div>
+      {detail && <OrderDetail order={detail} fields={fieldsFor(detail)} onClose={() => setExpanded(null)} onCopy={copyText} />}
     </div>
   );
 }
@@ -857,9 +999,15 @@ export default function PaymentPages({ session, profile }) {
   const [notification, setNotification] = useState(null);
   const [editing, setEditing] = useState(null);
   const [ordersPage, setOrdersPage] = useState(null);
-  const [qrPage, setQrPage] = useState(null);
+  const [sharePage, setSharePage] = useState(null);
   const [secret, setSecret] = useState(null); // { title, value }
   const [busyId, setBusyId] = useState(null);
+
+  const totals = useMemo(() => ({
+    collected: pages.reduce((n, p) => n + Number(p.collected_net_cents || 0), 0),
+    paid: pages.reduce((n, p) => n + Number(p.paid_count || 0), 0),
+    active: pages.filter((p) => p.status === 'active').length,
+  }), [pages]);
 
   const kycStatus = profile?.kyc_status;
   const kycBlocked = !!profile && !KYC_OK.includes(String(kycStatus || '').toLowerCase());
@@ -913,13 +1061,13 @@ export default function PaymentPages({ session, profile }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {notification && (
-        <div className={`p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-3 shadow-md border animate-in slide-in-from-top-2 ${notification.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+        <div className={`p-3.5 rounded-xl text-sm font-medium flex items-center gap-2.5 shadow-sm border animate-in slide-in-from-top-2 ${notification.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
           <ShieldCheck size={16} className="shrink-0" /> {notification.msg}
         </div>
       )}
 
       {kycBlocked && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs font-bold text-amber-700 flex items-start gap-3">
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-3">
           <AlertTriangle size={16} className="shrink-0 mt-0.5" />
           <span>{KYC_MESSAGE}</span>
         </div>
@@ -935,57 +1083,87 @@ export default function PaymentPages({ session, profile }) {
       )}
 
       {view === 'list' && (
-        <div className="bg-white rounded-[2.5rem] p-5 sm:p-8 border border-slate-200 shadow-xl">
-          <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-6 gap-3">
+        <div className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-black text-xl text-slate-800 tracking-tight">Payment Pages</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Shareable links with custom forms</p>
+              <h3 className="text-2xl font-bold text-slate-900">Payment Pages</h3>
+              <p className="text-sm text-slate-500 mt-0.5">Build a form with prices, share the link, and get paid into your wallet.</p>
             </div>
             <button onClick={() => { setEditing(null); setView('builder'); }} disabled={kycBlocked}
-              className="p-4 rounded-2xl text-white font-black transition-all shadow-md active:scale-95 flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50">
-              <Plus size={20} /> <span className="text-[10px] uppercase tracking-widest hidden sm:block">New Page</span>
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold bg-blue-600 hover:bg-blue-500 shadow-sm active:scale-[0.98] transition disabled:opacity-50">
+              <Plus size={18} /> New page
             </button>
           </div>
 
-          {listError && <div role="alert" className="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-xs font-bold text-red-600">{listError}</div>}
+          {pages.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {[
+                { Icon: Wallet, label: 'Collected', value: formatCents(totals.collected, 'USD'), tone: 'text-emerald-600 bg-emerald-50' },
+                { Icon: ReceiptText, label: 'Paid orders', value: totals.paid.toLocaleString(), tone: 'text-blue-600 bg-blue-50' },
+                { Icon: Link2, label: 'Active pages', value: `${totals.active} of ${pages.length}`, tone: 'text-violet-600 bg-violet-50' },
+              ].map(({ Icon, label, value, tone }) => (
+                <div key={label} className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 flex items-center gap-3">
+                  <span className={`hidden sm:flex w-10 h-10 rounded-xl items-center justify-center shrink-0 ${tone}`}><Icon size={20} /></span>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-slate-500 truncate">{label}</p>
+                    <p className="text-base sm:text-xl font-bold text-slate-900 truncate">{value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {listError && <div role="alert" className="p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{listError}</div>}
 
           {isLoading ? (
-            <div className="py-12 text-center text-slate-400"><Loader2 size={32} className="animate-spin mx-auto mb-2 text-blue-500" /> Loading pages...</div>
+            <div className="py-16 text-center text-slate-500 bg-white border border-slate-200 rounded-2xl"><Loader2 size={28} className="animate-spin mx-auto mb-2 text-blue-500" /> Loading pages…</div>
           ) : pages.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-100 rounded-3xl">
-              <Link2 size={48} className="mx-auto mb-4 opacity-20" />
-              <p className="font-bold text-slate-600">No payment pages yet.</p>
-              <p className="text-xs mt-1">Create a page with a custom form and share the link or QR code.</p>
+            <div className="py-14 px-6 text-center bg-white border-2 border-dashed border-slate-200 rounded-2xl">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center"><Link2 size={26} /></div>
+              <p className="text-lg font-semibold text-slate-900">Create your first payment page</p>
+              <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">Pick a template — travel booking, event registration or donations — add your fields and prices, then share the link or QR code.</p>
+              <button onClick={() => { setEditing(null); setView('builder'); }} disabled={kycBlocked}
+                className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold bg-blue-600 hover:bg-blue-500 disabled:opacity-50">
+                <Plus size={18} /> New page
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
               {pages.map((p) => {
                 const link = pageUrl(p.slug);
+                const brand = safeBrandColor(p.brand_color);
+                const btn = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition disabled:opacity-50';
                 return (
-                  <div key={p.id} className="p-4 sm:p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <p className="font-black text-sm text-slate-800 break-words">{p.title}</p>
+                  <div key={p.id} className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-sm transition-shadow">
+                    <span className="absolute left-0 inset-y-0 w-1.5" style={{ background: brand }} aria-hidden="true" />
+                    <div className="p-4 sm:p-5 pl-5 sm:pl-6 flex flex-col lg:flex-row lg:items-center gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-[15px] font-semibold text-slate-900 break-words">{p.title}</p>
                           <StatusBadge page={p} />
-                          {p.visibility === 'private' && <span className="text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest border bg-violet-50 text-violet-600 border-violet-200">private</span>}
+                          {p.visibility === 'private' && <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-violet-50 text-violet-700 border-violet-200">Private link</span>}
                         </div>
-                        <p className="text-[11px] font-mono text-blue-600 truncate">{link}</p>
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mt-1">
-                          {p.uses_count || 0}{p.max_uses ? `/${p.max_uses}` : ''} uses · Created {p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}
+                        <button type="button" onClick={() => copyText(link)} className="mt-1 max-w-full text-sm text-blue-600 hover:text-blue-700 truncate flex items-center gap-1.5" title="Copy link">
+                          <span className="truncate">{link.replace(/^https?:\/\//, '')}</span><Copy size={13} className="shrink-0" />
+                        </button>
+                        <p className="text-sm text-slate-500 mt-1.5">
+                          <span className="font-semibold text-slate-800">{formatCents(p.collected_net_cents || 0, 'USD')}</span> collected
+                          {' · '}{(p.paid_count || 0).toLocaleString()} paid
+                          {p.max_uses ? ` · ${p.uses_count || 0}/${p.max_uses} uses` : ''}
                           {p.expires_at ? ` · Expires ${new Date(p.expires_at).toLocaleDateString()}` : ''}
                         </p>
                       </div>
-                      <div className="flex gap-1.5 flex-wrap shrink-0">
-                        <IconBtn title="Copy link" onClick={() => copyText(link)}><Copy size={16} /></IconBtn>
-                        <IconBtn title="Show QR code" onClick={() => setQrPage(p)}><QrCode size={16} /></IconBtn>
-                        <a href={link} target="_blank" rel="noopener noreferrer" title="Open page" aria-label="Open page" className="p-2 rounded-lg border bg-slate-50 text-slate-600 border-slate-200 hover:text-blue-600 hover:border-blue-200 transition-colors"><ExternalLink size={16} /></a>
-                        <IconBtn title={p.status === 'active' ? 'Deactivate' : 'Activate'} onClick={() => toggleStatus(p)} disabled={busyId === p.id}>
-                          {busyId === p.id ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} className={p.status === 'active' ? 'text-emerald-600' : ''} />}
-                        </IconBtn>
-                        <IconBtn title="Edit" onClick={() => { setEditing(p); setView('builder'); }}><Pencil size={16} /></IconBtn>
-                        {p.webhook_url && <IconBtn title="Rotate webhook secret" onClick={() => rotateSecret(p)} disabled={busyId === p.id}><KeyRound size={16} /></IconBtn>}
-                        <IconBtn title="View orders" tone="blue" onClick={() => { setOrdersPage(p); setView('orders'); }}><ListOrdered size={16} /></IconBtn>
+                      <div className="flex items-center gap-2 flex-wrap shrink-0">
+                        <button type="button" className={`${btn} bg-slate-900 border-slate-900 text-white hover:bg-slate-800 hover:border-slate-800`} onClick={() => setSharePage(p)}><Share2 size={15} /> Share</button>
+                        <button type="button" className={btn} onClick={() => { setOrdersPage(p); setView('orders'); }}><ListOrdered size={15} /> Orders</button>
+                        <button type="button" className={btn} onClick={() => { setEditing(p); setView('builder'); }}><Pencil size={15} /> Edit</button>
+                        <button type="button" className={btn} onClick={() => toggleStatus(p)} disabled={busyId === p.id} title={p.status === 'active' ? 'Stop accepting payments' : 'Start accepting payments'}>
+                          {busyId === p.id ? <Loader2 size={15} className="animate-spin" /> : <Power size={15} className={p.status === 'active' ? 'text-emerald-600' : 'text-slate-400'} />}
+                          {p.status === 'active' ? 'Pause' : 'Activate'}
+                        </button>
+                        {p.webhook_url && (
+                          <IconBtn title="Rotate webhook secret" onClick={() => rotateSecret(p)} disabled={busyId === p.id}><KeyRound size={16} /></IconBtn>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -996,27 +1174,16 @@ export default function PaymentPages({ session, profile }) {
         </div>
       )}
 
-      {qrPage && (
-        <Modal title="Scan to pay" onClose={() => setQrPage(null)}>
-          <div className="flex flex-col items-center">
-            <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-md mb-4">
-              <QRCode value={pageUrl(qrPage.slug)} size={200} bgColor="#ffffff" fgColor="#0f172a" level="M" />
-            </div>
-            <p className="font-black text-slate-800 text-center break-words">{qrPage.title}</p>
-            <p className="text-[11px] font-mono text-blue-600 break-all text-center mt-1">{pageUrl(qrPage.slug)}</p>
-            <button onClick={() => copyText(pageUrl(qrPage.slug))} className="mt-4 w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"><Copy size={14} /> Copy link</button>
-          </div>
-        </Modal>
-      )}
+      {sharePage && <ShareSheet page={sharePage} onClose={() => setSharePage(null)} onCopy={(t) => copyText(t)} />}
 
       {secret && (
         <Modal title="Webhook secret" onClose={() => { if (window.confirm('Have you saved the secret? It will not be shown again.')) setSecret(null); }}>
-          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold text-amber-700 flex items-start gap-2 mb-4">
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800 flex items-start gap-2 mb-4">
             <AlertTriangle size={14} className="shrink-0 mt-0.5" />
             <span>Copy this secret now. It will not be shown again. Use it to verify the X-IFB-Signature header on webhooks for &ldquo;{secret.title}&rdquo;.</span>
           </div>
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 break-all select-all mb-4">{secret.value}</div>
-          <button onClick={() => copyText(secret.value, 'Webhook secret copied.')} className="w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"><Copy size={14} /> Copy secret</button>
+          <button onClick={() => copyText(secret.value, 'Webhook secret copied.')} className="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"><Copy size={15} /> Copy secret</button>
         </Modal>
       )}
     </div>

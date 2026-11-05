@@ -4,10 +4,13 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import {
   ArrowLeft, ShieldCheck, Loader2, CheckCircle2, XCircle, Clock, CreditCard,
-  Smartphone, Wallet, Landmark, AlertTriangle, Link2Off, RefreshCw, Lock
+  Smartphone, Wallet, Landmark, AlertTriangle, Link2Off, RefreshCw, Lock, BadgeCheck, Check
 } from 'lucide-react';
-import PaymentFormRenderer from './PaymentFormRenderer';
-import { callPaymentPages, formatCents, safeHttpsUrl, initialAnswers, buildAnswers } from './paymentPagesApi';
+import PaymentFormRenderer, { inputCls, FieldLabel } from './PaymentFormRenderer';
+import {
+  callPaymentPages, formatCents, safeHttpsUrl, initialAnswers, buildAnswers,
+  safeBrandColor, onBrandColor, initialsOf, DEFAULT_BRAND,
+} from './paymentPagesApi';
 
 // Public Payment Page: /p/:slug — works logged out.
 // The browser NEVER computes the charged amount: totals shown here come from the
@@ -20,8 +23,6 @@ const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 const POLL_INTERVAL_MS = 3000;
 const POLL_MAX_MS = 2 * 60 * 1000;
-
-const inputCls = 'w-full p-4 rounded-xl border border-slate-200 bg-white font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-colors disabled:opacity-60';
 
 /** Redirect only to https hosts of the expected provider. */
 function isAllowedProviderUrl(raw, method) {
@@ -107,33 +108,38 @@ function TurnstileWidget({ siteKey, onToken, resetKey }) {
 // ------------------------------------------
 // Shared shells
 // ------------------------------------------
-const Shell = ({ children }) => (
-  <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center px-4 py-6 sm:py-12">
+const Shell = ({ children, brand = DEFAULT_BRAND }) => (
+  <div className="min-h-screen w-full bg-slate-100 flex flex-col items-center" style={{ '--brand': safeBrandColor(brand) }}>
     {children}
-    <p className="mt-6 text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-      <Lock size={12} /> Secured by Infinite Future Bank
-    </p>
+    <footer className="mt-auto w-full py-6 text-center text-xs text-slate-500 flex items-center justify-center gap-1.5">
+      <Lock size={12} /> Secure checkout by Infinite Future Bank
+    </footer>
   </div>
 );
+
+const primaryBtn =
+  'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-[15px] transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed';
 
 const StateCard = ({ tone = 'slate', Icon, title, children, action }) => {
   const tones = {
     slate: 'bg-slate-100 text-slate-500',
-    red: 'bg-red-100 text-red-500',
-    amber: 'bg-amber-100 text-amber-600',
-    emerald: 'bg-emerald-100 text-emerald-600',
+    red: 'bg-red-50 text-red-600',
+    amber: 'bg-amber-50 text-amber-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
   };
   return (
     <Shell>
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-[2.5rem] shadow-xl p-8 text-center animate-in fade-in">
-        <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 ${tones[tone]}`}><Icon size={32} /></div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">{title}</h2>
-        <div className="text-sm text-slate-500 font-medium">{children}</div>
-        {action && <div className="mt-8">{action}</div>}
+      <div className="w-full max-w-md mx-4 mt-10 sm:mt-20 bg-white border border-slate-200 rounded-3xl shadow-sm p-8 text-center animate-in fade-in">
+        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 ${tones[tone]}`}><Icon size={30} /></div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">{title}</h2>
+        <div className="text-[15px] text-slate-600 leading-relaxed">{children}</div>
+        {action && <div className="mt-7">{action}</div>}
       </div>
     </Shell>
   );
 };
+
+const darkBtn = `${primaryBtn} bg-slate-900 hover:bg-slate-800 text-white`;
 
 // ------------------------------------------
 // Order status (after returning from a provider: ?order=<id>)
@@ -171,42 +177,42 @@ function OrderStatusView({ slug, orderId }) {
 
   if (state.phase === 'paid') {
     return (
-      <StateCard tone="emerald" Icon={CheckCircle2} title="Payment Received">
+      <StateCard tone="emerald" Icon={CheckCircle2} title="Payment received">
         {total && <p className="text-3xl font-black text-emerald-700 mb-3">{total}</p>}
         <p className="whitespace-pre-line">{state.data?.success_message || 'Thank you! A receipt has been sent to your email.'}</p>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-6 break-all">Order {orderId}</p>
+        <p className="text-xs text-slate-400 mt-6 break-all">Order reference: {orderId}</p>
       </StateCard>
     );
   }
   if (state.phase === 'failed') {
     return (
-      <StateCard tone="red" Icon={XCircle} title={state.data?.status === 'expired' ? 'Order Expired' : 'Payment Failed'}
-        action={<a href={backHref} className="inline-block px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Try Again</a>}>
+      <StateCard tone="red" Icon={XCircle} title={state.data?.status === 'expired' ? 'Order expired' : 'Payment failed'}
+        action={<a href={backHref} className={darkBtn}>Try Again</a>}>
         Your payment was not completed and you have not been charged by IFB. You can start a new payment.
       </StateCard>
     );
   }
   if (state.phase === 'notfound') {
     return (
-      <StateCard tone="red" Icon={AlertTriangle} title="Order Not Found"
-        action={<a href={backHref} className="inline-block px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Back to Payment Page</a>}>
+      <StateCard tone="red" Icon={AlertTriangle} title="Order not found"
+        action={<a href={backHref} className={darkBtn}>Back to payment page</a>}>
         We could not find this order.
       </StateCard>
     );
   }
   if (state.phase === 'timeout') {
     return (
-      <StateCard tone="amber" Icon={Clock} title="Payment Pending"
-        action={<button onClick={() => setAttempt((a) => a + 1)} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-2"><RefreshCw size={14} /> Check Again</button>}>
+      <StateCard tone="amber" Icon={Clock} title="Payment pending"
+        action={<button onClick={() => setAttempt((a) => a + 1)} className={darkBtn}><RefreshCw size={14} /> Check again</button>}>
         Your payment is still being confirmed by the provider. You will receive an email receipt once it clears. Please do not pay twice.
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-4 break-all">Order {orderId}</p>
+        <p className="text-xs text-slate-400 mt-4 break-all">Order reference: {orderId}</p>
       </StateCard>
     );
   }
   return (
-    <StateCard tone="slate" Icon={Loader2} title="Confirming Payment">
+    <StateCard tone="slate" Icon={Loader2} title="Confirming payment">
       <div className="flex items-center justify-center gap-2 mb-2"><Loader2 size={16} className="animate-spin text-blue-500" /> Waiting for confirmation from the payment provider...</div>
-      {total && <p className="font-black text-slate-700">{total}</p>}
+      {total && <p className="font-semibold text-slate-800">{total}</p>}
       <p className="text-xs mt-3">This usually takes a few seconds. Please keep this page open.</p>
     </StateCard>
   );
@@ -242,16 +248,16 @@ function CardPaymentForm({ slug, orderId, totalLabel, email, onBack }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-      <button type="button" onClick={onBack} disabled={isProcessing} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 flex items-center gap-2 transition-colors">
+      <button type="button" onClick={onBack} disabled={isProcessing} className="text-sm font-medium text-slate-500 hover:text-slate-900 flex items-center gap-1.5 transition-colors">
         <ArrowLeft size={14} /> Change payment method
       </button>
-      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl shadow-inner">
+      <div className="p-4 sm:p-5 bg-white border border-slate-200 rounded-2xl">
         <PaymentElement />
       </div>
       {errorMessage && (
-        <div role="alert" className="p-4 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl text-center">{errorMessage}</div>
+        <div role="alert" className="p-3.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">{errorMessage}</div>
       )}
-      <button disabled={isProcessing || !stripe || !elements} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+      <button disabled={isProcessing || !stripe || !elements} className={`${primaryBtn} w-full py-4 bg-[var(--brand)] hover:brightness-95 text-[var(--on-brand)]`}>
         {isProcessing ? <Loader2 className="animate-spin" size={18} /> : <><Lock size={16} /> Pay {totalLabel}</>}
       </button>
     </form>
@@ -283,7 +289,19 @@ function PaymentPageForm({ slug, session }) {
   const [checkoutError, setCheckoutError] = useState('');
   const [cardStep, setCardStep] = useState(null); // { orderId, clientSecret, stripePromise }
   const [walletPaid, setWalletPaid] = useState(null); // { orderId }
+  const [method, setMethod] = useState('card');
   const formRef = useRef(null);
+  const summaryRef = useRef(null);
+  const [summaryInView, setSummaryInView] = useState(false);
+
+  // Mobile: hide the bottom pay bar while the payment section itself is on screen.
+  useEffect(() => {
+    const el = summaryRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const io = new IntersectionObserver(([e]) => setSummaryInView(e.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [loadState.phase, cardStep]);
 
   // Load page definition
   useEffect(() => {
@@ -420,23 +438,23 @@ function PaymentPageForm({ slug, session }) {
   if (loadState.phase === 'error') {
     if (loadState.status === 429) {
       return (
-        <StateCard tone="amber" Icon={Clock} title="Slow Down"
-          action={<button onClick={() => setReloadKey((k) => k + 1)} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-2"><RefreshCw size={14} /> Retry</button>}>
+        <StateCard tone="amber" Icon={Clock} title="Please slow down"
+          action={<button onClick={() => setReloadKey((k) => k + 1)} className={darkBtn}><RefreshCw size={14} /> Retry</button>}>
           Too many requests from your network. Please wait a moment and try again.
         </StateCard>
       );
     }
     if (loadState.status === 404 || loadState.status === 409 || loadState.status === 400) {
       return (
-        <StateCard tone="red" Icon={Link2Off} title="Link Unavailable"
-          action={<a href="/" className="inline-block px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Return Home</a>}>
+        <StateCard tone="red" Icon={Link2Off} title="Link unavailable"
+          action={<a href="/" className={darkBtn}>Return home</a>}>
           This payment link is inactive, has expired, or has already been used. Please contact the merchant for a new link.
         </StateCard>
       );
     }
     return (
-      <StateCard tone="red" Icon={AlertTriangle} title="Something Went Wrong"
-        action={<button onClick={() => setReloadKey((k) => k + 1)} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-2"><RefreshCw size={14} /> Retry</button>}>
+      <StateCard tone="red" Icon={AlertTriangle} title="Something went wrong"
+        action={<button onClick={() => setReloadKey((k) => k + 1)} className={darkBtn}><RefreshCw size={14} /> Retry</button>}>
         {loadState.message || 'We could not load this payment page.'}
       </StateCard>
     );
@@ -444,128 +462,189 @@ function PaymentPageForm({ slug, session }) {
 
   if (walletPaid) {
     return (
-      <StateCard tone="emerald" Icon={CheckCircle2} title="Payment Complete">
+      <StateCard tone="emerald" Icon={CheckCircle2} title="Payment complete">
         {quote && <p className="text-3xl font-black text-emerald-700 mb-3">{formatCents(quote.total_cents, quote.currency)}</p>}
         <p className="whitespace-pre-line">{page.success_message || 'Thank you! Your payment was sent from your IFB wallet.'}</p>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-6 break-all">Order {walletPaid.orderId}</p>
+        <p className="text-xs text-slate-400 mt-6 break-all">Order reference: {walletPaid.orderId}</p>
       </StateCard>
     );
   }
 
   const logo = safeHttpsUrl(page.logo_url);
+  const brand = safeBrandColor(page.brand_color);
+  const onBrand = onBrandColor(brand);
   const currency = quote?.currency || page.currency || 'USD';
   const totalLabel = quote ? formatCents(quote.total_cents, currency) : '';
   const busy = busyMethod !== null;
   const canPay = !!quote && !isQuoting && !busy;
   const ca = page.pricing?.customer_amount;
 
+  const methods = [
+    { id: 'card', Icon: CreditCard, label: 'Card', hint: 'Visa, Mastercard, Apple Pay, Google Pay' },
+    { id: 'mobile_money', Icon: Smartphone, label: 'Mobile money', hint: 'MTN, M-Pesa, Airtel, Orange and more' },
+    ...(paystackAvailable ? [{ id: 'paystack', Icon: Landmark, label: 'Paystack', hint: 'Card, bank transfer or USSD' }] : []),
+    ...(session ? [{ id: 'wallet', Icon: Wallet, label: 'IFB wallet', hint: 'Pay from your IFB balance' }] : []),
+  ];
+  const activeMethod = methods.some((m) => m.id === method) ? method : 'card';
+
+  const section = 'bg-white border border-slate-200 rounded-2xl p-5 sm:p-6';
+  const sectionTitle = 'text-base font-bold text-slate-900 mb-4';
+
   return (
-    <Shell>
-      <div className="w-full max-w-lg bg-white border border-slate-200 rounded-[2.5rem] shadow-xl overflow-hidden animate-in slide-in-from-bottom-8">
-        {/* Header */}
-        <div className="p-6 sm:p-8 border-b border-slate-100 text-center">
-          {logo && (
-            <img src={logo} alt="" referrerPolicy="no-referrer" className="w-16 h-16 rounded-2xl object-cover mx-auto mb-4 border border-slate-100 bg-slate-50"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-          )}
-          {page.merchant_name && <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">{page.merchant_name}</p>}
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight break-words">{page.title}</h1>
-          {page.description && <p className="text-sm text-slate-500 font-medium mt-3 whitespace-pre-line break-words">{page.description}</p>}
+    <Shell brand={brand}>
+      <div className="w-full" style={{ '--on-brand': onBrand }}>
+        {/* Branded header */}
+        <div className="w-full h-28 sm:h-36" style={{ background: `linear-gradient(135deg, ${brand}, color-mix(in srgb, ${brand} 70%, #0f172a))` }} />
+        <div className="max-w-5xl mx-auto px-4 -mt-10 sm:-mt-12">
+          <div className="flex items-end gap-4 mb-6">
+            {logo ? (
+              <img src={logo} alt="" referrerPolicy="no-referrer"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-4 border-white bg-white shadow-sm"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            ) : (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-white shadow-sm flex items-center justify-center text-2xl font-bold"
+                style={{ background: brand, color: onBrand }} aria-hidden="true">
+                {initialsOf(page.merchant_name || page.title)}
+              </div>
+            )}
+            {page.merchant_name && (
+              <div className="pb-1 min-w-0">
+                <p className="text-[15px] font-semibold text-slate-900 truncate">{page.merchant_name}</p>
+                <p className="text-xs font-medium text-emerald-700 flex items-center gap-1"><BadgeCheck size={14} /> Verified business</p>
+              </div>
+            )}
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 break-words">{page.title}</h1>
+          {page.description && <p className="text-[15px] text-slate-600 mt-2 max-w-2xl whitespace-pre-line break-words">{page.description}</p>}
         </div>
 
-        <div className="p-6 sm:p-8">
+        <div className="max-w-5xl mx-auto px-4 py-6 pb-28 lg:pb-10">
           {cardStep ? (
-            <Elements stripe={cardStep.stripePromise} options={{ clientSecret: cardStep.clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#2563EB', borderRadius: '12px' } } }}>
-              <div className="mb-5 flex justify-between items-center bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total</span>
-                <span className="text-xl font-black text-slate-900">{totalLabel}</span>
-              </div>
-              <CardPaymentForm slug={slug} orderId={cardStep.orderId} totalLabel={totalLabel} email={email.trim()} onBack={() => setCardStep(null)} />
-            </Elements>
-          ) : (
-            <form ref={formRef} onSubmit={(e) => e.preventDefault()} noValidate={false} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="pp-name" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Full name<span className="text-red-500 ml-1">*</span></label>
-                  <input id="pp-name" required maxLength={120} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} disabled={busy} className={inputCls} />
-                </div>
-                <div>
-                  <label htmlFor="pp-email" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Email<span className="text-red-500 ml-1">*</span></label>
-                  <input id="pp-email" type="email" required maxLength={254} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={busy} className={inputCls} />
-                </div>
-              </div>
-
-              <PaymentFormRenderer fields={page.fields} values={values} onChange={onFieldChange} disabled={busy} idPrefix="pp" currency={currency} />
-
-              {isCustomerAmount && (
-                <div>
-                  <label htmlFor="pp-amount" className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Amount ({page.currency || 'USD'})<span className="text-red-500 ml-1">*</span></label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</span>
-                    <input id="pp-amount" type="text" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} disabled={busy} placeholder="0.00" className={`${inputCls} pl-9 text-lg`} />
+            <div className="max-w-lg">
+              <Elements stripe={cardStep.stripePromise} options={{ clientSecret: cardStep.clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: brand, borderRadius: '12px' } } }}>
+                <div className={section}>
+                  <div className="mb-5 flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Total to pay</span>
+                    <span className="text-2xl font-bold text-slate-900">{totalLabel}</span>
                   </div>
-                  {ca && <p className="text-[11px] text-slate-400 font-medium mt-1.5">Between {formatCents(ca.min_cents, currency)} and {formatCents(ca.max_cents, currency)}</p>}
+                  <CardPaymentForm slug={slug} orderId={cardStep.orderId} totalLabel={totalLabel} email={email.trim()} onBack={() => setCardStep(null)} />
                 </div>
-              )}
-
-              {/* Server quote (display only) */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4" aria-live="polite">
-                {quote ? (
-                  <div className={`space-y-2 transition-opacity ${isQuoting ? 'opacity-50' : ''}`}>
-                    {(quote.line_items || []).map((li, i) => (
-                      <div key={i} className="flex justify-between gap-3 text-xs font-bold text-slate-600">
-                        <span className="break-words">{li.label}{li.quantity > 1 ? ` x ${li.quantity}` : ''}</span>
-                        <span className="shrink-0">{formatCents(li.total_cents, currency)}</span>
-                      </div>
-                    ))}
-                    {/* A customer-paid fee already arrives as a "Processing fee" line item from the server */}
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total</span>
-                      <span className="text-2xl font-black text-slate-900">{totalLabel}</span>
+              </Elements>
+            </div>
+          ) : (
+            <form ref={formRef} onSubmit={(e) => e.preventDefault()} noValidate={false}
+              className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 items-start">
+              {/* Left: the form */}
+              <div className="space-y-6">
+                <section className={section}>
+                  <h2 className={sectionTitle}>Your details</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <FieldLabel htmlFor="pp-name" label="Full name" required />
+                      <input id="pp-name" required maxLength={120} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} disabled={busy} className={inputCls} />
+                    </div>
+                    <div>
+                      <FieldLabel htmlFor="pp-email" label="Email" required />
+                      <input id="pp-email" type="email" required maxLength={254} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={busy} className={inputCls} />
+                      <p className="text-[13px] text-slate-500 mt-1.5">Your receipt will be sent here.</p>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-xs font-bold text-slate-400 flex items-center gap-2 min-h-[24px]">
-                    {isQuoting ? <><Loader2 size={14} className="animate-spin" /> Calculating total...</> : (quoteError || 'Complete the form to see your total.')}
-                  </div>
+                </section>
+
+                {(page.fields.length > 0 || isCustomerAmount) && (
+                  <section className={section}>
+                    <h2 className={sectionTitle}>{isCustomerAmount && !page.fields.length ? 'Amount' : 'Details'}</h2>
+                    <div className="space-y-5">
+                      <PaymentFormRenderer fields={page.fields} values={values} onChange={onFieldChange} disabled={busy} idPrefix="pp" currency={currency} />
+                      {isCustomerAmount && (
+                        <div>
+                          <FieldLabel htmlFor="pp-amount" label={`Amount (${page.currency || 'USD'})`} required />
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-slate-400">$</span>
+                            <input id="pp-amount" type="text" inputMode="decimal" required value={amount} onChange={(e) => setAmount(e.target.value)} disabled={busy} placeholder="0.00" className={`${inputCls} pl-9 text-lg font-semibold`} />
+                          </div>
+                          {ca && <p className="text-[13px] text-slate-500 mt-1.5">Between {formatCents(ca.min_cents, currency)} and {formatCents(ca.max_cents, currency)}</p>}
+                        </div>
+                      )}
+                    </div>
+                  </section>
                 )}
               </div>
 
-              {TURNSTILE_SITE_KEY && <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} onToken={setTurnstileToken} resetKey={turnstileReset} />}
-
-              {checkoutError && (
-                <div role="alert" className="p-4 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl text-center">{checkoutError}</div>
-              )}
-
-              {/* Payment methods */}
-              <div className="space-y-3">
-                <button type="button" onClick={() => checkout('card')} disabled={!canPay}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 active:scale-[0.98]">
-                  {busyMethod === 'card' ? <Loader2 size={18} className="animate-spin" /> : <><CreditCard size={18} /> Pay {totalLabel} with Card</>}
-                </button>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button type="button" onClick={() => checkout('mobile_money')} disabled={!canPay}
-                    className="w-full bg-white border-2 border-slate-200 hover:border-orange-400 text-slate-800 font-black text-[10px] uppercase tracking-widest p-4 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                    {busyMethod === 'mobile_money' ? <Loader2 size={16} className="animate-spin" /> : <><Smartphone size={16} className="text-orange-500" /> Mobile Money</>}
-                  </button>
-                  {paystackAvailable && (
-                    <button type="button" onClick={() => checkout('paystack')} disabled={!canPay}
-                      className="w-full bg-white border-2 border-slate-200 hover:border-sky-400 text-slate-800 font-black text-[10px] uppercase tracking-widest p-4 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                      {busyMethod === 'paystack' ? <Loader2 size={16} className="animate-spin" /> : <><Landmark size={16} className="text-sky-500" /> Paystack</>}
-                    </button>
+              {/* Right: summary + payment (sticky on desktop) */}
+              <aside ref={summaryRef} className="lg:sticky lg:top-6 space-y-4">
+                <section className={section} aria-live="polite">
+                  <h2 className={sectionTitle}>Order summary</h2>
+                  {quote ? (
+                    <div className={`space-y-2.5 transition-opacity ${isQuoting ? 'opacity-50' : ''}`}>
+                      {(quote.line_items || []).map((li, i) => (
+                        <div key={i} className="flex justify-between gap-3 text-sm text-slate-600">
+                          <span className="break-words">{li.label}{li.quantity > 1 ? ` × ${li.quantity}` : ''}</span>
+                          <span className="shrink-0 font-medium text-slate-800">{formatCents(li.total_cents, currency)}</span>
+                        </div>
+                      ))}
+                      {/* A customer-paid fee already arrives as a "Processing fee" line item from the server */}
+                      <div className="flex justify-between items-baseline pt-3 mt-1 border-t border-slate-200">
+                        <span className="text-sm font-semibold text-slate-700">Total</span>
+                        <span className="text-2xl font-bold text-slate-900">{totalLabel}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 flex items-center gap-2 min-h-[24px]">
+                      {isQuoting ? <><Loader2 size={15} className="animate-spin" /> Calculating your total…</> : (quoteError || 'Fill in the form to see your total.')}
+                    </p>
                   )}
-                </div>
-                {session && (
-                  <button type="button" onClick={() => checkout('wallet')} disabled={!canPay}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest p-4 rounded-2xl shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                    {busyMethod === 'wallet' ? <Loader2 size={16} className="animate-spin" /> : <><Wallet size={16} /> Pay with IFB Wallet</>}
-                  </button>
-                )}
-              </div>
+                </section>
 
-              <p className="text-[10px] text-slate-400 font-bold text-center flex items-center justify-center gap-1.5">
-                <ShieldCheck size={12} /> The final amount is calculated and verified by IFB at checkout.
-              </p>
+                <section className={section}>
+                  <h2 className={sectionTitle}>Pay with</h2>
+                  <div className="space-y-2.5" role="radiogroup" aria-label="Payment method">
+                    {methods.map(({ id, Icon, label, hint }) => {
+                      const selected = activeMethod === id;
+                      return (
+                        <button key={id} type="button" role="radio" aria-checked={selected} disabled={busy}
+                          onClick={() => setMethod(id)}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition ${
+                            selected ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_6%,white)]' : 'border-slate-200 hover:border-slate-300'
+                          }`}>
+                          <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${selected ? 'bg-[var(--brand)] text-[var(--on-brand)]' : 'bg-slate-100 text-slate-500'}`}><Icon size={18} /></span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[15px] font-semibold text-slate-900">{label}</span>
+                            <span className="block text-xs text-slate-500 truncate">{hint}</span>
+                          </span>
+                          {selected && <Check size={18} className="text-[var(--brand)] shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {TURNSTILE_SITE_KEY && <div className="mt-4"><TurnstileWidget siteKey={TURNSTILE_SITE_KEY} onToken={setTurnstileToken} resetKey={turnstileReset} /></div>}
+
+                  {checkoutError && (
+                    <div role="alert" className="mt-4 p-3.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl">{checkoutError}</div>
+                  )}
+
+                  <button type="button" onClick={() => checkout(activeMethod)} disabled={!canPay}
+                    className={`${primaryBtn} w-full mt-4 py-4 bg-[var(--brand)] hover:brightness-95 text-[var(--on-brand)] shadow-sm`}>
+                    {busy ? <Loader2 size={18} className="animate-spin" /> : <><Lock size={16} /> {totalLabel ? `Pay ${totalLabel}` : 'Pay'}</>}
+                  </button>
+                  <p className="text-xs text-slate-500 text-center mt-3 flex items-center justify-center gap-1.5">
+                    <ShieldCheck size={13} /> The amount is checked and confirmed by IFB before you pay.
+                  </p>
+                </section>
+              </aside>
+
+              {/* Mobile: total + pay bar */}
+              <div className={`lg:hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t border-slate-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] transition-transform duration-200 ${summaryInView ? 'translate-y-full pointer-events-none' : 'translate-y-0'}`} aria-hidden={summaryInView}>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-slate-500">Total</p>
+                  <p className="text-lg font-bold text-slate-900 truncate">{totalLabel || '—'}</p>
+                </div>
+                <button type="button" onClick={() => summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  className={`${primaryBtn} bg-[var(--brand)] text-[var(--on-brand)]`}>
+                  Review &amp; pay
+                </button>
+              </div>
             </form>
           )}
         </div>
@@ -581,15 +660,15 @@ export default function PublicPaymentPage({ session }) {
 
   if (!SLUG_RE.test(slug)) {
     return (
-      <StateCard tone="red" Icon={Link2Off} title="Link Unavailable"
-        action={<a href="/" className="inline-block px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Return Home</a>}>
+      <StateCard tone="red" Icon={Link2Off} title="Link unavailable"
+        action={<a href="/" className={darkBtn}>Return home</a>}>
         This payment link is not valid. Please check the address and try again.
       </StateCard>
     );
   }
   if (orderId) {
     if (!ORDER_ID_RE.test(orderId)) {
-      return <StateCard tone="red" Icon={AlertTriangle} title="Order Not Found">The order reference in this link is not valid.</StateCard>;
+      return <StateCard tone="red" Icon={AlertTriangle} title="Order not found">The order reference in this link is not valid.</StateCard>;
     }
     return <OrderStatusView slug={slug} orderId={orderId} />;
   }

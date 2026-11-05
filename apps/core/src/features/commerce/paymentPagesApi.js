@@ -59,6 +59,25 @@ export const safeHttpsUrl = (raw) => {
   }
 };
 
+export const DEFAULT_BRAND = '#2563eb';
+
+/** A merchant brand colour, accepted only as "#rrggbb" (anything else falls back). */
+export const safeBrandColor = (raw) =>
+  (typeof raw === 'string' && /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : DEFAULT_BRAND);
+
+/** Readable text colour (white or near-black) to place on top of a brand colour. */
+export function onBrandColor(hex) {
+  const c = safeBrandColor(hex);
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.45 ? '#0f172a' : '#ffffff';
+}
+
+/** Initials for a merchant avatar when there is no logo. */
+export const initialsOf = (name) =>
+  String(name || '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || '').join('') || '•';
+
 /** Initial values for a set of fields (checkbox=false, quantity field=its min or 1, rest ''). */
 export function initialAnswers(fields = [], quantityField) {
   const out = {};
