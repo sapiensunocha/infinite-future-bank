@@ -163,7 +163,7 @@ export default function NpoHub({ session }) {
       const [profR, myNpoR, pubNpoR, campaignR, eventsR, donationsR, memberSubsR, memberTiersR, feedR, followsR, likeProfR, cohortsR, reportsR] = await Promise.all([
         uid ? supabase.from('profiles').select('role,full_name,email,default_like_value').eq('id', uid).single() : null,
         uid ? supabase.from('npo_profiles').select('*').eq('id', uid).maybeSingle() : null,
-        supabase.from('npo_profiles').select('*').eq('is_public', true).in('verification_status', ['verified']).order('total_raised', { ascending: false }),
+        supabase.from('npo_profiles_public').select('*').in('verification_status', ['verified']).order('total_raised', { ascending: false }),
         supabase.from('npo_campaigns').select('*').eq('is_active', true).order('created_at', { ascending: false }),
         supabase.from('npo_events').select('*').eq('is_active', true).order('starts_at', { ascending: true }),
         uid ? supabase.from('npo_donations').select('*').eq('donor_id', uid).order('created_at', { ascending: false }) : null,

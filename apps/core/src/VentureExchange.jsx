@@ -260,7 +260,7 @@ export default function VentureExchange({ session, balances, profile }) {
       const [myComp, myInv, pComps, pInvs, myDeals, myBal, myDocs, myNotifs, socialData, followsData, myProf] = await Promise.all([
         uid ? supabase.from('venturex_companies').select('*').eq('user_id', uid).maybeSingle() : Promise.resolve({ data: null }),
         uid ? supabase.from('venturex_investors').select('*').eq('user_id', uid).maybeSingle() : Promise.resolve({ data: null }),
-        supabase.from('venturex_companies').select('*').eq('is_public', true).eq('status', 'active').order('investment_readiness_score', { ascending: false }),
+        supabase.from('venturex_companies_public').select('*').order('investment_readiness_score', { ascending: false }),
         supabase.from('venturex_investors').select('*').eq('is_active', true).order('total_capital_available', { ascending: false }),
         uid ? supabase.from('venturex_deals').select('*').or(`company_user_id.eq.${uid},investor_user_id.eq.${uid}`).order('created_at', { ascending: false }) : Promise.resolve({ data: [] }),
         uid ? supabase.from('balances').select('liquid_usd').eq('user_id', uid).maybeSingle() : Promise.resolve({ data: null }),
