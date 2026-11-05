@@ -56,6 +56,34 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // 0. Never delete an account that still holds money: the customer must
+    //    withdraw first, otherwise they lose access to their funds.
+    const { data: bal, error: balErr } = await sbAdmin
+      .from("balances")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (balErr) {
+      return new Response(JSON.stringify({ error: "Could not check your balance. Please try again." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const MONEY_FIELDS = ["liquid_usd", "afr_balance", "mysafe_digital_usd", "alpha_equity_usd", "escrow_usd"];
+    const held = MONEY_FIELDS.filter((k) => Number(bal?.[k] ?? 0) > 0);
+    if (held.length > 0) {
+      // 200 + { error } on purpose: existing app versions display data.error to the user,
+      // but only show a generic failure for non-2xx responses.
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: "Your account still holds funds. Please withdraw your full balance before deleting your account.",
+          code: "BALANCE_NOT_ZERO",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // 1. Soft-scrub personal identifiable information (PII) in public.profiles
     await sbAdmin
       .from("profiles")
