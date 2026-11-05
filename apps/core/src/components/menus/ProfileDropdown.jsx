@@ -1,4 +1,5 @@
 import React from 'react';
+import FeatureBadge from "../ui/FeatureBadge";
 import { User, Briefcase, Users, Settings, ShieldCheck, LogOut } from 'lucide-react';
 
 export default function ProfileDropdown({ 
@@ -76,7 +77,7 @@ export default function ProfileDropdown({
                 <Settings size={15} className="text-slate-400" /> Settings & Identity
               </button>
               <button onClick={() => { setActiveTab('SOS'); setIsProfileMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors">
-                <ShieldCheck size={15} className="text-red-500" /> Emergency SOS
+                <ShieldCheck size={15} className="text-red-500" /> <span className="flex-1 text-left">Emergency SOS</span> <FeatureBadge id="SOS" />
               </button>
               <div className="border-t border-slate-100 my-1"></div>
               <button onClick={onSignOut} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors">
