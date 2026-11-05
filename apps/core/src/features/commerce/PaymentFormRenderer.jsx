@@ -8,7 +8,7 @@ import { formatCents } from './paymentPagesApi';
 // The accent colour comes from the CSS variable --brand set by the parent.
 
 export const inputCls =
-  'w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-[15px] text-slate-900 placeholder:text-slate-400 ' +
+  'w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-base text-slate-900 placeholder:text-slate-400 ' +
   'outline-none transition focus:border-[var(--brand,#2563eb)] focus:ring-4 focus:ring-[color-mix(in_srgb,var(--brand,#2563eb)_15%,transparent)] ' +
   'disabled:opacity-60 disabled:bg-slate-50';
 

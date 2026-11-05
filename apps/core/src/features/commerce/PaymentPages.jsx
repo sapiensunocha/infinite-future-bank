@@ -31,7 +31,7 @@ const KYC_OK = ['verified', 'approved'];
 const KYC_MESSAGE = 'Identity verification required. Complete KYC verification in your profile before publishing payment pages.';
 const ORDER_STATUSES = ['all', 'pending', 'paid', 'failed', 'expired'];
 
-const inputCls = 'w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition disabled:bg-slate-50 disabled:opacity-70';
+const inputCls = 'w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-base sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition disabled:bg-slate-50 disabled:opacity-70';
 const labelCls = 'block text-sm font-semibold text-slate-700 mb-1.5';
 const BRAND_SWATCHES = ['#2563eb', '#0f766e', '#7c3aed', '#db2777', '#ea580c', '#0f172a'];
 
@@ -931,7 +931,7 @@ function OrdersView({ page, onBack, showToast }) {
             </p>
           </div>
           <div className="flex gap-2">
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 rounded-lg border border-slate-300 text-sm outline-none focus:border-blue-500" aria-label="Filter by status">
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm outline-none focus:border-blue-500" aria-label="Filter by status">
               {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s[0].toUpperCase() + s.slice(1)}</option>)}
             </select>
             <IconBtn title="Refresh" onClick={() => load()}><RefreshCw size={16} /></IconBtn>
