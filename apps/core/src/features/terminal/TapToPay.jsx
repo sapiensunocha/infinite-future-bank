@@ -61,12 +61,12 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
   if (!isNative) {
     return (
       <div className="space-y-5 max-w-sm mx-auto text-center py-8">
-        <div className="w-16 h-16 mx-auto rounded-full bg-amber-900/30 border border-amber-700/40 flex items-center justify-center">
-          <CreditCard size={28} className="text-amber-400"/>
+        <div className="w-16 h-16 mx-auto rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
+          <CreditCard size={28} className="text-amber-600"/>
         </div>
-        <p className="font-black text-white text-lg">Android App Required</p>
-        <p className="text-slate-400 text-sm">Tap to Pay only works on the Android APK — it uses the phone's NFC chip as a card reader. Not available in the browser.</p>
-        {onClose && <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xs font-bold">Close</button>}
+        <p className="font-black text-slate-900 text-lg">Android App Required</p>
+        <p className="text-slate-500 text-sm">Tap to Pay only works on the Android APK — it uses the phone's NFC chip as a card reader. Not available in the browser.</p>
+        {onClose && <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-xs font-bold">Close</button>}
       </div>
     );
   }
@@ -77,17 +77,17 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
       {/* Header */}
       <div className="flex items-center gap-4">
         {step === 'amount' && onClose && (
-          <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors">
+          <button onClick={onClose} className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors">
             <ArrowLeft size={16}/>
           </button>
         )}
         <div className="flex items-center gap-3 flex-1">
-          <div className="w-10 h-10 rounded-xl bg-violet-900/40 border border-violet-700/40 flex items-center justify-center">
-            <CreditCard size={18} className="text-violet-400"/>
+          <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center">
+            <CreditCard size={18} className="text-violet-600"/>
           </div>
           <div>
-            <h2 className="text-lg font-black text-white">Tap to Pay</h2>
-            <p className="text-[10px] text-slate-400">Hold card to phone · Visa · MC · Amex</p>
+            <h2 className="text-lg font-black text-slate-900">Tap to Pay</h2>
+            <p className="text-[10px] text-slate-500">Hold card to phone · Visa · MC · Amex</p>
           </div>
         </div>
       </div>
@@ -96,37 +96,37 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
       {step === 'amount' && (
         <div className="space-y-5 animate-in fade-in">
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xl">$</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black text-xl">$</span>
             <input
               type="number" value={amount} onChange={e => setAmount(e.target.value)}
               placeholder="0.00" min="0.5" step="0.01" autoFocus
-              className="w-full bg-slate-800 border border-slate-700 rounded-2xl pl-10 pr-4 py-4 text-2xl font-black text-white outline-none focus:border-violet-500 transition-colors text-center"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-4 text-2xl font-black text-slate-900 outline-none focus:border-violet-500 transition-colors text-center"
             />
           </div>
           <div className="flex gap-2">
             {[10, 20, 50, 100].map(v => (
               <button key={v} onClick={() => setAmount(String(v))}
-                className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[10px] font-black rounded-xl transition-all">
+                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 text-[10px] font-black rounded-xl transition-all">
                 ${v}
               </button>
             ))}
           </div>
           <input value={note} onChange={e => setNote(e.target.value)}
             placeholder="Note (optional)"
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-white outline-none focus:border-violet-500 transition-colors placeholder-slate-600"/>
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 outline-none focus:border-violet-500 transition-colors placeholder-slate-600"/>
           {amount && parseFloat(amount) >= 0.5 && (
-            <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-3 text-xs space-y-1.5">
-              <div className="flex justify-between text-slate-400">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1.5">
+              <div className="flex justify-between text-slate-500">
                 <span>Charged to card</span>
-                <span className="font-bold text-white">{fmtUSD(parseFloat(amount))}</span>
+                <span className="font-bold text-slate-900">{fmtUSD(parseFloat(amount))}</span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-500">
                 <span>IFB Processing (1.5%)</span>
-                <span className="font-bold text-amber-400">−{fmtUSD(parseFloat(amount) * TERMINAL_FEE_PCT)}</span>
+                <span className="font-bold text-amber-600">−{fmtUSD(parseFloat(amount) * TERMINAL_FEE_PCT)}</span>
               </div>
-              <div className="flex justify-between text-slate-300 border-t border-slate-700 pt-1.5 font-black">
+              <div className="flex justify-between text-slate-600 border-t border-slate-200 pt-1.5 font-black">
                 <span>Net to your wallet</span>
-                <span className="text-emerald-400">{fmtUSD(parseFloat(amount) * (1 - TERMINAL_FEE_PCT))}</span>
+                <span className="text-emerald-600">{fmtUSD(parseFloat(amount) * (1 - TERMINAL_FEE_PCT))}</span>
               </div>
             </div>
           )}
@@ -144,12 +144,12 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
       {/* ── CONNECTING ── */}
       {step === 'connecting' && (
         <div className="space-y-6 animate-in fade-in text-center py-4">
-          <Loader2 size={48} className="text-violet-400 animate-spin mx-auto"/>
+          <Loader2 size={48} className="text-violet-600 animate-spin mx-auto"/>
           <div>
-            <p className="font-black text-white text-lg">Initialising reader…</p>
-            <p className="text-slate-400 text-sm mt-1">Activating NFC card reader</p>
+            <p className="font-black text-slate-900 text-lg">Initialising reader…</p>
+            <p className="text-slate-500 text-sm mt-1">Activating NFC card reader</p>
           </div>
-          <button onClick={cancel} className="text-slate-500 hover:text-red-400 text-xs font-bold transition-colors">Cancel</button>
+          <button onClick={cancel} className="text-slate-500 hover:text-red-600 text-xs font-bold transition-colors">Cancel</button>
         </div>
       )}
 
@@ -157,18 +157,18 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
       {step === 'waiting' && (
         <div className="space-y-6 animate-in fade-in text-center py-4">
           <div className="relative mx-auto w-32 h-32">
-            <div className="absolute inset-0 rounded-full border-4 border-violet-500/30 animate-ping"/>
-            <div className="absolute inset-3 rounded-full border-4 border-violet-500/50 animate-ping" style={{ animationDelay: '0.3s' }}/>
-            <div className="absolute inset-0 rounded-full bg-violet-900/30 border-2 border-violet-600 flex items-center justify-center">
-              <CreditCard size={40} className="text-violet-400"/>
+            <div className="absolute inset-0 rounded-full border-4 border-violet-200 animate-ping"/>
+            <div className="absolute inset-3 rounded-full border-4 border-violet-200 animate-ping" style={{ animationDelay: '0.3s' }}/>
+            <div className="absolute inset-0 rounded-full bg-violet-50 border-2 border-violet-600 flex items-center justify-center">
+              <CreditCard size={40} className="text-violet-600"/>
             </div>
           </div>
           <div>
-            <p className="font-black text-white text-xl">Hold card to phone</p>
-            <p className="text-violet-300 font-black text-2xl mt-1">{fmtUSD(parseFloat(amount))}</p>
-            <p className="text-slate-400 text-sm mt-2">Place your Visa, Mastercard, or Amex<br/>against the back of the phone</p>
+            <p className="font-black text-slate-900 text-xl">Hold card to phone</p>
+            <p className="text-violet-600 font-black text-2xl mt-1">{fmtUSD(parseFloat(amount))}</p>
+            <p className="text-slate-500 text-sm mt-2">Place your Visa, Mastercard, or Amex<br/>against the back of the phone</p>
           </div>
-          <button onClick={cancel} className="text-slate-500 hover:text-red-400 text-xs font-bold transition-colors flex items-center gap-1 mx-auto">
+          <button onClick={cancel} className="text-slate-500 hover:text-red-600 text-xs font-bold transition-colors flex items-center gap-1 mx-auto">
             <X size={12}/> Cancel
           </button>
         </div>
@@ -177,10 +177,10 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
       {/* ── PROCESSING ── */}
       {step === 'processing' && (
         <div className="space-y-6 animate-in fade-in text-center py-4">
-          <Loader2 size={48} className="text-emerald-400 animate-spin mx-auto"/>
+          <Loader2 size={48} className="text-emerald-600 animate-spin mx-auto"/>
           <div>
-            <p className="font-black text-white text-lg">Processing…</p>
-            <p className="text-slate-400 text-sm mt-1">Confirming payment with Stripe</p>
+            <p className="font-black text-slate-900 text-lg">Processing…</p>
+            <p className="text-slate-500 text-sm mt-1">Confirming payment with Stripe</p>
           </div>
         </div>
       )}
@@ -188,13 +188,13 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
       {/* ── SUCCESS ── */}
       {step === 'success' && result && (
         <div className="space-y-5 text-center animate-in zoom-in-95 py-4">
-          <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-b from-emerald-900 to-slate-900 border border-emerald-700 flex items-center justify-center">
-            <CheckCircle2 size={48} className="text-emerald-400"/>
+          <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-b from-emerald-50 to-slate-50 border border-emerald-200 flex items-center justify-center">
+            <CheckCircle2 size={48} className="text-emerald-600"/>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-2">Payment Accepted</p>
-            <p className="text-4xl font-black text-white">{fmtUSD(result.amount)}</p>
-            <p className="text-slate-400 text-sm mt-2">Money is on its way to your Liquid Wallet</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Payment Accepted</p>
+            <p className="text-4xl font-black text-slate-900">{fmtUSD(result.amount)}</p>
+            <p className="text-slate-500 text-sm mt-2">Money is on its way to your Liquid Wallet</p>
           </div>
           <div className="flex gap-3">
             <button onClick={reset}
@@ -203,7 +203,7 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
             </button>
             {onClose && (
               <button onClick={onClose}
-                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black rounded-2xl text-xs uppercase tracking-widest transition-all">
+                className="flex-1 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black rounded-2xl text-xs uppercase tracking-widest transition-all">
                 Done
               </button>
             )}
@@ -214,15 +214,15 @@ export default function TapToPay({ balances, onClose, onSuccess }) {
       {/* ── ERROR ── */}
       {step === 'error' && (
         <div className="space-y-5 text-center animate-in fade-in py-4">
-          <div className="w-20 h-20 mx-auto rounded-full bg-red-900/30 border border-red-700/40 flex items-center justify-center">
-            <AlertTriangle size={36} className="text-red-400"/>
+          <div className="w-20 h-20 mx-auto rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+            <AlertTriangle size={36} className="text-red-600"/>
           </div>
           <div>
-            <p className="font-black text-white text-lg">Payment Failed</p>
-            <p className="text-red-300 text-sm mt-1">{err}</p>
+            <p className="font-black text-slate-900 text-lg">Payment Failed</p>
+            <p className="text-red-600 text-sm mt-1">{err}</p>
           </div>
           <button onClick={reset}
-            className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black rounded-2xl text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+            className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black rounded-2xl text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2">
             <RefreshCw size={12}/> Try Again
           </button>
         </div>

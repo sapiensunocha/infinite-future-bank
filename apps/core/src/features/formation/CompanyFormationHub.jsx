@@ -1075,19 +1075,19 @@ function LandingPage({ onStart }) {
     <div className="space-y-10 animate-in fade-in duration-500">
 
       {/* Hero */}
-      <div className="relative bg-slate-900 border border-slate-800 rounded-[3rem] overflow-hidden p-10 md:p-16 text-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 via-slate-900 to-violet-900/20 pointer-events-none"/>
-        <div className="absolute -right-20 -top-20 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl"/>
-        <div className="absolute -left-10 -bottom-10 w-60 h-60 bg-violet-600/10 rounded-full blur-3xl"/>
+      <div className="relative bg-white border border-slate-200 rounded-[3rem] overflow-hidden p-10 md:p-16 text-slate-900">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-violet-50 pointer-events-none"/>
+        <div className="absolute -right-20 -top-20 w-80 h-80 bg-indigo-50 rounded-full blur-3xl"/>
+        <div className="absolute -left-10 -bottom-10 w-60 h-60 bg-violet-50 rounded-full blur-3xl"/>
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-indigo-300 text-[10px] font-black uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-full text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-6">
             <Globe size={12}/> IFB Global Company Formation
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-4">
             Register Your Company in<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Any Country. We Handle Everything.</span>
           </h1>
-          <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-xl">
+          <p className="text-slate-500 text-lg leading-relaxed mb-8 max-w-xl">
             No government portals. No lawyers. No guesswork. IFB handles the full formation — paperwork, filing, banking setup, and compliance — so you can focus entirely on building your business.
           </p>
           <div className="flex flex-wrap items-center gap-4">
@@ -1095,8 +1095,8 @@ function LandingPage({ onStart }) {
               className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center gap-2 transition-all shadow-xl shadow-indigo-900/40 hover:scale-105 active:scale-95">
               <Rocket size={18}/> Start Incorporating
             </button>
-            <div className="flex items-center gap-2 text-slate-400 text-sm font-bold">
-              <BadgeCheck size={18} className="text-emerald-400"/> No commitment until payment
+            <div className="flex items-center gap-2 text-slate-500 text-sm font-bold">
+              <BadgeCheck size={18} className="text-emerald-600"/> No commitment until payment
             </div>
           </div>
         </div>
@@ -1540,27 +1540,27 @@ function PayStep({ country, entityType, pkg, form, balance, onConfirm, onBack, p
         <h2 className="text-2xl font-black text-white mb-1">Review your order</h2>
         <p className="text-sm text-slate-400">Confirm the details below. Payment is charged from your IFB liquid balance.</p>
       </div>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Formation Order Summary</p>
-        <div className="flex items-center gap-4 pb-4 border-b border-slate-800">
+        <div className="flex items-center gap-4 pb-4 border-b border-slate-200">
           <div className="text-3xl">{country.flag}</div>
           <div className="flex-1">
-            <p className="text-white font-black">{entityType.name}</p>
-            <p className="text-slate-400 text-xs">{country.name} · {entityType.formation_time}</p>
+            <p className="text-slate-900 font-black">{entityType.name}</p>
+            <p className="text-slate-500 text-xs">{country.name} · {entityType.formation_time}</p>
           </div>
-          <p className="text-white font-black">{fmtUSD(entityType.price)}</p>
+          <p className="text-slate-900 font-black">{fmtUSD(entityType.price)}</p>
         </div>
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Icon size={15} className={pkg.textColor}/>
-            <span className="text-slate-300 text-sm font-bold">{pkg.name}</span>
+            <span className="text-slate-600 text-sm font-bold">{pkg.name}</span>
             <span className="text-[9px] text-slate-500">({pkg.processing})</span>
           </div>
           {pkg.price_addon > 0
             ? <span className={`${pkg.textColor} font-black`}>+{fmtUSD(pkg.price_addon)}</span>
-            : <span className="text-emerald-400 text-xs font-black">Included</span>}
+            : <span className="text-emerald-600 text-xs font-black">Included</span>}
         </div>
-        <div className="space-y-2 pb-4 border-b border-slate-800">
+        <div className="space-y-2 pb-4 border-b border-slate-200">
           {[
             { label: 'Founder name', value: form.founder_name },
             { label: 'Company name', value: form.business_name },
@@ -1568,14 +1568,14 @@ function PayStep({ country, entityType, pkg, form, balance, onConfirm, onBack, p
             { label: 'Contact', value: form.contact_email },
           ].map(row => (
             <div key={row.label} className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">{row.label}</span>
-              <span className="text-white font-bold text-xs text-right max-w-[60%] truncate">{row.value}</span>
+              <span className="text-slate-500">{row.label}</span>
+              <span className="text-slate-900 font-bold text-xs text-right max-w-[60%] truncate">{row.value}</span>
             </div>
           ))}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-white font-black uppercase tracking-widest text-xs">Total Due</span>
-          <span className="text-3xl font-black text-white">{fmtUSD(total)}</span>
+          <span className="text-slate-900 font-black uppercase tracking-widest text-xs">Total Due</span>
+          <span className="text-3xl font-black text-slate-900">{fmtUSD(total)}</span>
         </div>
       </div>
       <div className={`rounded-2xl p-4 border flex items-center justify-between ${sufficient ? 'bg-slate-800/40 border-slate-700' : 'bg-red-950/30 border-red-800'}`}>
@@ -1642,19 +1642,19 @@ function SuccessStep({ orderRef, form, country, entityType, pkg, total, onReset 
         <p className="text-slate-400 text-sm mt-1">{entityType?.name} · {country?.flag} {country?.name}</p>
         <p className={`text-sm font-black mt-1 ${pkg?.textColor}`}>{pkg?.name} · {pkg?.processing}</p>
       </div>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-left space-y-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 text-left space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-slate-500 text-sm font-bold">Reference Number</span>
-          <button onClick={copyRef} className="flex items-center gap-2 text-white font-black font-mono text-sm hover:text-indigo-400 transition-colors">
+          <button onClick={copyRef} className="flex items-center gap-2 text-slate-900 font-black font-mono text-sm hover:text-indigo-600 transition-colors">
             {orderRef}
-            {copied ? <Check size={14} className="text-emerald-400"/> : <Copy size={14} className="text-slate-500"/>}
+            {copied ? <Check size={14} className="text-emerald-600"/> : <Copy size={14} className="text-slate-500"/>}
           </button>
         </div>
         {[
-          { label: 'Amount Paid', value: fmtUSD(total), cls: 'text-white' },
-          { label: 'Processing', value: entityType?.formation_time, cls: 'text-amber-400' },
-          { label: 'Status', value: 'Pending Assignment', cls: 'text-amber-400' },
-          { label: 'Contact', value: form.contact_email, cls: 'text-slate-300 text-xs' },
+          { label: 'Amount Paid', value: fmtUSD(total), cls: 'text-slate-900' },
+          { label: 'Processing', value: entityType?.formation_time, cls: 'text-amber-600' },
+          { label: 'Status', value: 'Pending Assignment', cls: 'text-amber-600' },
+          { label: 'Contact', value: form.contact_email, cls: 'text-slate-600 text-xs' },
         ].map(row => (
           <div key={row.label} className="flex justify-between items-center text-sm">
             <span className="text-slate-500 font-bold">{row.label}</span>
@@ -1668,9 +1668,9 @@ function SuccessStep({ orderRef, form, country, entityType, pkg, total, onReset 
           { icon: FileText, label: 'Filing submitted', sub: entityType?.formation_time },
           { icon: Award, label: 'Certificate issued', sub: 'Upon completion' },
         ].map(item => (
-          <div key={item.label} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center">
+          <div key={item.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center">
             <item.icon size={18} className="mx-auto text-slate-500 mb-2"/>
-            <p className="text-[10px] font-black text-white">{item.label}</p>
+            <p className="text-[10px] font-black text-slate-900">{item.label}</p>
             <p className="text-[9px] text-slate-500 mt-1">{item.sub}</p>
           </div>
         ))}

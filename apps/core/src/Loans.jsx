@@ -282,7 +282,7 @@ export default function Loans({ session, balances, fetchAllData, profile }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Duration (Months)</label>
                   <select disabled={executionPlan.isActive} value={borrowForm.duration} onChange={e=>setBorrowForm({...borrowForm, duration: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 font-bold outline-none focus:border-blue-500 disabled:opacity-50">

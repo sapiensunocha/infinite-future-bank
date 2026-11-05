@@ -371,7 +371,7 @@ export default function Training({ session }) {
       )}
 
       {activeTab === 'ACADEMY' && activeModule && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
           <div 
             className="bg-white rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden relative border border-slate-100 h-[600px] flex flex-col"
             // 🔥 Instantly cancel auto-advance if the user moves their mouse inside the reading panel

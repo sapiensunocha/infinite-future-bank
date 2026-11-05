@@ -13,12 +13,12 @@ const SECTORS = [
 ];
 
 const EVENT_META = {
-  deal_proposed:    { label: 'Deal Proposed',    Icon: Briefcase,   color: 'bg-slate-700/60 text-slate-300',   dot: 'bg-slate-400',   accent: 'border-slate-600' },
-  deal_negotiating: { label: 'Negotiating',      Icon: Handshake,   color: 'bg-blue-900/40  text-blue-300',    dot: 'bg-blue-400',    accent: 'border-blue-700'  },
-  deal_signed:      { label: 'Deal Signed',      Icon: CheckCircle2,color: 'bg-emerald-900/40 text-emerald-300',dot: 'bg-emerald-400', accent: 'border-emerald-700'},
-  deal_closed:      { label: 'Funding Closed',   Icon: DollarSign,  color: 'bg-yellow-900/40 text-yellow-300', dot: 'bg-yellow-400',  accent: 'border-yellow-700'},
-  milestone_hit:    { label: 'Milestone Hit',    Icon: Award,       color: 'bg-purple-900/40 text-purple-300', dot: 'bg-purple-400',  accent: 'border-purple-700'},
-  company_listed:   { label: 'New Listing',      Icon: Rocket,      color: 'bg-indigo-900/40 text-indigo-300', dot: 'bg-indigo-400',  accent: 'border-indigo-700'},
+  deal_proposed:    { label: 'Deal Proposed',    Icon: Briefcase,   color: 'bg-slate-100 text-slate-600',   dot: 'bg-slate-400',   accent: 'border-slate-200' },
+  deal_negotiating: { label: 'Negotiating',      Icon: Handshake,   color: 'bg-blue-50  text-blue-600',    dot: 'bg-blue-400',    accent: 'border-blue-200'  },
+  deal_signed:      { label: 'Deal Signed',      Icon: CheckCircle2,color: 'bg-emerald-50 text-emerald-600',dot: 'bg-emerald-400', accent: 'border-emerald-200'},
+  deal_closed:      { label: 'Funding Closed',   Icon: DollarSign,  color: 'bg-yellow-50 text-yellow-600', dot: 'bg-yellow-400',  accent: 'border-yellow-200'},
+  milestone_hit:    { label: 'Milestone Hit',    Icon: Award,       color: 'bg-purple-50 text-purple-600', dot: 'bg-purple-400',  accent: 'border-purple-200'},
+  company_listed:   { label: 'New Listing',      Icon: Rocket,      color: 'bg-indigo-50 text-indigo-600', dot: 'bg-indigo-400',  accent: 'border-indigo-200'},
 };
 
 const SECTOR_EMOJI = {
@@ -43,11 +43,11 @@ function timeAgo(ts) {
 
 function StatPill({ icon: Icon, label, value, accent }) {
   return (
-    <div className={`flex items-center gap-3 bg-slate-800/80 border ${accent || 'border-slate-700'} rounded-2xl px-4 py-3`}>
-      <Icon size={16} className="text-slate-400 shrink-0" />
+    <div className={`flex items-center gap-3 bg-slate-50 border ${accent || 'border-slate-200'} rounded-2xl px-4 py-3`}>
+      <Icon size={16} className="text-slate-500 shrink-0" />
       <div>
         <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
-        <p className="text-sm font-black text-white">{value}</p>
+        <p className="text-sm font-black text-slate-900">{value}</p>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ function EventCard({ event }) {
   const meta = EVENT_META[event.event_type] || EVENT_META.deal_proposed;
   const Icon = meta.Icon;
   return (
-    <div className={`border-l-2 ${meta.accent} bg-slate-800/30 hover:bg-slate-800/60 transition-colors rounded-xl p-4 flex gap-4`}>
+    <div className={`border-l-2 ${meta.accent} bg-slate-50 hover:bg-slate-100 transition-colors rounded-xl p-4 flex gap-4`}>
       {/* Dot + icon */}
       <div className="flex flex-col items-center gap-1 shrink-0">
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${meta.color}`}>
@@ -69,7 +69,7 @@ function EventCard({ event }) {
       {/* Body */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
-          <p className="text-sm font-black text-white truncate">{event.company_name}</p>
+          <p className="text-sm font-black text-slate-900 truncate">{event.company_name}</p>
           <span className="text-[9px] font-bold text-slate-500 shrink-0 whitespace-nowrap">{timeAgo(event.happened_at)}</span>
         </div>
 
@@ -78,7 +78,7 @@ function EventCard({ event }) {
             {meta.label}
           </span>
           {event.sector && (
-            <span className="text-[9px] font-bold text-slate-400">
+            <span className="text-[9px] font-bold text-slate-500">
               {SECTOR_EMOJI[event.sector] || '📊'} {event.sector}
             </span>
           )}
@@ -90,12 +90,12 @@ function EventCard({ event }) {
         </div>
 
         {event.tagline && (
-          <p className="text-[10px] text-slate-400 mb-2 line-clamp-1 italic">{event.tagline}</p>
+          <p className="text-[10px] text-slate-500 mb-2 line-clamp-1 italic">{event.tagline}</p>
         )}
 
         <div className="flex items-center gap-3 flex-wrap">
           {event.amount_range && (
-            <span className="text-xs font-black text-emerald-400 flex items-center gap-1">
+            <span className="text-xs font-black text-emerald-600 flex items-center gap-1">
               <DollarSign size={10} /> {event.amount_range}
             </span>
           )}
@@ -105,7 +105,7 @@ function EventCard({ event }) {
             </span>
           )}
           {event.milestone_title && (
-            <span className="text-[10px] text-purple-400 font-bold">
+            <span className="text-[10px] text-purple-600 font-bold">
               ✓ {event.milestone_title}
             </span>
           )}
@@ -114,7 +114,7 @@ function EventCard({ event }) {
               href={event.pitch_video_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-red-900/40 text-red-300 hover:bg-red-800/60 transition-colors"
+              className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-red-50 text-red-600 hover:bg-red-50 transition-colors"
             >
               <Play size={8} className="fill-current" /> Watch
             </a>
@@ -226,24 +226,24 @@ export default function VentureXFeed() {
     <div className="space-y-6 animate-in fade-in duration-500">
 
       {/* ── Header ── */}
-      <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-emerald-900/10 pointer-events-none" />
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 text-slate-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-transparent to-emerald-50 pointer-events-none" />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Live Feed</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Live Feed</span>
                 </div>
-                <Radio size={14} className="text-emerald-400 animate-pulse" />
+                <Radio size={14} className="text-emerald-600 animate-pulse" />
               </div>
               <h2 className="text-2xl font-black tracking-tight">VentureX Activity Stream</h2>
-              <p className="text-sm text-slate-400 mt-1">Every deal, milestone and listing — happening right now across the network</p>
+              <p className="text-sm text-slate-500 mt-1">Every deal, milestone and listing — happening right now across the network</p>
             </div>
             <button
               onClick={() => fetchFeed(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-black uppercase tracking-widest text-slate-300 transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 transition-all"
             >
               <RefreshCw size={13} /> Refresh
             </button>
@@ -252,12 +252,12 @@ export default function VentureXFeed() {
           {/* Stats */}
           {stats && (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <StatPill icon={Building2}  label="Companies"        value={Number(stats.total_companies).toLocaleString()}  accent="border-slate-700" />
-              <StatPill icon={Users}      label="Investors"        value={Number(stats.active_investors).toLocaleString()} accent="border-blue-800"  />
-              <StatPill icon={Activity}   label="Total Deals"      value={Number(stats.total_deals).toLocaleString()}      accent="border-slate-700" />
-              <StatPill icon={CheckCircle2} label="Signed"         value={Number(stats.signed_deals).toLocaleString()}     accent="border-emerald-800" />
-              <StatPill icon={Zap}        label="Closed"           value={Number(stats.closed_deals).toLocaleString()}     accent="border-yellow-800" />
-              <StatPill icon={DollarSign} label="Capital Deployed" value={fmt(stats.capital_deployed)}                    accent="border-emerald-800" />
+              <StatPill icon={Building2}  label="Companies"        value={Number(stats.total_companies).toLocaleString()}  accent="border-slate-200" />
+              <StatPill icon={Users}      label="Investors"        value={Number(stats.active_investors).toLocaleString()} accent="border-blue-200"  />
+              <StatPill icon={Activity}   label="Total Deals"      value={Number(stats.total_deals).toLocaleString()}      accent="border-slate-200" />
+              <StatPill icon={CheckCircle2} label="Signed"         value={Number(stats.signed_deals).toLocaleString()}     accent="border-emerald-200" />
+              <StatPill icon={Zap}        label="Closed"           value={Number(stats.closed_deals).toLocaleString()}     accent="border-yellow-200" />
+              <StatPill icon={DollarSign} label="Capital Deployed" value={fmt(stats.capital_deployed)}                    accent="border-emerald-200" />
             </div>
           )}
         </div>
@@ -284,7 +284,7 @@ export default function VentureXFeed() {
               className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                 typeFilter === f.key
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
+                  : 'bg-slate-50 text-slate-500 hover:text-slate-900 border border-slate-200'
               }`}
             >
               {f.label}
@@ -296,17 +296,17 @@ export default function VentureXFeed() {
         <div className="relative ml-auto">
           <button
             onClick={() => setShowSectors(s => !s)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-slate-900 transition-all"
           >
             <Filter size={12} />
             {sector ? `${SECTOR_EMOJI[sector] || ''} ${sector}` : 'All Sectors'}
             <ChevronDown size={12} className={`transition-transform ${showSectors ? 'rotate-180' : ''}`} />
           </button>
           {showSectors && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-sm z-50 overflow-hidden">
               <button
                 onClick={() => { setSector(null); setShowSectors(false); }}
-                className={`w-full text-left px-4 py-3 text-xs font-bold transition-colors ${!sector ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
+                className={`w-full text-left px-4 py-3 text-xs font-bold transition-colors ${!sector ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
               >
                 All Sectors
               </button>
@@ -315,7 +315,7 @@ export default function VentureXFeed() {
                   <button
                     key={s}
                     onClick={() => { setSector(s); setShowSectors(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors flex items-center gap-2 ${sector === s ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
+                    className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors flex items-center gap-2 ${sector === s ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
                   >
                     {SECTOR_EMOJI[s] || '📊'} {s}
                   </button>
@@ -336,11 +336,11 @@ export default function VentureXFeed() {
               className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
                 sector === s.sector
                   ? 'bg-indigo-600 border-indigo-500 text-white'
-                  : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white hover:border-slate-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-500'
               }`}
             >
               {SECTOR_EMOJI[s.sector] || '📊'} {s.sector}
-              <span className="bg-slate-700/60 px-1.5 py-0.5 rounded-md text-[9px]">{s.deal_count}</span>
+              <span className="bg-slate-100 px-1.5 py-0.5 rounded-md text-[9px]">{s.deal_count}</span>
             </button>
           ))}
         </div>
@@ -354,9 +354,9 @@ export default function VentureXFeed() {
           </div>
         ) : feedError ? (
           <div className="text-center py-20">
-            <p className="text-red-400 font-bold mb-2">Feed error</p>
+            <p className="text-red-600 font-bold mb-2">Feed error</p>
             <p className="text-xs text-slate-500 mb-4">{feedError}</p>
-            <button onClick={() => fetchFeed(true)} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-black text-slate-300 hover:text-white transition-all">
+            <button onClick={() => fetchFeed(true)} className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:text-slate-900 transition-all">
               Retry
             </button>
           </div>
@@ -364,7 +364,7 @@ export default function VentureXFeed() {
           <div className="text-center py-20 text-slate-500">
             <TrendingUp size={40} className="mx-auto mb-3 opacity-30" />
             <p className="font-bold">No activity found for this filter</p>
-            <button onClick={() => fetchFeed(true)} className="mt-4 px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-black text-slate-300 hover:text-white transition-all">
+            <button onClick={() => fetchFeed(true)} className="mt-4 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:text-slate-900 transition-all">
               Refresh
             </button>
           </div>
@@ -377,7 +377,7 @@ export default function VentureXFeed() {
               <button
                 onClick={() => fetchFeed(false)}
                 disabled={loadingMore}
-                className="w-full py-4 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-4 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 border border-slate-200 hover:border-slate-500 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loadingMore ? <Loader2 size={14} className="animate-spin" /> : <ChevronDown size={14} />}
                 {loadingMore ? 'Loading...' : 'Load More'}

@@ -431,7 +431,7 @@ export default function VentureXListings({ session }) {
         const TABS = ['overview','assets','financials','management','esg'];
         const ei = selected.extended_info || {};
         return (
-          <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-2xl max-h-[94vh] overflow-y-auto rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl flex flex-col">
 
               {/* Modal top: exchange-style header */}
@@ -1052,7 +1052,7 @@ export default function VentureXListings({ session }) {
 
       {/* ══ INFO MODAL ════════════════════════════════════ */}
       {showInfo && (
-        <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-black/75 backdrop-blur-xl animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center p-0 md:p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-t-[2.5rem] md:rounded-[2.5rem] shadow-2xl">
             <div className="bg-[#0a0f1e] rounded-t-[2.5rem] p-7">
               <div className="flex justify-between items-start">

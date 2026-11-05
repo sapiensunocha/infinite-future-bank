@@ -1,37 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ShieldAlert, Lock, Loader2, Landmark, Briefcase,
-  ShieldCheck, TrendingUp, PieChart, BarChart2,
-  Send, Download, Plus, ArrowRightLeft, QrCode,
-  ArrowDownRight, ArrowUpRight, Zap, CreditCard, Building, Wallet,
-  ChevronRight, Wifi, Shield, Leaf, ShoppingBag, RefreshCw
+  ShieldAlert, Lock, Loader2, Landmark, Send, Download, Plus, ArrowRightLeft, QrCode,
+  ArrowDownRight, ArrowUpRight, Zap, CreditCard, Building, Wallet, ChevronRight,
+  Wifi, Shield, RefreshCw, MoreHorizontal, X, LayoutGrid, BarChart2,
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
-import FeatureBadge from "../components/ui/FeatureBadge";
+import FeatureBadge from '../components/ui/FeatureBadge';
+import { FEATURED_SERVICES } from '../config/services';
 import { useTranslation } from '../i18n/useTranslation';
 
-// ─── tiny transaction icon helper ───────────────────────────
 const txIcon = (tx) => {
   const t = (tx.transaction_type || '').toLowerCase();
-  if (t.includes('deposit') || t.includes('topup')) return { Icon: ArrowDownRight, color: 'bg-emerald-100 text-emerald-600' };
+  if (t.includes('deposit') || t.includes('topup')) return { Icon: ArrowDownRight, color: 'bg-emerald-50 text-emerald-600' };
   if (t.includes('withdraw') || t.includes('payout')) return { Icon: Building, color: 'bg-slate-100 text-slate-600' };
-  if (t.includes('card') || t.includes('expense')) return { Icon: CreditCard, color: 'bg-blue-100 text-blue-600' };
-  if (t.includes('send') || t.includes('p2p')) return { Icon: Zap, color: tx.amount > 0 ? 'bg-emerald-100 text-emerald-500' : 'bg-amber-100 text-amber-600' };
+  if (t.includes('card') || t.includes('expense')) return { Icon: CreditCard, color: 'bg-blue-50 text-blue-600' };
+  if (t.includes('send') || t.includes('p2p')) return { Icon: Zap, color: tx.amount > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600' };
   return { Icon: Wallet, color: 'bg-slate-100 text-slate-500' };
 };
 
+const STATUS_STYLE = {
+  completed: 'text-emerald-600',
+  pending: 'text-amber-600',
+};
+
+function SectionHeader({ title, action, onAction }) {
+  return (
+    <div className="flex items-center justify-between px-1 mb-2.5">
+      <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+      {action && (
+        <button type="button" onClick={onAction} className="flex items-center gap-0.5 text-sm font-semibold text-blue-600 hover:text-blue-700">
+          {action} <ChevronRight size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function NetPositionHome({
   profile, balances, transactions, totalNetWorth, formatCurrency,
-  setActiveTab, activeEscrows, setIsNotificationMenuOpen, onRefreshEscrows,
+  setActiveTab, activeEscrows, onRefreshEscrows,
   showBalances, setShowBalances, setActiveModal,
   setShowPayMe, setShowDepositUI, setIsWithdrawOpen,
   showAnalytics, setShowAnalytics,
-  setShowVault, setShowNFC, setActiveAppPopup
+  setShowVault, setShowNFC, setActiveAppPopup, onVerify,
 }) {
   const { t } = useTranslation();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
-  // Auto-poll every 30 seconds while there are active escrows
   useEffect(() => {
     if (!activeEscrows?.length || !onRefreshEscrows) return;
     const interval = setInterval(() => onRefreshEscrows(), 30000);
@@ -43,102 +59,82 @@ export default function NetPositionHome({
     setIsRefreshing(true);
     try { await onRefreshEscrows(); } finally { setIsRefreshing(false); }
   };
-  const safeTotalNetWorth = totalNetWorth || 1;
-  const liquidPct  = ((balances.liquid_usd || 0) / safeTotalNetWorth) * 100;
-  const alphaPct   = ((balances.alpha_equity_usd || 0) / safeTotalNetWorth) * 100;
-  const safePct    = ((balances.mysafe_digital_usd || 0) / safeTotalNetWorth) * 100;
 
-  const validTxs = transactions.filter(tx => tx.status !== 'failed' && tx.status !== 'pending');
-  const totalInflow  = validTxs.filter(tx => tx.amount > 0).reduce((sum, tx) => sum + tx.amount, 0);
-  const totalOutflow = validTxs.filter(tx => tx.amount < 0).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-  const totalFlowVolume = (totalInflow + totalOutflow) || 1;
-  const inflowPct  = (totalInflow / totalFlowVolume) * 100;
-  const outflowPct = (totalOutflow / totalFlowVolume) * 100;
-  const avgTransactionValue = validTxs.length > 0 ? validTxs.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) / validTxs.length : 0;
-
-  // Monthly stats
-  const currentMonth = new Date().getMonth();
-  const currentYear  = new Date().getFullYear();
-  const monthTxs = transactions.filter(tx => { const d = new Date(tx.created_at); return d.getMonth() === currentMonth && d.getFullYear() === currentYear; });
-  const moneyIn  = monthTxs.filter(tx => tx.amount > 0).reduce((s, tx) => s + tx.amount, 0);
-  const moneyOut = monthTxs.filter(tx => tx.amount < 0).reduce((s, tx) => s + Math.abs(tx.amount), 0);
-
-  const quickActions = [
-    { id: 'SEND',      icon: Send,           label: t('actions.send'),     color: 'bg-blue-600',    action: () => setActiveModal('SEND') },
-    { id: 'REQUEST',   icon: Download,       label: t('actions.receive'),  color: 'bg-emerald-600', action: () => setActiveModal('REQUEST') },
-    { id: 'PAY_ME',    icon: QrCode,         label: t('actions.payMe'),    color: 'bg-blue-500',    action: () => setShowPayMe(true) },
-    { id: 'DEPOSIT',   icon: Plus,           label: t('actions.add'),      color: 'bg-emerald-500', action: () => setShowDepositUI(true) },
-    { id: 'WITHDRAW',  icon: Landmark,       label: t('actions.withdraw'), color: 'bg-slate-700',   action: () => setIsWithdrawOpen(true) },
-    { id: 'NFC',       icon: Wifi,           label: 'Tap & Pay',           color: 'bg-violet-600',  action: () => setShowNFC && setShowNFC(true) },
-    { id: 'VAULT',     icon: Shield,         label: 'Vault',               color: 'bg-indigo-700',  action: () => setShowVault && setShowVault(true) },
-    { id: 'TRANSFER',  icon: ArrowRightLeft, label: t('actions.exchange'), color: 'bg-indigo-600',  action: () => setActiveModal('TRANSFER') },
-    { id: 'ANALYTICS', icon: BarChart2,      label: t('actions.analytics'),color: showAnalytics ? 'bg-indigo-700' : 'bg-slate-500', action: () => setShowAnalytics(!showAnalytics) },
+  const safeTotal = totalNetWorth || 1;
+  const allocation = [
+    { label: t('home.cash'),     value: balances.liquid_usd || 0,         bar: 'bg-blue-600' },
+    { label: t('home.invested'), value: balances.alpha_equity_usd || 0,   bar: 'bg-indigo-400' },
+    { label: t('home.vault'),    value: balances.mysafe_digital_usd || 0, bar: 'bg-emerald-500' },
   ];
 
-  const recentTxs = transactions.slice(0, 8);
+  const validTxs = transactions.filter((tx) => tx.status !== 'failed' && tx.status !== 'pending');
+  const now = new Date();
+  const monthTxs = transactions.filter((tx) => { const d = new Date(tx.created_at); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+  const moneyIn  = monthTxs.filter((tx) => tx.amount > 0).reduce((s, tx) => s + tx.amount, 0);
+  const moneyOut = monthTxs.filter((tx) => tx.amount < 0).reduce((s, tx) => s + Math.abs(tx.amount), 0);
+  const avgTx = validTxs.length ? validTxs.reduce((s, tx) => s + Math.abs(tx.amount), 0) / validTxs.length : 0;
+
+  // Four everyday actions; everything else lives under "More" (no repeated buttons).
+  const primaryActions = [
+    { id: 'SEND',     Icon: Send,     label: t('actions.send'),     run: () => setActiveModal('SEND') },
+    { id: 'REQUEST',  Icon: Download, label: t('actions.receive'),  run: () => setActiveModal('REQUEST') },
+    { id: 'DEPOSIT',  Icon: Plus,     label: t('actions.add'),      run: () => setShowDepositUI(true) },
+    { id: 'WITHDRAW', Icon: Landmark, label: t('actions.withdraw'), run: () => setIsWithdrawOpen(true) },
+  ];
+  const moreActions = [
+    { id: 'PAY_ME',   Icon: QrCode,         label: t('actions.payMe'),    desc: 'Show your QR code to get paid', run: () => setShowPayMe(true) },
+    { id: 'TRANSFER', Icon: ArrowRightLeft, label: t('actions.exchange'), desc: 'Move money between accounts',   run: () => setActiveModal('TRANSFER') },
+    { id: 'NFC',      Icon: Wifi,           label: 'Tap & Pay',           desc: 'Pay with your phone',           run: () => setShowNFC && setShowNFC(true) },
+    { id: 'VAULT',    Icon: Shield,         label: 'Vault',               desc: 'Lock money away safely',        run: () => setShowVault && setShowVault(true) },
+  ];
+  const runMore = (fn) => { setMoreOpen(false); fn(); };
+
+  const recentTxs = transactions.slice(0, 5);
+  const homeServices = FEATURED_SERVICES.slice(0, 7);
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-in fade-in zoom-in-95 duration-500">
+    <div className="ui-page space-y-6 animate-in fade-in duration-300">
 
-      {/* KYC Alert */}
+      {/* ── Alerts ─────────────────────────────────────────── */}
       {profile && profile.kyc_status === 'pending_kyc' && (
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-sm">
+        <div className="ui-card p-4 flex items-start gap-3 border-blue-200 bg-blue-50/60">
+          <Loader2 size={20} className="text-blue-600 animate-spin shrink-0 mt-0.5" />
           <div>
-            <h3 className="text-blue-700 font-black uppercase tracking-widest text-xs flex items-center gap-2">
-              <Loader2 size={16} className="animate-spin"/> KYC Under Review
-            </h3>
-            <p className="text-slate-600 text-sm mt-1 font-medium">Your identity documents have been submitted. Our compliance team will verify your account within 24–48 hours.</p>
-          </div>
-          <div className="w-full md:w-auto px-5 py-3 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-xl whitespace-nowrap text-center">
-            Verification Pending
+            <p className="text-sm font-semibold text-slate-900">Verification under review</p>
+            <p className="text-sm text-slate-600 mt-0.5">We're checking your documents. This usually takes 24–48 hours.</p>
           </div>
         </div>
       )}
-      {profile && profile.kyc_status !== 'verified' && profile.kyc_status !== 'pending_kyc' && (
-        <div className="bg-red-50 border border-red-200 p-4 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-sm">
-          <div>
-            <h3 className="text-red-600 font-black uppercase tracking-widest text-xs flex items-center gap-2"><ShieldAlert size={16} /> {t('kyc.required')}</h3>
-            <p className="text-slate-600 text-sm mt-1 font-medium">{t('kyc.desc')}</p>
+      {profile && !['verified', 'approved', 'pending_kyc'].includes(profile.kyc_status) && (
+        <div className="ui-card p-4 flex flex-col sm:flex-row sm:items-center gap-3 border-amber-200 bg-amber-50/70">
+          <div className="flex items-start gap-3 flex-1">
+            <ShieldAlert size={20} className="text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{t('kyc.required')}</p>
+              <p className="text-sm text-slate-600 mt-0.5">{t('kyc.desc')}</p>
+            </div>
           </div>
-          <button onClick={() => setActiveTab('SETTINGS')} className="w-full md:w-auto px-5 py-3 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-colors whitespace-nowrap shadow-md">
-            {t('kyc.cta')}
+          <button onClick={() => (onVerify ? onVerify() : setActiveTab('SETTINGS'))} className="ui-btn ui-btn-primary sm:w-auto">{t('kyc.cta')}</button>
+        </div>
+      )}
+      {activeEscrows?.map((escrow) => (
+        <div key={escrow.id} className="ui-card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <span className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><Lock size={18} /></span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-900 truncate">
+                {escrow.order_type === 'deposit' ? 'P2P deposit' : 'P2P withdrawal'} · {formatCurrency(escrow.amount_usd)}
+              </p>
+              <p className="text-sm text-slate-500 capitalize">{String(escrow.status || '').replace(/_/g, ' ')}</p>
+            </div>
+          </div>
+          <button onClick={handleCheckUpdates} disabled={isRefreshing} className="ui-btn ui-btn-secondary sm:w-auto">
+            <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} /> {isRefreshing ? 'Refreshing…' : 'Check status'}
           </button>
         </div>
-      )}
+      ))}
 
-      {/* P2P Escrow Alerts */}
-      {activeEscrows?.length > 0 && (
-        <div className="space-y-3 animate-in fade-in slide-in-from-top-4">
-          {activeEscrows.map(escrow => (
-            <div key={escrow.id} className="bg-emerald-50 border border-emerald-200 p-4 rounded-[2rem] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl relative">
-                  <Lock size={20} className="relative z-10" />
-                  <div className="absolute inset-0 bg-emerald-400 opacity-20 rounded-xl animate-ping" />
-                </div>
-                <div>
-                  <p className="font-black text-emerald-900 text-sm">
-                    {escrow.order_type === 'deposit' ? 'Inbound P2P Deposit' : 'Outbound P2P Withdrawal'} • {formatCurrency(escrow.amount_usd)}
-                  </p>
-                  <p className="text-[10px] font-bold text-emerald-700 mt-1 uppercase tracking-widest flex items-center gap-1">
-                    <Loader2 size={10} className="animate-spin" /> {escrow.status.replace(/_/g, ' ')}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCheckUpdates}
-                disabled={isRefreshing}
-                className="w-full sm:w-auto px-5 py-3 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
-                {isRefreshing ? 'Refreshing...' : 'Check Updates'}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Hero Banner */}
+      {/* ── Balance (the only place balances are shown) ───── */}
       <HeroBanner
         profile={profile}
         balances={balances}
@@ -150,270 +146,133 @@ export default function NetPositionHome({
         setActiveModal={setActiveModal}
       />
 
-      {/* ════════════════════════════════════════════════ */}
-      {/* MOBILE — Clean Action Strip                     */}
-      {/* ════════════════════════════════════════════════ */}
-      <div className="md:hidden bg-white border border-slate-200/80 rounded-2xl shadow-sm p-4">
-        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1">
-          {quickActions.map(({ id, icon: Icon, label, action }) => (
-            <button key={id} onClick={action} className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95 transition-transform group">
-              <div className="w-12 h-12 rounded-xl bg-slate-50 group-hover:bg-blue-50/60 border border-slate-200/70 flex items-center justify-center text-slate-700 group-hover:text-blue-600 transition-colors">
-                <Icon size={20} />
-              </div>
-              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide whitespace-nowrap">{label}</span>
-            </button>
-          ))}
-        </div>
+      {/* ── Actions ───────────────────────────────────────── */}
+      <div id="tour-quick-actions" className="grid grid-cols-5 gap-2 md:flex md:flex-wrap md:gap-2.5">
+        {primaryActions.map(({ id, Icon, label, run }) => (
+          <button key={id} type="button" onClick={run} className="ui-action">
+            <span className="ui-action-icon bg-blue-600 text-white"><Icon size={20} /></span>
+            <span className="ui-action-label">{label}</span>
+          </button>
+        ))}
+        <button type="button" onClick={() => setMoreOpen(true)} className="ui-action">
+          <span className="ui-action-icon bg-white text-slate-700 border border-slate-200"><MoreHorizontal size={20} /></span>
+          <span className="ui-action-label">More</span>
+        </button>
       </div>
 
-      {/* ════════════════════════════════════════════ */}
-      {/* DESKTOP — Grid quick actions                 */}
-      {/* ════════════════════════════════════════════ */}
-      <div id="tour-quick-actions" className="hidden md:block bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm">
-        <div className="grid grid-cols-7 gap-2.5">
-          {quickActions.map(({ id, icon: Icon, label, action }) => (
-            <button
-              key={id}
-              onClick={action}
-              className={`flex flex-col items-center justify-center gap-2 py-3.5 px-2 rounded-xl transition-all group border ${
-                id === 'ANALYTICS' && showAnalytics
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                  : 'bg-slate-50 text-slate-700 border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-sm'
-              }`}
-            >
-              <div className={`${id === 'ANALYTICS' && showAnalytics ? 'text-white' : 'text-slate-600 group-hover:text-blue-600'}`}>
-                <Icon size={20} />
-              </div>
-              <span className={`text-[10px] font-bold uppercase tracking-wider text-center ${id === 'ANALYTICS' && showAnalytics ? 'text-white' : 'text-slate-600'}`}>
-                {label}
-              </span>
-            </button>
-          ))}
+      {/* ── This month ────────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          title="This month"
+          action={showAnalytics ? 'Hide insights' : 'Insights'}
+          onAction={() => setShowAnalytics(!showAnalytics)}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="ui-card p-4">
+            <p className="text-sm text-slate-500 flex items-center gap-1.5"><ArrowDownRight size={16} className="text-emerald-600" /> {t('home.moneyIn')}</p>
+            <p className="ui-amount text-xl mt-1 text-emerald-600">{formatCurrency(moneyIn)}</p>
+          </div>
+          <div className="ui-card p-4">
+            <p className="text-sm text-slate-500 flex items-center gap-1.5"><ArrowUpRight size={16} className="text-slate-500" /> {t('home.moneyOut')}</p>
+            <p className="ui-amount text-xl mt-1 text-slate-900">{formatCurrency(moneyOut)}</p>
+          </div>
         </div>
-      </div>
-
-      {/* ════════════════════════════════════════════ */}
-      {/* MOBILE — Monthly summary strip              */}
-      {/* ════════════════════════════════════════════ */}
-      <div className="md:hidden grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-[1.5rem] p-4 border border-slate-100 shadow-sm">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-1.5">
-            <ArrowDownRight size={11} className="text-emerald-500" /> {t('home.moneyIn')}
-          </p>
-          <p className="text-lg font-black text-emerald-600">{formatCurrency(moneyIn)}</p>
-          <p className="text-[8px] text-slate-400 mt-0.5 font-bold">{t('home.thisMonth')}</p>
-        </div>
-        <div className="bg-white rounded-[1.5rem] p-4 border border-slate-100 shadow-sm">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center gap-1.5">
-            <ArrowUpRight size={11} className="text-slate-400" /> {t('home.moneyOut')}
-          </p>
-          <p className="text-lg font-black text-slate-800">{formatCurrency(moneyOut)}</p>
-          <p className="text-[8px] text-slate-400 mt-0.5 font-bold">{t('home.thisMonth')}</p>
-        </div>
-      </div>
-
-      {/* ════════════════════════════════════════════ */}
-      {/* Analytics / Balance Cards (desktop + mobile)*/}
-      {/* ════════════════════════════════════════════ */}
-      <div className="bg-white/60 backdrop-blur-xl border border-white/40 rounded-3xl p-5 md:p-8 shadow-sm transition-all duration-500">
-        {showAnalytics ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-in fade-in zoom-in-95 duration-500">
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2"><TrendingUp size={16} className="text-indigo-500" /> Cashflow</h3>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">All Time</span>
+        {showAnalytics && (
+          <div className="ui-card p-4 md:p-5 mt-3 space-y-4 animate-in fade-in duration-200">
+            <div>
+              <p className="text-sm font-semibold text-slate-900 flex items-center gap-2"><BarChart2 size={16} className="text-blue-600" /> Where your money is</p>
+              <div className="w-full h-2.5 rounded-full flex overflow-hidden gap-0.5 mt-3 bg-slate-100">
+                {allocation.map((a) => <div key={a.label} className={`${a.bar} h-full`} style={{ width: `${(a.value / safeTotal) * 100}%` }} />)}
               </div>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-1.5">
-                    <span className="text-emerald-600">Total Inflow</span>
-                    <span className="text-emerald-600">{formatCurrency(totalInflow)}</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000" style={{ width: `${inflowPct}%` }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs font-bold mb-1.5">
-                    <span className="text-slate-600">Total Outflow</span>
-                    <span className="text-slate-800">{formatCurrency(totalOutflow)}</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div className="bg-slate-400 h-full rounded-full transition-all duration-1000 delay-300" style={{ width: `${outflowPct}%` }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2"><PieChart size={16} className="text-blue-500" /> Allocation</h3>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Net Worth</span>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { label: 'Cash', pct: liquidPct, color: 'bg-slate-800', dot: 'bg-slate-800' },
-                  { label: 'Alpha', pct: alphaPct, color: 'bg-blue-500', dot: 'bg-blue-500' },
-                  { label: 'Vault', pct: safePct, color: 'bg-indigo-500', dot: 'bg-indigo-500' },
-                ].map(({ label, pct, dot }) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500 flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${dot}`} />{label}
-                    </span>
-                    <span className="text-xs font-bold text-slate-800">{pct.toFixed(1)}%</span>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {allocation.map((a) => (
+                  <div key={a.label} className="text-sm">
+                    <span className="flex items-center gap-1.5 text-slate-500"><span className={`w-2 h-2 rounded-full ${a.bar}`} />{a.label}</span>
+                    <span className="font-semibold text-slate-900">{((a.value / safeTotal) * 100).toFixed(0)}%</span>
                   </div>
                 ))}
-                <div className="w-full h-3 rounded-full flex overflow-hidden mt-3 gap-0.5 shadow-inner">
-                  <div className="bg-slate-800 h-full transition-all duration-1000" style={{ width: `${liquidPct}%` }} />
-                  <div className="bg-blue-500 h-full transition-all duration-1000 delay-150" style={{ width: `${alphaPct}%` }} />
-                  <div className="bg-indigo-500 h-full transition-all duration-1000 delay-300" style={{ width: `${safePct}%` }} />
-                </div>
               </div>
             </div>
-
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2"><BarChart2 size={16} className="text-emerald-500" /> Velocity</h3>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md">Activity</span>
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between items-end border-b border-slate-100 pb-3">
-                  <span className="text-xs font-bold text-slate-500">Total Transactions</span>
-                  <span className="text-xl font-black text-slate-800">{validTxs.length}</span>
-                </div>
-                <div className="flex justify-between items-end">
-                  <span className="text-xs font-bold text-slate-500">Average Volume</span>
-                  <span className="text-lg font-black text-slate-800">{formatCurrency(avgTransactionValue)}</span>
-                </div>
-              </div>
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 text-sm">
+              <div><p className="text-slate-500">Transactions</p><p className="font-semibold text-slate-900 text-base">{validTxs.length}</p></div>
+              <div><p className="text-slate-500">Average amount</p><p className="font-semibold text-slate-900 text-base">{formatCurrency(avgTx)}</p></div>
             </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 animate-in fade-in zoom-in-95 duration-500">
-            <button type="button" className="text-left bg-white rounded-2xl p-5 md:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full active:scale-98" onClick={() => setActiveTab('ACCOUNTS')}>
-              <div className="flex justify-between items-start mb-3 w-full">
-                <Landmark className="text-slate-400" size={22} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-full">Cash</span>
-              </div>
-              <p className="text-slate-500 font-medium text-sm mb-1">Cash on Hand</p>
-              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.liquid_usd)}</p>
-            </button>
-            <button type="button" className="text-left bg-white rounded-2xl p-5 md:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full active:scale-98" onClick={() => setActiveTab('INVEST')}>
-              <div className="flex justify-between items-start mb-3 w-full">
-                <Briefcase className="text-blue-500" size={22} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-full">Alpha</span>
-              </div>
-              <p className="text-slate-500 font-medium text-sm mb-1">Investments</p>
-              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.alpha_equity_usd)}</p>
-            </button>
-            <button type="button" className="text-left bg-white rounded-2xl p-5 md:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full active:scale-98" onClick={() => setActiveTab('ORGANIZE')}>
-              <div className="flex justify-between items-start mb-3 w-full">
-                <ShieldCheck className="text-indigo-500" size={22} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-1 rounded-full">Vault</span>
-              </div>
-              <p className="text-slate-500 font-medium text-sm mb-1">Digital Safe</p>
-              <p className="text-2xl font-black text-slate-800">{formatCurrency(balances.mysafe_digital_usd)}</p>
-            </button>
-            <button type="button" className="text-left bg-white rounded-2xl p-5 md:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between cursor-pointer w-full active:scale-98" onClick={() => setActiveTab('ACCOUNTS')}>
-              <div className="flex justify-between items-start mb-3 w-full">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-100">AFR</span>
-                <span className="text-[10px] font-semibold text-slate-400">Network Token</span>
-              </div>
-              <p className="text-slate-500 font-medium text-sm mb-1">AFR Tokens</p>
-              <p className="text-2xl font-black text-slate-800">{(balances.afr_balance || 0).toLocaleString()} <span className="text-sm font-semibold text-slate-400">AFR</span></p>
-            </button>
           </div>
         )}
-      </div>
+      </section>
 
-      {/* ════════════════════════════════════════════ */}
-      {/* FINANCIAL PROTECTION + MARKETPLACE CARDS   */}
-      {/* ════════════════════════════════════════════ */}
+      {/* ── Recent activity (mobile and web) ─────────────── */}
+      <section>
+        <SectionHeader title={t('home.recentActivity')} action={recentTxs.length ? t('home.seeAll') : null} onAction={() => setActiveTab('TRANSACTIONS')} />
+        <div className="ui-card divide-y divide-slate-100 overflow-hidden">
+          {recentTxs.length === 0 && (
+            <p className="px-4 py-8 text-sm text-slate-500 text-center">No transactions yet. Add money to get started.</p>
+          )}
+          {recentTxs.map((tx) => {
+            const { Icon, color } = txIcon(tx);
+            const isPos = tx.amount > 0;
+            const label = tx.description || tx.transaction_type || 'Transaction';
+            const dateStr = new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return (
+              <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
+                <span className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center shrink-0`}><Icon size={18} /></span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-medium text-slate-900 truncate first-letter:uppercase">{label}</p>
+                  <p className="text-sm text-slate-500">
+                    {dateStr}
+                    {tx.status && tx.status !== 'completed' && <span className={`ml-1.5 capitalize ${STATUS_STYLE[tx.status] || 'text-red-600'}`}>· {tx.status}</span>}
+                  </p>
+                </div>
+                <p className={`ui-amount text-[15px] shrink-0 ${isPos ? 'text-emerald-600' : 'text-slate-900'}`}>
+                  {isPos ? '+' : ''}{formatCurrency(tx.amount)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Services: small row at the bottom, "More" opens the full page ── */}
       {setActiveAppPopup && (
-        <div className="space-y-3">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">Services & Protection</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setActiveAppPopup('PENSION_FUND')}
-              className="flex flex-col items-start gap-2.5 p-4 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-sm text-slate-800 transition-all text-left shadow-xs"
-            >
-              <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center border border-blue-100/60">
-                <TrendingUp size={18} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">IFB Pension <FeatureBadge id="PENSION_FUND" /></p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Retirement & growth</p>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveAppPopup('AGRI_SHIELD')}
-              className="flex flex-col items-start gap-2.5 p-4 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-sm text-slate-800 transition-all text-left shadow-xs"
-            >
-              <div className="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center border border-emerald-100/60">
-                <Leaf size={18} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">AgriShield <FeatureBadge id="AGRI_SHIELD" /></p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Agricultural protection</p>
-              </div>
+        <section>
+          <SectionHeader title="Services" action="See all" onAction={() => setActiveTab('SERVICES')} />
+          <div className="ui-card p-3 grid grid-cols-4 md:grid-cols-8 gap-1">
+            {homeServices.map(({ id, Icon, label }) => (
+              <button key={id} type="button" onClick={() => setActiveAppPopup(id)} className="ui-tile">
+                <span className="ui-tile-icon"><Icon size={20} /></span>
+                <span className="ui-tile-label">{label}</span>
+                <FeatureBadge id={id} compact />
+              </button>
+            ))}
+            <button type="button" onClick={() => setActiveTab('SERVICES')} className="ui-tile">
+              <span className="ui-tile-icon bg-slate-100 text-slate-700"><LayoutGrid size={20} /></span>
+              <span className="ui-tile-label">More</span>
             </button>
           </div>
-          <button
-            onClick={() => setActiveAppPopup('DEUS_MARKET')}
-            className="w-full flex items-center gap-3.5 p-4 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 hover:shadow-sm text-slate-800 transition-all shadow-xs"
-          >
-            <div className="w-9 h-9 bg-slate-50 text-slate-700 rounded-lg flex items-center justify-center border border-slate-200/70">
-              <ShoppingBag size={18} />
-            </div>
-            <div className="text-left flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-900">DEUS Marketplace</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Verified products & direct merchant checkout</p>
-            </div>
-            <ChevronRight size={16} className="text-slate-400" />
-          </button>
-        </div>
+        </section>
       )}
 
-      {/* ════════════════════════════════════════════ */}
-      {/* MOBILE — Recent Activity feed                */}
-      {/* ════════════════════════════════════════════ */}
-      {recentTxs.length > 0 && (
-        <div className="md:hidden bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
-            <h3 className="text-xs font-bold text-slate-900">{t('home.recentActivity')}</h3>
-            <button
-              onClick={() => setActiveTab('TRANSACTIONS')}
-              className="flex items-center gap-1 text-blue-600 text-xs font-semibold"
-            >
-              {t('home.seeAll')} <ChevronRight size={13} />
-            </button>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {recentTxs.map((tx) => {
-              const { Icon, color } = txIcon(tx);
-              const isPos = tx.amount > 0;
-              const label = tx.description || tx.transaction_type || 'Transaction';
-              const dateStr = new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-              return (
-                <div key={tx.id} className="flex items-center gap-3 px-4 py-3 active:bg-slate-50 transition-colors">
-                  <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center shrink-0`}>
-                    <Icon size={16} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-800 capitalize truncate">{label}</p>
-                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">{dateStr}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={`text-xs font-bold ${isPos ? 'text-emerald-600' : 'text-slate-900'}`}>
-                      {isPos ? '+' : ''}{formatCurrency(tx.amount)}
-                    </p>
-                    <div className={`text-[8px] font-bold uppercase tracking-wider mt-0.5 ${
-                      tx.status === 'completed' ? 'text-emerald-500' : tx.status === 'pending' ? 'text-amber-500' : 'text-red-500'
-                    }`}>{tx.status}</div>
-                  </div>
-                </div>
-              );
-            })}
+      {/* ── "More" actions sheet ─────────────────────────── */}
+      {moreOpen && (
+        <div className="fixed inset-0 z-[300] flex items-end md:items-center justify-center" role="dialog" aria-modal="true">
+          <button type="button" className="absolute inset-0 bg-slate-900/40" aria-label="Close" onClick={() => setMoreOpen(false)} />
+          <div className="relative w-full md:max-w-md bg-white rounded-t-3xl md:rounded-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-4 duration-200">
+            <div className="flex items-center justify-between px-1 pb-2">
+              <h3 className="text-base font-semibold text-slate-900">More actions</h3>
+              <button type="button" onClick={() => setMoreOpen(false)} className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100" aria-label="Close"><X size={18} /></button>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {moreActions.map(({ id, Icon, label, desc, run }) => (
+                <button key={id} type="button" onClick={() => runMore(run)} className="w-full flex items-center gap-3.5 px-1 py-3 text-left hover:bg-slate-50 rounded-xl">
+                  <span className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><Icon size={20} /></span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[15px] font-semibold text-slate-900">{label}</span>
+                    <span className="block text-sm text-slate-500">{desc}</span>
+                  </span>
+                  <ChevronRight size={18} className="text-slate-300" />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

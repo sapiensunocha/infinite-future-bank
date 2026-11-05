@@ -123,23 +123,23 @@ export default function AdminSupportDesk({ session, adminProfile }) {
   const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-300 font-sans flex overflow-hidden selection:bg-blue-500/30">
+    <div className="min-h-screen bg-white text-slate-600 font-sans flex overflow-hidden selection:bg-blue-500/30">
       
       {/* LEFT: TICKET QUEUE */}
-      <div className="w-80 bg-[#111827] border-r border-white/5 flex flex-col h-screen">
-        <div className="p-6 border-b border-white/5 bg-black/20">
-          <h2 className="text-lg font-black text-white tracking-tight flex items-center gap-2">
+      <div className="w-80 bg-white border-r border-slate-200 flex flex-col h-screen">
+        <div className="p-6 border-b border-slate-200 bg-slate-50">
+          <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
             <ShieldCheck className="text-blue-500" /> Command Center
           </h2>
           <p className="text-[10px] uppercase tracking-widest text-slate-500 mt-1">Role: {adminProfile?.role?.replace('_', ' ').toUpperCase()}</p>
         </div>
         
-        <div className="p-4 border-b border-white/5 relative">
+        <div className="p-4 border-b border-slate-200 relative">
           <Search className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
           <input 
             type="text" 
             placeholder="Search tickets..." 
-            className="w-full bg-black/40 border border-white/5 rounded-xl py-3 pl-10 pr-4 text-sm outline-none focus:border-blue-500/50 text-white"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm outline-none focus:border-blue-200 text-slate-900"
           />
         </div>
 
@@ -148,16 +148,16 @@ export default function AdminSupportDesk({ session, adminProfile }) {
             <button 
               key={ticket.id} 
               onClick={() => setActiveTicket(ticket)}
-              className={`w-full text-left p-5 border-b border-white/5 hover:bg-white/5 transition-colors flex items-start gap-4 ${activeTicket?.id === ticket.id ? 'bg-blue-900/20 border-l-2 border-l-blue-500' : ''}`}
+              className={`w-full text-left p-5 border-b border-slate-200 hover:bg-slate-100 transition-colors flex items-start gap-4 ${activeTicket?.id === ticket.id ? 'bg-blue-50 border-l-2 border-l-blue-500' : ''}`}
             >
-              <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
                 {ticket.profiles?.avatar_url ? <img src={ticket.profiles.avatar_url} className="w-full h-full rounded-full object-cover"/> : <User size={18}/>}
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-bold text-white truncate">{ticket.profiles?.full_name || 'Unknown Client'}</p>
+                <p className="text-sm font-bold text-slate-900 truncate">{ticket.profiles?.full_name || 'Unknown Client'}</p>
                 <p className="text-xs text-slate-500 mt-1">Ticket #{ticket.id.split('-')[0]}</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${ticket.status === 'open' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${ticket.status === 'open' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
                     {ticket.status === 'open' ? 'New' : 'Assigned'}
                   </span>
                   <span className="text-[9px] text-slate-600 flex items-center gap-1"><Clock size={10}/> {new Date(ticket.created_at).toLocaleTimeString()}</span>
@@ -175,16 +175,16 @@ export default function AdminSupportDesk({ session, adminProfile }) {
       </div>
 
       {/* MIDDLE: CHAT TERMINAL */}
-      <div className="flex-1 flex flex-col h-screen relative bg-[#0B0F19]">
+      <div className="flex-1 flex flex-col h-screen relative bg-white">
         {activeTicket ? (
           <>
             {/* Chat Header */}
-            <div className="h-20 border-b border-white/5 bg-black/20 flex items-center justify-between px-8 shrink-0 backdrop-blur-md relative z-10">
+            <div className="h-20 border-b border-slate-200 bg-slate-50 flex items-center justify-between px-8 shrink-0 backdrop-blur-md relative z-10">
               <div>
-                <h3 className="text-white font-bold text-lg">Secure Session: {targetUser?.full_name}</h3>
+                <h3 className="text-slate-900 font-bold text-lg">Secure Session: {targetUser?.full_name}</h3>
                 <p className="text-[10px] text-slate-500 uppercase tracking-widest">End-to-End Encrypted Advisory Link</p>
               </div>
-              <button onClick={handleResolveTicket} className="px-5 py-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all flex items-center gap-2">
+              <button onClick={handleResolveTicket} className="px-5 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center gap-2">
                 <CheckCircle2 size={14}/> Resolve & Close
               </button>
             </div>
@@ -198,9 +198,9 @@ export default function AdminSupportDesk({ session, adminProfile }) {
                     <div className={`max-w-[70%] p-5 rounded-[2rem] text-sm leading-relaxed ${
                       isAgent 
                         ? 'bg-blue-600 text-white rounded-tr-none shadow-[0_0_20px_rgba(37,99,235,0.2)]' 
-                        : 'bg-white/5 border border-white/10 text-slate-200 rounded-tl-none'
+                        : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-tl-none'
                     }`}>
-                      {!isAgent && <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-2">Client</p>}
+                      {!isAgent && <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-200 pb-2">Client</p>}
                       {msg.message}
                     </div>
                   </div>
@@ -210,14 +210,14 @@ export default function AdminSupportDesk({ session, adminProfile }) {
             </div>
 
             {/* Input Box */}
-            <div className="p-6 bg-black/40 border-t border-white/5 backdrop-blur-md">
+            <div className="p-6 bg-slate-50 border-t border-slate-200 backdrop-blur-md">
               <form onSubmit={handleSendReply} className="relative">
                 <input 
                   type="text" 
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
                   placeholder="Transmit message to client terminal..." 
-                  className="w-full bg-[#111827] border border-white/10 rounded-2xl py-4 pl-6 pr-16 text-sm text-white outline-none focus:border-blue-500 shadow-inner"
+                  className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-6 pr-16 text-sm text-slate-900 outline-none focus:border-blue-500 shadow-inner"
                   disabled={isTyping}
                 />
                 <button type="submit" disabled={!reply.trim() || isTyping} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-500 transition-all disabled:opacity-50">
@@ -237,18 +237,18 @@ export default function AdminSupportDesk({ session, adminProfile }) {
 
       {/* RIGHT: 360 CUSTOMER CONTEXT (Only visible when ticket is selected) */}
       {activeTicket && targetUser && (
-        <div className="w-80 xl:w-96 bg-[#111827] border-l border-white/5 h-screen overflow-y-auto custom-scrollbar flex flex-col">
+        <div className="w-80 xl:w-96 bg-white border-l border-slate-200 h-screen overflow-y-auto custom-scrollbar flex flex-col">
           
           {/* Profile Snapshot */}
-          <div className="p-8 border-b border-white/5 text-center flex flex-col items-center bg-black/20">
-            <div className="w-24 h-24 rounded-3xl bg-slate-800 border-2 border-slate-700 overflow-hidden mb-4 shadow-lg">
+          <div className="p-8 border-b border-slate-200 text-center flex flex-col items-center bg-slate-50">
+            <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-slate-200 overflow-hidden mb-4 shadow-lg">
               {targetUser.avatar_url ? <img src={targetUser.avatar_url} className="w-full h-full object-cover"/> : <User size={48} className="m-6 text-slate-600"/>}
             </div>
-            <h3 className="text-xl font-black text-white">{targetUser.full_name}</h3>
-            <p className="text-xs text-slate-400 mt-1">{targetUser.email}</p>
+            <h3 className="text-xl font-black text-slate-900">{targetUser.full_name}</h3>
+            <p className="text-xs text-slate-500 mt-1">{targetUser.email}</p>
             
             <div className={`mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
-              targetUser.kyc_status === 'verified' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+              targetUser.kyc_status === 'verified' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-amber-50 border-amber-200 text-amber-600'
             }`}>
               {targetUser.kyc_status === 'verified' ? <ShieldCheck size={14}/> : <ShieldAlert size={14}/>}
               KYC: {targetUser.kyc_status || 'Unverified'}
@@ -256,29 +256,29 @@ export default function AdminSupportDesk({ session, adminProfile }) {
           </div>
 
           {/* Institutional Balances */}
-          <div className="p-6 border-b border-white/5 space-y-4">
+          <div className="p-6 border-b border-slate-200 space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Balances</h4>
             
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg"><Landmark size={16}/></div>
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Landmark size={16}/></div>
                 <div>
-                  <p className="text-xs font-bold text-white">Liquid Cash</p>
+                  <p className="text-xs font-bold text-slate-900">Liquid Cash</p>
                   <p className="text-[10px] text-slate-500">Operational USD</p>
                 </div>
               </div>
-              <p className="font-black text-white">{formatCurrency(targetBalances?.liquid_usd)}</p>
+              <p className="font-black text-slate-900">{formatCurrency(targetBalances?.liquid_usd)}</p>
             </div>
 
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg"><Lock size={16}/></div>
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Lock size={16}/></div>
                 <div>
-                  <p className="text-xs font-bold text-white">Digital Safe</p>
+                  <p className="text-xs font-bold text-slate-900">Digital Safe</p>
                   <p className="text-[10px] text-slate-500">Vaulted Assets</p>
                 </div>
               </div>
-              <p className="font-black text-white">{formatCurrency(targetBalances?.mysafe_digital_usd)}</p>
+              <p className="font-black text-slate-900">{formatCurrency(targetBalances?.mysafe_digital_usd)}</p>
             </div>
           </div>
 
@@ -293,12 +293,12 @@ export default function AdminSupportDesk({ session, adminProfile }) {
                   <button 
                     onClick={handleForceKycVerify}
                     disabled={targetUser.kyc_status === 'verified'}
-                    className="w-full p-4 rounded-xl text-xs font-black uppercase tracking-widest text-left transition-all border disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                    className="w-full p-4 rounded-xl text-xs font-black uppercase tracking-widest text-left transition-all border disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
                   >
                     Force KYC Verification {targetUser.kyc_status === 'verified' && <CheckCircle2 size={16}/>}
                   </button>
 
-                  <button className="w-full p-4 rounded-xl text-xs font-black uppercase tracking-widest text-left transition-all border flex items-center justify-between bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20">
+                  <button className="w-full p-4 rounded-xl text-xs font-black uppercase tracking-widest text-left transition-all border flex items-center justify-between bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-50">
                     <Unlock size={16}/> Override Vault Lock
                   </button>
                 </>
@@ -306,7 +306,7 @@ export default function AdminSupportDesk({ session, adminProfile }) {
 
               {/* TIER 3 (ADMIN) ONLY */}
               {adminProfile.role === 'admin_l3' && (
-                <button className="w-full p-4 rounded-xl text-xs font-black uppercase tracking-widest text-left transition-all border flex items-center justify-between bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 mt-4">
+                <button className="w-full p-4 rounded-xl text-xs font-black uppercase tracking-widest text-left transition-all border flex items-center justify-between bg-red-50 text-red-600 border-red-200 hover:bg-red-50 mt-4">
                   <Zap size={16}/> Adjust Core Ledger
                 </button>
               )}

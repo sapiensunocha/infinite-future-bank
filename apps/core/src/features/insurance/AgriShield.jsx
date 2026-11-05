@@ -291,7 +291,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           </div>
 
           {/* Location */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Country *</label>
               <select
@@ -315,7 +315,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           </div>
 
           {/* Farm size + coverage */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Farm Size (ha) *</label>
               <input
@@ -378,7 +378,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           </div>
 
           {/* Coverage period */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Coverage Start *</label>
               <input

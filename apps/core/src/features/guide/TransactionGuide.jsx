@@ -255,7 +255,7 @@ function Phone({ children, dark = false }) {
   return (
     <div className="relative w-[252px] h-[496px] rounded-[40px] bg-slate-900 shadow-2xl border-2 border-slate-700 overflow-hidden flex flex-col">
       <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-black rounded-full z-20" />
-      <div className={`flex-shrink-0 h-8 ${dark ? 'bg-[#0a0f1e]' : 'bg-slate-100'} flex items-center justify-between px-4 pt-2 text-[8px] font-black ${dark ? 'text-white' : 'text-slate-700'}`}>
+      <div className={`flex-shrink-0 h-8 ${dark ? 'bg-white' : 'bg-slate-100'} flex items-center justify-between px-4 pt-2 text-[8px] font-black ${dark ? 'text-slate-900' : 'text-slate-700'}`}>
         <span>9:41</span><span>●●●</span>
       </div>
       <div className="flex-1 overflow-hidden relative">{children}</div>
@@ -296,28 +296,28 @@ function DashboardScreen() {
     { icon: FileText, label: 'Ledger', color: 'text-slate-300' },
   ];
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col px-3 py-2 overflow-hidden">
+    <div className="h-full bg-white flex flex-col px-3 py-2 overflow-hidden">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-black"><span className="text-blue-400">D</span><span className="text-red-400">E</span><span className="text-yellow-400">U</span><span className="text-green-400">S</span></span>
-        <Bell size={10} className="text-slate-400" />
+        <span className="text-[10px] font-black"><span className="text-blue-600">D</span><span className="text-red-600">E</span><span className="text-yellow-600">U</span><span className="text-green-600">S</span></span>
+        <Bell size={10} className="text-slate-500" />
       </div>
-      <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-3 mb-3">
-        <p className="text-[7px] text-blue-200 font-black uppercase tracking-widest">Total Balance</p>
-        <p className="text-xl font-black text-white">$12,480.50</p>
-        <p className="text-[7px] text-blue-200">IFB Account · **** 4821</p>
+      <div className="bg-gradient-to-br from-blue-600 to-blue-50 rounded-2xl p-3 mb-3">
+        <p className="text-[7px] text-blue-600 font-black uppercase tracking-widest">Total Balance</p>
+        <p className="text-xl font-black text-slate-900">$12,480.50</p>
+        <p className="text-[7px] text-blue-600">IFB Account · **** 4821</p>
       </div>
       <div className="grid grid-cols-3 gap-1.5 mb-3">
         {actions.map((a) => (
-          <div key={a.label} className="bg-slate-800/60 rounded-xl flex flex-col items-center justify-center py-2 gap-1">
+          <div key={a.label} className="bg-slate-50 rounded-xl flex flex-col items-center justify-center py-2 gap-1">
             <a.icon size={12} className={a.color} />
-            <span className="text-[7px] text-slate-300 font-black">{a.label}</span>
+            <span className="text-[7px] text-slate-600 font-black">{a.label}</span>
           </div>
         ))}
       </div>
-      <div className="flex justify-around border-t border-slate-800 pt-2">
+      <div className="flex justify-around border-t border-slate-200 pt-2">
         {[{ icon: Compass, label: 'Home' }, { icon: ArrowRightLeft, label: 'Txn' }, { icon: Wifi, label: 'Tap' }, { icon: Bell, label: 'Alerts' }, { icon: Menu, label: 'More' }].map((n) => (
           <div key={n.label} className="flex flex-col items-center gap-0.5">
-            <n.icon size={10} className={n.label === 'Home' ? 'text-blue-400' : 'text-slate-500'} />
+            <n.icon size={10} className={n.label === 'Home' ? 'text-blue-600' : 'text-slate-500'} />
             <span className="text-[6px] text-slate-500">{n.label}</span>
           </div>
         ))}
@@ -328,31 +328,31 @@ function DashboardScreen() {
 
 function DepositScreen({ variant, done, onTap }) {
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col p-3">
+    <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center"><Plus size={10} className="text-white" /></div>
-        <span className="text-[10px] font-black text-white">Add Funds</span>
+        <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center"><Plus size={10} className="text-slate-900" /></div>
+        <span className="text-[10px] font-black text-slate-900">Add Funds</span>
       </div>
-      <p className="text-[7px] text-slate-400 mb-3">Choose deposit method:</p>
+      <p className="text-[7px] text-slate-500 mb-3">Choose deposit method:</p>
       <div className="flex flex-col gap-2">
         <HL done={done && variant === 'cot'} onTap={variant === 'cot' ? onTap : undefined} radius="rounded-2xl">
-          <div className={`bg-slate-800 rounded-2xl p-3 border ${variant === 'cot' ? 'border-yellow-400/30' : 'border-slate-700'}`}>
+          <div className={`bg-slate-50 rounded-2xl p-3 border ${variant === 'cot' ? 'border-yellow-200' : 'border-slate-200'}`}>
             <div className="flex items-center gap-2 mb-1">
-              <Users size={10} className="text-blue-400" />
-              <span className="text-[9px] font-black text-white">Community of Trust</span>
+              <Users size={10} className="text-blue-600" />
+              <span className="text-[9px] font-black text-slate-900">Community of Trust</span>
             </div>
-            <p className="text-[7px] text-slate-400">1% IFB Fee + 2% Processor</p>
-            <span className="text-[7px] bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded-full font-black">LOWEST COST</span>
+            <p className="text-[7px] text-slate-500">1% IFB Fee + 2% Processor</p>
+            <span className="text-[7px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-black">LOWEST COST</span>
           </div>
         </HL>
         <HL done={done && variant === 'stripe'} onTap={variant === 'stripe' ? onTap : undefined} radius="rounded-2xl">
-          <div className={`bg-slate-800 rounded-2xl p-3 border ${variant === 'stripe' ? 'border-yellow-400/30' : 'border-slate-700'}`}>
+          <div className={`bg-slate-50 rounded-2xl p-3 border ${variant === 'stripe' ? 'border-yellow-200' : 'border-slate-200'}`}>
             <div className="flex items-center gap-2 mb-1">
-              <CreditCard size={10} className="text-purple-400" />
-              <span className="text-[9px] font-black text-white">Global Card Network</span>
+              <CreditCard size={10} className="text-purple-600" />
+              <span className="text-[9px] font-black text-slate-900">Global Card Network</span>
             </div>
-            <p className="text-[7px] text-slate-400">2.9% + $0.30 · Visa · Mastercard</p>
-            <span className="text-[7px] bg-purple-600/20 text-purple-400 px-1.5 py-0.5 rounded-full font-black">INSTANT</span>
+            <p className="text-[7px] text-slate-500">2.9% + $0.30 · Visa · Mastercard</p>
+            <span className="text-[7px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full font-black">INSTANT</span>
           </div>
         </HL>
       </div>
@@ -362,23 +362,23 @@ function DepositScreen({ variant, done, onTap }) {
 
 function SendScreen({ done, onTap }) {
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col p-3">
+    <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
-        <Send size={10} className="text-emerald-400" />
-        <span className="text-[10px] font-black text-white">Send Money</span>
+        <Send size={10} className="text-emerald-600" />
+        <span className="text-[10px] font-black text-slate-900">Send Money</span>
       </div>
-      <div className="bg-slate-800 rounded-xl p-2 mb-2 flex items-center gap-2">
+      <div className="bg-slate-50 rounded-xl p-2 mb-2 flex items-center gap-2">
         <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[7px] font-black text-white">JD</div>
-        <div><p className="text-[8px] font-black text-white">Jane Doe</p><p className="text-[6px] text-slate-400">@janedoe · IFB</p></div>
+        <div><p className="text-[8px] font-black text-slate-900">Jane Doe</p><p className="text-[6px] text-slate-500">@janedoe · IFB</p></div>
       </div>
-      <div className="bg-slate-800/50 rounded-xl p-2 mb-2">
-        <p className="text-[6px] text-slate-400 mb-0.5">Amount</p>
-        <p className="text-lg font-black text-white">$250.00</p>
+      <div className="bg-slate-50 rounded-xl p-2 mb-2">
+        <p className="text-[6px] text-slate-500 mb-0.5">Amount</p>
+        <p className="text-lg font-black text-slate-900">$250.00</p>
         <p className="text-[6px] text-slate-500">USD · IFB Network</p>
       </div>
-      <div className="bg-slate-800/50 rounded-xl p-2 mb-3">
-        <p className="text-[6px] text-slate-400 mb-0.5">Note</p>
-        <p className="text-[8px] text-white">Dinner split 🍕</p>
+      <div className="bg-slate-50 rounded-xl p-2 mb-3">
+        <p className="text-[6px] text-slate-500 mb-0.5">Note</p>
+        <p className="text-[8px] text-slate-900">Dinner split 🍕</p>
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl" labelPos="top">
         <div className="w-full bg-emerald-600 rounded-xl py-2 text-center text-[9px] font-black text-white">Send Now</div>
@@ -440,16 +440,16 @@ function InvoiceScreen({ done, onTap }) {
 
 function QRScreen({ done, onTap }) {
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col items-center p-3">
-      <span className="text-[10px] font-black text-white mb-3">My QR Code</span>
+    <div className="h-full bg-white flex flex-col items-center p-3">
+      <span className="text-[10px] font-black text-slate-900 mb-3">My QR Code</span>
       <HL done={done} onTap={onTap} radius="rounded-2xl">
         <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center">
           <QrCode size={80} className="text-slate-900" />
         </div>
       </HL>
-      <p className="text-[7px] text-slate-400 mt-3 text-center">Scan to pay @janedoe</p>
-      <div className="mt-2 bg-slate-800 rounded-xl px-3 py-1.5">
-        <p className="text-[7px] text-slate-300 font-black">Fixed: $50.00 USD</p>
+      <p className="text-[7px] text-slate-500 mt-3 text-center">Scan to pay @janedoe</p>
+      <div className="mt-2 bg-slate-50 rounded-xl px-3 py-1.5">
+        <p className="text-[7px] text-slate-600 font-black">Fixed: $50.00 USD</p>
       </div>
     </div>
   );
@@ -510,28 +510,28 @@ function PayMeScreen({ variant, done, onTap }) {
 
 function WithdrawScreen({ variant, done, onTap }) {
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col p-3">
+    <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
-        <Download size={10} className="text-purple-400" />
-        <span className="text-[10px] font-black text-white">Withdraw</span>
+        <Download size={10} className="text-purple-600" />
+        <span className="text-[10px] font-black text-slate-900">Withdraw</span>
       </div>
       <div className="flex flex-col gap-2">
         <HL done={done && variant === 'global'} onTap={variant === 'global' ? onTap : undefined} radius="rounded-2xl">
-          <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700">
+          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200">
             <div className="flex items-center gap-2 mb-1">
-              <Globe size={10} className="text-purple-400" />
-              <span className="text-[9px] font-black text-white">Global Bank / Card</span>
+              <Globe size={10} className="text-purple-600" />
+              <span className="text-[9px] font-black text-slate-900">Global Bank / Card</span>
             </div>
-            <p className="text-[7px] text-slate-400">1.5% + $1.00 · 1-3 business days</p>
+            <p className="text-[7px] text-slate-500">1.5% + $1.00 · 1-3 business days</p>
           </div>
         </HL>
         <HL done={done && variant === 'cot'} onTap={variant === 'cot' ? onTap : undefined} radius="rounded-2xl">
-          <div className="bg-slate-800 rounded-2xl p-3 border border-slate-700">
+          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200">
             <div className="flex items-center gap-2 mb-1">
-              <Users size={10} className="text-emerald-400" />
-              <span className="text-[9px] font-black text-white">Community of Trust</span>
+              <Users size={10} className="text-emerald-600" />
+              <span className="text-[9px] font-black text-slate-900">Community of Trust</span>
             </div>
-            <p className="text-[7px] text-slate-400">Lowest fees · Minutes · Local cash</p>
+            <p className="text-[7px] text-slate-500">Lowest fees · Minutes · Local cash</p>
           </div>
         </HL>
       </div>
@@ -542,9 +542,9 @@ function WithdrawScreen({ variant, done, onTap }) {
 function NFCScreen({ variant, done, onTap }) {
   const modes = ['Send', 'Receive', 'Card'];
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col items-center p-3">
-      <span className="text-[10px] font-black text-white mb-2">Tap to Pay</span>
-      <div className="flex gap-1 bg-slate-800 rounded-xl p-0.5 mb-4">
+    <div className="h-full bg-white flex flex-col items-center p-3">
+      <span className="text-[10px] font-black text-slate-900 mb-2">Tap to Pay</span>
+      <div className="flex gap-1 bg-slate-50 rounded-xl p-0.5 mb-4">
         {modes.map((m) => {
           const isActive = (variant === 'send' && m === 'Send') || (variant === 'receive' && m === 'Receive') || (variant === 'card' && m === 'Card');
           const isTarget = (variant === 'receive' && m === 'Receive') || (variant === 'card' && m === 'Card');
@@ -553,27 +553,27 @@ function NFCScreen({ variant, done, onTap }) {
               <span className="bg-blue-600 text-white text-[7px] font-black px-2 py-1 rounded-lg">{m}</span>
             </HL>
           );
-          return <span key={m} className={`text-[7px] font-black px-2 py-1 rounded-lg ${isActive ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>{m}</span>;
+          return <span key={m} className={`text-[7px] font-black px-2 py-1 rounded-lg ${isActive ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>{m}</span>;
         })}
       </div>
       <div className="relative flex items-center justify-center">
-        <div className="w-24 h-24 rounded-full border-2 border-blue-500/30 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full border-2 border-blue-500/50 flex items-center justify-center">
+        <div className="w-24 h-24 rounded-full border-2 border-blue-200 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full border-2 border-blue-200 flex items-center justify-center">
             {variant === 'send' ? (
               <HL done={done} onTap={onTap} radius="rounded-full">
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                  <Wifi size={18} className="text-white" />
+                  <Wifi size={18} className="text-slate-900" />
                 </div>
               </HL>
             ) : (
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                <Wifi size={18} className="text-white" />
+                <Wifi size={18} className="text-slate-900" />
               </div>
             )}
           </div>
         </div>
       </div>
-      <p className="text-[7px] text-slate-400 mt-3 text-center">
+      <p className="text-[7px] text-slate-500 mt-3 text-center">
         {variant === 'send' ? 'Hold near reader' : variant === 'receive' ? 'Accepting payments' : 'Emulating card'}
       </p>
     </div>
@@ -582,16 +582,16 @@ function NFCScreen({ variant, done, onTap }) {
 
 function SwiftScreen({ done, onTap }) {
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col p-3">
+    <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
-        <Landmark size={10} className="text-blue-400" />
-        <span className="text-[10px] font-black text-white">SWIFT Transfer</span>
+        <Landmark size={10} className="text-blue-600" />
+        <span className="text-[10px] font-black text-slate-900">SWIFT Transfer</span>
       </div>
       <div className="flex flex-col gap-1.5 mb-3">
         {[['Recipient', 'Klaus Müller'], ['IBAN', 'DE89 3704 0044 0532 0130 00'], ['BIC', 'COBADEFFXXX'], ['Amount', '$5,000 USD']].map(([l, v]) => (
-          <div key={l} className="bg-slate-800/60 rounded-lg p-2">
+          <div key={l} className="bg-slate-50 rounded-lg p-2">
             <p className="text-[6px] text-slate-500">{l}</p>
-            <p className="text-[8px] font-black text-white">{v}</p>
+            <p className="text-[8px] font-black text-slate-900">{v}</p>
           </div>
         ))}
       </div>
@@ -626,16 +626,16 @@ function ACHScreen({ done, onTap }) {
 
 function ExchangeScreen({ done, onTap }) {
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col p-3">
+    <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
-        <ArrowRightLeft size={10} className="text-yellow-400" />
-        <span className="text-[10px] font-black text-white">AFR Exchange</span>
+        <ArrowRightLeft size={10} className="text-yellow-600" />
+        <span className="text-[10px] font-black text-slate-900">AFR Exchange</span>
       </div>
-      <div className="bg-slate-800 rounded-2xl p-3 mb-3">
+      <div className="bg-slate-50 rounded-2xl p-3 mb-3">
         <div className="flex items-center justify-between mb-2">
-          <div><p className="text-[6px] text-slate-400">From</p><p className="text-[11px] font-black text-white">$500 USD</p></div>
-          <ArrowRightLeft size={12} className="text-yellow-400" />
-          <div><p className="text-[6px] text-slate-400">To</p><p className="text-[11px] font-black text-yellow-400">₳ 1,250 AFR</p></div>
+          <div><p className="text-[6px] text-slate-500">From</p><p className="text-[11px] font-black text-slate-900">$500 USD</p></div>
+          <ArrowRightLeft size={12} className="text-yellow-600" />
+          <div><p className="text-[6px] text-slate-500">To</p><p className="text-[11px] font-black text-yellow-600">₳ 1,250 AFR</p></div>
         </div>
         <p className="text-[7px] text-slate-500">Rate: 1 USD = 2.50 AFR</p>
       </div>
@@ -764,23 +764,23 @@ function MerchantScanScreen({ done, onTap }) {
 function WalletScreen({ done, onTap }) {
   const currencies = [{ code: 'USD', name: 'US Dollar', bal: '$12,480.50', color: 'text-green-400' }, { code: 'EUR', name: 'Euro', bal: '€3,200.00', color: 'text-blue-400' }, { code: 'GBP', name: 'British Pound', bal: '£1,800.00', color: 'text-purple-400' }, { code: 'AFR', name: 'Afri Reserve', bal: '₳ 8,500', color: 'text-yellow-400' }];
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col p-3">
+    <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
-        <Wallet size={10} className="text-teal-400" />
-        <span className="text-[10px] font-black text-white">Multi-currency Wallet</span>
+        <Wallet size={10} className="text-teal-600" />
+        <span className="text-[10px] font-black text-slate-900">Multi-currency Wallet</span>
       </div>
       <div className="flex flex-col gap-2">
         {currencies.map((c, i) => (
           i === 0 ? (
             <HL key={c.code} done={done} onTap={onTap} radius="rounded-xl">
-              <div className="bg-slate-800 rounded-xl p-2.5 flex items-center justify-between border border-yellow-400/20">
-                <div><p className="text-[9px] font-black text-white">{c.code}</p><p className="text-[6px] text-slate-400">{c.name}</p></div>
+              <div className="bg-slate-50 rounded-xl p-2.5 flex items-center justify-between border border-yellow-200">
+                <div><p className="text-[9px] font-black text-slate-900">{c.code}</p><p className="text-[6px] text-slate-500">{c.name}</p></div>
                 <span className={`text-[8px] font-black ${c.color}`}>{c.bal}</span>
               </div>
             </HL>
           ) : (
-            <div key={c.code} className="bg-slate-800 rounded-xl p-2.5 flex items-center justify-between">
-              <div><p className="text-[9px] font-black text-white">{c.code}</p><p className="text-[6px] text-slate-400">{c.name}</p></div>
+            <div key={c.code} className="bg-slate-50 rounded-xl p-2.5 flex items-center justify-between">
+              <div><p className="text-[9px] font-black text-slate-900">{c.code}</p><p className="text-[6px] text-slate-500">{c.name}</p></div>
               <span className={`text-[8px] font-black ${c.color}`}>{c.bal}</span>
             </div>
           )
@@ -793,18 +793,18 @@ function WalletScreen({ done, onTap }) {
 function BulkTransferScreen({ done, onTap }) {
   const recipients = [{ init: 'AL', name: 'Alice Lee', amount: '$500' }, { init: 'BM', name: 'Bob Martin', amount: '$500' }, { init: 'CR', name: 'Clara R.', amount: '$500' }];
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col p-3">
+    <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-2">
-        <Users size={10} className="text-blue-400" />
-        <span className="text-[10px] font-black text-white">Bulk Transfer</span>
+        <Users size={10} className="text-blue-600" />
+        <span className="text-[10px] font-black text-slate-900">Bulk Transfer</span>
       </div>
-      <p className="text-[7px] text-slate-400 mb-2">3 recipients · Total: $1,500</p>
+      <p className="text-[7px] text-slate-500 mb-2">3 recipients · Total: $1,500</p>
       <div className="flex flex-col gap-1.5 mb-3">
         {recipients.map((r) => (
-          <div key={r.name} className="flex items-center gap-2 bg-slate-800 rounded-xl p-2">
+          <div key={r.name} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
             <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[6px] font-black text-white">{r.init}</div>
-            <span className="text-[7px] text-white flex-1">{r.name}</span>
-            <span className="text-[7px] font-black text-emerald-400">{r.amount}</span>
+            <span className="text-[7px] text-slate-900 flex-1">{r.name}</span>
+            <span className="text-[7px] font-black text-emerald-600">{r.amount}</span>
           </div>
         ))}
       </div>
@@ -893,15 +893,15 @@ function ExportScreen({ variant, done, onTap }) {
 
 function SummaryScreen() {
   return (
-    <div className="h-full bg-[#0a0f1e] flex flex-col items-center justify-center p-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center mb-4">
-        <CheckCircle2 size={28} className="text-emerald-400" />
+    <div className="h-full bg-white flex flex-col items-center justify-center p-4 text-center">
+      <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-500 flex items-center justify-center mb-4">
+        <CheckCircle2 size={28} className="text-emerald-600" />
       </div>
-      <p className="text-white font-black text-base mb-1">Transaction Pro!</p>
-      <p className="text-slate-400 text-[8px] mb-4">30 modules completed</p>
+      <p className="text-slate-900 font-black text-base mb-1">Transaction Pro!</p>
+      <p className="text-slate-500 text-[8px] mb-4">30 modules completed</p>
       <div className="flex gap-1 flex-wrap justify-center">
         {['CoT', 'Stripe', 'Send', 'SWIFT', 'ACH', 'AFR', 'NFC', 'QR', 'Split', 'Bulk'].map((t) => (
-          <span key={t} className="text-[6px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-full">{t}</span>
+          <span key={t} className="text-[6px] bg-slate-50 text-slate-600 px-1.5 py-0.5 rounded-full">{t}</span>
         ))}
       </div>
     </div>
@@ -1008,33 +1008,33 @@ export default function TransactionGuide({ onClose }) {
 
   if (mode === 'assessment') {
     return (
-      <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex flex-col">
-        <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
+        <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xl font-black"><span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span></span>
-            <span className="text-slate-400 text-xs font-black uppercase tracking-widest">Assessment</span>
+            <span className="text-slate-500 text-xs font-black uppercase tracking-widest">Assessment</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+            <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
               {['en', 'fr', 'es'].map((l) => (
-                <button key={l} onClick={() => setLang(l)} className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}>{l.toUpperCase()}</button>
+                <button key={l} onClick={() => setLang(l)} className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>{l.toUpperCase()}</button>
               ))}
             </div>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400"><X size={16} /></button>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500"><X size={16} /></button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full">
           {!submitted ? (
             <>
-              <p className="text-white font-black text-lg mb-1">Transaction Assessment</p>
-              <p className="text-slate-400 text-xs mb-6">12 questions · Pass: 9/12</p>
+              <p className="text-slate-900 font-black text-lg mb-1">Transaction Assessment</p>
+              <p className="text-slate-500 text-xs mb-6">12 questions · Pass: 9/12</p>
               {QUESTIONS.map((q, qi) => (
                 <div key={qi} className="mb-5">
-                  <p className="text-white text-sm font-black mb-2">{qi + 1}. {q.q[lang]}</p>
+                  <p className="text-slate-900 text-sm font-black mb-2">{qi + 1}. {q.q[lang]}</p>
                   <div className="grid grid-cols-1 gap-2">
                     {q.opts[lang].map((opt, oi) => (
                       <button key={oi} onClick={() => setAnswers((p) => ({ ...p, [qi]: oi }))}
-                        className={`text-left px-4 py-2 rounded-xl text-sm font-black transition-colors ${answers[qi] === oi ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>
+                        className={`text-left px-4 py-2 rounded-xl text-sm font-black transition-colors ${answers[qi] === oi ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                         {opt}
                       </button>
                     ))}
@@ -1042,20 +1042,20 @@ export default function TransactionGuide({ onClose }) {
                 </div>
               ))}
               <button onClick={handleSubmit} disabled={Object.keys(answers).length < QUESTIONS.length}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white font-black py-3 rounded-2xl transition-colors">
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-500 text-white font-black py-3 rounded-2xl transition-colors">
                 {labels.submit[lang]}
               </button>
             </>
           ) : (
             <div className="flex flex-col items-center text-center py-8">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${score >= 9 ? 'bg-emerald-500/20 border-2 border-emerald-500' : 'bg-red-500/20 border-2 border-red-500'}`}>
-                {score >= 9 ? <CheckCircle2 size={36} className="text-emerald-400" /> : <X size={36} className="text-red-400" />}
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${score >= 9 ? 'bg-emerald-50 border-2 border-emerald-500' : 'bg-red-50 border-2 border-red-500'}`}>
+                {score >= 9 ? <CheckCircle2 size={36} className="text-emerald-600" /> : <X size={36} className="text-red-600" />}
               </div>
-              <p className="text-white font-black text-2xl mb-1">{score}/12</p>
-              <p className="text-slate-400 text-sm mb-4">{score >= 9 ? labels.pass[lang] : labels.fail[lang]}</p>
+              <p className="text-slate-900 font-black text-2xl mb-1">{score}/12</p>
+              <p className="text-slate-500 text-sm mb-4">{score >= 9 ? labels.pass[lang] : labels.fail[lang]}</p>
               {score < 9 && (
                 <button onClick={() => { setAnswers({}); setSubmitted(false); }}
-                  className="bg-slate-700 text-white font-black px-6 py-2 rounded-xl">{labels.retry[lang]}</button>
+                  className="bg-slate-100 text-slate-900 font-black px-6 py-2 rounded-xl">{labels.retry[lang]}</button>
               )}
               {score >= 9 && (
                 <button onClick={() => setMode('cert')} className="bg-emerald-600 text-white font-black px-6 py-2 rounded-xl">{labels.cert[lang]}</button>
@@ -1069,10 +1069,10 @@ export default function TransactionGuide({ onClose }) {
 
   if (mode === 'cert') {
     return (
-      <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex flex-col items-center justify-center p-6">
-        <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+      <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-6">
+        <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-sm">
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Award size={32} className="text-white" />
+            <Award size={32} className="text-slate-900" />
           </div>
           <p className="text-xs font-black uppercase tracking-widest text-blue-600 mb-2">{labels.certTitle[lang]}</p>
           <input value={certName} onChange={(e) => setCertName(e.target.value)} placeholder={labels.yourName[lang]}
@@ -1082,28 +1082,28 @@ export default function TransactionGuide({ onClose }) {
             <p className="text-blue-600 font-black text-2xl">{score}/12</p>
             <p className="text-slate-500 text-xs">Transaction Expert</p>
           </div>
-          <p className="text-slate-400 text-[10px] mb-4">{labels.certFooter[lang]}</p>
+          <p className="text-slate-500 text-[10px] mb-4">{labels.certFooter[lang]}</p>
           <button className="w-full bg-blue-600 text-white font-black py-3 rounded-2xl">{labels.download[lang]}</button>
         </div>
-        <button onClick={onClose} className="mt-6 text-slate-400 font-black text-sm"><X size={14} className="inline mr-1" />Close</button>
+        <button onClick={onClose} className="mt-6 text-slate-500 font-black text-sm"><X size={14} className="inline mr-1" />Close</button>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex flex-col">
-      <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+    <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
+      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xl font-black"><span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span></span>
-          <span className="text-slate-400 text-xs font-black uppercase tracking-widest">Transactions</span>
+          <span className="text-slate-500 text-xs font-black uppercase tracking-widest">Transactions</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
             {['en', 'fr', 'es'].map((l) => (
-              <button key={l} onClick={() => setLang(l)} className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}>{l.toUpperCase()}</button>
+              <button key={l} onClick={() => setLang(l)} className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>{l.toUpperCase()}</button>
             ))}
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"><X size={16} /></button>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"><X size={16} /></button>
         </div>
       </div>
 
@@ -1116,7 +1116,7 @@ export default function TransactionGuide({ onClose }) {
               </Phone>
             </div>
             {!s.noTap && !tapped[slide] && (
-              <p className="text-yellow-400 text-[10px] font-black animate-pulse mt-1 md:mt-0 text-center px-4 md:px-0">
+              <p className="text-yellow-600 text-[10px] font-black animate-pulse mt-1 md:mt-0 text-center px-4 md:px-0">
                 {s.prompt[lang]}
               </p>
             )}
@@ -1125,29 +1125,29 @@ export default function TransactionGuide({ onClose }) {
           <div className="flex-1 w-full flex flex-col gap-4">
             <div>
               <p className="text-slate-500 text-xs font-black uppercase tracking-widest mb-1">{s.path[lang]}</p>
-              <h2 className="text-white font-black text-xl leading-tight">{s.title[lang]}</h2>
+              <h2 className="text-slate-900 font-black text-xl leading-tight">{s.title[lang]}</h2>
               <p className="text-xs text-slate-500 mt-1">{slide + 1} / {SLIDES.length}</p>
             </div>
 
             {showExplain ? (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
-                <p className="text-slate-200 text-sm leading-relaxed">{s.explain[lang]}</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <p className="text-slate-800 text-sm leading-relaxed">{s.explain[lang]}</p>
               </div>
             ) : (
-              <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-2xl p-4 flex items-center gap-3">
+              <div className="bg-yellow-400/10 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center flex-shrink-0">
                   <span className="text-black font-black text-xs">!</span>
                 </div>
-                <p className="text-yellow-300 text-sm font-black">{labels.tapFirst[lang]}</p>
+                <p className="text-yellow-600 text-sm font-black">{labels.tapFirst[lang]}</p>
               </div>
             )}
 
             {showExplain && (
-              <div className="bg-blue-600/10 border border-blue-600/20 rounded-2xl p-3 flex gap-2">
-                <Zap size={14} className="text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="bg-blue-50 border border-blue-600/20 rounded-2xl p-3 flex gap-2">
+                <Zap size={14} className="text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-blue-400 text-[10px] font-black uppercase tracking-wide mb-0.5">{labels.tip[lang]}</p>
-                  <p className="text-slate-300 text-xs">{s.tip[lang]}</p>
+                  <p className="text-blue-600 text-[10px] font-black uppercase tracking-wide mb-0.5">{labels.tip[lang]}</p>
+                  <p className="text-slate-600 text-xs">{s.tip[lang]}</p>
                 </div>
               </div>
             )}
@@ -1161,16 +1161,16 @@ export default function TransactionGuide({ onClose }) {
         </div>
       </div>
 
-      <div className="bg-[#0a0f1e] border-t border-slate-800 px-3 md:px-4 py-2 md:py-3 flex items-center justify-between gap-2 flex-shrink-0">
+      <div className="bg-white border-t border-slate-200 px-3 md:px-4 py-2 md:py-3 flex items-center justify-between gap-2 flex-shrink-0">
         <button onClick={goPrev} disabled={slide === 0}
-          className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
           <ChevronLeft size={14} />{labels.back[lang]}
         </button>
 
         <div className="flex gap-0.5 md:gap-1 flex-wrap justify-center max-w-[140px] md:max-w-none">
           {SLIDES.map((_, i) => (
             <button key={i} onClick={() => setSlide(i)}
-              className={`rounded-full transition-all ${i === slide ? 'w-3 h-1.5 md:w-4 md:h-2 bg-blue-500' : 'w-1.5 h-1.5 bg-slate-600 hover:bg-slate-400'}`} />
+              className={`rounded-full transition-all ${i === slide ? 'w-3 h-1.5 md:w-4 md:h-2 bg-blue-500' : 'w-1.5 h-1.5 bg-slate-200 hover:bg-slate-400'}`} />
           ))}
         </div>
 

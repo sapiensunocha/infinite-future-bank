@@ -143,7 +143,7 @@ export default function VoiceAdvisor({ session, balances, profile, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/95 backdrop-blur-3xl animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-500">
       <div className="relative w-full max-w-5xl flex flex-col items-center justify-center p-12 overflow-hidden">
         
         {/* LOGO AREA */}

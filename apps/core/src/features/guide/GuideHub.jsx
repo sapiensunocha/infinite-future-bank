@@ -5,7 +5,7 @@ const CompanyGuide     = lazy(() => import('./CompanyGuide'));
 const TransactionGuide = lazy(() => import('./TransactionGuide'));
 
 const PageLoader = () => (
-  <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex items-center justify-center">
+  <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center">
     <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
   </div>
 );
@@ -38,8 +38,8 @@ const GUIDES = [
 ];
 
 const colorMap = {
-  blue:    { bg: 'bg-blue-600/10',    border: 'border-blue-600/30',    icon: 'text-blue-400',    btn: 'bg-blue-600 hover:bg-blue-700' },
-  emerald: { bg: 'bg-emerald-600/10', border: 'border-emerald-600/30', icon: 'text-emerald-400', btn: 'bg-emerald-600 hover:bg-emerald-700' },
+  blue:    { bg: 'bg-blue-50',    border: 'border-blue-600/30',    icon: 'text-blue-600',    btn: 'bg-blue-600 hover:bg-blue-700' },
+  emerald: { bg: 'bg-emerald-50', border: 'border-emerald-600/30', icon: 'text-emerald-600', btn: 'bg-emerald-600 hover:bg-emerald-700' },
 };
 
 export default function GuideHub({ onClose }) {
@@ -64,9 +64,9 @@ export default function GuideHub({ onClose }) {
   const hubSub   = { en: 'Choose a guide to start learning', fr: 'Choisissez un guide pour commencer', es: 'Elige una guía para comenzar' };
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#0a0f1e] flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
       {/* Top bar */}
-      <div className="bg-[#0a0f1e] border-b border-slate-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xl font-black">
             <span className="text-[#4285F4]">D</span>
@@ -74,19 +74,19 @@ export default function GuideHub({ onClose }) {
             <span className="text-[#FBBC04]">U</span>
             <span className="text-[#34A853]">S</span>
           </span>
-          <span className="text-slate-400 text-xs font-black uppercase tracking-widest">{hubTitle[lang]}</span>
+          <span className="text-slate-500 text-xs font-black uppercase tracking-widest">{hubTitle[lang]}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-slate-800 rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
             {['en', 'fr', 'es'].map((l) => (
               <button key={l} onClick={() => setLang(l)}
-                className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-white'}`}>
+                className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>
                 {l.toUpperCase()}
               </button>
             ))}
           </div>
           <button onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -95,8 +95,8 @@ export default function GuideHub({ onClose }) {
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
         <BookOpen size={32} className="text-slate-600 mb-4" />
-        <h1 className="text-2xl font-black text-white mb-1">{hubTitle[lang]}</h1>
-        <p className="text-slate-400 text-sm mb-10">{hubSub[lang]}</p>
+        <h1 className="text-2xl font-black text-slate-900 mb-1">{hubTitle[lang]}</h1>
+        <p className="text-slate-500 text-sm mb-10">{hubSub[lang]}</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl">
           {GUIDES.map((g) => {
@@ -105,12 +105,12 @@ export default function GuideHub({ onClose }) {
             return (
               <button key={g.id} onClick={() => setActive(g.id)}
                 className={`text-left ${c.bg} border ${c.border} rounded-3xl p-6 hover:scale-[1.02] transition-transform group`}>
-                <div className={`w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center mb-4 ${c.icon}`}>
+                <div className={`w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 ${c.icon}`}>
                   <Icon size={22} />
                 </div>
-                <h2 className="text-white font-black text-lg mb-2 leading-tight">{g.title[lang]}</h2>
-                <p className="text-slate-400 text-xs leading-relaxed mb-4">{g.desc[lang]}</p>
-                <div className={`inline-flex items-center gap-2 ${c.btn} text-white text-xs font-black px-4 py-2 rounded-xl transition-colors`}>
+                <h2 className="text-slate-900 font-black text-lg mb-2 leading-tight">{g.title[lang]}</h2>
+                <p className="text-slate-500 text-xs leading-relaxed mb-4">{g.desc[lang]}</p>
+                <div className={`inline-flex items-center gap-2 ${c.btn} text-slate-900 text-xs font-black px-4 py-2 rounded-xl transition-colors`}>
                   {lang === 'fr' ? 'Commencer' : lang === 'es' ? 'Comenzar' : 'Start Guide'}
                   <ArrowRight size={13} />
                 </div>

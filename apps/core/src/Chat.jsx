@@ -273,23 +273,23 @@ export default function Chat({ session, onClose, balances, profile }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 md:p-10 backdrop-blur-3xl bg-black/80 animate-in fade-in duration-300">
-      <div className="bg-[#0B0F19] border border-white/10 shadow-glass rounded-[3.5rem] w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 md:p-10 backdrop-blur-sm bg-slate-900/40 animate-in fade-in duration-300">
+      <div className="bg-white border border-slate-200 shadow-sm rounded-[3.5rem] w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden relative animate-in zoom-in-95 duration-300">
 
         {/* Ambient Glow */}
-        <div className={`absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[80px] pointer-events-none transition-colors duration-1000 ${isAgentMode ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}></div>
+        <div className={`absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[80px] pointer-events-none transition-colors duration-1000 ${isAgentMode ? 'bg-emerald-50' : 'bg-blue-50'}`}></div>
 
         {/* Header */}
-        <div className="p-6 md:p-8 border-b border-white/10 flex justify-between items-center bg-white/5 relative z-10 backdrop-blur-md">
+        <div className="p-6 md:p-8 border-b border-slate-200 flex justify-between items-center bg-slate-50 relative z-10 backdrop-blur-md">
           <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shadow-inner transition-colors ${isAgentMode ? 'bg-emerald-950/50 border-emerald-500/30 text-emerald-400' : 'bg-black/50 border-white/10 text-white'}`}>
-              {isAgentMode ? <HeadphonesIcon size={24} /> : <BrainCircuit size={24} className="text-blue-400" />}
+            <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shadow-inner transition-colors ${isAgentMode ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+              {isAgentMode ? <HeadphonesIcon size={24} /> : <BrainCircuit size={24} className="text-blue-600" />}
             </div>
             <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
-                {isAgentMode ? 'Live Support Desk' : 'IFB Support'} <ShieldCheck size={14} className="text-emerald-400"/>
+              <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
+                {isAgentMode ? 'Live Support Desk' : 'IFB Support'} <ShieldCheck size={14} className="text-emerald-600"/>
               </h2>
-              <p className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 mt-1 ${isAgentMode ? 'text-emerald-400' : 'text-blue-400'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 mt-1 ${isAgentMode ? 'text-emerald-600' : 'text-blue-600'}`}>
                 <span className={`w-1 h-1 rounded-full animate-pulse ${isAgentMode ? 'bg-emerald-400' : 'bg-blue-400'}`}></span>
                 {isAgentMode ? 'Human Specialist Connected' : 'AI Assistant · Online'}
               </p>
@@ -297,11 +297,11 @@ export default function Chat({ session, onClose, balances, profile }) {
           </div>
           <div className="flex items-center gap-3">
             {!isAgentMode && mode === 'CHAT' && (
-              <button onClick={handleTalkToSpecialist} className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest text-slate-300 hover:text-white transition-all">
+              <button onClick={handleTalkToSpecialist} className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full text-xs font-black uppercase tracking-widest text-slate-600 hover:text-slate-900 transition-all">
                 <AlertCircle size={14} /> Talk to Human
               </button>
             )}
-            <button onClick={onClose} className="p-3 hover:bg-white/10 text-slate-400 hover:text-white rounded-full transition-colors border border-transparent hover:border-white/10">
+            <button onClick={onClose} className="p-3 hover:bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors border border-transparent hover:border-slate-200">
               <X size={24}/>
             </button>
           </div>
@@ -314,32 +314,32 @@ export default function Chat({ session, onClose, balances, profile }) {
           {mode === 'CHOICE' && (
             <div className="h-full flex flex-col items-center justify-center gap-8 animate-in fade-in duration-500">
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-white tracking-tight">How can we help?</h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Choose a support channel</p>
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight">How can we help?</h3>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Choose a support channel</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-3xl">
                 {/* AI Chat */}
-                <button onClick={() => setMode('CHAT')} className="bg-black/40 border border-white/10 p-8 rounded-[2rem] flex flex-col items-center gap-4 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group shadow-glass">
-                  <div className="w-16 h-16 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.3)]"><MessageSquare size={28}/></div>
+                <button onClick={() => setMode('CHAT')} className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] flex flex-col items-center gap-4 hover:border-blue-200 hover:bg-blue-50 transition-all group shadow-sm">
+                  <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(59,130,246,0.3)]"><MessageSquare size={28}/></div>
                   <div className="text-center">
-                    <span className="text-xs font-black uppercase tracking-widest block text-white mb-1">AI Help Chat</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Instant answers</span>
+                    <span className="text-xs font-black uppercase tracking-widest block text-slate-900 mb-1">AI Help Chat</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Instant answers</span>
                   </div>
                 </button>
                 {/* Submit Problem */}
-                <button onClick={() => setMode('SUBMIT_TICKET')} className="bg-black/40 border border-white/10 p-8 rounded-[2rem] flex flex-col items-center gap-4 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all group shadow-glass">
-                  <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.3)]"><Ticket size={28}/></div>
+                <button onClick={() => setMode('SUBMIT_TICKET')} className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] flex flex-col items-center gap-4 hover:border-amber-200 hover:bg-amber-50 transition-all group shadow-sm">
+                  <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.3)]"><Ticket size={28}/></div>
                   <div className="text-center">
-                    <span className="text-xs font-black uppercase tracking-widest block text-white mb-1">Report a Problem</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Get remote support</span>
+                    <span className="text-xs font-black uppercase tracking-widest block text-slate-900 mb-1">Report a Problem</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Get remote support</span>
                   </div>
                 </button>
                 {/* Callback */}
-                <button onClick={handleRequestCallback} className="bg-black/40 border border-white/10 p-8 rounded-[2rem] flex flex-col items-center gap-4 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group shadow-glass">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(16,185,129,0.3)]"><PhoneCall size={28}/></div>
+                <button onClick={handleRequestCallback} className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] flex flex-col items-center gap-4 hover:border-emerald-200 hover:bg-emerald-50 transition-all group shadow-sm">
+                  <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(16,185,129,0.3)]"><PhoneCall size={28}/></div>
                   <div className="text-center">
-                    <span className="text-xs font-black uppercase tracking-widest block text-white mb-1">Request Callback</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Within 5 minutes</span>
+                    <span className="text-xs font-black uppercase tracking-widest block text-slate-900 mb-1">Request Callback</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Within 5 minutes</span>
                   </div>
                 </button>
               </div>
@@ -350,16 +350,16 @@ export default function Chat({ session, onClose, balances, profile }) {
           {mode === 'SUBMIT_TICKET' && (
             <div className="h-full flex flex-col items-center justify-center gap-6 animate-in fade-in duration-500 max-w-xl mx-auto w-full">
               <div className="text-center">
-                <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4"><Ticket size={32}/></div>
-                <h3 className="text-xl font-black text-white">Describe Your Problem</h3>
-                <p className="text-xs text-slate-400 mt-2">Our team reviews every ticket and will reply here in-app.</p>
+                <div className="w-16 h-16 bg-amber-50 border border-amber-200 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4"><Ticket size={32}/></div>
+                <h3 className="text-xl font-black text-slate-900">Describe Your Problem</h3>
+                <p className="text-xs text-slate-500 mt-2">Our team reviews every ticket and will reply here in-app.</p>
               </div>
               <div className="w-full space-y-4">
                 <textarea
                   value={ticketProblem}
                   onChange={e => setTicketProblem(e.target.value)}
                   placeholder="Describe what's not working, what you expected to happen, and your account email..."
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white placeholder:text-slate-500 outline-none focus:border-amber-500 transition-colors resize-none h-36 font-medium"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-amber-500 transition-colors resize-none h-36 font-medium"
                 />
                 <button
                   onClick={handleSubmitTicket}
@@ -368,7 +368,7 @@ export default function Chat({ session, onClose, balances, profile }) {
                 >
                   {isSubmittingTicket ? <><Loader2 size={16} className="animate-spin"/>Submitting...</> : <><CheckCircle size={16}/>Submit to IFB Support</>}
                 </button>
-                <button onClick={() => setMode('CHOICE')} className="w-full text-center text-xs font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest">
+                <button onClick={() => setMode('CHOICE')} className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest">
                   Back
                 </button>
               </div>
@@ -378,12 +378,12 @@ export default function Chat({ session, onClose, balances, profile }) {
           {/* CALLBACK REQUESTED */}
           {mode === 'CALL_REQUESTED' && (
             <div className="h-full flex flex-col items-center justify-center text-center animate-in zoom-in-95">
-              <div className="w-24 h-24 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-[2rem] flex items-center justify-center mb-6 animate-pulse">
+              <div className="w-24 h-24 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-[2rem] flex items-center justify-center mb-6 animate-pulse">
                 <ShieldCheck size={48} />
               </div>
-              <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Callback Requested</h3>
-              <p className="text-sm font-medium text-slate-400 max-w-xs mx-auto leading-relaxed">An advisor will contact you on your registered line within 5 minutes.</p>
-              <button onClick={() => setMode('CHOICE')} className="mt-10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors">Cancel</button>
+              <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Callback Requested</h3>
+              <p className="text-sm font-medium text-slate-500 max-w-xs mx-auto leading-relaxed">An advisor will contact you on your registered line within 5 minutes.</p>
+              <button onClick={() => setMode('CHOICE')} className="mt-10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">Cancel</button>
             </div>
           )}
 
@@ -394,7 +394,7 @@ export default function Chat({ session, onClose, balances, profile }) {
                 if (msg.role === 'system') {
                   return (
                     <div key={i} className="flex justify-center animate-in fade-in">
-                      <span className="bg-white/5 border border-white/10 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 text-center max-w-sm">
+                      <span className="bg-slate-50 border border-slate-200 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-500 text-center max-w-sm">
                         {msg.content}
                       </span>
                     </div>
@@ -404,14 +404,14 @@ export default function Chat({ session, onClose, balances, profile }) {
                 const isAgent = msg.role === 'agent';
                 return (
                   <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2`}>
-                    <div className={`max-w-[90%] md:max-w-[75%] p-5 rounded-[2rem] text-sm font-medium leading-relaxed shadow-glass ${
+                    <div className={`max-w-[90%] md:max-w-[75%] p-5 rounded-[2rem] text-sm font-medium leading-relaxed shadow-sm ${
                       isUser
-                        ? 'bg-blue-600 text-white border border-blue-400/30 rounded-tr-none'
+                        ? 'bg-blue-600 text-white border border-blue-200 rounded-tr-none'
                         : isAgent
-                          ? 'bg-emerald-950/80 border border-emerald-500/30 text-emerald-50 rounded-tl-none'
-                          : 'bg-white/10 border border-white/10 text-slate-200 rounded-tl-none'
+                          ? 'bg-emerald-50 border border-emerald-200 text-emerald-50 rounded-tl-none'
+                          : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-tl-none'
                     }`}>
-                      {isAgent && <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 border-b border-emerald-500/20 pb-2">IFB Specialist</p>}
+                      {isAgent && <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 border-b border-emerald-200 pb-2">IFB Specialist</p>}
                       {msg.content.split('\n').map((line, j) => <span key={j} className="block min-h-[1rem]">{line}</span>)}
                     </div>
                   </div>
@@ -420,8 +420,8 @@ export default function Chat({ session, onClose, balances, profile }) {
 
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="p-4 rounded-3xl bg-white/5 border border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-inner">
-                    <Loader2 size={14} className="animate-spin text-blue-400" />
+                  <div className="p-4 rounded-3xl bg-slate-50 border border-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-inner">
+                    <Loader2 size={14} className="animate-spin text-blue-600" />
                     {isAgentMode ? 'Specialist is typing...' : 'Processing...'}
                   </div>
                 </div>
@@ -433,7 +433,7 @@ export default function Chat({ session, onClose, balances, profile }) {
 
         {/* Input & Quick FAQs */}
         {mode === 'CHAT' && (
-          <div className="bg-white/5 border-t border-white/10 relative z-10 backdrop-blur-xl">
+          <div className="bg-slate-50 border-t border-slate-200 relative z-10 backdrop-blur-xl">
 
             {/* Quick FAQ chips — only in AI mode */}
             {!isAgentMode && !isTyping && messages.length < 4 && (
@@ -442,7 +442,7 @@ export default function Chat({ session, onClose, balances, profile }) {
                   <button
                     key={i}
                     onClick={() => handleSendMessage(null, faq.text)}
-                    className="whitespace-nowrap bg-blue-500/10 border border-blue-500/20 text-blue-300 hover:bg-blue-500/20 hover:text-white px-4 py-2 rounded-full text-xs font-bold transition-colors"
+                    className="whitespace-nowrap bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-slate-900 px-4 py-2 rounded-full text-xs font-bold transition-colors"
                   >
                     {faq.label}
                   </button>
@@ -453,7 +453,7 @@ export default function Chat({ session, onClose, balances, profile }) {
             {/* Mobile "Talk to Human" */}
             {!isAgentMode && (
               <div className="md:hidden px-6 pt-2 flex justify-end">
-                <button onClick={handleTalkToSpecialist} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white flex items-center gap-1">
+                <button onClick={handleTalkToSpecialist} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-1">
                   <HeadphonesIcon size={12}/> Connect to Specialist
                 </button>
               </div>
@@ -464,16 +464,16 @@ export default function Chat({ session, onClose, balances, profile }) {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={isAgentMode ? "Type your message to the specialist..." : "Describe your issue or ask a question..."}
-                className="w-full bg-black/50 border border-white/10 rounded-full py-4 md:py-5 pl-6 pr-16 md:pr-20 text-sm font-medium outline-none focus:border-blue-500 transition-all shadow-inner text-white placeholder:text-slate-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-full py-4 md:py-5 pl-6 pr-16 md:pr-20 text-sm font-medium outline-none focus:border-blue-500 transition-all shadow-inner text-slate-900 placeholder:text-slate-400"
                 disabled={isTyping}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isTyping}
-                className={`absolute right-6 md:right-8 w-10 h-10 md:w-12 md:h-12 text-white rounded-full flex items-center justify-center transition-all disabled:opacity-50 border ${
+                className={`absolute right-6 md:right-8 w-10 h-10 md:w-12 md:h-12 text-slate-900 rounded-full flex items-center justify-center transition-all disabled:opacity-50 border ${
                   isAgentMode
-                    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] border-emerald-400/30'
-                    : 'bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] border-blue-400/30'
+                    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] border-emerald-200'
+                    : 'bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] border-blue-200'
                 }`}
               >
                 <ArrowRight size={18} className="md:hidden" />

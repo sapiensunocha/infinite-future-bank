@@ -205,7 +205,7 @@ export default function PensionFund({ session, balances, fetchAllData }) {
                 placeholder="100"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Frequency</label>
                 <select

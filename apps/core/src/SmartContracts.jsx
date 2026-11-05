@@ -121,46 +121,46 @@ export default function SmartContracts({ session, balances, fetchAllData }) {
       </div>
 
       {showNew && (
-        <form onSubmit={handleCreate} className="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl text-white space-y-4 animate-in slide-in-from-top-4">
+        <form onSubmit={handleCreate} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-slate-900 space-y-4 animate-in slide-in-from-top-4">
           <h3 className="font-black mb-2 flex items-center gap-2">
-            <Lock size={18} className="text-amber-400"/> Initialize & Lock Funds
+            <Lock size={18} className="text-amber-600"/> Initialize & Lock Funds
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               required type="text" placeholder="Service / Milestone Title"
               value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-              className="bg-slate-800 border border-slate-700 p-4 rounded-xl outline-none font-bold text-sm"
+              className="bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-bold text-sm"
             />
             <input
               required type="email" placeholder="Provider's Email Address"
               value={form.providerEmail} onChange={e => setForm({ ...form, providerEmail: e.target.value })}
-              className="bg-slate-800 border border-slate-700 p-4 rounded-xl outline-none font-bold text-sm"
+              className="bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-bold text-sm"
             />
           </div>
           <textarea
             required placeholder="Condition of Release (What must be delivered?)"
             value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-            className="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl outline-none font-bold text-sm h-24"
+            className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-bold text-sm h-24"
           />
           <input
             required type="number" min="1" step="0.01" placeholder="Amount to Lock in USD"
             value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
-            className="w-full bg-slate-800 border border-slate-700 p-4 rounded-xl outline-none font-black text-2xl text-center"
+            className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-black text-2xl text-center"
           />
 
           {previewFee > 0 && (
-            <div className="bg-slate-800 rounded-2xl p-4 space-y-2 border border-slate-700">
+            <div className="bg-slate-50 rounded-2xl p-4 space-y-2 border border-slate-200">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Locked in Escrow</span>
+                <span className="text-slate-500">Locked in Escrow</span>
                 <span className="font-bold">${parseFloat(form.amount).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-400">IFB Escrow Fee (0.5%)</span>
-                <span className="font-bold text-amber-400">${previewFee.toFixed(2)}</span>
+                <span className="text-slate-500">IFB Escrow Fee (0.5%)</span>
+                <span className="font-bold text-amber-600">${previewFee.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm border-t border-slate-700 pt-2">
-                <span className="font-black text-white">Total Deducted</span>
-                <span className="font-black text-white">${previewTotal.toFixed(2)}</span>
+              <div className="flex justify-between text-sm border-t border-slate-200 pt-2">
+                <span className="font-black text-slate-900">Total Deducted</span>
+                <span className="font-black text-slate-900">${previewTotal.toFixed(2)}</span>
               </div>
             </div>
           )}

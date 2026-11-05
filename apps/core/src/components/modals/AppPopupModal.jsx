@@ -56,7 +56,7 @@ export default function AppPopupModal({
   const shownPopup = isGated(activeAppPopup) ? null : activeAppPopup;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
       {/* Backdrop tap to close */}
       <div className="absolute inset-0" onClick={() => setActiveAppPopup(null)} />
 

@@ -354,7 +354,7 @@ function answerDisplay(fieldDef, value) {
 // Small UI pieces
 // ------------------------------------------
 const Modal = ({ onClose, children, title }) => (
-  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in" role="dialog" aria-modal="true">
+  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in" role="dialog" aria-modal="true">
     <div className="absolute inset-0" onClick={onClose} />
     <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
       <div className="flex justify-between items-center mb-4">
@@ -558,7 +558,7 @@ function FieldEditor({ f, index, count, fieldId, onChange, onRemove, onMove }) {
       </div>
 
       {f.type === 'number' && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label className={labelCls}>Min</label><input type="number" step="1" value={f.min} onChange={(e) => set({ min: e.target.value })} className={inputCls} /></div>
           <div><label className={labelCls}>Max</label><input type="number" step="1" value={f.max} onChange={(e) => set({ max: e.target.value })} className={inputCls} /></div>
         </div>
@@ -802,7 +802,7 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
                 <p className="text-[11px] text-slate-400 font-medium mt-1">Only required number fields can be used. Quantity 1-100.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><label className={labelCls}>Minimum</label><input inputMode="decimal" value={form.pricing.min} onChange={(e) => setPricing({ min: e.target.value })} className={inputCls} placeholder="1.00" /></div>
                 <div><label className={labelCls}>Maximum</label><input inputMode="decimal" value={form.pricing.max} onChange={(e) => setPricing({ max: e.target.value })} className={inputCls} placeholder="5000.00" /></div>
               </div>

@@ -344,7 +344,7 @@ export default function InsuranceHub({ session, profile }) {
 
       {/* JOIN POOL MODAL */}
       {selectedPool && tab === 'EXPLORE' && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/80 backdrop-blur-xl p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
            <div className="bg-white rounded-[3rem] w-full max-w-lg shadow-2xl p-10 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
               <h3 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Confirm Enrollment</h3>

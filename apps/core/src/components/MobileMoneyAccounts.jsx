@@ -21,14 +21,14 @@ const COUNTRY_LABELS = {
 };
 
 const NETWORK_COLORS = {
-  "MTN": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "Airtel": "bg-red-500/20 text-red-400 border-red-500/30",
-  "M-Pesa": "bg-green-500/20 text-green-400 border-green-500/30",
-  "Orange": "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  "Wave": "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  "Vodacom": "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  "Moov": "bg-teal-500/20 text-teal-400 border-teal-500/30",
-  "TNM": "bg-pink-500/20 text-pink-400 border-pink-500/30",
+  "MTN": "bg-yellow-50 text-yellow-600 border-yellow-200",
+  "Airtel": "bg-red-50 text-red-600 border-red-200",
+  "M-Pesa": "bg-green-50 text-green-600 border-green-200",
+  "Orange": "bg-orange-50 text-orange-600 border-orange-200",
+  "Wave": "bg-blue-50 text-blue-600 border-blue-200",
+  "Vodacom": "bg-purple-50 text-purple-600 border-purple-200",
+  "Moov": "bg-teal-50 text-teal-600 border-teal-200",
+  "TNM": "bg-pink-50 text-pink-600 border-pink-200",
 };
 
 export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
@@ -90,7 +90,7 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-3 text-slate-400">
+      <div className="flex items-center gap-2 py-3 text-slate-500">
         <Loader2 size={14} className="animate-spin" />
         <span className="text-[10px] font-black uppercase tracking-widest">Loading saved accounts...</span>
       </div>
@@ -100,12 +100,12 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
           <Smartphone size={12} /> Saved Accounts
         </p>
         <button
           onClick={() => setShowForm(v => !v)}
-          className="text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+          className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-600 flex items-center gap-1 transition-colors"
         >
           {showForm ? <><X size={12}/> Cancel</> : <><Plus size={12}/> Add</>}
         </button>
@@ -115,12 +115,12 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
       {accounts.length > 0 && (
         <div className="space-y-1.5">
           {accounts.map(acc => (
-            <div key={acc.id} className="flex items-center gap-2 p-2.5 bg-white/5 border border-white/10 rounded-xl group">
-              <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${NETWORK_COLORS[acc.network] || 'bg-slate-500/20 text-slate-400 border-slate-500/30'}`}>
+            <div key={acc.id} className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl group">
+              <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${NETWORK_COLORS[acc.network] || 'bg-slate-50 text-slate-500 border-slate-500/30'}`}>
                 {acc.network}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">{acc.phone}</p>
+                <p className="text-xs font-bold text-slate-900 truncate">{acc.phone}</p>
                 {(acc.alias || acc.country) && (
                   <p className="text-[9px] font-bold text-slate-500 truncate">
                     {acc.alias ? `${acc.alias} · ` : ''}{COUNTRY_LABELS[acc.country] || acc.country}
@@ -128,19 +128,19 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                {acc.is_default && <Star size={11} className="text-amber-400 fill-amber-400" />}
+                {acc.is_default && <Star size={11} className="text-amber-600 fill-amber-400" />}
                 <button
                   onClick={() => onSelectAccount({ network: acc.network, country: acc.country, phone: acc.phone, alias: acc.alias })}
-                  className="text-[9px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 px-2 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                  className="text-[9px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-600 px-2 py-0.5 bg-emerald-50 hover:bg-emerald-50 rounded-lg transition-colors"
                 >
                   Use
                 </button>
                 {!acc.is_default && (
-                  <button onClick={() => handleSetDefault(acc.id)} title="Set as default" className="p-1 text-slate-500 hover:text-amber-400 transition-colors rounded">
+                  <button onClick={() => handleSetDefault(acc.id)} title="Set as default" className="p-1 text-slate-500 hover:text-amber-600 transition-colors rounded">
                     <Star size={11} />
                   </button>
                 )}
-                <button onClick={() => handleDelete(acc.id)} className="p-1 text-slate-500 hover:text-red-400 transition-colors rounded opacity-0 group-hover:opacity-100">
+                <button onClick={() => handleDelete(acc.id)} className="p-1 text-slate-500 hover:text-red-600 transition-colors rounded opacity-0 group-hover:opacity-100">
                   <Trash2 size={11} />
                 </button>
               </div>
@@ -151,14 +151,14 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
 
       {/* Add new form */}
       {showForm && (
-        <div className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Network</label>
               <select
                 value={network}
                 onChange={e => { setNetwork(e.target.value); setCountry(FLW_NETWORKS[e.target.value]?.[0] || 'GH'); }}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-bold text-white outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors"
               >
                 {Object.keys(FLW_NETWORKS).map(n => <option key={n} value={n}>{n}</option>)}
               </select>
@@ -168,7 +168,7 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
               <select
                 value={country}
                 onChange={e => setCountry(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-bold text-white outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors"
               >
                 {availableCountries.map(c => <option key={c} value={c}>{COUNTRY_LABELS[c] || c}</option>)}
               </select>
@@ -179,14 +179,14 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
             value={phone}
             onChange={e => setPhone(e.target.value)}
             placeholder="+233XXXXXXXXX"
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-bold text-white outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-400"
           />
           <input
             type="text"
             value={alias}
             onChange={e => setAlias(e.target.value)}
             placeholder="Label (optional, e.g. My MTN)"
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs font-bold text-white outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-400"
           />
           <button
             onClick={handleSave}

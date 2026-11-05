@@ -356,7 +356,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
 
       {/* PROOF VIEWER & AI VALIDATION MODAL */}
       {selectedOrderProof && (
-        <div className="fixed inset-0 z-[999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full shadow-2xl flex flex-col md:flex-row">
             
             {/* Left: Document View */}

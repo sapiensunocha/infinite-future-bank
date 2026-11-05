@@ -125,7 +125,7 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
 
       {/* PAYROLL CONFIRMATION MODAL */}
       {payrollConfirm && (
-        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 space-y-6 animate-in zoom-in-95">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -335,7 +335,7 @@ export default function EmergencySOS({ session, balances }) {
 
       {/* SUCCESS OVERLAY */}
       {requestStatus === 'SUCCESS' && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/60 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-900/40 animate-in fade-in duration-300">
           <div className="bg-white border border-slate-200 shadow-2xl rounded-[3.5rem] max-w-md w-full p-12 text-center animate-in zoom-in-95 duration-300 relative overflow-hidden">
             <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-emerald-50 blur-[60px] pointer-events-none"></div>
             <div className="relative z-10">

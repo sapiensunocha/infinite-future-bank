@@ -96,7 +96,7 @@ const CardForm = ({ session, onClose, onSuccess }) => {
 
 export default function CardLinker({ session, onClose, onSuccess }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="w-full max-w-md bg-[#0B0F19] rounded-3xl shadow-glass overflow-hidden relative border border-white/10 animate-in zoom-in-95 duration-300">
         
         {/* Subtle top gradient light */}

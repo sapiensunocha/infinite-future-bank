@@ -585,7 +585,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
 
       {/* ─── BUY TICKET MODAL ─────────────────────────────────────────── */}
       {buyModal && mainTab === 'EXPLORE' && (
-        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 max-h-[90vh] flex flex-col">
             {/* Event image header */}
             <div className="h-40 relative shrink-0">
@@ -923,7 +923,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
 
       {/* ─── CONFIRM MODAL ──────────────────────────────────────────────── */}
       {confirmModal && (
-        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-8 text-center space-y-4 animate-in zoom-in-95">
             <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto"><Trash2 size={24} className="text-red-500" /></div>
             <h4 className="font-black text-slate-800 text-lg">Confirm Delete</h4>
@@ -944,7 +944,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
 
       {/* ─── EVENT CREATE / EDIT MODAL ─────────────────────────────────── */}
       {isCreating && mainTab === 'BOX_OFFICE' && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-[3rem] w-full max-w-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
             <div className="p-8 border-b flex justify-between items-center bg-slate-50/50 shrink-0">
               <h3 className="font-black text-xl text-slate-800">{editingEvent ? 'Edit Event' : 'Create New Event'}</h3>
@@ -952,7 +952,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
             </div>
 
             <form onSubmit={handleSaveEvent} className="flex-1 overflow-y-auto no-scrollbar">
-              <div className="p-8 grid grid-cols-2 gap-5">
+              <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
 
                 <div className="col-span-2">
                   <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Title *</label>

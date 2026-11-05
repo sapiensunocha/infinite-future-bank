@@ -658,7 +658,7 @@ export default function WealthInvest({ session, balances, profile }) {
 
       {/* PRIVATE EQUITY MODAL */}
       {investModalItem && (
-        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden relative">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center relative z-10 bg-slate-50/50">
               <h3 className="font-black text-lg text-slate-800 tracking-tight uppercase flex items-center gap-2"><Briefcase size={18} className="text-blue-600"/> Invest in Startup</h3>

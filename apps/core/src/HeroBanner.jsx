@@ -360,187 +360,66 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
     );
   };
 
-  return (
-    <>
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/*  MOBILE HERO                                               */}
-      {/* ══════════════════════════════════════════════════════════ */}
-      <div className="md:hidden relative w-full rounded-2xl overflow-hidden mb-5 shadow-md bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 border border-blue-500/30">
-        <div className="relative z-10 p-5 pt-6 pb-5">
-          {/* Top row */}
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1">
-                <TimeIcon size={13} className={iconColor} />
-                <p className="text-blue-200 text-[10px] font-bold uppercase tracking-wider">{greeting}</p>
-              </div>
-              <h1 className="text-white text-xl font-bold tracking-tight leading-none">{firstName}</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowBalances(!showBalances)}
-                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center active:scale-95 transition-all border border-white/15"
-                aria-label="Toggle balance visibility"
-              >
-                {showBalances ? <Eye size={16} className="text-white" /> : <EyeOff size={16} className="text-white" />}
-              </button>
-            </div>
-          </div>
+  // One balance card for mobile and web (it used to be a blue card on phones and a
+  // dark photo banner on desktop). The only place on Home where balances appear.
+  const short = (v) => (showBalances
+    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: Math.abs(v || 0) >= 10000 ? 'compact' : 'standard', maximumFractionDigits: Math.abs(v || 0) >= 10000 ? 1 : 0 }).format(v || 0)
+    : '••••');
+  const pills = [
+    { label: t('home.cash'),     val: short(balances?.liquid_usd) },
+    { label: t('home.invested'), val: short(balances?.alpha_equity_usd) },
+    { label: t('home.vault'),    val: short(balances?.mysafe_digital_usd) },
+    { label: 'AFR',              val: showBalances ? new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(balances?.afr_balance || 0)) : '••••' },
+  ];
 
-          {/* Balance */}
-          <div className="mb-3">
-            <p className="text-blue-200/80 text-[10px] font-semibold uppercase tracking-wider mb-1">Total Balance</p>
-            <p className="text-white font-extrabold tracking-tight leading-none text-4xl">
+  return (
+    <div className="relative w-full rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-[0_12px_32px_-12px_rgba(37,99,235,0.55)]">
+      <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+      <div className="relative p-5 md:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-sm text-blue-100">
+              <TimeIcon size={15} className="text-amber-300" /> {greeting}, {firstName}
+            </p>
+            <p className="text-sm text-blue-100/80 mt-4">Total balance</p>
+            <p className="ui-amount text-[2.25rem] md:text-5xl leading-tight mt-0.5">
               {showBalances
                 ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(totalPortfolio)
                 : '••••••'}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowBalances(!showBalances)}
+            className="w-10 h-10 shrink-0 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center"
+            aria-label={showBalances ? 'Hide balances' : 'Show balances'}
+          >
+            {showBalances ? <Eye size={18} /> : <EyeOff size={18} />}
+          </button>
+        </div>
 
-          {/* Account status + date */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-1.5 bg-white/10 border border-white/15 px-2.5 py-0.5 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[9px] font-bold text-white uppercase tracking-wider">Account Active</span>
+        <div className="grid grid-cols-4 gap-1.5 md:gap-2 mt-5">
+          {pills.map(({ label, val }) => (
+            <div key={label} className="rounded-2xl bg-white/10 px-2 md:px-3 py-2.5 min-w-0 text-center md:text-left">
+              <p className="text-xs text-blue-100 whitespace-nowrap overflow-hidden text-ellipsis">{label}</p>
+              <p className="text-[13px] md:text-base font-semibold tabular-nums tracking-tight whitespace-nowrap mt-0.5">{val}</p>
             </div>
-            <span className="text-blue-200/70 text-[10px] font-medium">
-              {time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-            </span>
-          </div>
+          ))}
+        </div>
 
-          {/* Balance pills */}
-          <div className="flex gap-2">
-            {[
-              { label: t('home.cash'),     val: balances?.liquid_usd || 0 },
-              { label: t('home.invested'), val: balances?.alpha_equity_usd || 0 },
-              { label: t('home.vault'),    val: balances?.mysafe_digital_usd || 0 },
-            ].map(({ label, val }) => (
-              <div key={label} className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-2.5 border border-white/15">
-                <p className="text-blue-200 text-[9px] font-bold uppercase tracking-wider mb-0.5">{label}</p>
-                <p className="text-white text-sm font-bold leading-tight">{fmtCompact(val)}</p>
-              </div>
-            ))}
-          </div>
+        <div className="hidden md:flex items-center justify-between gap-6 mt-5 pt-4 border-t border-white/15">
+          <p className="text-sm text-blue-50/90 line-clamp-2 max-w-2xl">
+            {isLoadingInsight ? 'Loading your daily insight…' : insight}
+          </p>
+          <button
+            type="button"
+            onClick={() => setActiveModal('CONVERT_FUNDS')}
+            className="shrink-0 h-10 px-4 rounded-xl bg-white text-blue-700 text-sm font-semibold hover:bg-blue-50 flex items-center gap-1.5"
+          >
+            Global transfer <ArrowRight size={15} />
+          </button>
         </div>
       </div>
-
-      {/* ══════════════════════════════════════════════════════════ */}
-      {/*  DESKTOP HERO                                              */}
-      {/* ══════════════════════════════════════════════════════════ */}
-      <div className="hidden md:block relative w-full rounded-2xl overflow-hidden shadow-md mb-8 bg-slate-900 border border-slate-800 animate-in fade-in duration-300">
-        <div className="absolute inset-0 z-0 bg-slate-900">
-          <img src={finalImage} alt={celebration} className="w-full h-full object-cover opacity-80 scale-105 transition-opacity duration-1000"
-            crossOrigin="anonymous"
-            onError={(e) => { e.target.onerror = null; e.target.src = "https://picsum.photos/id/1016/2000/1200"; setImageError(true); }} />
-          <div className={`absolute inset-0 bg-gradient-to-br ${isEid ? 'from-slate-950/80 via-slate-900/50' : 'from-slate-950/50 via-slate-900/20'} to-transparent`} />
-        </div>
-
-        <div className="relative z-10 p-8 md:p-12 flex flex-col min-h-[420px]">
-          <div className="flex justify-between items-start mb-auto">
-            <div className="flex flex-col gap-2">
-              <div className={`bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center gap-2 w-max ${isEid ? 'shadow-lg' : ''}`}>
-                <div className={`w-2 h-2 rounded-full ${isEid ? 'bg-yellow-400' : 'bg-emerald-400'} animate-pulse`} />
-                <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{celebration}</span>
-              </div>
-              <p className={`text-xs font-black ${isEid ? 'text-slate-200' : 'text-slate-300'} uppercase tracking-widest pl-2 drop-shadow-md`}>
-                {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </p>
-            </div>
-
-            <div className="relative hidden sm:block z-20">
-              {/* Clock + weather */}
-              <div className="flex items-center gap-4 bg-black/40 backdrop-blur-xl p-3 rounded-2xl border border-white/10 shadow-lg relative z-30">
-                <div className="text-right">
-                  <p className="text-xl font-black text-white leading-none">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{weather.city}</p>
-                </div>
-                <div className="w-px h-8 bg-white/20" />
-                <div className="text-white font-black text-lg">{weather.temp}°</div>
-              </div>
-
-              {/* MICHAEL Risk Panel */}
-              <div className="absolute top-[calc(100%+12px)] right-0">
-                <RiskPanel />
-              </div>
-            </div>
-          </div>
-
-          <div className="max-w-3xl my-8">
-            <div className="flex items-center gap-3 mb-6">
-              <TimeIcon className={iconColor} size={32} />
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-lg">
-                {greeting}, {firstName}.
-              </h1>
-            </div>
-
-            <div className={`flex flex-col sm:flex-row sm:items-center gap-5 mb-6 ${isEid ? 'bg-black/40' : 'bg-white/5'} backdrop-blur-md p-4 pr-6 rounded-3xl border border-white/10 w-fit shadow-2xl`}>
-              <div>
-                <p className={`text-[10px] font-black ${isEid ? 'text-slate-300' : 'text-slate-400'} uppercase tracking-[0.2em] mb-1 flex items-center gap-2`}>
-                  <Globe size={12} className={isEid ? 'text-yellow-400' : 'text-emerald-400'} /> Global Liquidity (USD Eq.)
-                </p>
-                <p className="text-base sm:text-lg font-black text-white tracking-wide drop-shadow-md">{formatCurrency(primaryUsdBalance)}</p>
-              </div>
-              <div className="w-px h-10 bg-white/10 hidden sm:block" />
-              <div className="flex flex-col justify-end w-32 h-10 relative group">
-                <p className={`text-[8px] font-black ${isEid ? 'text-slate-400' : 'text-slate-500'} uppercase tracking-widest absolute -top-1 right-0 transition-colors group-hover:text-emerald-400`}>{recentTxCount} Tx Trajectory</p>
-                <div className="absolute bottom-0 w-full h-6 opacity-80 group-hover:opacity-100 transition-opacity">
-                  <svg viewBox="0 0 100 30" className="w-full h-full overflow-visible" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#34d399" stopOpacity="0.4" />
-                        <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <polygon points={sparklineFill} fill="url(#lineGrad)" />
-                    <polyline points={sparklinePoints} fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {isLoadingInsight ? (
-              <div className={`flex items-center gap-3 ${isEid ? 'text-yellow-300' : 'text-blue-400'} font-bold animate-pulse mt-4`}>
-                <RefreshCw size={18} className="animate-spin" />
-                <span className="text-sm">Consulting Network Intelligence...</span>
-              </div>
-            ) : (
-              <p className={`text-lg md:text-xl ${isEid ? 'text-white' : 'text-slate-200'} font-medium leading-relaxed drop-shadow-2xl border-l-2 ${isEid ? 'border-yellow-400' : 'border-blue-500'} pl-4 max-w-2xl`}>
-                {insight}
-              </p>
-            )}
-          </div>
-
-          <div className={`mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-6 border-t ${isEid ? 'border-white/20' : 'border-white/10'}`}>
-            <div className="flex gap-4 overflow-x-auto pb-2 sm:pb-0 no-scrollbar w-full sm:w-auto">
-              {activeWallets.map((wallet) => (
-                <div key={wallet.currency_code} className={`flex items-center gap-3 ${isEid ? 'bg-black/30 border-yellow-400/20' : 'bg-white/5 border-white/10'} backdrop-blur-sm border p-3 rounded-2xl min-w-[140px]`}>
-                  <div className={`w-10 h-10 ${isEid ? 'bg-yellow-500/20 border-yellow-400/40 text-yellow-300' : 'bg-blue-500/20 border-blue-500/30 text-blue-400'} rounded-xl flex items-center justify-center border shadow-lg`}>
-                    <Wallet size={16} />
-                  </div>
-                  <div>
-                    <p className={`text-[9px] font-black ${isEid ? 'text-slate-300' : 'text-slate-400'} uppercase tracking-widest`}>{wallet.currency_code} Account</p>
-                    <p className="text-sm font-black text-white">{new Intl.NumberFormat('en-US', { style: 'currency', currency: wallet.currency_code }).format(wallet.balance)}</p>
-                  </div>
-                </div>
-              ))}
-              <button onClick={() => setActiveModal('OPEN_ACCOUNT')} className={`flex items-center gap-3 ${isEid ? 'bg-black/40 hover:bg-black/60 border-yellow-400/30' : 'bg-black/20 hover:bg-white/10 border-white/10'} transition-colors backdrop-blur-sm border border-dashed p-3 rounded-2xl min-w-[140px] group`}>
-                <div className={`w-10 h-10 ${isEid ? 'bg-yellow-500/10 text-yellow-500' : 'bg-slate-800/50 text-slate-400'} group-hover:text-white rounded-xl flex items-center justify-center transition-colors`}>
-                  <span className="text-2xl font-light mb-1">+</span>
-                </div>
-                <div className="text-left">
-                  <p className={`text-[10px] font-black ${isEid ? 'text-yellow-400' : 'text-slate-400'} group-hover:text-white uppercase tracking-widest transition-colors`}>Open</p>
-                  <p className={`text-xs font-bold ${isEid ? 'text-yellow-200' : 'text-slate-500'} group-hover:text-slate-300`}>New Currency</p>
-                </div>
-              </button>
-            </div>
-            <div className="flex items-center justify-end shrink-0">
-              <button onClick={() => setActiveModal('CONVERT_FUNDS')} className={`px-6 py-3 ${isEid ? 'bg-white/90 hover:bg-white text-slate-900' : 'bg-white hover:bg-blue-50 text-slate-900'} rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 group shadow-lg`}>
-                Global Transfer <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

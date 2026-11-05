@@ -80,7 +80,7 @@ export default function PrivateBankerChat() {
       <GlassCard className="flex-1 flex flex-col p-0 overflow-hidden relative border-ifb-accent/20">
         
         {/* Header element within the chat */}
-        <div className="bg-white/5 border-b border-white/10 p-4 flex justify-between items-center z-10 backdrop-blur-md">
+        <div className="bg-slate-50 border-b border-slate-200 p-4 flex justify-between items-center z-10 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-ifb-accent/20 flex items-center justify-center border border-ifb-accent/50 shadow-glow">
@@ -90,11 +90,11 @@ export default function PrivateBankerChat() {
               <span className="absolute bottom-0 right-0 w-3 h-3 bg-ifb-success rounded-full border-2 border-[#0B0F19] animate-pulse"></span>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white leading-none">DEUS</h2>
+              <h2 className="text-lg font-bold text-slate-900 leading-none">DEUS</h2>
               <span className="text-xs text-ifb-accent uppercase tracking-widest font-semibold">Chief Financial Intelligence</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-ifb-muted bg-[#0B0F19]/50 px-3 py-1.5 rounded-full border border-white/5">
+          <div className="flex items-center gap-2 text-xs text-ifb-muted bg-[#0B0F19]/50 px-3 py-1.5 rounded-full border border-slate-200">
             <ShieldCheck size={14} className="text-ifb-success" /> End-to-End Encrypted
           </div>
         </div>
@@ -112,8 +112,8 @@ export default function PrivateBankerChat() {
                 {/* Avatar */}
                 <div className="shrink-0 mt-1">
                   {msg.sender === 'user' ? (
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-                      <User size={14} className="text-white" />
+                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200">
+                      <User size={14} className="text-slate-900" />
                     </div>
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-ifb-accent/20 flex items-center justify-center border border-ifb-accent/50 shadow-glow">
@@ -127,8 +127,8 @@ export default function PrivateBankerChat() {
                   <div 
                     className={`px-5 py-3.5 rounded-2xl text-sm leading-relaxed backdrop-blur-md shadow-lg
                       ${msg.sender === 'user' 
-                        ? 'bg-ifb-primary/20 border border-ifb-primary/30 text-white rounded-tr-none' 
-                        : 'bg-[#0B0F19]/80 border border-ifb-accent/20 text-white rounded-tl-none relative overflow-hidden'
+                        ? 'bg-ifb-primary/20 border border-ifb-primary/30 text-slate-900 rounded-tr-none' 
+                        : 'bg-[#0B0F19]/80 border border-ifb-accent/20 text-slate-900 rounded-tl-none relative overflow-hidden'
                       }
                     `}
                   >
@@ -163,7 +163,7 @@ export default function PrivateBankerChat() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white/5 border-t border-white/10 backdrop-blur-md z-10">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 backdrop-blur-md z-10">
           
           {/* Quick Action Chips */}
           <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar pb-1">
@@ -171,7 +171,7 @@ export default function PrivateBankerChat() {
               <button
                 key={idx}
                 onClick={() => handleSendMessage(action)}
-                className="whitespace-nowrap px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-ifb-muted hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors flex items-center gap-1.5"
+                className="whitespace-nowrap px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-medium text-ifb-muted hover:text-slate-900 hover:bg-slate-100 hover:border-slate-200 transition-colors flex items-center gap-1.5"
               >
                 <Zap size={12} className="text-ifb-accent" /> {action}
               </button>
@@ -187,13 +187,13 @@ export default function PrivateBankerChat() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask DEUS to analyze, allocate, or move capital..."
-              className="w-full bg-[#0B0F19]/80 border border-white/20 rounded-xl py-3.5 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-ifb-accent focus:ring-1 focus:ring-ifb-accent transition-all shadow-inner"
+              className="w-full bg-[#0B0F19]/80 border border-slate-200 rounded-xl py-3.5 pl-4 pr-12 text-sm text-slate-900 focus:outline-none focus:border-ifb-accent focus:ring-1 focus:ring-ifb-accent transition-all shadow-inner"
               disabled={isTyping}
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isTyping}
-              className="absolute right-2 p-2 rounded-lg bg-ifb-primary/20 text-ifb-primary hover:bg-ifb-primary hover:text-white transition-colors disabled:opacity-50 disabled:hover:bg-ifb-primary/20 disabled:hover:text-ifb-primary"
+              className="absolute right-2 p-2 rounded-lg bg-ifb-primary/20 text-ifb-primary hover:bg-ifb-primary hover:text-slate-900 transition-colors disabled:opacity-50 disabled:hover:bg-ifb-primary/20 disabled:hover:text-ifb-primary"
             >
               <Send size={18} />
             </button>
@@ -211,19 +211,19 @@ export default function PrivateBankerChat() {
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-white">Market Data Latency</span>
+                <span className="text-slate-900">Market Data Latency</span>
                 <span className="text-ifb-success font-mono">12ms</span>
               </div>
-              <div className="w-full h-1 bg-white/10 rounded-full"><div className="h-full bg-ifb-success w-[95%] rounded-full"></div></div>
+              <div className="w-full h-1 bg-slate-50 rounded-full"><div className="h-full bg-ifb-success w-[95%] rounded-full"></div></div>
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-white">Predictive Confidence</span>
+                <span className="text-slate-900">Predictive Confidence</span>
                 <span className="text-ifb-accent font-mono">99.4%</span>
               </div>
-              <div className="w-full h-1 bg-white/10 rounded-full"><div className="h-full bg-ifb-accent w-[99%] rounded-full shadow-glow"></div></div>
+              <div className="w-full h-1 bg-slate-50 rounded-full"><div className="h-full bg-ifb-accent w-[99%] rounded-full shadow-glow"></div></div>
             </div>
-            <div className="pt-3 border-t border-white/10">
+            <div className="pt-3 border-t border-slate-200">
               <p className="text-[10px] text-ifb-muted leading-relaxed">
                 DEUS is currently analyzing 4,209 global market vectors to optimize your tax-loss harvesting strategy.
               </p>
@@ -234,12 +234,12 @@ export default function PrivateBankerChat() {
         <GlassCard padding="p-5">
            <h3 className="text-xs font-bold text-ifb-muted uppercase tracking-widest mb-4">Active AI Mandates</h3>
            <div className="space-y-3">
-             <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-               <span className="block text-xs font-semibold text-white mb-1">Auto-Yield Sweep</span>
+             <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+               <span className="block text-xs font-semibold text-slate-900 mb-1">Auto-Yield Sweep</span>
                <span className="text-[10px] text-ifb-muted">Checking liquidity above $50k is auto-routed to 5.25% Treasury.</span>
              </div>
-             <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-               <span className="block text-xs font-semibold text-white mb-1">Lombard Protection</span>
+             <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+               <span className="block text-xs font-semibold text-slate-900 mb-1">Lombard Protection</span>
                <span className="text-[10px] text-ifb-muted">Alerting user if portfolio drops below 45% LTV margin threshold.</span>
              </div>
            </div>

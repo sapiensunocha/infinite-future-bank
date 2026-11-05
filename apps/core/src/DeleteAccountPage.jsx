@@ -54,9 +54,9 @@ export default function DeleteAccountPage({ session }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-white flex flex-col justify-between p-6">
-      <header className="max-w-2xl mx-auto w-full pt-6 pb-4 flex items-center justify-between border-b border-slate-800">
-        <Link to="/" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between p-6">
+      <header className="max-w-2xl mx-auto w-full pt-6 pb-4 flex items-center justify-between border-b border-slate-200">
+        <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-xs font-bold uppercase tracking-wider">
           <ArrowLeft size={16} /> Back to DEUS
         </Link>
         <div className="flex items-center gap-1 font-black text-lg">
@@ -68,21 +68,21 @@ export default function DeleteAccountPage({ session }) {
       </header>
 
       <main className="max-w-xl mx-auto w-full my-auto py-8">
-        <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl">
-          <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 mb-6">
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm backdrop-blur-xl">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center text-red-500 mb-6">
             <Trash2 size={28} />
           </div>
 
           <h1 className="text-2xl font-black mb-2">Delete Your Account</h1>
-          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
             In compliance with Apple App Store and Google Play Store data safety standards, you can permanently delete your account and personal data at any time.
           </p>
 
           {success ? (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 text-center space-y-4 animate-in fade-in">
-              <CheckCircle2 size={40} className="text-emerald-400 mx-auto" />
-              <h2 className="text-lg font-bold text-white">Account Deletion Processed</h2>
-              <p className="text-slate-300 text-sm leading-relaxed">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center space-y-4 animate-in fade-in">
+              <CheckCircle2 size={40} className="text-emerald-600 mx-auto" />
+              <h2 className="text-lg font-bold text-slate-900">Account Deletion Processed</h2>
+              <p className="text-slate-600 text-sm leading-relaxed">
                 Your login credentials, profile, identity documents, and active sessions have been permanently removed.
               </p>
               <Link
@@ -95,27 +95,27 @@ export default function DeleteAccountPage({ session }) {
           ) : (
             <form onSubmit={handleDelete} className="space-y-6">
               {error && (
-                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold flex items-center gap-3">
+                <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold flex items-center gap-3">
                   <AlertTriangle size={18} className="shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
               {/* Data retention disclosure */}
-              <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 text-xs space-y-2 text-slate-300">
-                <p className="font-bold text-slate-200 flex items-center gap-2">
-                  <ShieldAlert size={14} className="text-amber-400" /> What happens to your data:
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 text-xs space-y-2 text-slate-600">
+                <p className="font-bold text-slate-800 flex items-center gap-2">
+                  <ShieldAlert size={14} className="text-amber-600" /> What happens to your data:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-slate-400 pl-1">
-                  <li><span className="text-red-400 font-semibold">Deleted immediately:</span> Passwords, phone numbers, KYC identity documents, selfies, and device tokens.</li>
-                  <li><span className="text-amber-400 font-semibold">Retained per legal regulation:</span> Financial ledger records and completed transaction receipts are retained for 5 years strictly to comply with global Anti-Money Laundering (AML) laws.</li>
+                <ul className="list-disc list-inside space-y-1 text-slate-500 pl-1">
+                  <li><span className="text-red-600 font-semibold">Deleted immediately:</span> Passwords, phone numbers, KYC identity documents, selfies, and device tokens.</li>
+                  <li><span className="text-amber-600 font-semibold">Retained per legal regulation:</span> Financial ledger records and completed transaction receipts are retained for 5 years strictly to comply with global Anti-Money Laundering (AML) laws.</li>
                 </ul>
               </div>
 
               {!session && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Registered Email</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">Registered Email</label>
                     <div className="relative">
                       <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input
@@ -124,13 +124,13 @@ export default function DeleteAccountPage({ session }) {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="your@email.com"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-sm text-white outline-none focus:border-red-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Account Password</label>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">Account Password</label>
                     <div className="relative">
                       <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input
@@ -139,7 +139,7 @@ export default function DeleteAccountPage({ session }) {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-sm text-white outline-none focus:border-red-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500"
                       />
                     </div>
                   </div>
@@ -147,8 +147,8 @@ export default function DeleteAccountPage({ session }) {
               )}
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                  Type <span className="text-red-400 font-black">DELETE</span> to confirm
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
+                  Type <span className="text-red-600 font-black">DELETE</span> to confirm
                 </label>
                 <input
                   type="text"
@@ -156,7 +156,7 @@ export default function DeleteAccountPage({ session }) {
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder="DELETE"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-black text-red-400 outline-none focus:border-red-500 uppercase tracking-widest"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-black text-red-600 outline-none focus:border-red-500 uppercase tracking-widest"
                 />
               </div>
 
@@ -173,7 +173,7 @@ export default function DeleteAccountPage({ session }) {
         </div>
       </main>
 
-      <footer className="max-w-2xl mx-auto w-full py-4 text-center text-xs text-slate-600 border-t border-slate-800">
+      <footer className="max-w-2xl mx-auto w-full py-4 text-center text-xs text-slate-600 border-t border-slate-200">
         &copy; {new Date().getFullYear()} Infinite Future Bank. Compliant with Apple App Store & Google Play Console policies.
       </footer>
     </div>
