@@ -292,6 +292,16 @@ function PaymentPageForm({ slug, session }) {
   const [method, setMethod] = useState('card');
   const formRef = useRef(null);
   const summaryRef = useRef(null);
+  const [summaryInView, setSummaryInView] = useState(false);
+
+  // Mobile: hide the bottom pay bar while the payment section itself is on screen.
+  useEffect(() => {
+    const el = summaryRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const io = new IntersectionObserver(([e]) => setSummaryInView(e.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [loadState.phase, cardStep]);
 
   // Load page definition
   useEffect(() => {
@@ -625,7 +635,7 @@ function PaymentPageForm({ slug, session }) {
               </aside>
 
               {/* Mobile: total + pay bar */}
-              <div className="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t border-slate-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
+              <div className={`lg:hidden fixed bottom-0 inset-x-0 z-20 bg-white border-t border-slate-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3 shadow-[0_-4px_16px_rgba(15,23,42,0.06)] transition-transform duration-200 ${summaryInView ? 'translate-y-full pointer-events-none' : 'translate-y-0'}`} aria-hidden={summaryInView}>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-slate-500">Total</p>
                   <p className="text-lg font-bold text-slate-900 truncate">{totalLabel || '—'}</p>
