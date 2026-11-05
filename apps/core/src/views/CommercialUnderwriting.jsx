@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Building, ShieldCheck, Loader2, TrendingUp, Lock, Globe, ClipboardCheck, Brain, Target, HandCoins, Gift, BarChart3 } from 'lucide-react';
 import CompanyFormationHub from '../features/formation/CompanyFormationHub';
 import IFBAudit from '../features/audit/IFBAudit';
+import ComingSoonPanel from '../components/ui/ComingSoonPanel';
+import FeatureBadge from '../components/ui/FeatureBadge';
+import { isGated } from '../config/featureAvailability';
 import MarketIntelligence from '../features/market/MarketIntelligence';
 import FirstCustomerEngine from '../features/gtm/FirstCustomerEngine';
 import Loans from '../Loans';
@@ -28,7 +31,7 @@ export default function CommercialUnderwriting({
     { id: 'formation',          label: 'Register New Company',   icon: Globe,          color: 'indigo' },
     { id: 'venture_exchange',   label: 'Stock Exchange',         icon: BarChart3,      color: 'emerald'},
     { id: 'first_customer',     label: 'First Customer Engine',  icon: Target,         color: 'violet' },
-    { id: 'audit',              label: 'IFB Audit',              icon: ClipboardCheck, color: 'violet' },
+    { id: 'audit',              label: 'IFB Audit',              icon: ClipboardCheck, color: 'violet', gate: 'IFB_AUDIT' },
     { id: 'market_intelligence',label: 'Market Intelligence',    icon: Brain,          color: 'teal'   },
     { id: 'loans',              label: 'Loans & Credit',         icon: HandCoins,      color: 'emerald'},
     { id: 'capital',            label: 'Capital Platform',       icon: TrendingUp,     color: 'blue'   },
@@ -61,7 +64,7 @@ export default function CommercialUnderwriting({
               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
                 bizView === tab.id ? TAB_ACTIVE[tab.id] : 'text-slate-400 hover:text-white hover:bg-slate-800'
               }`}>
-              <Icon size={13}/> {tab.label}
+              <Icon size={13}/> {tab.label}{tab.gate && <FeatureBadge id={tab.gate} compact />}
             </button>
           );
         })}
@@ -84,7 +87,9 @@ export default function CommercialUnderwriting({
 
       {/* IFB Audit */}
       {bizView === 'audit' && (
-        <IFBAudit session={session} balances={balances} />
+        isGated('IFB_AUDIT')
+          ? <ComingSoonPanel id="IFB_AUDIT" />
+          : <IFBAudit session={session} balances={balances} />
       )}
 
       {/* Market Intelligence */}
