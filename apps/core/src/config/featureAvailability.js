@@ -17,6 +17,7 @@ const GATED = {
   SOS:              { status: STATUS.COMING_SOON, title: 'Emergency SOS',      reason: 'Emergency advances are not connected to real funds yet.' },
   BILLS:            { status: STATUS.COMING_SOON, title: 'Pay Bills',          reason: 'We are integrating with bill providers so payments actually reach the biller.' },
   MERCHANT_BILLING: { status: STATUS.COMING_SOON, title: 'Invoicing',          reason: 'Use Payment Pages with a private link to bill a client today.' },
+  IFB_AUDIT:        { status: STATUS.COMING_SOON, title: 'IFB Audit',          reason: 'Paid company audits are not connected to billing and delivery yet.' },
 
   // ── Regulated: needs a licence ───────────────────────────────────────────
   LOANS:            { status: STATUS.LICENCE, title: 'Lending',            reason: 'Lending requires a credit licence in each country we operate in.' },

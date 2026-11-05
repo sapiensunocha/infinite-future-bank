@@ -279,7 +279,7 @@ function MainApp() {
             supabase.from('wallets').upsert(
               { user_id: currentSession.user.id, currency: 'USD', balance: 0 },
               { onConflict: 'user_id', ignoreDuplicates: true }
-            ).catch(() => {});
+            ).then(() => {}, () => {}); // query builders have no .catch(); calling it threw
           }
         }
         // Phone verification gate — block dashboard until phone is verified

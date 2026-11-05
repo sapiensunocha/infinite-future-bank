@@ -533,19 +533,18 @@ export default function IFBAudit({ session, balances }) {
         uploadedUrls.push({ name: file.name, url: publicUrl, type: file.type });
       }
 
-      await supabase.from('transactions').insert([{
-        user_id: userId, amount: -price, currency: 'USD', tx_type: 'ifb_audit',
-        source: 'audit', status: 'completed',
-        description: `IFB Audit (${tier.name}) — ${companyName || 'Company'}`,
-      }]);
-
-      await supabase.rpc('adjust_balance', { p_user_id: userId, p_wallet: 'liquid', p_type: 'debit', p_amount: price, p_reason: `IFB Audit — ${tier.name}` }).catch(() => {});
-
+      // Billing is intentionally NOT done here. The previous code wrote a
+      // "completed" charge line to `transactions`, then called an
+      // `adjust_balance` RPC and an `ifb_audits` table that do not exist in the
+      // database, and used .catch() on Supabase query builders (which have no
+      // .catch()), so every purchase crashed after writing a false charge.
+      // The feature is gated as "Coming soon" (IFB_AUDIT) until a server-side
+      // purchase RPC prices, debits and records the audit atomically.
       const { data: auditData } = await supabase.from('ifb_audits').insert([{
         user_id: userId, company_name: companyName || null,
         document_urls: uploadedUrls, status: 'processing',
-        amount_paid: price, tier: selectedTier,
-      }]).select().single().catch(() => ({ data: null }));
+        amount_paid: 0, tier: selectedTier,
+      }]).select().single();
       if (auditData?.id) setAuditId(auditData.id);
 
       supabase.functions.invoke('kyc-ai-extract', {

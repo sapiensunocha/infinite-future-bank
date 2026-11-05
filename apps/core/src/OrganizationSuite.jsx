@@ -301,7 +301,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
         p_error_message: reason,
         p_error_code: err.code || 'TRANSFER_ERROR',
         p_context: { amount, recipient: sendingRecipient?.name, recipient_id: sendingRecipient?.target_user_id }
-      }).catch(() => {});
+      }).then(() => {}, () => {}); // query builders have no .catch()
       // Also send email notification about the failure
       supabase.functions.invoke('send-operation-failed-email', {
         body: {
