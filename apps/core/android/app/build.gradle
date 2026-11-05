@@ -20,7 +20,7 @@ android {
         minSdkVersion 26
         targetSdkVersion 36
         versionCode appVersionCode
-        versionName "1.5.8"
+        versionName "1.5.9"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             // Exclude compressed variants — Android WebView serves assets directly, doesn't need .gz/.br

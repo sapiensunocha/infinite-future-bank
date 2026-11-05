@@ -259,17 +259,18 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
         throw rpcError;
       }
 
-      // Log 0.5% routing fee in transaction ledger
-      if (withdrawalFee > 0) {
-        await supabase.from('transactions').insert({
-          user_id: userId,
-          transaction_type: 'withdrawal_fee',
-          amount: -withdrawalFee,
-          status: 'completed',
-          description: `Withdrawal Routing Fee (0.5%) — $${parseFloat(amount).toFixed(2)} via ${p2pFiatMethod}`,
-        }).catch(() => {});
-      }
+      // From here on the funds are already locked in escrow: nothing below may
+      // turn this into an error for the user.
+      //
+      // The 0.5% routing fee is NOT logged here any more. The client-side
+      // deduction was removed on 2026-10-27, so the fee is never taken from the
+      // balance; a "completed" ledger line for it would be false. The old
+      // logging call also used .catch() on a Supabase query builder, which has
+      // no .catch(): it threw "…catch is not a function" right after a
+      // successful escrow lock, so every P2P/bank withdrawal showed an error.
+      // TODO: charge the fee server-side inside process_p2p_escrow.
 
+      // Best effort: a failed insert returns { error } and does not throw.
       await supabase.from('notifications').insert([{
         user_id: realProcessorId,
         type: 'p2p_withdrawal_request',
