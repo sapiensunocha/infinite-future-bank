@@ -1096,17 +1096,17 @@ export default function PaymentPages({ session, profile }) {
           </div>
 
           {pages.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 { Icon: Wallet, label: 'Collected', value: formatCents(totals.collected, 'USD'), tone: 'text-emerald-600 bg-emerald-50' },
                 { Icon: ReceiptText, label: 'Paid orders', value: totals.paid.toLocaleString(), tone: 'text-blue-600 bg-blue-50' },
                 { Icon: Link2, label: 'Active pages', value: `${totals.active} of ${pages.length}`, tone: 'text-violet-600 bg-violet-50' },
               ].map(({ Icon, label, value, tone }) => (
-                <div key={label} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
-                  <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tone}`}><Icon size={20} /></span>
+                <div key={label} className="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 flex items-center gap-3">
+                  <span className={`hidden sm:flex w-10 h-10 rounded-xl items-center justify-center shrink-0 ${tone}`}><Icon size={20} /></span>
                   <div className="min-w-0">
-                    <p className="text-sm text-slate-500">{label}</p>
-                    <p className="text-xl font-bold text-slate-900 truncate">{value}</p>
+                    <p className="text-xs sm:text-sm text-slate-500 truncate">{label}</p>
+                    <p className="text-base sm:text-xl font-bold text-slate-900 truncate">{value}</p>
                   </div>
                 </div>
               ))}

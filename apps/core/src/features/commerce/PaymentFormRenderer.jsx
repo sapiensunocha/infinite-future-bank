@@ -198,7 +198,7 @@ export default function PaymentFormRenderer({ fields = [], values = {}, onChange
               aria-describedby={helpId}
               onChange={(e) => set(field.id, e.target.value)}
               // iOS WebKit shrinks empty date inputs unless the native styling is reset.
-              className={field.type === 'date' ? `${inputCls} appearance-none block min-h-[3.125rem] text-left` : inputCls}
+              className={field.type === 'date' ? `${inputCls} appearance-none block min-h-[3.125rem] text-left [&::-webkit-date-and-time-value]:text-left` : inputCls}
               {...extra}
             />
             {help}
