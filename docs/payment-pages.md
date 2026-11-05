@@ -116,14 +116,14 @@ Merchant actions (require `Authorization: Bearer <user JWT>`):
 
 | action | input | output |
 |---|---|---|
-| `list_pages` | — | `{ pages: Page[] }` |
+| `list_pages` | — | `{ pages: Page[] }`, each with `paid_count` and `collected_net_cents` |
 | `create_page` | `{ page: PageInput }` | `{ page, webhook_secret }` (secret shown only here and on rotate) |
 | `update_page` | `{ id, page: PageInput }` | `{ page }` (bumps `version`) |
 | `set_status` | `{ id, status }` | `{ page }` |
 | `rotate_webhook_secret` | `{ id }` | `{ webhook_secret }` (only time it is shown) |
 | `list_orders` | `{ page_id?, status?, limit<=100, before? }` | `{ orders: Order[] }` with decrypted `answers` |
 
-`PageInput` = `{ title, description?, logo_url?, visibility, single_use?, max_uses?,
+`PageInput` = `{ title, description?, logo_url?, brand_color? (#rrggbb), visibility, single_use?, max_uses?,
 expires_at?, fields, pricing, success_message?, redirect_url? (https only), notify_email?,
 webhook_url? (https only) }`. Slug is generated server-side (from the title for public pages,
 random for private ones).
@@ -132,7 +132,7 @@ Public actions (no user login needed; anon key only):
 
 | action | input | output |
 |---|---|---|
-| `get_page` | `{ slug }` | `{ page: { slug, title, description, logo_url, currency, fields, pricing, merchant_name, success_message } }`; 404 if inactive, expired or used up |
+| `get_page` | `{ slug }` | `{ page: { slug, title, description, logo_url, brand_color, currency, fields, pricing, merchant_name, success_message } }`; 404 if inactive, expired or used up |
 | `quote` | `{ slug, answers, amount_cents? }` | `{ line_items, subtotal_cents, fee_cents, total_cents, currency }` |
 | `checkout` | `{ slug, name, email, answers, amount_cents?, method: 'card' \| 'mobile_money' \| 'paystack' \| 'wallet', turnstile_token? }` | card: `{ order_id, client_secret, publishable_key }`; mobile_money / paystack: `{ order_id, redirect_url }`; wallet (needs user JWT): `{ order_id, status: 'paid' }` |
 | `order_status` | `{ order_id }` | `{ status, total_cents, currency, success_message, redirect_url? }` (no answers; `redirect_url` only once paid). For pending Flutterwave/Paystack orders it also asks the provider (verify by reference) so the redirect page settles even if the webhook is late. |

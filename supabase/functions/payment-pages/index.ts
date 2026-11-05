@@ -45,7 +45,7 @@ const SLUG_RE = /^[a-z0-9-]{3,60}$/;
 
 // Columns a merchant may see for their own pages (never webhook_secret).
 const MERCHANT_PAGE_COLUMNS =
-  "id, slug, title, description, logo_url, currency, status, visibility, single_use, max_uses, uses_count, " +
+  "id, slug, title, description, logo_url, brand_color, currency, status, visibility, single_use, max_uses, uses_count, " +
   "expires_at, fields, pricing, success_message, redirect_url, notify_email, webhook_url, version, created_at, updated_at";
 
 type Json = Record<string, unknown>;
@@ -64,6 +64,14 @@ function optStr(x: unknown, what: string, max: number): string | null {
   if (!s) return null;
   if (s.length > max) bad(`${what} must be at most ${max} characters`);
   return s;
+}
+
+/** Brand colour: "#rrggbb" only (lowercased), or null. */
+function brandColor(x: unknown): string | null {
+  const s = optStr(x, "Brand colour", 7);
+  if (!s) return null;
+  if (!/^#[0-9a-fA-F]{6}$/.test(s)) bad("Brand colour must look like #1a73e8");
+  return s.toLowerCase();
 }
 
 function httpsUrl(x: unknown, what: string): string | null {
@@ -157,6 +165,7 @@ interface NormalizedPage {
   title: string;
   description: string | null;
   logo_url: string | null;
+  brand_color: string | null;
   visibility: "public" | "private";
   single_use: boolean;
   max_uses: number | null;
@@ -206,6 +215,7 @@ function normalizePageInput(raw: unknown): NormalizedPage {
     title,
     description: optStr(p.description, "Description", 2000),
     logo_url: httpsUrl(p.logo_url, "Logo URL"),
+    brand_color: brandColor(p.brand_color),
     visibility,
     single_use: p.single_use === true,
     max_uses,
@@ -284,7 +294,33 @@ async function listPages(userId: string): Promise<Json> {
     .order("created_at", { ascending: false })
     .limit(500);
   if (error) throw new Error(error.message);
-  return { pages: (data ?? []).map(merchantView) };
+
+  // Per-page sales: paid order count and the merchant's net collected.
+  const stats = new Map<string, { paid_count: number; collected_net_cents: number }>();
+  const ids = (data ?? []).map((p) => p.id as string);
+  if (ids.length) {
+    const { data: paid, error: statErr } = await admin
+      .from("payment_page_orders")
+      .select("page_id, merchant_net_cents")
+      .eq("merchant_id", userId)
+      .eq("status", "paid")
+      .in("page_id", ids)
+      .limit(10000);
+    if (statErr) throw new Error(statErr.message);
+    for (const o of paid ?? []) {
+      const s = stats.get(o.page_id as string) ?? { paid_count: 0, collected_net_cents: 0 };
+      s.paid_count += 1;
+      s.collected_net_cents += Number(o.merchant_net_cents ?? 0);
+      stats.set(o.page_id as string, s);
+    }
+  }
+
+  return {
+    pages: (data ?? []).map((p) => ({
+      ...merchantView(p),
+      ...(stats.get(p.id as string) ?? { paid_count: 0, collected_net_cents: 0 }),
+    })),
+  };
 }
 
 async function createPage(userId: string, body: Json): Promise<Json> {
@@ -424,6 +460,7 @@ async function getPage(req: Request, body: Json): Promise<Json> {
       title: page.title,
       description: page.description,
       logo_url: page.logo_url,
+      brand_color: page.brand_color ?? null,
       currency: page.currency,
       fields: page.fields,
       pricing: page.pricing,
