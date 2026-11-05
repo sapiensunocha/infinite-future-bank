@@ -38,7 +38,7 @@ Rotate (create new, deploy, then revoke old). Names only:
 |---|---|---|
 | Stripe **live secret key** (`sk_live_…`) | Stripe Dashboard > Developers > API keys > Roll key | Supabase function secret `STRIPE_SECRET_KEY` |
 | Stripe **webhook signing secret** (`whsec_…`) | Stripe Dashboard > Webhooks > endpoint > Roll secret | Supabase function secret `STRIPE_WEBHOOK_SECRET` |
-| **Resend** API key | resend.com > API Keys (delete old key) | Supabase secret `RESEND_API_KEY`; local env for `send_formation_announcement.mjs` |
+| **Resend** API key | resend.com > API Keys (delete old key) | Supabase secret `RESEND_API_KEY` (`send_formation_announcement.mjs` was removed; its old copies in git history still hold the leaked key, see section 3) |
 | **Gemini** API key | Google AI Studio / GCP Credentials (delete old key) | Supabase secret `GEMINI_API_KEY` only. Never `VITE_*` |
 | **Groq** API key | console.groq.com > API Keys | Supabase secret `GROQ_API_KEY` |
 | **Michael API key** (Cloud Run `michael-api`) | Rotate on the Michael API service | Supabase secret used by `michael-proxy` |
