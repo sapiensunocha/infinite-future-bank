@@ -31,11 +31,11 @@ async function sendStatusEmail(toEmail, orderShortId, status, notes, tracking) {
 }
 
 const ROLE_META = {
-  super:   { label: 'Super Admin',    color: 'text-red-400    bg-red-900/30    border-red-700',    desc: 'Full platform access' },
-  ops:     { label: 'Operations',     color: 'text-blue-400   bg-blue-900/30   border-blue-700',   desc: 'User & KYC management' },
-  finance: { label: 'Finance',        color: 'text-amber-400  bg-amber-900/30  border-amber-700',  desc: 'Transactions & balances' },
-  support: { label: 'Support',        color: 'text-emerald-400 bg-emerald-900/30 border-emerald-700', desc: 'Tickets & user messages' },
-  content: { label: 'Content',        color: 'text-purple-400 bg-purple-900/30 border-purple-700', desc: 'VentureX & announcements' },
+  super:   { label: 'Super Admin',    color: 'text-red-600    bg-red-50    border-red-200',    desc: 'Full platform access' },
+  ops:     { label: 'Operations',     color: 'text-blue-600   bg-blue-50   border-blue-200',   desc: 'User & KYC management' },
+  finance: { label: 'Finance',        color: 'text-amber-600  bg-amber-50  border-amber-200',  desc: 'Transactions & balances' },
+  support: { label: 'Support',        color: 'text-emerald-600 bg-emerald-50 border-emerald-200', desc: 'Tickets & user messages' },
+  content: { label: 'Content',        color: 'text-purple-600 bg-purple-50 border-purple-200', desc: 'VentureX & announcements' },
 };
 
 const TABS = [
@@ -57,15 +57,15 @@ const TABS = [
 ];
 
 const PACKAGES_META = {
-  access: { name: 'IFB ACCESS',  price: 650,  color: 'text-emerald-400' },
-  growth: { name: 'IFB GROWTH',  price: 2750, color: 'text-blue-400'    },
-  elite:  { name: 'IFB ELITE',   price: 6000, color: 'text-violet-400'  },
+  access: { name: 'IFB ACCESS',  price: 650,  color: 'text-emerald-600' },
+  growth: { name: 'IFB GROWTH',  price: 2750, color: 'text-blue-600'    },
+  elite:  { name: 'IFB ELITE',   price: 6000, color: 'text-violet-600'  },
 };
 const APP_STATUS_META = {
-  under_review: { label: 'Under Review', cls: 'text-amber-400 bg-amber-900/30 border-amber-700/40' },
-  in_progress:  { label: 'In Progress',  cls: 'text-blue-400  bg-blue-900/30  border-blue-700/40'  },
-  completed:    { label: 'Completed',    cls: 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' },
-  cancelled:    { label: 'Cancelled',    cls: 'text-red-400   bg-red-900/30   border-red-700/40'   },
+  under_review: { label: 'Under Review', cls: 'text-amber-600 bg-amber-50 border-amber-200' },
+  in_progress:  { label: 'In Progress',  cls: 'text-blue-600  bg-blue-50  border-blue-200'  },
+  completed:    { label: 'Completed',    cls: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+  cancelled:    { label: 'Cancelled',    cls: 'text-red-600   bg-red-50   border-red-200'   },
 };
 const VTX_SECTORS = ['Technology','Fintech','Agriculture','Healthcare','Education','Energy','Real Estate','Manufacturing','Retail','Logistics','Media','Tourism','Other'];
 const VTX_STAGES  = ['idea','pre_revenue','early','growth','scale','mvp','ipo_ready'];
@@ -88,13 +88,13 @@ async function signKycUrls(rows) {
   }));
 }
 
-function StatCard({ icon: Icon, label, value, sub, color = 'text-blue-400', bg = 'bg-blue-900/20' }) {
+function StatCard({ icon: Icon, label, value, sub, color = 'text-blue-600', bg = 'bg-blue-50' }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6">
       <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mb-4`}>
         <Icon size={18} className={color}/>
       </div>
-      <p className="text-2xl font-black text-white">{value}</p>
+      <p className="text-2xl font-black text-slate-900">{value}</p>
       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{label}</p>
       {sub && <p className="text-[10px] text-slate-600 mt-0.5">{sub}</p>}
     </div>
@@ -595,11 +595,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
     const metCount = checklist.filter(c => c.met).length;
     const pct = Math.round((metCount / checklist.length) * 100);
     const LEVELS = [
-      { min:0,  max:20,  n:1, label:'Just Started',  bar:'bg-red-500',    badge:'text-red-400 bg-red-900/30 border-red-700/40' },
-      { min:21, max:40,  n:2, label:'Foundation',     bar:'bg-orange-500', badge:'text-orange-400 bg-orange-900/30 border-orange-700/40' },
-      { min:41, max:60,  n:3, label:'In Progress',    bar:'bg-amber-500',  badge:'text-amber-400 bg-amber-900/30 border-amber-700/40' },
-      { min:61, max:80,  n:4, label:'Advanced',       bar:'bg-blue-500',   badge:'text-blue-400 bg-blue-900/30 border-blue-700/40' },
-      { min:81, max:100, n:5, label:'Funding Ready',  bar:'bg-emerald-500',badge:'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' },
+      { min:0,  max:20,  n:1, label:'Just Started',  bar:'bg-red-500',    badge:'text-red-600 bg-red-50 border-red-200' },
+      { min:21, max:40,  n:2, label:'Foundation',     bar:'bg-orange-500', badge:'text-orange-600 bg-orange-50 border-orange-200' },
+      { min:41, max:60,  n:3, label:'In Progress',    bar:'bg-amber-500',  badge:'text-amber-600 bg-amber-50 border-amber-200' },
+      { min:61, max:80,  n:4, label:'Advanced',       bar:'bg-blue-500',   badge:'text-blue-600 bg-blue-50 border-blue-200' },
+      { min:81, max:100, n:5, label:'Funding Ready',  bar:'bg-emerald-500',badge:'text-emerald-600 bg-emerald-50 border-emerald-200' },
     ];
     const lv = LEVELS.find(l => pct >= l.min && pct <= l.max) || LEVELS[0];
     const missing = checklist.filter(c => !c.met);
@@ -887,7 +887,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
   if (checkingRole) {
     return (
-      <div className="fixed inset-0 bg-slate-950 z-[600] flex items-center justify-center">
+      <div className="fixed inset-0 bg-white z-[600] flex items-center justify-center">
         <Loader2 className="animate-spin text-blue-500" size={32}/>
       </div>
     );
@@ -895,14 +895,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
   if (!adminRole) {
     return (
-      <div className="fixed inset-0 bg-slate-950 z-[600] flex items-center justify-center p-8">
+      <div className="fixed inset-0 bg-white z-[600] flex items-center justify-center p-8">
         <div className="text-center space-y-4 max-w-sm">
-          <div className="w-20 h-20 bg-red-900/30 border border-red-800 rounded-3xl flex items-center justify-center mx-auto">
-            <Lock size={36} className="text-red-400"/>
+          <div className="w-20 h-20 bg-red-50 border border-red-200 rounded-3xl flex items-center justify-center mx-auto">
+            <Lock size={36} className="text-red-600"/>
           </div>
-          <h2 className="text-2xl font-black text-white">Access Denied</h2>
-          <p className="text-slate-400">You don't have admin rights on this platform.</p>
-          <button onClick={onClose} className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-colors">
+          <h2 className="text-2xl font-black text-slate-900">Access Denied</h2>
+          <p className="text-slate-500">You don't have admin rights on this platform.</p>
+          <button onClick={onClose} className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl transition-colors">
             Go Back
           </button>
         </div>
@@ -914,23 +914,23 @@ export default function AdminDashboard({ session, profile, onClose }) {
   const allowedTabs = TABS.filter(t => t.roles.includes(adminRole.role));
 
   return (
-    <div className="fixed inset-0 bg-slate-950 z-[600] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-white z-[600] flex flex-col overflow-hidden">
       {/* Global notification */}
       {notification && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[700] px-6 py-3 rounded-2xl border shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 text-sm font-black ${notification.type === 'error' ? 'bg-red-900/90 border-red-700 text-red-200' : 'bg-emerald-900/90 border-emerald-700 text-emerald-200'}`}>
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[700] px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-3 animate-in slide-in-from-top-4 text-sm font-black ${notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'}`}>
           {notification.type === 'error' ? <AlertTriangle size={16}/> : <CheckCircle size={16}/>}
           {notification.msg}
         </div>
       )}
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/80 backdrop-blur shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white backdrop-blur shrink-0">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center shadow-lg">
-            <Shield size={20} className="text-white"/>
+            <Shield size={20} className="text-slate-900"/>
           </div>
           <div>
-            <h1 className="font-black text-white text-sm tracking-tight">DEUS Admin Control Center</h1>
+            <h1 className="font-black text-slate-900 text-sm tracking-tight">DEUS Admin Control Center</h1>
             <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border mt-0.5 ${roleMeta.color}`}>
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"/>
               {roleMeta.label}
@@ -939,17 +939,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-slate-500 hidden md:block">{session.user.email}</span>
-          <button onClick={onClose} className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 text-slate-500 hover:text-slate-900 rounded-xl transition-colors">
             <X size={20}/>
           </button>
         </div>
       </div>
 
       {/* Tab nav */}
-      <div className="flex overflow-x-auto no-scrollbar border-b border-slate-800 bg-slate-900/50 shrink-0">
+      <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 bg-white shrink-0">
         {allowedTabs.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-5 py-3.5 whitespace-nowrap text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === id ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
+            className={`flex items-center gap-2 px-5 py-3.5 whitespace-nowrap text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-600'}`}>
             <Icon size={13}/>{label}
           </button>
         ))}
@@ -963,33 +963,33 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">Platform Overview</h2>
-                <button onClick={loadStats} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-black text-slate-900">Platform Overview</h2>
+                <button onClick={loadStats} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
               {stats ? (
                 <>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    <StatCard icon={Users} label="Total Users" value={fmtNum(stats.total_users)} sub={`+${fmtNum(stats.new_users_7d)} this week`} color="text-blue-400" bg="bg-blue-900/20"/>
-                    <StatCard icon={ShieldCheck} label="Verified KYC" value={fmtNum(stats.verified_users)} color="text-emerald-400" bg="bg-emerald-900/20"/>
-                    <StatCard icon={DollarSign} label="30-day Volume" value={fmtUSD(stats.txn_volume)} color="text-amber-400" bg="bg-amber-900/20"/>
-                    <StatCard icon={Ticket} label="Open Tickets" value={fmtNum(stats.open_tickets)} color="text-red-400" bg="bg-red-900/20"/>
-                    <StatCard icon={ShieldAlert} label="Pending KYC" value={fmtNum(stats.pending_kyc)} color="text-orange-400" bg="bg-orange-900/20"/>
+                    <StatCard icon={Users} label="Total Users" value={fmtNum(stats.total_users)} sub={`+${fmtNum(stats.new_users_7d)} this week`} color="text-blue-600" bg="bg-blue-50"/>
+                    <StatCard icon={ShieldCheck} label="Verified KYC" value={fmtNum(stats.verified_users)} color="text-emerald-600" bg="bg-emerald-50"/>
+                    <StatCard icon={DollarSign} label="30-day Volume" value={fmtUSD(stats.txn_volume)} color="text-amber-600" bg="bg-amber-50"/>
+                    <StatCard icon={Ticket} label="Open Tickets" value={fmtNum(stats.open_tickets)} color="text-red-600" bg="bg-red-50"/>
+                    <StatCard icon={ShieldAlert} label="Pending KYC" value={fmtNum(stats.pending_kyc)} color="text-orange-600" bg="bg-orange-50"/>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard icon={Database} label="Total Balance" value={fmtUSD(stats.total_balance)} color="text-purple-400" bg="bg-purple-900/20"/>
-                    <StatCard icon={Activity} label="Open P2P Orders" value={fmtNum(stats.p2p_open)} color="text-cyan-400" bg="bg-cyan-900/20"/>
-                    <StatCard icon={Building2} label="VentureX Active" value={fmtNum(stats.venturex_companies)} color="text-indigo-400" bg="bg-indigo-900/20"/>
-                    <StatCard icon={TrendingUp} label="Total Transactions" value={fmtNum(stats.total_txns)} color="text-teal-400" bg="bg-teal-900/20"/>
+                    <StatCard icon={Database} label="Total Balance" value={fmtUSD(stats.total_balance)} color="text-purple-600" bg="bg-purple-50"/>
+                    <StatCard icon={Activity} label="Open P2P Orders" value={fmtNum(stats.p2p_open)} color="text-cyan-600" bg="bg-cyan-50"/>
+                    <StatCard icon={Building2} label="VentureX Active" value={fmtNum(stats.venturex_companies)} color="text-indigo-600" bg="bg-indigo-50"/>
+                    <StatCard icon={TrendingUp} label="Total Transactions" value={fmtNum(stats.total_txns)} color="text-teal-600" bg="bg-teal-50"/>
                   </div>
 
                   {/* Quick actions */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
-                      canAccess('kyc') && { label: 'Review KYC Queue', count: stats.pending_kyc, tab: 'kyc', color: 'border-orange-700/40 bg-orange-900/10', icon: ShieldAlert, iconColor: 'text-orange-400' },
-                      canAccess('support') && { label: 'Open Support Tickets', count: stats.open_tickets, tab: 'support', color: 'border-red-700/40 bg-red-900/10', icon: Ticket, iconColor: 'text-red-400' },
-                      canAccess('finance') && { label: 'Pending P2P Orders', count: stats.p2p_open, tab: 'finance', color: 'border-cyan-700/40 bg-cyan-900/10', icon: Activity, iconColor: 'text-cyan-400' },
+                      canAccess('kyc') && { label: 'Review KYC Queue', count: stats.pending_kyc, tab: 'kyc', color: 'border-orange-200 bg-orange-50', icon: ShieldAlert, iconColor: 'text-orange-600' },
+                      canAccess('support') && { label: 'Open Support Tickets', count: stats.open_tickets, tab: 'support', color: 'border-red-200 bg-red-50', icon: Ticket, iconColor: 'text-red-600' },
+                      canAccess('finance') && { label: 'Pending P2P Orders', count: stats.p2p_open, tab: 'finance', color: 'border-cyan-200 bg-cyan-50', icon: Activity, iconColor: 'text-cyan-600' },
                     ].filter(Boolean).map(item => item && (
                       <button key={item.tab} onClick={() => setActiveTab(item.tab)}
                         className={`p-6 rounded-2xl border ${item.color} hover:opacity-80 text-left transition-opacity`}>
@@ -997,7 +997,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <item.icon size={20} className={item.iconColor}/>
                           <ChevronRight size={16} className="text-slate-600"/>
                         </div>
-                        <p className="text-3xl font-black text-white">{item.count}</p>
+                        <p className="text-3xl font-black text-slate-900">{item.count}</p>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{item.label}</p>
                       </button>
                     ))}
@@ -1013,14 +1013,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'users' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <h2 className="text-2xl font-black text-white">User Management</h2>
+                <h2 className="text-2xl font-black text-slate-900">User Management</h2>
                 <div className="flex gap-3">
                   <div className="relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"/>
                     <input value={userSearch} onChange={e => setUserSearch(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && loadUsers(userSearch)}
                       placeholder="Search email or name..."
-                      className="bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white font-medium outline-none focus:border-blue-500 w-64 transition-colors"/>
+                      className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-900 font-medium outline-none focus:border-blue-500 w-64 transition-colors"/>
                   </div>
                   <button onClick={() => loadUsers(userSearch)} className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
                     Search
@@ -1029,37 +1029,37 @@ export default function AdminDashboard({ session, profile, onClose }) {
               </div>
 
               {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead><tr className="border-b border-slate-800">
+                      <thead><tr className="border-b border-slate-200">
                         {['User', 'Email', 'Country', 'KYC', 'Liquid Balance', 'Joined', 'Actions'].map(h => (
                           <th key={h} className="p-4 text-left text-[9px] font-black uppercase tracking-widest text-slate-500">{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
                         {(users || []).map((user, i) => (
-                          <tr key={user.id} className="border-b border-slate-800/50 hover:bg-slate-800/40 transition-colors">
+                          <tr key={user.id} className="border-b border-slate-200 hover:bg-slate-100 transition-colors">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-xs">
                                   {(user.full_name || user.email || 'U')[0].toUpperCase()}
                                 </div>
-                                <span className="font-black text-white text-sm">{user.full_name || '—'}</span>
+                                <span className="font-black text-slate-900 text-sm">{user.full_name || '—'}</span>
                               </div>
                             </td>
-                            <td className="p-4 text-xs text-slate-400">{user.email}</td>
-                            <td className="p-4 text-xs text-slate-400">{user.country || '—'}</td>
+                            <td className="p-4 text-xs text-slate-500">{user.email}</td>
+                            <td className="p-4 text-xs text-slate-500">{user.country || '—'}</td>
                             <td className="p-4">
-                              <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${user.kyc_status === 'verified' ? 'bg-emerald-900/40 text-emerald-400' : user.kyc_status === 'rejected' ? 'bg-red-900/40 text-red-400' : 'bg-amber-900/40 text-amber-400'}`}>
+                              <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${user.kyc_status === 'verified' ? 'bg-emerald-50 text-emerald-600' : user.kyc_status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
                                 {user.kyc_status || 'unverified'}
                               </span>
                             </td>
-                            <td className="p-4 font-black text-white text-sm">{fmtUSD(user.liquid_usd)}</td>
+                            <td className="p-4 font-black text-slate-900 text-sm">{fmtUSD(user.liquid_usd)}</td>
                             <td className="p-4 text-xs text-slate-500">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</td>
                             <td className="p-4">
                               <button onClick={() => { setSelectedUser(user); setUserDetailTab('profile'); setUserEdits({}); }}
-                                className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 font-black text-[9px] uppercase rounded-lg transition-colors">
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-[9px] uppercase rounded-lg transition-colors">
                                 View
                               </button>
                             </td>
@@ -1073,31 +1073,31 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
               {/* User detail panel */}
               {selectedUser && (
-                <div className="fixed inset-y-0 right-0 w-full md:w-[26rem] bg-slate-950 border-l border-slate-800 z-50 flex flex-col shadow-2xl animate-in slide-in-from-right-4">
+                <div className="fixed inset-y-0 right-0 w-full md:w-[26rem] bg-white border-l border-slate-200 z-50 flex flex-col shadow-sm animate-in slide-in-from-right-4">
                   {/* Header */}
-                  <div className="p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
+                  <div className="p-5 border-b border-slate-200 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-lg">
                         {(selectedUser.full_name || selectedUser.email || 'U')[0].toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-black text-white text-sm leading-tight">{selectedUser.full_name || '—'}</p>
-                        <p className="text-[10px] text-slate-400">{selectedUser.email}</p>
+                        <p className="font-black text-slate-900 text-sm leading-tight">{selectedUser.full_name || '—'}</p>
+                        <p className="text-[10px] text-slate-500">{selectedUser.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                        selectedUser.kyc_status === 'verified' ? 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' :
-                        selectedUser.kyc_status === 'suspended' ? 'text-red-400 bg-red-900/30 border-red-700/40' :
-                        selectedUser.kyc_status === 'rejected' ? 'text-red-400 bg-red-900/30 border-red-700/40' :
-                        'text-amber-400 bg-amber-900/30 border-amber-700/40'
+                        selectedUser.kyc_status === 'verified' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
+                        selectedUser.kyc_status === 'suspended' ? 'text-red-600 bg-red-50 border-red-200' :
+                        selectedUser.kyc_status === 'rejected' ? 'text-red-600 bg-red-50 border-red-200' :
+                        'text-amber-600 bg-amber-50 border-amber-200'
                       }`}>{(selectedUser.kyc_status || 'unverified').replace(/_/g,' ')}</span>
-                      <button onClick={() => { setSelectedUser(null); setUserEdits({}); }} className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400"><X size={18}/></button>
+                      <button onClick={() => { setSelectedUser(null); setUserEdits({}); }} className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500"><X size={18}/></button>
                     </div>
                   </div>
 
                   {/* Sub-tabs */}
-                  <div className="flex border-b border-slate-800 shrink-0">
+                  <div className="flex border-b border-slate-200 shrink-0">
                     {[
                       { id: 'profile', label: 'Profile', icon: UserCog },
                       { id: 'balance', label: 'Balance', icon: DollarSign },
@@ -1105,7 +1105,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       { id: 'actions', label: 'Actions', icon: ShieldAlert },
                     ].map(t => (
                       <button key={t.id} onClick={() => setUserDetailTab(t.id)}
-                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[9px] font-black uppercase tracking-widest transition-colors border-b-2 ${userDetailTab === t.id ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
+                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[9px] font-black uppercase tracking-widest transition-colors border-b-2 ${userDetailTab === t.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-600'}`}>
                         <t.icon size={12}/>
                         {t.label}
                       </button>
@@ -1132,7 +1132,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 type={type}
                                 value={userEdits[key] !== undefined ? userEdits[key] : (selectedUser[key] || '')}
                                 onChange={e => setUserEdits(u => ({ ...u, [key]: e.target.value }))}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
                               />
                             </div>
                           ))}
@@ -1144,7 +1144,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             Save Profile
                           </button>
                         )}
-                        <div className="p-3 bg-slate-800/40 rounded-xl space-y-1.5 mt-2">
+                        <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 mt-2">
                           {[
                             { label: 'User ID', val: selectedUser.id?.slice(0, 20) + '…' },
                             { label: 'Liquid Balance', val: fmtUSD(selectedUser.liquid_usd) },
@@ -1153,12 +1153,12 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           ].map(({ label, val }) => (
                             <div key={label} className="flex justify-between">
                               <span className="text-[9px] font-black uppercase text-slate-500">{label}</span>
-                              <span className="text-[10px] font-black text-slate-300">{val}</span>
+                              <span className="text-[10px] font-black text-slate-600">{val}</span>
                             </div>
                           ))}
                         </div>
                         <button onClick={() => { setBoUser(selectedUser); setActiveTab('backoffice'); setSelectedUser(null); }}
-                          className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[9px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors">
+                          className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[9px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors">
                           <LayoutDashboard size={11}/> View in Back Office
                         </button>
                       </div>
@@ -1168,13 +1168,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {userDetailTab === 'balance' && (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+                          <div className="bg-slate-50 rounded-xl p-3 text-center">
                             <p className="text-[9px] font-black uppercase text-slate-500 mb-1">Liquid Wallet</p>
-                            <p className="text-base font-black text-white">{fmtUSD(selectedUser.liquid_usd)}</p>
+                            <p className="text-base font-black text-slate-900">{fmtUSD(selectedUser.liquid_usd)}</p>
                           </div>
-                          <div className="bg-slate-800/60 rounded-xl p-3 text-center">
+                          <div className="bg-slate-50 rounded-xl p-3 text-center">
                             <p className="text-[9px] font-black uppercase text-slate-500 mb-1">My Safe</p>
-                            <p className="text-base font-black text-white">{fmtUSD(selectedUser.mysafe_digital_usd)}</p>
+                            <p className="text-base font-black text-slate-900">{fmtUSD(selectedUser.mysafe_digital_usd)}</p>
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -1182,7 +1182,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="grid grid-cols-2 gap-2">
                             {['liquid', 'vault'].map(w => (
                               <button key={w} onClick={() => setBalanceAdj(b => ({ ...b, wallet: w }))}
-                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.wallet === w ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.wallet === w ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                 {w === 'liquid' ? 'Liquid' : 'My Safe'}
                               </button>
                             ))}
@@ -1191,7 +1191,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="grid grid-cols-2 gap-2">
                             {['credit', 'debit'].map(t => (
                               <button key={t} onClick={() => setBalanceAdj(b => ({ ...b, type: t }))}
-                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.type === t ? (t === 'credit' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-700 border-red-600 text-white') : 'bg-slate-800 border-slate-700 text-slate-400'}`}>
+                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.type === t ? (t === 'credit' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-700 border-red-600 text-white') : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                 {t === 'credit' ? '+ Credit' : '− Debit'}
                               </button>
                             ))}
@@ -1202,7 +1202,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             value={balanceAdj.amount}
                             onChange={e => setBalanceAdj(b => ({ ...b, amount: e.target.value }))}
                             placeholder="0.00"
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
                           />
                           <label className="text-[9px] font-black uppercase text-slate-500">Reason</label>
                           <input
@@ -1210,7 +1210,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             value={balanceAdj.reason}
                             onChange={e => setBalanceAdj(b => ({ ...b, reason: e.target.value }))}
                             placeholder="Bonus, correction, withdrawal…"
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
                           />
                           <button onClick={handleAdjustBalance} disabled={adjLoading || !balanceAdj.amount}
                             className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${balanceAdj.type === 'credit' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-700 hover:bg-red-600 text-white'} disabled:opacity-50`}>
@@ -1224,7 +1224,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* ── NOTIFY TAB ── */}
                     {userDetailTab === 'notify' && (
                       <div className="space-y-3">
-                        <p className="text-[10px] text-slate-400">Send a direct notification to this user's app.</p>
+                        <p className="text-[10px] text-slate-500">Send a direct notification to this user's app.</p>
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase text-slate-500">Title</label>
                           <input
@@ -1232,7 +1232,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             value={userNotif.title}
                             onChange={e => setUserNotif(n => ({ ...n, title: e.target.value }))}
                             placeholder="e.g. Account Update"
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
                           />
                           <label className="text-[9px] font-black uppercase text-slate-500">Message</label>
                           <textarea
@@ -1240,7 +1240,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             onChange={e => setUserNotif(n => ({ ...n, message: e.target.value }))}
                             placeholder="Your message…"
                             rows={4}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
                           />
                           <button onClick={handleSendUserNotif} disabled={sendingUserNotif}
                             className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
@@ -1260,7 +1260,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           { status: 'pending', label: 'Mark Pending', icon: Clock, cls: 'bg-amber-700 hover:bg-amber-600 text-white' },
                           { status: 'needs_more_info', label: 'Needs More Info', icon: AlertTriangle, cls: 'bg-orange-700 hover:bg-orange-600 text-white' },
                           { status: 'ai_reviewing', label: 'Send to AI Review', icon: Zap, cls: 'bg-blue-700 hover:bg-blue-600 text-white' },
-                          { status: 'rejected', label: 'Reject KYC', icon: Ban, cls: 'bg-red-900/70 hover:bg-red-800 border border-red-700/40 text-red-300' },
+                          { status: 'rejected', label: 'Reject KYC', icon: Ban, cls: 'bg-red-50 hover:bg-red-50 border border-red-200 text-red-600' },
                         ].filter(a => a.status !== selectedUser.kyc_status).map(({ status, label, icon: Icon, cls }) => (
                           <button key={status}
                             onClick={async () => {
@@ -1276,10 +1276,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             <Icon size={12}/> {label}
                           </button>
                         ))}
-                        <div className="border-t border-slate-800 pt-2 mt-2">
+                        <div className="border-t border-slate-200 pt-2 mt-2">
                           <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Account</p>
                           <button onClick={handleToggleSuspend}
-                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${selectedUser.kyc_status === 'suspended' ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-red-900/50 hover:bg-red-900/80 border border-red-700/40 text-red-400'}`}>
+                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${selectedUser.kyc_status === 'suspended' ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-red-50 hover:bg-red-50 border border-red-200 text-red-600'}`}>
                             {selectedUser.kyc_status === 'suspended' ? <><Unlock size={12}/> Unsuspend User</> : <><Lock size={12}/> Suspend User</>}
                           </button>
                         </div>
@@ -1296,8 +1296,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'kyc' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">KYC Review Queue</h2>
-                <button onClick={loadKyc} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-black text-slate-900">KYC Review Queue</h2>
+                <button onClick={loadKyc} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
@@ -1308,12 +1308,12 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   {/* Row 1 — Key numbers */}
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {[
-                      { label: 'Total Submissions', value: fmtNum((stats.kyc_total)||0), color: 'text-blue-400', bg: 'bg-blue-900/20 border-blue-700/30' },
-                      { label: 'Pending Review', value: fmtNum((stats.kyc_pending)||0), color: 'text-amber-400', bg: 'bg-amber-900/20 border-amber-700/30' },
-                      { label: 'Approved', value: fmtNum((stats.kyc_approved)||0), color: 'text-emerald-400', bg: 'bg-emerald-900/20 border-emerald-700/30' },
-                      { label: 'Rejected', value: fmtNum((stats.kyc_rejected)||0), color: 'text-red-400', bg: 'bg-red-900/20 border-red-700/30' },
-                      { label: 'AI Reviewing', value: fmtNum((stats.kyc_ai_reviewing)||0), color: 'text-purple-400', bg: 'bg-purple-900/20 border-purple-700/30' },
-                      { label: 'Needs Info', value: fmtNum((stats.kyc_needs_info)||0), color: 'text-orange-400', bg: 'bg-orange-900/20 border-orange-700/30' },
+                      { label: 'Total Submissions', value: fmtNum((stats.kyc_total)||0), color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+                      { label: 'Pending Review', value: fmtNum((stats.kyc_pending)||0), color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+                      { label: 'Approved', value: fmtNum((stats.kyc_approved)||0), color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+                      { label: 'Rejected', value: fmtNum((stats.kyc_rejected)||0), color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
+                      { label: 'AI Reviewing', value: fmtNum((stats.kyc_ai_reviewing)||0), color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
+                      { label: 'Needs Info', value: fmtNum((stats.kyc_needs_info)||0), color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
                     ].map(s => (
                       <div key={s.label} className={`rounded-2xl border p-4 ${s.bg}`}>
                         <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
@@ -1326,8 +1326,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     {/* Approval Rate donut-style */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Approval Rate</p>
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Approval Rate</p>
                       {(() => {
                         const total = (stats.kyc_approved||0) + (stats.kyc_rejected||0) + (stats.kyc_pending||0) + (stats.kyc_ai_reviewing||0) + (stats.kyc_needs_info||0);
                         const appRate = total > 0 ? Math.round(((stats.kyc_approved||0) / total) * 100) : 0;
@@ -1336,18 +1336,18 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         return (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-4xl font-black text-emerald-400">{appRate}%</span>
+                              <span className="text-4xl font-black text-emerald-600">{appRate}%</span>
                               <span className="text-xs text-slate-500">of all submissions</span>
                             </div>
-                            <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden flex">
+                            <div className="w-full bg-slate-50 rounded-full h-3 overflow-hidden flex">
                               <div className="bg-emerald-500 h-full transition-all" style={{width:`${appRate}%`}}/>
                               <div className="bg-red-500 h-full transition-all" style={{width:`${rejRate}%`}}/>
                               <div className="bg-amber-500 h-full transition-all" style={{width:`${pendRate}%`}}/>
                             </div>
                             <div className="flex gap-3 text-[10px] font-bold">
-                              <span className="text-emerald-400">● Approved {appRate}%</span>
-                              <span className="text-red-400">● Rejected {rejRate}%</span>
-                              <span className="text-amber-400">● Pending {pendRate}%</span>
+                              <span className="text-emerald-600">● Approved {appRate}%</span>
+                              <span className="text-red-600">● Rejected {rejRate}%</span>
+                              <span className="text-amber-600">● Pending {pendRate}%</span>
                             </div>
                           </div>
                         );
@@ -1355,23 +1355,23 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     </div>
 
                     {/* AI Confidence + Risk breakdown */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">AI Confidence & Risk</p>
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">AI Confidence & Risk</p>
                       <div className="space-y-3">
                         <div>
                           <div className="flex justify-between text-xs font-bold mb-1">
-                            <span className="text-slate-400">Avg AI Confidence</span>
-                            <span className="text-blue-400">{stats.kyc_avg_ai_confidence || '—'}%</span>
+                            <span className="text-slate-500">Avg AI Confidence</span>
+                            <span className="text-blue-600">{stats.kyc_avg_ai_confidence || '—'}%</span>
                           </div>
-                          <div className="w-full bg-slate-800 rounded-full h-2">
+                          <div className="w-full bg-slate-50 rounded-full h-2">
                             <div className="bg-blue-500 h-full rounded-full" style={{width:`${stats.kyc_avg_ai_confidence||0}%`}}/>
                           </div>
                         </div>
                         <div className="pt-2 space-y-2">
                           {[
-                            { label: 'Low Risk', val: stats.kyc_risk_low||0, color: 'bg-emerald-500', text: 'text-emerald-400' },
-                            { label: 'Medium Risk', val: stats.kyc_risk_medium||0, color: 'bg-amber-500', text: 'text-amber-400' },
-                            { label: 'High Risk', val: stats.kyc_risk_high||0, color: 'bg-red-500', text: 'text-red-400' },
+                            { label: 'Low Risk', val: stats.kyc_risk_low||0, color: 'bg-emerald-500', text: 'text-emerald-600' },
+                            { label: 'Medium Risk', val: stats.kyc_risk_medium||0, color: 'bg-amber-500', text: 'text-amber-600' },
+                            { label: 'High Risk', val: stats.kyc_risk_high||0, color: 'bg-red-500', text: 'text-red-600' },
                           ].map(r => {
                             const riskTotal = (stats.kyc_risk_low||0)+(stats.kyc_risk_medium||0)+(stats.kyc_risk_high||0);
                             const pct = riskTotal > 0 ? Math.round((r.val/riskTotal)*100) : 0;
@@ -1379,9 +1379,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <div key={r.label}>
                                 <div className="flex justify-between text-[10px] font-bold mb-1">
                                   <span className={r.text}>{r.label}</span>
-                                  <span className="text-slate-400">{r.val} · {pct}%</span>
+                                  <span className="text-slate-500">{r.val} · {pct}%</span>
                                 </div>
-                                <div className="w-full bg-slate-800 rounded-full h-1.5">
+                                <div className="w-full bg-slate-50 rounded-full h-1.5">
                                   <div className={`${r.color} h-full rounded-full`} style={{width:`${pct}%`}}/>
                                 </div>
                               </div>
@@ -1392,36 +1392,36 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     </div>
 
                     {/* User verification funnel */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Verification Funnel</p>
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Verification Funnel</p>
                       <div className="space-y-3">
                         {[
-                          { label: 'Total Users', val: stats.total_users||0, color: 'bg-slate-600', pct: 100 },
+                          { label: 'Total Users', val: stats.total_users||0, color: 'bg-slate-200', pct: 100 },
                           { label: 'KYC Submitted', val: stats.kyc_total||0, color: 'bg-blue-600', pct: stats.total_users > 0 ? Math.round(((stats.kyc_total||0)/stats.total_users)*100) : 0 },
                           { label: 'Verified', val: stats.verified_users||0, color: 'bg-emerald-600', pct: stats.total_users > 0 ? Math.round(((stats.verified_users||0)/stats.total_users)*100) : 0 },
                         ].map(f => (
                           <div key={f.label}>
                             <div className="flex justify-between text-[10px] font-bold mb-1">
-                              <span className="text-slate-300">{f.label}</span>
-                              <span className="text-slate-400">{fmtNum(f.val)} ({f.pct}%)</span>
+                              <span className="text-slate-600">{f.label}</span>
+                              <span className="text-slate-500">{fmtNum(f.val)} ({f.pct}%)</span>
                             </div>
-                            <div className="w-full bg-slate-800 rounded-full h-2">
+                            <div className="w-full bg-slate-50 rounded-full h-2">
                               <div className={`${f.color} h-full rounded-full`} style={{width:`${f.pct}%`}}/>
                             </div>
                           </div>
                         ))}
-                        <div className="pt-2 border-t border-slate-800">
+                        <div className="pt-2 border-t border-slate-200">
                           <div className="flex justify-between">
                             <span className="text-[10px] text-slate-500 font-bold">New Users (7d)</span>
-                            <span className="text-[10px] text-blue-400 font-black">+{fmtNum(stats.new_users_7d||0)}</span>
+                            <span className="text-[10px] text-blue-600 font-black">+{fmtNum(stats.new_users_7d||0)}</span>
                           </div>
                           <div className="flex justify-between mt-1">
                             <span className="text-[10px] text-slate-500 font-bold">Failed Ops (24h)</span>
-                            <span className={`text-[10px] font-black ${(stats.failed_ops_24h||0) > 0 ? 'text-red-400' : 'text-emerald-400'}`}>{fmtNum(stats.failed_ops_24h||0)}</span>
+                            <span className={`text-[10px] font-black ${(stats.failed_ops_24h||0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmtNum(stats.failed_ops_24h||0)}</span>
                           </div>
                           <div className="flex justify-between mt-1">
                             <span className="text-[10px] text-slate-500 font-bold">30d Txn Volume</span>
-                            <span className="text-[10px] text-amber-400 font-black">{fmtUSD(stats.txn_volume||0)}</span>
+                            <span className="text-[10px] text-amber-600 font-black">{fmtUSD(stats.txn_volume||0)}</span>
                           </div>
                         </div>
                       </div>
@@ -1454,26 +1454,26 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       { key: 'board_resolution_url',            label: 'Board Resolution' },
                     ];
                     return (
-                    <div key={sub.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
+                    <div key={sub.id} className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5">
                       {/* ── Header ── */}
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="font-black text-white text-base">{sub.legal_full_name || sub.profiles?.full_name || '—'}</p>
-                          <p className="text-xs text-slate-400">{sub.profiles?.email}{sub.email_primary ? ` · ${sub.email_primary}` : ''}</p>
+                          <p className="font-black text-slate-900 text-base">{sub.legal_full_name || sub.profiles?.full_name || '—'}</p>
+                          <p className="text-xs text-slate-500">{sub.profiles?.email}{sub.email_primary ? ` · ${sub.email_primary}` : ''}</p>
                           <p className="text-[9px] text-slate-600 mt-0.5 font-mono">{sub.id}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1.5">
                           <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${
-                            sub.status === 'approved'      ? 'text-emerald-400 bg-emerald-900/30 border-emerald-700/40' :
-                            sub.status === 'rejected'      ? 'text-red-400 bg-red-900/30 border-red-700/40' :
-                            sub.status === 'ai_reviewing'  ? 'text-blue-400 bg-blue-900/30 border-blue-700/40' :
-                                                             'text-amber-400 bg-amber-900/30 border-amber-700/40'
+                            sub.status === 'approved'      ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
+                            sub.status === 'rejected'      ? 'text-red-600 bg-red-50 border-red-200' :
+                            sub.status === 'ai_reviewing'  ? 'text-blue-600 bg-blue-50 border-blue-200' :
+                                                             'text-amber-600 bg-amber-50 border-amber-200'
                           }`}>{sub.status?.replace(/_/g,' ')}</span>
                           {sub.risk_rating && (
                             <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
-                              sub.risk_rating === 'low'    ? 'text-emerald-400 border-emerald-700/40' :
-                              sub.risk_rating === 'medium' ? 'text-amber-400 border-amber-700/40' :
-                                                             'text-red-400 border-red-700/40'
+                              sub.risk_rating === 'low'    ? 'text-emerald-600 border-emerald-200' :
+                              sub.risk_rating === 'medium' ? 'text-amber-600 border-amber-200' :
+                                                             'text-red-600 border-red-200'
                             }`}>Risk: {sub.risk_rating}</span>
                           )}
                         </div>
@@ -1483,10 +1483,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <div className={`bg-${confColor}-950/20 border border-${confColor}-700/30 rounded-2xl p-4`}>
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">AI Confidence Score</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">AI Confidence Score</p>
                             <p className={`text-sm font-black text-${confColor}-400`}>
                               {confPct != null ? `${confPct}%` : 'Not scored yet'}
-                              {sub.ai_recommendation && <span className="ml-2 text-[10px] font-bold text-slate-400 normal-case">· {sub.ai_recommendation}</span>}
+                              {sub.ai_recommendation && <span className="ml-2 text-[10px] font-bold text-slate-500 normal-case">· {sub.ai_recommendation}</span>}
                             </p>
                           </div>
                           {confPct != null && (
@@ -1496,14 +1496,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           )}
                         </div>
                         {confPct != null && (
-                          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-2 bg-slate-50 rounded-full overflow-hidden">
                             <div className={`h-full bg-${confColor}-500 rounded-full transition-all`} style={{ width: `${confPct}%` }}/>
                           </div>
                         )}
                         {sub.ai_flags?.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-3">
                             {sub.ai_flags.map(flag => (
-                              <span key={flag} className="text-[8px] font-black uppercase text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-0.5 rounded-lg">{flag.replace(/_/g,' ')}</span>
+                              <span key={flag} className="text-[8px] font-black uppercase text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{flag.replace(/_/g,' ')}</span>
                             ))}
                           </div>
                         )}
@@ -1516,20 +1516,20 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="grid grid-cols-3 gap-3">
                             {sub.id_front_url && (
                               <a href={sub.id_front_url} target="_blank" rel="noreferrer" className="group relative">
-                                <img src={sub.id_front_url} alt="ID Front" className="w-full h-28 object-cover rounded-xl border border-slate-700 group-hover:border-violet-500/60 transition-colors"/>
-                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-black/60 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">ID Front</span>
+                                <img src={sub.id_front_url} alt="ID Front" className="w-full h-28 object-cover rounded-xl border border-slate-200 group-hover:border-violet-200 transition-colors"/>
+                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">ID Front</span>
                               </a>
                             )}
                             {(sub.selfie_with_id_url || sub.selfie_url) && (
                               <a href={sub.selfie_with_id_url || sub.selfie_url} target="_blank" rel="noreferrer" className="group relative">
-                                <img src={sub.selfie_with_id_url || sub.selfie_url} alt="Selfie" className="w-full h-28 object-cover rounded-xl border border-slate-700 group-hover:border-violet-500/60 transition-colors"/>
-                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-black/60 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">Selfie</span>
+                                <img src={sub.selfie_with_id_url || sub.selfie_url} alt="Selfie" className="w-full h-28 object-cover rounded-xl border border-slate-200 group-hover:border-violet-200 transition-colors"/>
+                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">Selfie</span>
                               </a>
                             )}
                             {sub.id_back_url && (
                               <a href={sub.id_back_url} target="_blank" rel="noreferrer" className="group relative">
-                                <img src={sub.id_back_url} alt="ID Back" className="w-full h-28 object-cover rounded-xl border border-slate-700 group-hover:border-violet-500/60 transition-colors"/>
-                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-black/60 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">ID Back</span>
+                                <img src={sub.id_back_url} alt="ID Back" className="w-full h-28 object-cover rounded-xl border border-slate-200 group-hover:border-violet-200 transition-colors"/>
+                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">ID Back</span>
                               </a>
                             )}
                           </div>
@@ -1552,9 +1552,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           { label: 'Submitted', val: sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : new Date(sub.created_at).toLocaleDateString() },
                           { label: 'Country', val: sub.residential_country || '—' },
                         ].map(({ label, val }) => (
-                          <div key={label} className="bg-slate-800/60 rounded-xl p-2.5">
+                          <div key={label} className="bg-slate-50 rounded-xl p-2.5">
                             <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{label}</p>
-                            <p className={`text-xs font-black truncate ${val?.toString().includes('⚠️') ? 'text-amber-400' : 'text-white'}`}>{val}</p>
+                            <p className={`text-xs font-black truncate ${val?.toString().includes('⚠️') ? 'text-amber-600' : 'text-slate-900'}`}>{val}</p>
                           </div>
                         ))}
                       </div>
@@ -1566,8 +1566,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                             {imgFields.filter(f => !['id_front_url','id_back_url','selfie_url','selfie_with_id_url'].includes(f.key) && sub[f.key]).map(f => (
                               <a key={f.key} href={sub[f.key]} target="_blank" rel="noreferrer" className="group relative">
-                                <img src={sub[f.key]} alt={f.label} className="w-full h-20 object-cover rounded-lg border border-slate-700 group-hover:border-blue-500/60 transition-colors"/>
-                                <span className="absolute bottom-1 left-1 text-[7px] font-black uppercase bg-black/60 text-white px-1 py-0.5 rounded backdrop-blur-sm leading-tight">{f.label}</span>
+                                <img src={sub[f.key]} alt={f.label} className="w-full h-20 object-cover rounded-lg border border-slate-200 group-hover:border-blue-200 transition-colors"/>
+                                <span className="absolute bottom-1 left-1 text-[7px] font-black uppercase bg-slate-50 text-slate-900 px-1 py-0.5 rounded backdrop-blur-sm leading-tight">{f.label}</span>
                               </a>
                             ))}
                           </div>
@@ -1580,7 +1580,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <p className="text-[9px] font-black uppercase text-slate-500 w-full">Files</p>
                           {fileFields.filter(f => sub[f.key]).map(f => (
                             <a key={f.key} href={sub[f.key]} target="_blank" rel="noreferrer"
-                              className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-3 py-1.5 rounded-lg hover:bg-blue-900/40 transition-colors flex items-center gap-1">
+                              className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1">
                               <FileText size={9}/>{f.label}
                             </a>
                           ))}
@@ -1591,25 +1591,25 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       {(() => {
                         const scan = kycAiScan[sub.id] || {};
                         return (
-                          <div className="bg-violet-950/20 border border-violet-700/25 rounded-2xl p-4 space-y-3">
+                          <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 space-y-3">
                             <div className="flex items-center gap-2">
-                              <Brain size={12} className="text-violet-400"/>
-                              <span className="text-[9px] font-black uppercase tracking-widest text-violet-400">AI Doc Scan — Auto-Extract KYC Data</span>
-                              {scan.scanning && <Loader2 size={10} className="animate-spin text-violet-400 ml-auto"/>}
+                              <Brain size={12} className="text-violet-600"/>
+                              <span className="text-[9px] font-black uppercase tracking-widest text-violet-600">AI Doc Scan — Auto-Extract KYC Data</span>
+                              {scan.scanning && <Loader2 size={10} className="animate-spin text-violet-600 ml-auto"/>}
                             </div>
                             {!scan.scanning && scan.fields?.length > 0 && (
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 {scan.fields.map(f => (
-                                  <div key={f.label} className="bg-emerald-950/30 border border-emerald-700/30 rounded-lg p-2">
+                                  <div key={f.label} className="bg-emerald-50 border border-emerald-200 rounded-lg p-2">
                                     <p className="text-[7px] font-black uppercase text-emerald-500">{f.label}</p>
-                                    <p className="text-[10px] font-bold text-white truncate">{f.value}</p>
-                                    <p className="text-[7px] text-emerald-400">{Math.round((f.confidence||0)*100)}% conf.</p>
+                                    <p className="text-[10px] font-bold text-slate-900 truncate">{f.value}</p>
+                                    <p className="text-[7px] text-emerald-600">{Math.round((f.confidence||0)*100)}% conf.</p>
                                   </div>
                                 ))}
                               </div>
                             )}
-                            {scan.error && <p className="text-[10px] text-red-400">{scan.error}</p>}
-                            <label className={`flex items-center gap-2 px-4 py-2.5 border border-dashed rounded-xl cursor-pointer transition-all text-[9px] font-black uppercase tracking-widest w-fit ${scan.scanning ? 'opacity-50 cursor-default border-slate-600 text-slate-600' : 'border-violet-600/50 hover:border-violet-500 text-violet-400 hover:bg-violet-950/20'}`}>
+                            {scan.error && <p className="text-[10px] text-red-600">{scan.error}</p>}
+                            <label className={`flex items-center gap-2 px-4 py-2.5 border border-dashed rounded-xl cursor-pointer transition-all text-[9px] font-black uppercase tracking-widest w-fit ${scan.scanning ? 'opacity-50 cursor-default border-slate-200 text-slate-600' : 'border-violet-600/50 hover:border-violet-500 text-violet-600 hover:bg-violet-50'}`}>
                               {scan.scanning ? <Loader2 size={11} className="animate-spin"/> : <Upload size={11}/>}
                               {scan.scanning ? 'Scanning...' : scan.fields?.length > 0 ? 'Scan Another Doc' : 'Upload Doc for AI Scan'}
                               <input type="file" className="hidden" disabled={scan.scanning}
@@ -1621,7 +1621,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       })()}
 
                       {/* ── ARIA AI Review ── */}
-                      <div className="pt-2 border-t border-slate-800 space-y-3">
+                      <div className="pt-2 border-t border-slate-200 space-y-3">
                         <button
                           onClick={() => handleAriaReview(sub.user_id)}
                           disabled={ariaRunning[sub.user_id]}
@@ -1634,10 +1634,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                         {ariaResults[sub.user_id] && (() => {
                           const r = ariaResults[sub.user_id];
-                          const decisionColor = r.decision === 'approved' ? 'text-emerald-400 border-emerald-700/40 bg-emerald-900/20'
-                            : r.decision === 'rejected' ? 'text-red-400 border-red-700/40 bg-red-900/20'
-                            : 'text-amber-400 border-amber-700/40 bg-amber-900/20';
-                          const riskColor = r.risk_rating === 'low' ? 'text-emerald-400' : r.risk_rating === 'medium' ? 'text-amber-400' : r.risk_rating === 'high' ? 'text-orange-400' : 'text-red-400';
+                          const decisionColor = r.decision === 'approved' ? 'text-emerald-600 border-emerald-200 bg-emerald-50'
+                            : r.decision === 'rejected' ? 'text-red-600 border-red-200 bg-red-50'
+                            : 'text-amber-600 border-amber-200 bg-amber-50';
+                          const riskColor = r.risk_rating === 'low' ? 'text-emerald-600' : r.risk_rating === 'medium' ? 'text-amber-600' : r.risk_rating === 'high' ? 'text-orange-600' : 'text-red-600';
                           return (
                             <div className={`border rounded-xl p-4 space-y-2 ${decisionColor}`}>
                               <div className="flex items-center justify-between">
@@ -1649,7 +1649,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               {r.reviewer_notes && <p className="text-[11px] opacity-80 leading-relaxed">{r.reviewer_notes}</p>}
                               {r.flags?.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
-                                  {r.flags.map(f => <span key={f} className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full text-[9px] font-black uppercase">{f}</span>)}
+                                  {r.flags.map(f => <span key={f} className="px-2 py-0.5 bg-slate-50 text-slate-600 rounded-full text-[9px] font-black uppercase">{f}</span>)}
                                 </div>
                               )}
                               {(r.missing_fields?.length > 0 || r.missing_docs?.length > 0) && (
@@ -1664,9 +1664,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       </div>
 
                       {/* ── Manual override row ── */}
-                      <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-800">
+                      <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-200">
                         <input
-                          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-slate-500 outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10"
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-violet-200 focus:ring-2 focus:ring-violet-200"
                           placeholder="Reviewer notes / rejection reason (optional)"
                           id={`kyc-note-${sub.id}`}
                         />
@@ -1675,11 +1675,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <CheckCircle size={13}/> Approve
                         </button>
                         <button onClick={() => handleKycAction(sub.user_id, 'needs_more_info', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-5 py-2.5 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-700/40 text-amber-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          className="px-5 py-2.5 bg-amber-50 hover:bg-amber-600/40 border border-amber-200 text-amber-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
                           <AlertTriangle size={13}/> Request Info
                         </button>
                         <button onClick={() => handleKycAction(sub.user_id, 'rejected', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-5 py-2.5 bg-red-900/30 hover:bg-red-900/60 border border-red-700/40 text-red-400 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          className="px-5 py-2.5 bg-red-50 hover:bg-red-50 border border-red-200 text-red-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
                           <X size={13}/> Reject
                         </button>
                       </div>
@@ -1693,8 +1693,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── REGISTER USER ─── */}
           {activeTab === 'register' && (
             <div className="space-y-6 animate-in fade-in max-w-2xl">
-              <h2 className="text-2xl font-black text-white">Register New User</h2>
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-5">
+              <h2 className="text-2xl font-black text-slate-900">Register New User</h2>
+              <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     { key:'full_name',       label:'Full Name *',          type:'text' },
@@ -1709,7 +1709,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     <div key={key}>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
                       <input type={type} value={regForm[key]} onChange={e => setRegForm(f => ({...f, [key]: e.target.value}))}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-blue-500" />
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
                     </div>
                   ))}
                 </div>
@@ -1717,7 +1717,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <div>
                     <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Role</label>
                     <select value={regForm.role} onChange={e => setRegForm(f => ({...f, role: e.target.value}))}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-500">
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500">
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
                       <option value="admin_l3">Admin L3</option>
@@ -1727,7 +1727,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <div>
                     <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">KYC Status</label>
                     <select value={regForm.kyc_status} onChange={e => setRegForm(f => ({...f, kyc_status: e.target.value}))}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-500">
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500">
                       <option value="unverified">Unverified</option>
                       <option value="pending_kyc">Pending KYC</option>
                       <option value="verified">Verified</option>
@@ -1757,38 +1757,38 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'documents' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">KYC Documents</h2>
-                <button onClick={loadDocuments} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-black text-slate-900">KYC Documents</h2>
+                <button onClick={loadDocuments} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
               {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
                 <div className="space-y-4">
                   {allDocs.length === 0 ? <div className="text-center py-20 text-slate-500 font-bold">No documents found.</div> : allDocs.map(doc => (
-                    <div key={doc.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <div key={doc.id} className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="font-black text-white">{doc.user_full_name || doc.legal_full_name || '—'}</p>
-                          <p className="text-xs text-slate-400">{doc.user_email}</p>
+                          <p className="font-black text-slate-900">{doc.user_full_name || doc.legal_full_name || '—'}</p>
+                          <p className="text-xs text-slate-500">{doc.user_email}</p>
                           <p className="text-[10px] text-slate-500 mt-0.5">{doc.user_id}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
-                          <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${doc.status==='approved'?'text-emerald-400 bg-emerald-900/30 border-emerald-700/40':doc.status==='rejected'?'text-red-400 bg-red-900/30 border-red-700/40':'text-amber-400 bg-amber-900/30 border-amber-700/40'}`}>{doc.status?.replace(/_/g,' ')}</span>
-                          {doc.risk_rating && <span className="text-[9px] text-slate-400 font-bold">Risk: {doc.risk_rating}</span>}
-                          {doc.ai_confidence_score != null && <span className="text-[9px] text-blue-400 font-bold">AI: {doc.ai_confidence_score}%</span>}
+                          <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${doc.status==='approved'?'text-emerald-600 bg-emerald-50 border-emerald-200':doc.status==='rejected'?'text-red-600 bg-red-50 border-red-200':'text-amber-600 bg-amber-50 border-amber-200'}`}>{doc.status?.replace(/_/g,' ')}</span>
+                          {doc.risk_rating && <span className="text-[9px] text-slate-500 font-bold">Risk: {doc.risk_rating}</span>}
+                          {doc.ai_confidence_score != null && <span className="text-[9px] text-blue-600 font-bold">AI: {doc.ai_confidence_score}%</span>}
                         </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {[['Nationality', doc.nationality], ['ID Type', doc.id_type], ['Income', doc.monthly_income_usd ? fmtUSD(doc.monthly_income_usd)+'/mo' : '—'], ['PEP', doc.politically_exposed_person ? '⚠️ YES' : 'No']].map(([l,v]) => (
-                          <div key={l} className="bg-slate-800/50 rounded-xl p-2">
+                          <div key={l} className="bg-slate-50 rounded-xl p-2">
                             <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
-                            <p className="text-xs font-bold text-white">{v || '—'}</p>
+                            <p className="text-xs font-bold text-slate-900">{v || '—'}</p>
                           </div>
                         ))}
                       </div>
                       {doc.ai_flags?.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {doc.ai_flags.map(f => <span key={f} className="text-[9px] font-black uppercase text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
+                          {doc.ai_flags.map(f => <span key={f} className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
                         </div>
                       )}
                       <div className="flex flex-wrap gap-2">
@@ -1800,24 +1800,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           ['Board Resolution', doc.board_resolution_url],
                         ].filter(([,url]) => url).map(([label, url]) => (
                           <a key={label} href={url} target="_blank" rel="noreferrer"
-                            className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-3 py-1.5 rounded-lg hover:bg-blue-900/40 flex items-center gap-1">
+                            className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 flex items-center gap-1">
                             <Eye size={10}/>{label}
                           </a>
                         ))}
                       </div>
                       {doc.status !== 'approved' && doc.status !== 'rejected' && (
-                        <div className="flex gap-3 pt-2 border-t border-slate-800">
-                          <input id={`docnote-${doc.id}`} className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 outline-none" placeholder="Notes..." />
+                        <div className="flex gap-3 pt-2 border-t border-slate-200">
+                          <input id={`docnote-${doc.id}`} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none" placeholder="Notes..." />
                           <button onClick={() => handleKycAction(doc.user_id, 'approved', document.getElementById(`docnote-${doc.id}`)?.value)}
                             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
                             <CheckCircle size={12}/> Approve
                           </button>
                           <button onClick={() => handleKycAction(doc.user_id, 'needs_more_info', document.getElementById(`docnote-${doc.id}`)?.value)}
-                            className="px-4 py-2 bg-amber-600/30 border border-amber-700/40 text-amber-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            className="px-4 py-2 bg-amber-600/30 border border-amber-200 text-amber-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
                             <AlertTriangle size={12}/> More Info
                           </button>
                           <button onClick={() => handleKycAction(doc.user_id, 'rejected', document.getElementById(`docnote-${doc.id}`)?.value)}
-                            className="px-4 py-2 bg-red-900/40 border border-red-700/40 text-red-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
                             <X size={12}/> Reject
                           </button>
                         </div>
@@ -1833,21 +1833,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'transactions' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <h2 className="text-2xl font-black text-white">All Transactions</h2>
+                <h2 className="text-2xl font-black text-slate-900">All Transactions</h2>
                 <div className="flex items-center gap-3">
                   <input value={txSearch} onChange={e => setTxSearch(e.target.value)} placeholder="Search user / type / status..."
-                    className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder:text-slate-500 outline-none w-56" />
-                  <button onClick={loadTransactions} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none w-56" />
+                  <button onClick={loadTransactions} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
               </div>
               {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b border-slate-800 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                        <tr className="border-b border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-500">
                           {['Source','User','Type','Amount','Currency','Status','Date','Notes'].map(h => (
                             <th key={h} className="px-4 py-3 text-left">{h}</th>
                           ))}
@@ -1855,13 +1855,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       </thead>
                       <tbody>
                         {transactions.filter(t => !txSearch || [t.user_email,t.user_name,t.tx_type,t.status,t.source].join(' ').toLowerCase().includes(txSearch.toLowerCase())).map((tx, i) => (
-                          <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                            <td className="px-4 py-3"><span className="text-[9px] font-black uppercase text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded">{tx.source?.replace(/_/g,' ')}</span></td>
-                            <td className="px-4 py-3"><p className="font-bold text-white">{tx.user_name || '—'}</p><p className="text-slate-500 text-[10px]">{tx.user_email}</p></td>
-                            <td className="px-4 py-3 text-slate-300 font-bold">{tx.tx_type?.replace(/_/g,' ')}</td>
-                            <td className="px-4 py-3 font-black text-white">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
-                            <td className="px-4 py-3 text-slate-400">{tx.currency}</td>
-                            <td className="px-4 py-3"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-400':'tx.status==="failed"||tx.status==="rejected"'?'text-red-400':'text-amber-400'}`}>{tx.status}</span></td>
+                          <tr key={i} className="border-b border-slate-200 hover:bg-slate-100 transition-colors">
+                            <td className="px-4 py-3"><span className="text-[9px] font-black uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{tx.source?.replace(/_/g,' ')}</span></td>
+                            <td className="px-4 py-3"><p className="font-bold text-slate-900">{tx.user_name || '—'}</p><p className="text-slate-500 text-[10px]">{tx.user_email}</p></td>
+                            <td className="px-4 py-3 text-slate-600 font-bold">{tx.tx_type?.replace(/_/g,' ')}</td>
+                            <td className="px-4 py-3 font-black text-slate-900">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
+                            <td className="px-4 py-3 text-slate-500">{tx.currency}</td>
+                            <td className="px-4 py-3"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-600':'tx.status==="failed"||tx.status==="rejected"'?'text-red-600':'text-amber-600'}`}>{tx.status}</span></td>
                             <td className="px-4 py-3 text-slate-500">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '—'}</td>
                             <td className="px-4 py-3 text-slate-500 max-w-[120px] truncate">{tx.notes || '—'}</td>
                           </tr>
@@ -1879,29 +1879,29 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'finance' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">Finance & P2P Orders</h2>
-                <button onClick={loadP2p} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-black text-slate-900">Finance & P2P Orders</h2>
+                <button onClick={loadP2p} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
               {loading ? <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={28}/></div> : (
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead><tr className="border-b border-slate-800">
+                      <thead><tr className="border-b border-slate-200">
                         {['Order ID', 'User', 'Type', 'Amount', 'Payment Method', 'Status', 'Created'].map(h => (
                           <th key={h} className="p-4 text-left text-[9px] font-black uppercase tracking-widest text-slate-500">{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
                         {p2pOrders.map(order => (
-                          <tr key={order.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                            <td className="p-4 font-mono text-xs text-slate-400">{order.id?.slice(0,8)}</td>
-                            <td className="p-4 text-xs text-white font-bold">{order.profiles?.full_name || order.profiles?.email || '—'}</td>
-                            <td className="p-4"><span className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 px-2 py-1 rounded-full">{order.order_type}</span></td>
-                            <td className="p-4 font-black text-white">{fmtUSD(order.amount_usd)}</td>
-                            <td className="p-4 text-xs text-slate-400 max-w-32 truncate">{order.payment_method}</td>
-                            <td className="p-4"><span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${order.status === 'open' ? 'bg-amber-900/40 text-amber-400' : 'bg-blue-900/40 text-blue-400'}`}>{order.status}</span></td>
+                          <tr key={order.id} className="border-b border-slate-200 hover:bg-slate-100 transition-colors">
+                            <td className="p-4 font-mono text-xs text-slate-500">{order.id?.slice(0,8)}</td>
+                            <td className="p-4 text-xs text-slate-900 font-bold">{order.profiles?.full_name || order.profiles?.email || '—'}</td>
+                            <td className="p-4"><span className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{order.order_type}</span></td>
+                            <td className="p-4 font-black text-slate-900">{fmtUSD(order.amount_usd)}</td>
+                            <td className="p-4 text-xs text-slate-500 max-w-32 truncate">{order.payment_method}</td>
+                            <td className="p-4"><span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${order.status === 'open' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{order.status}</span></td>
                             <td className="p-4 text-xs text-slate-500">{new Date(order.created_at).toLocaleDateString()}</td>
                           </tr>
                         ))}
@@ -1918,10 +1918,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'applications' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <h2 className="text-2xl font-black text-white">IFB Entrepreneur Applications</h2>
+                <h2 className="text-2xl font-black text-slate-900">IFB Entrepreneur Applications</h2>
                 <div className="flex items-center gap-3 flex-wrap">
                   <select value={appFilter} onChange={e => setAppFilter(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
                     <option value="">All Statuses</option>
                     {Object.entries(APP_STATUS_META).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
@@ -1929,7 +1929,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl">
                     <Plus size={12}/> Create for User
                   </button>
-                  <button onClick={loadApplications} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                  <button onClick={loadApplications} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
@@ -1937,14 +1937,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
               {/* Create Application Panel */}
               {showCreateApp && (
-                <div className="bg-slate-900 border border-indigo-700/40 rounded-3xl p-6 space-y-5">
-                  <h3 className="font-black text-white text-sm">Register Application on Behalf of User</h3>
+                <div className="bg-white border border-indigo-200 rounded-3xl p-6 space-y-5">
+                  <h3 className="font-black text-slate-900 text-sm">Register Application on Behalf of User</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-3">
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">User ID (UUID) *</label>
                       <input value={appForm.user_id} onChange={e => setAppForm(f=>({...f,user_id:e.target.value}))}
                         placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500 font-mono" />
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 font-mono" />
                     </div>
                     {[['company_name','Company Name *','text'],['sector','Sector','text'],['country','Country','text'],
                       ['capital_ask_usd','Capital Ask (USD)','number'],['annual_revenue_usd','Annual Revenue (USD)','number'],
@@ -1952,13 +1952,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <div key={key}>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
                         <input type={type} value={appForm[key]} onChange={e => setAppForm(f=>({...f,[key]:e.target.value}))}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500" />
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500" />
                       </div>
                     ))}
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Stage</label>
                       <select value={appForm.stage} onChange={e => setAppForm(f=>({...f,stage:e.target.value}))}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
                         {['idea','pre_revenue','early','growth','scale'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
@@ -1967,21 +1967,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <select value={appForm.package_id} onChange={e => {
                         const pkg = PACKAGES_META[e.target.value];
                         setAppForm(f=>({...f, package_id:e.target.value, package_name:pkg?.name||e.target.value, package_price_usd:pkg?.price||0}));
-                      }} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                      }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
                         {Object.entries(PACKAGES_META).map(([k,v]) => <option key={k} value={k}>{v.name} (${v.price})</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Initial Status</label>
                       <select value={appForm.status} onChange={e => setAppForm(f=>({...f,status:e.target.value}))}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
                         {Object.entries(APP_STATUS_META).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Payment Status</label>
                       <select value={appForm.payment_status} onChange={e => setAppForm(f=>({...f,payment_status:e.target.value}))}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
                         {['admin_created','paid','refunded','waived'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
@@ -1989,30 +1989,30 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Assign Advisor</label>
                       <input value={appForm.assigned_advisor} onChange={e => setAppForm(f=>({...f,assigned_advisor:e.target.value}))}
                         placeholder="Advisor name or email"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500" />
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Problem Statement</label>
                     <textarea value={appForm.problem_statement} onChange={e => setAppForm(f=>({...f,problem_statement:e.target.value}))}
-                      rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none" />
+                      rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none resize-none" />
                   </div>
                   <div>
                     <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Solution Statement</label>
                     <textarea value={appForm.solution_statement} onChange={e => setAppForm(f=>({...f,solution_statement:e.target.value}))}
-                      rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none" />
+                      rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none resize-none" />
                   </div>
                   <div>
                     <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Internal Notes</label>
                     <textarea value={appForm.notes} onChange={e => setAppForm(f=>({...f,notes:e.target.value}))}
-                      rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none" />
+                      rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none resize-none" />
                   </div>
                   <div className="flex gap-3">
                     <button onClick={handleCreateApp} disabled={creatingApp || !appForm.user_id || !appForm.company_name}
                       className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
                       {creatingApp ? <Loader2 size={14} className="animate-spin"/> : <Rocket size={14}/>} Submit Application
                     </button>
-                    <button onClick={() => setShowCreateApp(false)} className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    <button onClick={() => setShowCreateApp(false)} className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest rounded-xl">
                       Cancel
                     </button>
                   </div>
@@ -2030,18 +2030,18 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           const pkgMeta = PACKAGES_META[app.package_id];
                           return (
                             <button key={app.id} onClick={() => { setAppDetail(app); setAppAdvisor(app.assigned_advisor||''); setAppNotes(app.notes||''); }}
-                              className={`w-full text-left p-5 rounded-2xl border transition-all hover:border-indigo-600 ${appDetail?.id===app.id?'border-indigo-600 bg-indigo-950/20':'border-slate-800 bg-slate-900'}`}>
+                              className={`w-full text-left p-5 rounded-2xl border transition-all hover:border-indigo-600 ${appDetail?.id===app.id?'border-indigo-600 bg-indigo-50':'border-slate-200 bg-white'}`}>
                               <div className="flex items-start justify-between gap-2 mb-1">
                                 <div>
-                                  <p className="font-black text-white text-sm">{app.company_name}</p>
-                                  <p className="text-xs text-slate-400">{app.user_full_name} · {app.user_email}</p>
+                                  <p className="font-black text-slate-900 text-sm">{app.company_name}</p>
+                                  <p className="text-xs text-slate-500">{app.user_full_name} · {app.user_email}</p>
                                 </div>
                                 <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border shrink-0 ${statusMeta.cls}`}>{statusMeta.label}</span>
                               </div>
                               <div className="flex items-center gap-3 mt-2">
-                                <span className={`text-[9px] font-black ${pkgMeta?.color||'text-slate-400'}`}>{app.package_name}</span>
+                                <span className={`text-[9px] font-black ${pkgMeta?.color||'text-slate-500'}`}>{app.package_name}</span>
                                 <span className="text-[9px] text-slate-500">{app.sector} · {app.country}</span>
-                                {app.assigned_advisor && <span className="text-[9px] text-emerald-400">⚙ {app.assigned_advisor}</span>}
+                                {app.assigned_advisor && <span className="text-[9px] text-emerald-600">⚙ {app.assigned_advisor}</span>}
                               </div>
                               <p className="text-[9px] text-slate-600 mt-1">{new Date(app.created_at).toLocaleString()}</p>
                             </button>
@@ -2052,10 +2052,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                   {/* Detail panel */}
                   {appDetail ? (
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-                      <div className="p-5 border-b border-slate-800">
-                        <p className="font-black text-white">{appDetail.company_name}</p>
-                        <p className="text-xs text-slate-400">{appDetail.user_full_name} · {appDetail.user_email}</p>
+                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden">
+                      <div className="p-5 border-b border-slate-200">
+                        <p className="font-black text-slate-900">{appDetail.company_name}</p>
+                        <p className="text-xs text-slate-500">{appDetail.user_full_name} · {appDetail.user_email}</p>
                       </div>
                       <div className="p-5 space-y-4 overflow-y-auto max-h-[70vh]">
                         {/* Info grid */}
@@ -2071,20 +2071,20 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             ['Total Paid', fmtUSD(appDetail.total_paid_usd)],
                             ['Payment', appDetail.payment_status],
                           ].map(([l,v]) => (
-                            <div key={l} className="bg-slate-800/50 rounded-xl p-2.5">
+                            <div key={l} className="bg-slate-50 rounded-xl p-2.5">
                               <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
-                              <p className="text-xs font-bold text-white">{v||'—'}</p>
+                              <p className="text-xs font-bold text-slate-900">{v||'—'}</p>
                             </div>
                           ))}
                         </div>
                         {appDetail.problem_statement && (
-                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Problem</p><p className="text-xs text-slate-300 leading-relaxed">{appDetail.problem_statement}</p></div>
+                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Problem</p><p className="text-xs text-slate-600 leading-relaxed">{appDetail.problem_statement}</p></div>
                         )}
                         {appDetail.solution_statement && (
-                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Solution</p><p className="text-xs text-slate-300 leading-relaxed">{appDetail.solution_statement}</p></div>
+                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Solution</p><p className="text-xs text-slate-600 leading-relaxed">{appDetail.solution_statement}</p></div>
                         )}
                         {appDetail.website && (
-                          <a href={appDetail.website} target="_blank" rel="noreferrer" className="text-xs text-blue-400 underline">{appDetail.website}</a>
+                          <a href={appDetail.website} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">{appDetail.website}</a>
                         )}
 
                         {/* Status buttons */}
@@ -2093,7 +2093,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="flex flex-wrap gap-2">
                             {Object.entries(APP_STATUS_META).map(([k,v]) => (
                               <button key={k} onClick={() => handleAppUpdate(appDetail.id, k, null, null)}
-                                className={`px-3 py-1.5 border font-black text-[9px] uppercase rounded-xl transition-colors ${appDetail.status===k?v.cls:'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'}`}>
+                                className={`px-3 py-1.5 border font-black text-[9px] uppercase rounded-xl transition-colors ${appDetail.status===k?v.cls:'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
                                 {v.label}
                               </button>
                             ))}
@@ -2106,7 +2106,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="flex gap-2">
                             <input value={appAdvisor} onChange={e => setAppAdvisor(e.target.value)}
                               placeholder="Name or email"
-                              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500" />
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-500" />
                             <button onClick={() => handleAppUpdate(appDetail.id, null, appAdvisor, null)}
                               className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase rounded-xl">
                               Assign
@@ -2118,16 +2118,16 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         <div>
                           <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Internal Notes</label>
                           <textarea value={appNotes} onChange={e => setAppNotes(e.target.value)} rows={3}
-                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none resize-none" />
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none resize-none" />
                           <button onClick={() => handleAppUpdate(appDetail.id, null, null, appNotes)}
-                            className="mt-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            className="mt-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
                             <Save size={12}/> Save Notes
                           </button>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-slate-900 border border-slate-800 rounded-3xl flex items-center justify-center text-slate-600 font-bold text-sm h-64">
+                    <div className="bg-white border border-slate-200 rounded-3xl flex items-center justify-center text-slate-600 font-bold text-sm h-64">
                       Select an application to manage
                     </div>
                   )}
@@ -2140,8 +2140,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'support' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">Support Tickets</h2>
-                <button onClick={loadTickets} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-black text-slate-900">Support Tickets</h2>
+                <button onClick={loadTickets} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
@@ -2152,15 +2152,15 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     tickets.length === 0 ? <div className="text-center py-12 text-slate-500 font-bold">No open tickets.</div> :
                     tickets.map(ticket => (
                       <button key={ticket.id} onClick={() => setSelectedTicket(ticket)}
-                        className={`w-full text-left p-5 rounded-2xl border transition-all hover:border-blue-600 ${selectedTicket?.id === ticket.id ? 'border-blue-600 bg-blue-950/20' : 'border-slate-800 bg-slate-900'}`}>
+                        className={`w-full text-left p-5 rounded-2xl border transition-all hover:border-blue-600 ${selectedTicket?.id === ticket.id ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white'}`}>
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div>
-                            <p className="font-black text-white text-sm">{ticket.user_full_name || '—'}</p>
-                            <p className="text-xs text-slate-400">{ticket.user_email}</p>
+                            <p className="font-black text-slate-900 text-sm">{ticket.user_full_name || '—'}</p>
+                            <p className="text-xs text-slate-500">{ticket.user_email}</p>
                           </div>
-                          <span className="text-[9px] font-black uppercase text-red-400 bg-red-900/30 px-2 py-1 rounded-full shrink-0">Open</span>
+                          <span className="text-[9px] font-black uppercase text-red-600 bg-red-50 px-2 py-1 rounded-full shrink-0">Open</span>
                         </div>
-                        {ticket.subject && <p className="text-xs text-slate-400 truncate">{ticket.subject}</p>}
+                        {ticket.subject && <p className="text-xs text-slate-500 truncate">{ticket.subject}</p>}
                         <p className="text-[9px] text-slate-600 mt-1">{new Date(ticket.created_at).toLocaleString()}</p>
                       </button>
                     ))
@@ -2169,23 +2169,23 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                 {/* Ticket conversation panel */}
                 {selectedTicket ? (
-                  <div className="bg-slate-900 border border-slate-800 rounded-3xl flex flex-col h-[600px]">
-                    <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                  <div className="bg-white border border-slate-200 rounded-3xl flex flex-col h-[600px]">
+                    <div className="p-5 border-b border-slate-200 flex items-center justify-between">
                       <div>
-                        <p className="font-black text-white">{selectedTicket.user_full_name || '—'}</p>
-                        <p className="text-xs text-slate-400">{selectedTicket.user_email}</p>
+                        <p className="font-black text-slate-900">{selectedTicket.user_full_name || '—'}</p>
+                        <p className="text-xs text-slate-500">{selectedTicket.user_email}</p>
                       </div>
                       <button onClick={() => handleCloseTicket(selectedTicket.id)}
-                        className="px-3 py-1.5 bg-emerald-900/40 border border-emerald-700/40 text-emerald-400 font-black text-[9px] uppercase rounded-lg hover:bg-emerald-900/60 transition-colors">
+                        className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 font-black text-[9px] uppercase rounded-lg hover:bg-emerald-50 transition-colors">
                         Close Ticket
                       </button>
                     </div>
                     <TicketMessages ticketId={selectedTicket.id} session={session}/>
-                    <div className="p-4 border-t border-slate-800 flex gap-3">
+                    <div className="p-4 border-t border-slate-200 flex gap-3">
                       <input value={ticketReply} onChange={e => setTicketReply(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleTicketReply()}
                         placeholder="Reply to user..."
-                        className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white font-medium outline-none focus:border-blue-500 transition-colors"/>
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-medium outline-none focus:border-blue-500 transition-colors"/>
                       <button onClick={handleTicketReply} disabled={!ticketReply.trim() || sendingReply}
                         className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black rounded-xl transition-colors flex items-center gap-2">
                         {sendingReply ? <Loader2 size={14} className="animate-spin"/> : <Send size={14}/>}
@@ -2193,7 +2193,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-slate-900 border border-slate-800 rounded-3xl flex items-center justify-center text-slate-600 font-bold text-sm h-[300px]">
+                  <div className="bg-white border border-slate-200 rounded-3xl flex items-center justify-center text-slate-600 font-bold text-sm h-[300px]">
                     Select a ticket to view conversation
                   </div>
                 )}
@@ -2205,50 +2205,50 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'venturex' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <h2 className="text-2xl font-black text-white">VentureX Management</h2>
+                <h2 className="text-2xl font-black text-slate-900">VentureX Management</h2>
                 <div className="flex items-center gap-3">
                   <select value={vtxFilter} onChange={e => setVtxFilter(e.target.value)}
-                    className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
                     <option value="">All Statuses</option>
                     {['draft','active','suspended','pending_review','rejected'].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
-                  <button onClick={loadVentureX} className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                  <button onClick={loadVentureX} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
               </div>
 
               {/* ── QUICK PROSPECT SEND ── */}
-              <details className="bg-violet-950/30 border border-violet-800/40 rounded-2xl">
-                <summary className="px-6 py-4 cursor-pointer font-black text-violet-300 text-sm flex items-center gap-2">
+              <details className="bg-violet-50 border border-violet-200 rounded-2xl">
+                <summary className="px-6 py-4 cursor-pointer font-black text-violet-600 text-sm flex items-center gap-2">
                   <Send size={14}/> Send Report to Prospect (account may or may not exist)
                 </summary>
-                <div className="px-6 pb-6 pt-4 border-t border-violet-800/30 space-y-4">
+                <div className="px-6 pb-6 pt-4 border-t border-violet-200 space-y-4">
                   <p className="text-[10px] text-violet-400/70 font-bold">Enter name + email + org name — IFB will automatically find or create their account, create their company profile, send an in-app notification, and email them the full readiness report with a Pay & Start link.</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {[['full_name','Full Name','text'],['email','Email Address','email'],['company_name','Organization / Company Name','text'],['sector','Sector (optional)','text'],['country','Country (optional)','text']].map(([k,ph,t]) => (
                       <div key={k}>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
                         <input type={t} value={prospectForm[k]} onChange={e => setProspectForm(f => ({...f, [k]: e.target.value}))}
-                          className="w-full bg-slate-800 border border-slate-700 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-white outline-none" />
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none" />
                       </div>
                     ))}
                     <div className="md:col-span-2">
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Estimated Cost Range (USD)</label>
                       <div className="flex gap-2 items-center">
                         <input type="number" value={prospectForm.cost_min} onChange={e => setProspectForm(f => ({...f, cost_min: parseInt(e.target.value)||0}))}
-                          className="w-full bg-slate-800 border border-slate-700 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-white outline-none" placeholder="Min" />
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none" placeholder="Min" />
                         <span className="text-slate-500 font-black">–</span>
                         <input type="number" value={prospectForm.cost_max} onChange={e => setProspectForm(f => ({...f, cost_max: parseInt(e.target.value)||0}))}
-                          className="w-full bg-slate-800 border border-slate-700 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-white outline-none" placeholder="Max" />
+                          className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none" placeholder="Max" />
                       </div>
                     </div>
                   </div>
 
                   {prospectResult && (
-                    <div className="bg-slate-900 border border-emerald-700/40 rounded-xl px-4 py-3 space-y-1">
-                      <p className="text-emerald-400 font-black text-xs">{prospectResult.message}</p>
-                      <div className="flex flex-wrap gap-3 text-[9px] font-bold text-slate-400">
+                    <div className="bg-white border border-emerald-200 rounded-xl px-4 py-3 space-y-1">
+                      <p className="text-emerald-600 font-black text-xs">{prospectResult.message}</p>
+                      <div className="flex flex-wrap gap-3 text-[9px] font-bold text-slate-500">
                         <span>{prospectResult.created_user ? '🆕 New account created' : '✓ Existing account found'}</span>
                         <span>{prospectResult.created_company ? '🆕 Company profile created' : '✓ Existing company found'}</span>
                         <span>{prospectResult.email_sent ? '📧 Email sent' : '⚠ Email failed (check Resend key)'}</span>
@@ -2265,31 +2265,31 @@ export default function AdminDashboard({ session, profile, onClose }) {
               </details>
 
               {/* Create company on behalf */}
-              <details className="bg-slate-900 border border-slate-800 rounded-2xl">
-                <summary className="px-6 py-4 cursor-pointer font-black text-slate-300 text-sm flex items-center gap-2"><Plus size={14}/> Register Company on Behalf of User</summary>
-                <div className="px-6 pb-6 space-y-4 border-t border-slate-800 pt-4">
+              <details className="bg-white border border-slate-200 rounded-2xl">
+                <summary className="px-6 py-4 cursor-pointer font-black text-slate-600 text-sm flex items-center gap-2"><Plus size={14}/> Register Company on Behalf of User</summary>
+                <div className="px-6 pb-6 space-y-4 border-t border-slate-200 pt-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {[['vtx_uid','User ID (UUID)','text'],['vtx_name','Legal Company Name','text'],['vtx_reg','Registration Number','text'],['vtx_sector','Sector','text'],['vtx_country','Country','text'],['vtx_goal','Funding Goal (USD)','number'],['vtx_raised','Total Raised (USD)','number'],['vtx_valuation','Valuation (USD)','number'],['vtx_teamsize','Team Size','number'],['vtx_website','Website','text'],['vtx_tagline','Tagline','text']].map(([id,ph,type]) => (
                       <div key={id}>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
-                        <input id={id} type={type} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500" />
+                        <input id={id} type={type} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500" />
                       </div>
                     ))}
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Stage</label>
-                      <select id="vtx_stage" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <select id="vtx_stage" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
                         {VTX_STAGES.map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Current Round</label>
-                      <select id="vtx_round" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <select id="vtx_round" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
                         {['pre-seed','seed','series-a','series-b','series-c','ipo'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Initial Status</label>
-                      <select id="vtx_status" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                      <select id="vtx_status" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
                         {['draft','active','pending_review'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
@@ -2298,7 +2298,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {[['vtx_problem','Problem Statement'],['vtx_solution','Solution Statement'],['vtx_competitive','Competitive Advantage'],['vtx_hiring','Hiring Plan']].map(([id,ph]) => (
                       <div key={id}>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
-                        <textarea id={id} rows={2} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none resize-none" />
+                        <textarea id={id} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none resize-none" />
                       </div>
                     ))}
                   </div>
@@ -2331,28 +2331,28 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     const isProgressOpen = vtxProgressOpen.has(co.id);
                     const cr = computeCapitalReadiness(co);
                     return (
-                      <div key={co.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                      <div key={co.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                         {/* Header row */}
                         <div className="p-5 flex flex-col md:flex-row gap-4">
                           <div className="flex-1 space-y-2">
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="font-black text-white">{co.legal_name}</p>
+                                  <p className="font-black text-slate-900">{co.legal_name}</p>
                                   <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${cr.lv.badge}`}>Lv.{cr.lv.n} {cr.lv.label}</span>
                                   <span className="text-[9px] font-black text-slate-500">{cr.pct}% ready · {cr.missing.length} missing</span>
                                 </div>
-                                <p className="text-xs text-slate-400">{co.user_full_name} · {co.user_email}</p>
+                                <p className="text-xs text-slate-500">{co.user_full_name} · {co.user_email}</p>
                                 <p className="text-[10px] text-slate-500">{co.sector} · {co.country}</p>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-900/40 text-emerald-400':co.status==='rejected'?'bg-red-900/40 text-red-400':'bg-slate-700 text-slate-400'}`}>{co.status}</span>
+                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-50 text-emerald-600':co.status==='rejected'?'bg-red-50 text-red-600':'bg-slate-100 text-slate-500'}`}>{co.status}</span>
                                 <button onClick={() => { setVtxEditId(isEditing ? null : co.id); setVtxEdits({}); }}
-                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isEditing?'bg-blue-600 border-blue-500 text-white':'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'}`}>
+                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isEditing?'bg-blue-600 border-blue-500 text-white':'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
                                   <Pencil size={10}/> {isEditing ? 'Cancel' : 'Edit'}
                                 </button>
                                 <button onClick={() => setVtxProgressOpen(s => { const n = new Set(s); isProgressOpen ? n.delete(co.id) : n.add(co.id); return n; })}
-                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isProgressOpen?'bg-violet-600 border-violet-500 text-white':'bg-slate-800 border-slate-700 text-slate-400 hover:border-violet-600'}`}>
+                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isProgressOpen?'bg-violet-600 border-violet-500 text-white':'bg-slate-50 border-slate-200 text-slate-500 hover:border-violet-600'}`}>
                                   <Activity size={10}/> {isProgressOpen ? 'Hide' : 'Readiness'}
                                 </button>
                               </div>
@@ -2363,40 +2363,40 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 ['Raised', co.total_raised?fmtUSD(co.total_raised):'—'],['Valuation', co.valuation?fmtUSD(co.valuation):'—'],
                                 ['AI Score', co.investment_readiness_score!=null?`${co.investment_readiness_score}%`:'—'],
                                 ['KYC', co.user_kyc_status||'—'],
-                              ].map(([l,v]) => <div key={l} className="bg-slate-800/50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-white">{v}</p></div>)}
+                              ].map(([l,v]) => <div key={l} className="bg-slate-50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-slate-900">{v}</p></div>)}
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {[['Financial', co.financial_verified],['Identity', co.identity_verified],['Traction', co.traction_verified],['Public', co.is_public]].map(([l,v]) => (
-                                <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-400 border-emerald-700/40':'text-slate-500 border-slate-700'}`}>{l}: {v?'✓':'✗'}</span>
+                                <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-600 border-emerald-200':'text-slate-500 border-slate-200'}`}>{l}: {v?'✓':'✗'}</span>
                               ))}
                             </div>
                           </div>
                           {/* Quick action column */}
                           <div className="flex md:flex-col gap-2 md:w-40 shrink-0">
                             {[
-                              { label:'Activate', status:'active', cls:'bg-emerald-600/30 text-emerald-400 border-emerald-700/40' },
-                              { label:'Suspend', status:'suspended', cls:'bg-red-900/30 text-red-400 border-red-700/40' },
-                              { label:'Review', status:'pending_review', cls:'bg-amber-900/30 text-amber-400 border-amber-700/40' },
-                              { label:'Reject', status:'rejected', cls:'bg-red-900/50 text-red-400 border-red-700/40' },
+                              { label:'Activate', status:'active', cls:'bg-emerald-600/30 text-emerald-600 border-emerald-200' },
+                              { label:'Suspend', status:'suspended', cls:'bg-red-50 text-red-600 border-red-200' },
+                              { label:'Review', status:'pending_review', cls:'bg-amber-50 text-amber-600 border-amber-200' },
+                              { label:'Reject', status:'rejected', cls:'bg-red-50 text-red-600 border-red-200' },
                             ].map(({ label, status, cls }) => (
                               <button key={status} onClick={() => handleVxStatus(co.id, status)}
                                 className={`flex-1 md:flex-none py-2 px-3 border font-black text-[9px] uppercase tracking-widest rounded-xl transition-colors ${cls}`}>{label}</button>
                             ))}
-                            <div className="border-t border-slate-800 pt-2 space-y-1">
+                            <div className="border-t border-slate-200 pt-2 space-y-1">
                               {[['financial_verified','Financial'],['identity_verified','Identity'],['traction_verified','Traction'],['is_public','Public']].map(([field, label]) => (
                                 <button key={field} onClick={async () => {
                                   const args = { p_company_id: co.id, p_status: null, p_financial_verified: null, p_identity_verified: null, p_traction_verified: null, p_is_public: null, p_investment_readiness_score: null };
                                   args[`p_${field}`] = !co[field];
                                   const { error } = await supabase.rpc('admin_update_venturex_company', args);
                                   if (error) notify(error.message, 'error'); else { notify(`${label} toggled`); loadVentureX(); }
-                                }} className={`w-full py-1.5 px-2 border font-black text-[8px] uppercase rounded-lg transition-colors ${co[field]?'bg-emerald-900/20 text-emerald-400 border-emerald-700/30':'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                                }} className={`w-full py-1.5 px-2 border font-black text-[8px] uppercase rounded-lg transition-colors ${co[field]?'bg-emerald-50 text-emerald-600 border-emerald-200':'bg-slate-50 text-slate-500 border-slate-200'}`}>
                                   {co[field]?'✓':''} {label}
                                 </button>
                               ))}
                             </div>
-                            <div className="border-t border-slate-700 pt-2">
+                            <div className="border-t border-slate-200 pt-2">
                               <button onClick={() => handleSendProgressReport(co)} disabled={!!vtxSendingReport[co.id]}
-                                className="w-full py-2 px-2 border border-violet-700/40 bg-violet-900/20 hover:bg-violet-900/40 text-violet-400 font-black text-[8px] uppercase rounded-lg flex items-center justify-center gap-1 disabled:opacity-50">
+                                className="w-full py-2 px-2 border border-violet-200 bg-violet-50 hover:bg-violet-50 text-violet-600 font-black text-[8px] uppercase rounded-lg flex items-center justify-center gap-1 disabled:opacity-50">
                                 {vtxSendingReport[co.id] ? <Loader2 size={9} className="animate-spin"/> : <Send size={9}/>}
                                 Send Report
                               </button>
@@ -2406,17 +2406,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                         {/* ── CAPITAL READINESS PANEL ── */}
                         {isProgressOpen && (
-                          <div className="border-t border-violet-900/40 p-5 space-y-5 bg-violet-950/20">
+                          <div className="border-t border-violet-200 p-5 space-y-5 bg-violet-50">
                             <div className="flex items-center justify-between flex-wrap gap-3">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-400">Capital Readiness — {co.legal_name}</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-600">Capital Readiness — {co.legal_name}</p>
                               <div className="flex items-center gap-3">
                                 <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border ${cr.lv.badge}`}>Level {cr.lv.n}/5 · {cr.lv.label}</span>
-                                <span className="text-[9px] text-slate-400 font-bold">{cr.metCount}/{cr.total} complete</span>
+                                <span className="text-[9px] text-slate-500 font-bold">{cr.metCount}/{cr.total} complete</span>
                               </div>
                             </div>
                             {/* Progress bar */}
                             <div className="space-y-1">
-                              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-2 bg-slate-50 rounded-full overflow-hidden">
                                 <div className={`h-full rounded-full transition-all ${cr.lv.bar}`} style={{ width: `${cr.pct}%` }}/>
                               </div>
                               <p className="text-[9px] text-slate-500 font-bold">Next milestone: {cr.fundingPhase}</p>
@@ -2426,10 +2426,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Documentation & Verification Checklist</p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                                 {cr.checklist.map(item => (
-                                  <div key={item.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-bold ${item.met ? 'bg-emerald-900/20 border-emerald-800/40 text-emerald-300' : 'bg-slate-800/60 border-slate-700/60 text-slate-400'}`}>
-                                    <span className={`text-[11px] shrink-0 ${item.met ? 'text-emerald-400' : 'text-red-400'}`}>{item.met ? '✓' : '✗'}</span>
+                                  <div key={item.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-bold ${item.met ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                                    <span className={`text-[11px] shrink-0 ${item.met ? 'text-emerald-600' : 'text-red-600'}`}>{item.met ? '✓' : '✗'}</span>
                                     <span className="leading-tight">{item.label}</span>
-                                    <span className={`ml-auto text-[8px] font-black shrink-0 px-1.5 py-0.5 rounded border ${item.met ? 'text-emerald-600 border-emerald-800/40' : 'text-slate-600 border-slate-700'}`}>{item.ws}</span>
+                                    <span className={`ml-auto text-[8px] font-black shrink-0 px-1.5 py-0.5 rounded border ${item.met ? 'text-emerald-600 border-emerald-200' : 'text-slate-600 border-slate-200'}`}>{item.ws}</span>
                                   </div>
                                 ))}
                               </div>
@@ -2439,21 +2439,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <p className="text-[9px] font-black uppercase text-slate-500 mb-2">IFB Workstreams & Support Costs ($30/hr)</p>
                               <div className="space-y-2">
                                 {cr.workstreams.map(ws => (
-                                  <div key={ws.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-[10px] ${ws.complete ? 'bg-emerald-900/15 border-emerald-800/30' : ws.partial ? 'bg-amber-900/15 border-amber-800/30' : 'bg-slate-800/60 border-slate-700/40'}`}>
-                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${ws.complete ? 'bg-emerald-500 text-white' : ws.partial ? 'bg-amber-500 text-white' : 'bg-slate-700 text-slate-300'}`}>{ws.id}</span>
-                                    <span className={`flex-1 font-bold leading-tight ${ws.complete ? 'text-emerald-300' : ws.partial ? 'text-amber-300' : 'text-slate-300'}`}>{ws.label}</span>
+                                  <div key={ws.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-[10px] ${ws.complete ? 'bg-emerald-50 border-emerald-200' : ws.partial ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${ws.complete ? 'bg-emerald-500 text-white' : ws.partial ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600'}`}>{ws.id}</span>
+                                    <span className={`flex-1 font-bold leading-tight ${ws.complete ? 'text-emerald-600' : ws.partial ? 'text-amber-600' : 'text-slate-600'}`}>{ws.label}</span>
                                     <span className={`text-[9px] font-black shrink-0 ${ws.complete ? 'text-emerald-500' : 'text-slate-500'}`}>{ws.complete ? '✓ Done' : `${ws.hMin}–${ws.hMax}h · $${ws.cMin.toLocaleString()}–$${ws.cMax.toLocaleString()}`}</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
                             {/* Cost summary + send */}
-                            <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-violet-900/30">
+                            <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-violet-200">
                               <div>
                                 {cr.incomplete.length > 0 ? (
-                                  <p className="text-xs font-black text-white">Remaining investment: <span className="text-violet-400">${cr.totalCostMin.toLocaleString()} – ${cr.totalCostMax.toLocaleString()}</span></p>
+                                  <p className="text-xs font-black text-slate-900">Remaining investment: <span className="text-violet-600">${cr.totalCostMin.toLocaleString()} – ${cr.totalCostMax.toLocaleString()}</span></p>
                                 ) : (
-                                  <p className="text-xs font-black text-emerald-400">All workstreams complete — ready for funding!</p>
+                                  <p className="text-xs font-black text-emerald-600">All workstreams complete — ready for funding!</p>
                                 )}
                                 <p className="text-[9px] text-slate-500">{cr.incomplete.length} workstreams remaining · {cr.missing.length} checklist items missing</p>
                               </div>
@@ -2468,8 +2468,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                         {/* ── FULL EDITOR (expanded when isEditing) ── */}
                         {isEditing && (
-                          <div className="border-t border-slate-700 p-5 space-y-5 bg-slate-800/30">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-400">Full Company Editor — editing {co.legal_name}</p>
+                          <div className="border-t border-slate-200 p-5 space-y-5 bg-slate-50">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Full Company Editor — editing {co.legal_name}</p>
 
                             {/* Core identity */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -2482,20 +2482,20 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div key={field}>
                                   <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
                                   <input type={type} value={ev(field)||''} onChange={e => setEv(field, e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500" />
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-500" />
                                 </div>
                               ))}
                               <div>
                                 <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">Product Stage</label>
                                 <select value={ev('product_stage')||'idea'} onChange={e => setEv('product_stage', e.target.value)}
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
                                   {VTX_STAGES.map(s => <option key={s}>{s}</option>)}
                                 </select>
                               </div>
                               <div>
                                 <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">Current Round</label>
                                 <select value={ev('current_round')||'pre-seed'} onChange={e => setEv('current_round', e.target.value)}
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
                                   {['pre-seed','seed','series-a','series-b','series-c','ipo'].map(s => <option key={s}>{s}</option>)}
                                 </select>
                               </div>
@@ -2514,7 +2514,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div key={field}>
                                   <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
                                   <input type="number" value={ev(field)||0} onChange={e => setEv(field, parseFloat(e.target.value)||0)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500" />
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-500" />
                                 </div>
                               ))}
                             </div>
@@ -2533,7 +2533,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div key={field}>
                                   <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
                                   <input type="number" value={ev(field)||0} onChange={e => setEv(field, parseFloat(e.target.value)||0)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500" />
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-500" />
                                 </div>
                               ))}
                             </div>
@@ -2545,19 +2545,19 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div key={field}>
                                   <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
                                   <textarea value={ev(field)||''} onChange={e => setEv(field, e.target.value)} rows={3}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none resize-none" />
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none resize-none" />
                                 </div>
                               ))}
                             </div>
 
                             {/* Risk */}
                             <p className="text-[9px] font-black uppercase text-slate-500">Risk Levels</p>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               {[['regulatory_risk','Regulatory'],['market_risk','Market'],['execution_risk','Execution']].map(([field,label]) => (
                                 <div key={field}>
                                   <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
                                   <select value={ev(field)||'medium'} onChange={e => setEv(field, e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none">
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
                                     {['low','medium','high'].map(r => <option key={r}>{r}</option>)}
                                   </select>
                                 </div>
@@ -2575,11 +2575,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div key={field} className="space-y-2">
                                   <label className="block text-[8px] font-black uppercase text-slate-500">{label}</label>
                                   {co[field] && (
-                                    <a href={co[field]} target="_blank" rel="noreferrer" className="text-[9px] text-blue-400 underline block truncate">{co[field]}</a>
+                                    <a href={co[field]} target="_blank" rel="noreferrer" className="text-[9px] text-blue-600 underline block truncate">{co[field]}</a>
                                   )}
                                   <input type="text" placeholder="Paste URL or upload below" value={vtxEdits[field]||''} onChange={e => setEv(field, e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none" />
-                                  <label className={`flex items-center gap-2 px-3 py-2 border border-dashed border-slate-600 rounded-xl cursor-pointer hover:border-blue-500 text-[9px] font-black uppercase text-slate-400 ${vtxUploading[field]?'opacity-50':''}`}>
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none" />
+                                  <label className={`flex items-center gap-2 px-3 py-2 border border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-500 text-[9px] font-black uppercase text-slate-500 ${vtxUploading[field]?'opacity-50':''}`}>
                                     {vtxUploading[field] ? <Loader2 size={10} className="animate-spin"/> : <Upload size={10}/>}
                                     Upload File
                                     <input type="file" className="hidden" disabled={vtxUploading[field]}
@@ -2590,13 +2590,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             </div>
 
                             {/* Save */}
-                            <div className="flex gap-3 pt-2 border-t border-slate-700">
+                            <div className="flex gap-3 pt-2 border-t border-slate-200">
                               <button onClick={() => handleVtxSave(co.id)} disabled={!Object.keys(vtxEdits).length}
                                 className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
                                 <Save size={14}/> Save {Object.keys(vtxEdits).length > 0 ? `${Object.keys(vtxEdits).length} Changes` : ''}
                               </button>
                               <button onClick={() => { setVtxEditId(null); setVtxEdits({}); }}
-                                className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                                className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest rounded-xl">
                                 Cancel
                               </button>
                             </div>
@@ -2607,7 +2607,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         {!isEditing && (
                           <div className="px-5 pb-4 flex gap-2 flex-wrap">
                             {[['Pitch Deck', co.pitch_deck_url],['Financials', co.financial_statements_url],['Legal Docs', co.legal_docs_url]].filter(([,u])=>u).map(([l,u]) => (
-                              <a key={l} href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg hover:bg-blue-900/40">
+                              <a key={l} href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg hover:bg-blue-50">
                                 <Eye size={10}/>{l}
                               </a>
                             ))}
@@ -2627,14 +2627,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── BACK OFFICE ─── */}
           {activeTab === 'backoffice' && (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-2xl font-black text-white">Back Office — Full User Control</h2>
+              <h2 className="text-2xl font-black text-slate-900">Back Office — Full User Control</h2>
 
               {/* Search bar */}
               <div className="flex gap-3">
                 <input value={boSearch} onChange={e => setBoSearch(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && document.getElementById('bo-search-btn')?.click()}
                   placeholder="Search by email or user UUID..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-blue-500" />
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
                 <button id="bo-search-btn" disabled={boLoading} onClick={async () => {
                   if (!boSearch.trim()) return;
                   setBoLoading(true); setBoUser(null); setBoEdits({}); setBoOverview(null); setBoTab('profile');
@@ -2670,17 +2670,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
                 return (
                   <div className="space-y-5">
                     {/* User banner */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center gap-5">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-5">
                       <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-2xl shrink-0">
                         {(p.full_name||p.email||'U')[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-white text-lg">{p.full_name || '—'}</p>
-                        <p className="text-slate-400 text-sm">{p.email}</p>
+                        <p className="font-black text-slate-900 text-lg">{p.full_name || '—'}</p>
+                        <p className="text-slate-500 text-sm">{p.email}</p>
                         <p className="text-[10px] text-slate-600 font-mono mt-0.5">{p.id}</p>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
-                        <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${p.kyc_status==='approved'||p.kyc_status==='verified'?'text-emerald-400 border-emerald-700/40':'text-amber-400 border-amber-700/40'}`}>{p.kyc_status||'unverified'}</span>
+                        <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${p.kyc_status==='approved'||p.kyc_status==='verified'?'text-emerald-600 border-emerald-200':'text-amber-600 border-amber-200'}`}>{p.kyc_status||'unverified'}</span>
                         <span className="text-[9px] text-slate-500 font-black uppercase">{p.role||'user'}</span>
                       </div>
                     </div>
@@ -2688,27 +2688,27 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* Balances strip */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {bals.map(b => (
-                        <div key={b.currency_code} className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                        <div key={b.currency_code} className="bg-white border border-slate-200 rounded-2xl p-4">
                           <p className="text-[9px] font-black uppercase text-slate-500">{b.currency_code} Balance</p>
-                          <p className="text-xl font-black text-white mt-1">{Number(b.balance||0).toLocaleString()}</p>
+                          <p className="text-xl font-black text-slate-900 mt-1">{Number(b.balance||0).toLocaleString()}</p>
                         </div>
                       ))}
                       {(ov.applications||[]).length > 0 && (
-                        <div className="bg-indigo-900/20 border border-indigo-700/40 rounded-2xl p-4">
-                          <p className="text-[9px] font-black uppercase text-indigo-400">IFB Applications</p>
-                          <p className="text-xl font-black text-white mt-1">{(ov.applications||[]).length}</p>
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
+                          <p className="text-[9px] font-black uppercase text-indigo-600">IFB Applications</p>
+                          <p className="text-xl font-black text-slate-900 mt-1">{(ov.applications||[]).length}</p>
                         </div>
                       )}
                       {(ov.companies||[]).length > 0 && (
-                        <div className="bg-blue-900/20 border border-blue-700/40 rounded-2xl p-4">
-                          <p className="text-[9px] font-black uppercase text-blue-400">VentureX Companies</p>
-                          <p className="text-xl font-black text-white mt-1">{(ov.companies||[]).length}</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                          <p className="text-[9px] font-black uppercase text-blue-600">VentureX Companies</p>
+                          <p className="text-xl font-black text-slate-900 mt-1">{(ov.companies||[]).length}</p>
                         </div>
                       )}
                     </div>
 
                     {/* Inner tab bar */}
-                    <div className="flex overflow-x-auto no-scrollbar border-b border-slate-800">
+                    <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200">
                       {[
                         { id:'profile',       label:'Profile & KYC',    icon: UserCog },
                         { id:'applications',  label:'Applications',     icon: Rocket },
@@ -2717,7 +2717,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         { id:'transactions',  label:'Transactions',     icon: Activity },
                       ].map(({ id, label, icon: Icon }) => (
                         <button key={id} onClick={() => setBoTab(id)}
-                          className={`flex items-center gap-2 px-5 py-3 whitespace-nowrap text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${boTab===id?'border-blue-500 text-blue-400':'border-transparent text-slate-500 hover:text-slate-300'}`}>
+                          className={`flex items-center gap-2 px-5 py-3 whitespace-nowrap text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${boTab===id?'border-blue-500 text-blue-600':'border-transparent text-slate-500 hover:text-slate-600'}`}>
                           <Icon size={12}/>{label}
                         </button>
                       ))}
@@ -2726,8 +2726,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* ── Profile & KYC ── */}
                     {boTab === 'profile' && (
                       <div className="space-y-5">
-                        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
-                          <p className="font-black text-white text-sm">Edit Profile</p>
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5">
+                          <p className="font-black text-slate-900 text-sm">Edit Profile</p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {[
                               { key:'full_name', label:'Full Name' }, { key:'email', label:'Email' },
@@ -2739,7 +2739,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <div key={key}>
                                 <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
                                 <input value={curVal(key)} onChange={e => editField(key, e.target.value)}
-                                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500" />
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500" />
                               </div>
                             ))}
                           </div>
@@ -2747,14 +2747,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             <div>
                               <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">KYC Status</label>
                               <select value={curVal('kyc_status')} onChange={e => editField('kyc_status', e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
                                 {['unverified','pending_kyc','verified','approved','rejected'].map(s => <option key={s}>{s}</option>)}
                               </select>
                             </div>
                             <div>
                               <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Role</label>
                               <select value={curVal('role')} onChange={e => editField('role', e.target.value)}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none">
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
                                 {['user','admin','admin_l3','superadmin','is_cot_processor'].map(s => <option key={s}>{s}</option>)}
                               </select>
                             </div>
@@ -2776,51 +2776,51 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                         {/* KYC Submission */}
                         {kyc && Object.keys(kyc).length > 0 && (
-                          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                            <p className="font-black text-white text-sm">KYC Submission</p>
+                          <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
+                            <p className="font-black text-slate-900 text-sm">KYC Submission</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                               {[['Status', kyc.status],['Risk', kyc.risk_rating],['AI Score', kyc.ai_confidence_score!=null?`${kyc.ai_confidence_score}%`:'—'],['AI Rec.', kyc.ai_recommendation],
                                 ['Nationality', kyc.nationality],['ID Type', kyc.id_type],['ID Number', kyc.id_number],['PEP', kyc.politically_exposed_person?'⚠️ YES':'No']
                               ].map(([l,v]) => (
-                                <div key={l} className="bg-slate-800/50 rounded-xl p-3">
+                                <div key={l} className="bg-slate-50 rounded-xl p-3">
                                   <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
-                                  <p className="text-xs font-bold text-white">{v||'—'}</p>
+                                  <p className="text-xs font-bold text-slate-900">{v||'—'}</p>
                                 </div>
                               ))}
                             </div>
                             {kyc.ai_flags?.length > 0 && (
                               <div className="flex flex-wrap gap-2">
-                                {kyc.ai_flags.map(f => <span key={f} className="text-[9px] font-black text-amber-400 bg-amber-900/20 border border-amber-700/30 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
+                                {kyc.ai_flags.map(f => <span key={f} className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
                               </div>
                             )}
                             <div className="flex flex-wrap gap-2">
                               {[['ID Front',kyc.id_front_url],['ID Back',kyc.id_back_url],['Selfie',kyc.selfie_url],['Selfie+ID',kyc.selfie_with_id_url],
                                 ['Address Proof',kyc.proof_of_address_url],['Income',kyc.proof_of_income_url],['Bank Stmt',kyc.bank_statement_url]
                               ].filter(([,u])=>u).map(([l,u]) => (
-                                <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] font-black uppercase text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg hover:bg-blue-900/40 flex items-center gap-1">
+                                <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg hover:bg-blue-50 flex items-center gap-1">
                                   <Eye size={10}/>{l}
                                 </a>
                               ))}
                             </div>
                             {/* Back-office AI doc scan */}
-                            <div className="bg-violet-950/20 border border-violet-700/25 rounded-2xl p-4 space-y-3">
+                            <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 space-y-3">
                               <div className="flex items-center gap-2">
-                                <Brain size={11} className="text-violet-400"/>
-                                <span className="text-[8px] font-black uppercase tracking-widest text-violet-400">AI Doc Scan — Extract KYC Fields</span>
-                                {boAiScan.scanning && <Loader2 size={9} className="animate-spin text-violet-400 ml-auto"/>}
+                                <Brain size={11} className="text-violet-600"/>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-violet-600">AI Doc Scan — Extract KYC Fields</span>
+                                {boAiScan.scanning && <Loader2 size={9} className="animate-spin text-violet-600 ml-auto"/>}
                               </div>
                               {!boAiScan.scanning && boAiScan.fields?.length > 0 && (
                                 <div className="grid grid-cols-2 gap-2">
                                   {boAiScan.fields.map(f => (
-                                    <div key={f.label} className="bg-emerald-950/30 border border-emerald-700/30 rounded-lg p-2">
+                                    <div key={f.label} className="bg-emerald-50 border border-emerald-200 rounded-lg p-2">
                                       <p className="text-[7px] font-black uppercase text-emerald-500">{f.label}</p>
-                                      <p className="text-[10px] font-bold text-white truncate">{f.value}</p>
+                                      <p className="text-[10px] font-bold text-slate-900 truncate">{f.value}</p>
                                     </div>
                                   ))}
                                 </div>
                               )}
-                              {boAiScan.error && <p className="text-[10px] text-red-400">{boAiScan.error}</p>}
-                              <label className={`flex items-center gap-2 px-3 py-2 border border-dashed rounded-xl cursor-pointer text-[9px] font-black uppercase w-fit ${boAiScan.scanning ? 'opacity-50 border-slate-600 text-slate-600 cursor-default' : 'border-violet-600/50 hover:border-violet-500 text-violet-400'}`}>
+                              {boAiScan.error && <p className="text-[10px] text-red-600">{boAiScan.error}</p>}
+                              <label className={`flex items-center gap-2 px-3 py-2 border border-dashed rounded-xl cursor-pointer text-[9px] font-black uppercase w-fit ${boAiScan.scanning ? 'opacity-50 border-slate-200 text-slate-600 cursor-default' : 'border-violet-600/50 hover:border-violet-500 text-violet-600'}`}>
                                 {boAiScan.scanning ? <Loader2 size={10} className="animate-spin"/> : <Upload size={10}/>}
                                 {boAiScan.scanning ? 'Scanning...' : 'Upload Doc for AI Scan'}
                                 <input type="file" className="hidden" disabled={boAiScan.scanning}
@@ -2829,10 +2829,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               </label>
                             </div>
 
-                            <div className="flex gap-3 pt-2 border-t border-slate-800">
+                            <div className="flex gap-3 pt-2 border-t border-slate-200">
                               <button onClick={() => handleKycAction(p.id, 'approved', 'Admin manual approval')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><CheckCircle size={12}/> Approve KYC</button>
-                              <button onClick={() => handleKycAction(p.id, 'needs_more_info', 'Admin requested more info')} className="px-4 py-2 bg-amber-600/30 border border-amber-700/40 text-amber-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><AlertTriangle size={12}/> Request Info</button>
-                              <button onClick={() => handleKycAction(p.id, 'rejected', 'Admin rejection')} className="px-4 py-2 bg-red-900/40 border border-red-700/40 text-red-400 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><X size={12}/> Reject</button>
+                              <button onClick={() => handleKycAction(p.id, 'needs_more_info', 'Admin requested more info')} className="px-4 py-2 bg-amber-600/30 border border-amber-200 text-amber-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><AlertTriangle size={12}/> Request Info</button>
+                              <button onClick={() => handleKycAction(p.id, 'rejected', 'Admin rejection')} className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><X size={12}/> Reject</button>
                             </div>
                           </div>
                         )}
@@ -2843,7 +2843,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {boTab === 'applications' && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <p className="font-black text-white text-sm">IFB Applications for {p.full_name}</p>
+                          <p className="font-black text-slate-900 text-sm">IFB Applications for {p.full_name}</p>
                           <button onClick={() => {
                             setAppForm(f => ({...f, user_id: p.id}));
                             setActiveTab('applications');
@@ -2859,24 +2859,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 const sm = APP_STATUS_META[app.status] || APP_STATUS_META.under_review;
                                 const pm = PACKAGES_META[app.package_id];
                                 return (
-                                  <div key={app.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                  <div key={app.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
-                                        <p className="font-black text-white">{app.company_name}</p>
-                                        <p className="text-xs text-slate-400">{app.sector} · {app.country} · Stage: {app.stage?.replace(/_/g,' ')}</p>
+                                        <p className="font-black text-slate-900">{app.company_name}</p>
+                                        <p className="text-xs text-slate-500">{app.sector} · {app.country} · Stage: {app.stage?.replace(/_/g,' ')}</p>
                                       </div>
                                       <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border shrink-0 ${sm.cls}`}>{sm.label}</span>
                                     </div>
                                     <div className="flex items-center gap-4 flex-wrap">
-                                      <span className={`text-[9px] font-black ${pm?.color||'text-slate-400'}`}>{app.package_name}</span>
-                                      {app.assigned_advisor && <span className="text-[9px] text-emerald-400">Advisor: {app.assigned_advisor}</span>}
+                                      <span className={`text-[9px] font-black ${pm?.color||'text-slate-500'}`}>{app.package_name}</span>
+                                      {app.assigned_advisor && <span className="text-[9px] text-emerald-600">Advisor: {app.assigned_advisor}</span>}
                                       <span className="text-[9px] text-slate-500">{new Date(app.created_at).toLocaleDateString()}</span>
                                     </div>
-                                    {app.notes && <p className="text-[10px] text-slate-500 bg-slate-800/50 rounded-lg p-2">{app.notes}</p>}
+                                    {app.notes && <p className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-2">{app.notes}</p>}
                                     <div className="flex gap-2 flex-wrap">
                                       {Object.entries(APP_STATUS_META).map(([k,v]) => (
                                         <button key={k} onClick={() => handleAppUpdate(app.id, k, null, null).then(() => loadBoOverview(p.id))}
-                                          className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg transition-colors ${app.status===k?v.cls:'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600'}`}>
+                                          className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg transition-colors ${app.status===k?v.cls:'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
                                           {v.label}
                                         </button>
                                       ))}
@@ -2892,7 +2892,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {boTab === 'companies' && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <p className="font-black text-white text-sm">VentureX Companies for {p.full_name}</p>
+                          <p className="font-black text-slate-900 text-sm">VentureX Companies for {p.full_name}</p>
                           <button onClick={() => setActiveTab('venturex')}
                             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest rounded-xl">
                             <Building2 size={12}/> Manage in VentureX
@@ -2902,33 +2902,33 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           (ov.companies||[]).length === 0
                             ? <div className="text-center py-12 text-slate-500 font-bold">No companies yet.</div>
                             : (ov.companies||[]).map(co => (
-                                <div key={co.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                                <div key={co.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
                                   <div className="flex items-start justify-between gap-3">
                                     <div>
-                                      <p className="font-black text-white">{co.legal_name}</p>
-                                      <p className="text-xs text-slate-400">{co.sector} · {co.country}</p>
+                                      <p className="font-black text-slate-900">{co.legal_name}</p>
+                                      <p className="text-xs text-slate-500">{co.sector} · {co.country}</p>
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-900/40 text-emerald-400':co.status==='rejected'?'bg-red-900/40 text-red-400':'bg-slate-700 text-slate-400'}`}>{co.status}</span>
+                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-50 text-emerald-600':co.status==='rejected'?'bg-red-50 text-red-600':'bg-slate-100 text-slate-500'}`}>{co.status}</span>
                                   </div>
                                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                                     {[['Stage',co.product_stage],['Goal',co.funding_goal?fmtUSD(co.funding_goal):'—'],['Raised',co.total_raised?fmtUSD(co.total_raised):'—'],
                                       ['Valuation',co.valuation?fmtUSD(co.valuation):'—'],['Score',co.investment_readiness_score!=null?`${co.investment_readiness_score}%`:'—'],
-                                    ].map(([l,v]) => <div key={l} className="bg-slate-800/50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-white">{v}</p></div>)}
+                                    ].map(([l,v]) => <div key={l} className="bg-slate-50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-slate-900">{v}</p></div>)}
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {[['Financial',co.financial_verified],['Identity',co.identity_verified],['Traction',co.traction_verified],['Public',co.is_public]].map(([l,v]) => (
-                                      <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-400 border-emerald-700/40':'text-slate-600 border-slate-700'}`}>{l}: {v?'✓':'✗'}</span>
+                                      <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-600 border-emerald-200':'text-slate-600 border-slate-200'}`}>{l}: {v?'✓':'✗'}</span>
                                     ))}
                                   </div>
                                   <div className="flex gap-2 flex-wrap">
-                                    {[['active','Activate','text-emerald-400 border-emerald-700/40'],['suspended','Suspend','text-red-400 border-red-700/40'],['pending_review','Review','text-amber-400 border-amber-700/40'],['rejected','Reject','text-red-400 border-red-700/40']].map(([s,l,cls]) => (
+                                    {[['active','Activate','text-emerald-600 border-emerald-200'],['suspended','Suspend','text-red-600 border-red-200'],['pending_review','Review','text-amber-600 border-amber-200'],['rejected','Reject','text-red-600 border-red-200']].map(([s,l,cls]) => (
                                       <button key={s} onClick={() => handleVxStatus(co.id, s).then(() => loadBoOverview(p.id))}
-                                        className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg ${co.status===s?cls+' bg-slate-800':'bg-slate-800 border-slate-700 text-slate-500'}`}>{l}</button>
+                                        className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg ${co.status===s?cls+' bg-slate-50':'bg-slate-50 border-slate-200 text-slate-500'}`}>{l}</button>
                                     ))}
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {[['Pitch Deck',co.pitch_deck_url],['Financials',co.financial_statements_url],['Legal Docs',co.legal_docs_url]].filter(([,u])=>u).map(([l,u]) => (
-                                      <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] text-blue-400 bg-blue-900/20 border border-blue-800/40 px-2 py-1 rounded-lg flex items-center gap-1">
+                                      <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg flex items-center gap-1">
                                         <Eye size={10}/>{l}
                                       </a>
                                     ))}
@@ -2943,7 +2943,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {boTab === 'notifications' && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <p className="font-black text-white text-sm">Notifications for {p.full_name}</p>
+                          <p className="font-black text-slate-900 text-sm">Notifications for {p.full_name}</p>
                           <button onClick={async () => {
                             const msg = window.prompt('Send notification message:');
                             if (!msg) return;
@@ -2958,10 +2958,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           (ov.notifications||[]).length === 0
                             ? <div className="text-center py-12 text-slate-500 font-bold">No notifications.</div>
                             : (ov.notifications||[]).map(n => (
-                                <div key={n.id} className={`p-4 rounded-2xl border ${n.read?'border-slate-800 bg-slate-900/50':'border-blue-800/40 bg-blue-950/20'}`}>
+                                <div key={n.id} className={`p-4 rounded-2xl border ${n.read?'border-slate-200 bg-white':'border-blue-200 bg-blue-50'}`}>
                                   <div className="flex items-start justify-between gap-3">
-                                    <p className="text-sm text-white leading-relaxed">{n.message}</p>
-                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${n.read?'text-slate-600':'text-blue-400'}`}>{n.read?'Read':'Unread'}</span>
+                                    <p className="text-sm text-slate-900 leading-relaxed">{n.message}</p>
+                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${n.read?'text-slate-600':'text-blue-600'}`}>{n.read?'Read':'Unread'}</span>
                                   </div>
                                   <p className="text-[10px] text-slate-600 mt-1">{new Date(n.created_at).toLocaleString()} · {n.type}</p>
                                 </div>
@@ -2973,27 +2973,27 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* ── Transactions (view as user) ── */}
                     {boTab === 'transactions' && (
                       <div className="space-y-4">
-                        <p className="font-black text-white text-sm">Transactions for {p.full_name}</p>
+                        <p className="font-black text-slate-900 text-sm">Transactions for {p.full_name}</p>
                         {boOverviewLoading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={24}/></div> :
                           (ov.transactions||[]).length === 0
                             ? <div className="text-center py-12 text-slate-500 font-bold">No transactions.</div>
                             : (
-                              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                                 <div className="overflow-x-auto">
                                   <table className="w-full text-xs">
                                     <thead>
-                                      <tr className="border-b border-slate-800 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                      <tr className="border-b border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-500">
                                         {['Source','Type','Amount','Currency','Status','Date'].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {(ov.transactions||[]).map((tx, i) => (
-                                        <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30">
-                                          <td className="px-4 py-3"><span className="text-[9px] font-black uppercase text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded">{tx.source}</span></td>
-                                          <td className="px-4 py-3 text-slate-300 font-bold">{tx.tx_type?.replace(/_/g,' ')}</td>
-                                          <td className="px-4 py-3 font-black text-white">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
-                                          <td className="px-4 py-3 text-slate-400">{tx.currency}</td>
-                                          <td className="px-4 py-3"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-400':'text-amber-400'}`}>{tx.status||'—'}</span></td>
+                                        <tr key={i} className="border-b border-slate-200 hover:bg-slate-100">
+                                          <td className="px-4 py-3"><span className="text-[9px] font-black uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{tx.source}</span></td>
+                                          <td className="px-4 py-3 text-slate-600 font-bold">{tx.tx_type?.replace(/_/g,' ')}</td>
+                                          <td className="px-4 py-3 font-black text-slate-900">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
+                                          <td className="px-4 py-3 text-slate-500">{tx.currency}</td>
+                                          <td className="px-4 py-3"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-600':'text-amber-600'}`}>{tx.status||'—'}</span></td>
                                           <td className="px-4 py-3 text-slate-500">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '—'}</td>
                                         </tr>
                                       ))}
@@ -3014,22 +3014,22 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── BROADCAST ─── */}
           {activeTab === 'announce' && (
             <div className="space-y-6 animate-in fade-in max-w-2xl">
-              <h2 className="text-2xl font-black text-white">Platform Broadcast</h2>
-              <div className="bg-amber-900/20 border border-amber-700/30 rounded-2xl p-4 flex items-start gap-3">
-                <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5"/>
-                <p className="text-xs text-amber-200 font-medium">This will send a notification to all active platform users. Use responsibly for important announcements only.</p>
+              <h2 className="text-2xl font-black text-slate-900">Platform Broadcast</h2>
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+                <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5"/>
+                <p className="text-xs text-amber-600 font-medium">This will send a notification to all active platform users. Use responsibly for important announcements only.</p>
               </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Announcement Title</label>
                   <input value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-sm outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-bold text-sm outline-none focus:border-blue-500 transition-colors"
                     placeholder="e.g. IFB Platform Update — May 2026"/>
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Message</label>
                   <textarea value={broadcastMsg} onChange={e => setBroadcastMsg(e.target.value)} rows={5}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium text-sm outline-none focus:border-blue-500 transition-colors resize-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-medium text-sm outline-none focus:border-blue-500 transition-colors resize-none"
                     placeholder="Write your announcement here..."/>
                 </div>
                 <button onClick={handleBroadcast} disabled={!broadcastTitle.trim() || !broadcastMsg.trim() || broadcasting}
@@ -3044,8 +3044,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'market_orders' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">DEUS Market Orders</h2>
-                <button onClick={loadMktOrders} disabled={mktLoading} className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 text-slate-300 text-xs font-black uppercase rounded-xl hover:bg-slate-700 transition-colors disabled:opacity-50">
+                <h2 className="text-2xl font-black text-slate-900">DEUS Market Orders</h2>
+                <button onClick={loadMktOrders} disabled={mktLoading} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 text-xs font-black uppercase rounded-xl hover:bg-slate-100 transition-colors disabled:opacity-50">
                   <RefreshCw size={13} className={mktLoading ? 'animate-spin' : ''}/> Refresh
                 </button>
               </div>
@@ -3056,9 +3056,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                 mktOrders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
                 return (
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                    {[['pending','Pending','text-amber-400','bg-amber-900/20'],['sourcing','Sourcing','text-blue-400','bg-blue-900/20'],['processing','Processing','text-indigo-400','bg-indigo-900/20'],['shipped','Shipped','text-violet-400','bg-violet-900/20'],['delivered','Delivered','text-emerald-400','bg-emerald-900/20'],['cancelled','Cancelled','text-red-400','bg-red-900/20']].map(([s,l,c,bg]) => (
+                    {[['pending','Pending','text-amber-600','bg-amber-50'],['sourcing','Sourcing','text-blue-600','bg-blue-50'],['processing','Processing','text-indigo-600','bg-indigo-50'],['shipped','Shipped','text-violet-600','bg-violet-50'],['delivered','Delivered','text-emerald-600','bg-emerald-50'],['cancelled','Cancelled','text-red-600','bg-red-50']].map(([s,l,c,bg]) => (
                       <button key={s} onClick={() => setMktFilter(s)}
-                        className={`${bg} border ${mktFilter===s?'border-white/20':'border-slate-800'} rounded-2xl p-3 text-center transition-all hover:border-white/20`}>
+                        className={`${bg} border ${mktFilter===s?'border-slate-200':'border-slate-200'} rounded-2xl p-3 text-center transition-all hover:border-slate-200`}>
                         <p className={`text-2xl font-black ${c}`}>{counts[s]||0}</p>
                         <p className="text-[9px] font-black uppercase text-slate-500 mt-0.5">{l}</p>
                       </button>
@@ -3075,7 +3075,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {mktFilter.toUpperCase()} ORDERS ({mktOrders.filter(o=>o.status===mktFilter).length})
                   </p>
                   {mktLoading ? (
-                    <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-blue-400"/></div>
+                    <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-blue-600"/></div>
                   ) : mktOrders.filter(o => o.status === mktFilter).length === 0 ? (
                     <div className="text-center py-12 text-slate-600">
                       <ShoppingBag size={32} className="mx-auto mb-2 opacity-30"/>
@@ -3083,17 +3083,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     </div>
                   ) : mktOrders.filter(o => o.status === mktFilter).map(order => (
                     <button key={order.id} onClick={() => { setMktSelected(order); setMktEdits({ status: order.status, tracking_number: order.tracking_number||'', tracking_url: order.tracking_url||'', admin_notes: order.admin_notes||'', vendor_source: order.vendor_source||'', estimated_delivery: order.estimated_delivery||'' }); }}
-                      className={`w-full text-left bg-slate-900 border rounded-2xl p-4 transition-all hover:border-slate-600 ${mktSelected?.id===order.id?'border-blue-500':'border-slate-800'}`}>
+                      className={`w-full text-left bg-white border rounded-2xl p-4 transition-all hover:border-slate-200 ${mktSelected?.id===order.id?'border-blue-500':'border-slate-200'}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-white font-mono">{order.id.slice(0,8).toUpperCase()}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5 truncate">{order.user_name || order.user_email}</p>
+                          <p className="text-xs font-black text-slate-900 font-mono">{order.id.slice(0,8).toUpperCase()}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 truncate">{order.user_name || order.user_email}</p>
                           <p className="text-[10px] text-slate-600 mt-1">
                             {(order.items||[]).length} item{(order.items||[]).length!==1?'s':''} · {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-black text-white">${Number(order.total_usd).toFixed(2)}</p>
+                          <p className="text-sm font-black text-slate-900">${Number(order.total_usd).toFixed(2)}</p>
                           {order.vendor_source && <p className="text-[9px] text-slate-500 mt-0.5">via {order.vendor_source}</p>}
                         </div>
                       </div>
@@ -3110,29 +3110,29 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                 {/* Detail / edit panel */}
                 {mktSelected ? (
-                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 self-start sticky top-4">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 self-start sticky top-4">
                     <div>
-                      <p className="text-xs font-black text-white font-mono">{mktSelected.id.slice(0,8).toUpperCase()}</p>
-                      <p className="text-[10px] text-slate-400">{mktSelected.user_name} · {mktSelected.user_email}</p>
-                      <p className="text-lg font-black text-white mt-1">${Number(mktSelected.total_usd).toFixed(2)}</p>
+                      <p className="text-xs font-black text-slate-900 font-mono">{mktSelected.id.slice(0,8).toUpperCase()}</p>
+                      <p className="text-[10px] text-slate-500">{mktSelected.user_name} · {mktSelected.user_email}</p>
+                      <p className="text-lg font-black text-slate-900 mt-1">${Number(mktSelected.total_usd).toFixed(2)}</p>
                     </div>
 
                     {/* Items */}
-                    <div className="space-y-1 border-t border-slate-800 pt-3">
+                    <div className="space-y-1 border-t border-slate-200 pt-3">
                       {(mktSelected.items||[]).map((item,i) => (
                         <div key={i} className="flex justify-between text-xs">
-                          <span className="text-slate-400">{item.quantity}× {item.product_name}</span>
-                          <span className="text-white font-bold">${Number(item.line_total).toFixed(2)}</span>
+                          <span className="text-slate-500">{item.quantity}× {item.product_name}</span>
+                          <span className="text-slate-900 font-bold">${Number(item.line_total).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
 
                     {/* Edit fields */}
-                    <div className="space-y-3 border-t border-slate-800 pt-3">
+                    <div className="space-y-3 border-t border-slate-200 pt-3">
                       <div>
                         <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Status</label>
                         <select value={mktEdits.status||''} onChange={e=>setMktEdits(p=>({...p,status:e.target.value}))}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500">
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500">
                           {['pending','sourcing','processing','shipped','out_for_delivery','delivered','cancelled'].map(s=>(
                             <option key={s} value={s}>{s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>
                           ))}
@@ -3142,30 +3142,30 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Sourced From (e.g. Amazon)</label>
                         <input value={mktEdits.vendor_source||''} onChange={e=>setMktEdits(p=>({...p,vendor_source:e.target.value}))}
                           placeholder="Amazon, Walmart, Alibaba…"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500"/>
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500"/>
                       </div>
                       <div>
                         <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Tracking Number</label>
                         <input value={mktEdits.tracking_number||''} onChange={e=>setMktEdits(p=>({...p,tracking_number:e.target.value}))}
                           placeholder="1Z999AA10123456784"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500"/>
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500"/>
                       </div>
                       <div>
                         <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Tracking URL</label>
                         <input value={mktEdits.tracking_url||''} onChange={e=>setMktEdits(p=>({...p,tracking_url:e.target.value}))}
                           placeholder="https://track.ups.com/…"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500"/>
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500"/>
                       </div>
                       <div>
                         <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Estimated Delivery</label>
                         <input type="date" value={mktEdits.estimated_delivery||''} onChange={e=>setMktEdits(p=>({...p,estimated_delivery:e.target.value}))}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500"/>
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"/>
                       </div>
                       <div>
                         <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Note to Customer</label>
                         <textarea value={mktEdits.admin_notes||''} onChange={e=>setMktEdits(p=>({...p,admin_notes:e.target.value}))}
                           rows={3} placeholder="We've ordered this from Amazon, expect delivery in 5-7 days…"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500 resize-none"/>
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 resize-none"/>
                       </div>
                     </div>
 
@@ -3208,13 +3208,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'vse_pipeline' && (() => {
             const VSE_STAGES = ['applied','kyc_review','audit','due_diligence','pre_ipo','listed','rejected'];
             const VSE_STAGE_COLORS = {
-              applied:        'text-slate-400  bg-slate-800    border-slate-700',
-              kyc_review:     'text-amber-400  bg-amber-900/30  border-amber-700/50',
-              audit:          'text-blue-400   bg-blue-900/30   border-blue-700/50',
-              due_diligence:  'text-violet-400 bg-violet-900/30 border-violet-700/50',
-              pre_ipo:        'text-orange-400 bg-orange-900/30 border-orange-700/50',
-              listed:         'text-emerald-400 bg-emerald-900/30 border-emerald-700/50',
-              rejected:       'text-red-400    bg-red-900/30    border-red-700/50',
+              applied:        'text-slate-500  bg-slate-50    border-slate-200',
+              kyc_review:     'text-amber-600  bg-amber-50  border-amber-200',
+              audit:          'text-blue-600   bg-blue-50   border-blue-200',
+              due_diligence:  'text-violet-600 bg-violet-50 border-violet-200',
+              pre_ipo:        'text-orange-600 bg-orange-50 border-orange-200',
+              listed:         'text-emerald-600 bg-emerald-50 border-emerald-200',
+              rejected:       'text-red-600    bg-red-50    border-red-200',
             };
             const fmtM = n => n >= 1e9 ? `$${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `$${(n/1e3).toFixed(0)}K` : `$${n||0}`;
             const filtered = vseVentures.filter(v =>
@@ -3265,8 +3265,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
             return (
               <div className="space-y-6 animate-in fade-in">
                 <div className="flex items-center justify-between flex-wrap gap-3">
-                  <h2 className="text-2xl font-black text-white">IFB Venture Exchange Pipeline</h2>
-                  <button onClick={loadVse} className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-black uppercase rounded-xl hover:bg-slate-700 transition-colors">
+                  <h2 className="text-2xl font-black text-slate-900">IFB Venture Exchange Pipeline</h2>
+                  <button onClick={loadVse} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-500 text-[10px] font-black uppercase rounded-xl hover:bg-slate-100 transition-colors">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
@@ -3275,8 +3275,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                 <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
                   {VSE_STAGES.map(s => (
                     <button key={s} onClick={() => setVseStageFilter(vseStageFilter === s ? '' : s)}
-                      className={`p-3 rounded-2xl border text-center transition-all ${vseStageFilter === s ? 'border-blue-500 bg-blue-900/30' : 'bg-slate-900 border-slate-800 hover:border-slate-700'}`}>
-                      <p className="text-xl font-black text-white">{stageCounts[s] || 0}</p>
+                      className={`p-3 rounded-2xl border text-center transition-all ${vseStageFilter === s ? 'border-blue-500 bg-blue-50' : 'bg-white border-slate-200 hover:border-slate-200'}`}>
+                      <p className="text-xl font-black text-slate-900">{stageCounts[s] || 0}</p>
                       <p className="text-[8px] text-slate-500 uppercase font-bold mt-0.5">{s.replace('_',' ')}</p>
                     </button>
                   ))}
@@ -3285,7 +3285,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                 {/* Filters */}
                 <div className="flex gap-3 flex-wrap">
                   <select value={vseSectorFilter} onChange={e => setVseSectorFilter(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 outline-none">
+                    className="bg-white border border-slate-200 text-slate-900 text-xs rounded-xl px-3 py-2 outline-none">
                     <option value="">All Sectors</option>
                     {['Tech','Health','Mining','Agriculture','Energy','Finance','Real Estate','Manufacturing','Media','Consumer'].map(s =>
                       <option key={s} value={s}>{s}</option>
@@ -3293,7 +3293,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   </select>
                   {(vseSectorFilter || vseStageFilter) && (
                     <button onClick={() => { setVseSectorFilter(''); setVseStageFilter(''); }}
-                      className="px-3 py-2 bg-slate-800 border border-slate-700 text-slate-400 text-[10px] font-black uppercase rounded-xl hover:bg-slate-700">
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-500 text-[10px] font-black uppercase rounded-xl hover:bg-slate-100">
                       Clear Filters
                     </button>
                   )}
@@ -3309,18 +3309,18 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {filtered.map(v => {
                       const isOpen = vseSelected?.id === v.id;
                       return (
-                        <div key={v.id} className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-                          <button className="w-full p-5 flex items-center justify-between gap-4 text-left hover:bg-slate-800/50 transition-colors"
+                        <div key={v.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden">
+                          <button className="w-full p-5 flex items-center justify-between gap-4 text-left hover:bg-slate-100 transition-colors"
                             onClick={() => {
                               if (isOpen) { setVseSelected(null); }
                               else { setVseSelected(v); setVseAdminNote(v.admin_notes || ''); setVseTickerInput(v.ticker_symbol || ''); setVseSharePrice(v.share_price || ''); setVseShares(v.shares_issued || ''); setVseValuation(v.valuation || ''); }
                             }}>
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-2xl bg-slate-800 flex items-center justify-center font-black text-white text-lg">
+                              <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-900 text-lg">
                                 {v.company_name?.[0] || '?'}
                               </div>
                               <div>
-                                <p className="font-black text-white">{v.company_name}</p>
+                                <p className="font-black text-slate-900">{v.company_name}</p>
                                 <p className="text-[10px] text-slate-500">{v.sector} · {v.country} · {v.profiles?.email || 'unknown'}</p>
                               </div>
                             </div>
@@ -3334,7 +3334,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           </button>
 
                           {isOpen && (
-                            <div className="px-5 pb-5 border-t border-slate-800 pt-5 space-y-4">
+                            <div className="px-5 pb-5 border-t border-slate-200 pt-5 space-y-4">
                               {/* Metrics */}
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {[
@@ -3343,40 +3343,40 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                   { label: 'Team',         value: `${v.team_size || '?'} ppl` },
                                   { label: 'Founded',      value: v.founded_year || '?' },
                                 ].map(m => (
-                                  <div key={m.label} className="bg-slate-800/60 rounded-xl p-3">
+                                  <div key={m.label} className="bg-slate-50 rounded-xl p-3">
                                     <p className="text-[9px] text-slate-500 uppercase font-bold">{m.label}</p>
-                                    <p className="text-white font-black text-sm mt-0.5">{m.value}</p>
+                                    <p className="text-slate-900 font-black text-sm mt-0.5">{m.value}</p>
                                   </div>
                                 ))}
                               </div>
 
                               {v.description && (
-                                <p className="text-sm text-slate-400">{v.description}</p>
+                                <p className="text-sm text-slate-500">{v.description}</p>
                               )}
 
                               {/* Pre-IPO fields */}
                               {(v.stage === 'pre_ipo' || v.stage === 'listed') && (
-                                <div className="bg-slate-800/50 rounded-2xl p-4 space-y-3">
-                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IPO Details</p>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
+                                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">IPO Details</p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                                     <div>
                                       <label className="text-[9px] text-slate-500 uppercase font-bold">Ticker</label>
-                                      <input className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none uppercase"
+                                      <input className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none uppercase"
                                         value={vseTickerInput} onChange={e => setVseTickerInput(e.target.value)} placeholder="e.g. AFRS"/>
                                     </div>
                                     <div>
                                       <label className="text-[9px] text-slate-500 uppercase font-bold">Share Price $</label>
-                                      <input type="number" className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none"
+                                      <input type="number" className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none"
                                         value={vseSharePrice} onChange={e => setVseSharePrice(e.target.value)} placeholder="e.g. 10.00"/>
                                     </div>
                                     <div>
                                       <label className="text-[9px] text-slate-500 uppercase font-bold">Shares Issued</label>
-                                      <input type="number" className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none"
+                                      <input type="number" className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none"
                                         value={vseShares} onChange={e => setVseShares(e.target.value)} placeholder="e.g. 1000000"/>
                                     </div>
                                     <div>
                                       <label className="text-[9px] text-slate-500 uppercase font-bold">Valuation $</label>
-                                      <input type="number" className="w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm font-black outline-none"
+                                      <input type="number" className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none"
                                         value={vseValuation} onChange={e => setVseValuation(e.target.value)} placeholder="e.g. 10000000"/>
                                     </div>
                                   </div>
@@ -3386,7 +3386,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               {/* Admin notes */}
                               <div>
                                 <label className="text-[9px] text-slate-500 uppercase font-bold">Admin Notes / Feedback to Company</label>
-                                <textarea rows={3} className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+                                <textarea rows={3} className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
                                   value={vseAdminNote} onChange={e => setVseAdminNote(e.target.value)}
                                   placeholder="Internal notes or guidance for the company..."/>
                               </div>
@@ -3407,12 +3407,12 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 </button>
                                 {v.stage !== 'rejected' && v.stage !== 'listed' && (
                                   <button onClick={() => rejectVenture(v)} disabled={vseSaving}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-red-900/40 border border-red-700/50 hover:bg-red-900/60 disabled:opacity-50 text-red-400 font-black text-[10px] uppercase rounded-xl transition-colors">
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 hover:bg-red-50 disabled:opacity-50 text-red-600 font-black text-[10px] uppercase rounded-xl transition-colors">
                                     <X size={12}/> Reject
                                   </button>
                                 )}
                                 {v.stage === 'listed' && (
-                                  <span className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/20 border border-emerald-700/40 text-emerald-400 font-black text-[10px] uppercase rounded-xl">
+                                  <span className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-600 font-black text-[10px] uppercase rounded-xl">
                                     <Trophy size={12}/> Listed — ${v.ticker_symbol || '?'}
                                   </span>
                                 )}
@@ -3431,22 +3431,22 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── ADMIN ROLES ─── */}
           {activeTab === 'roles' && (
             <div className="space-y-8 animate-in fade-in">
-              <h2 className="text-2xl font-black text-white">Admin Role Management</h2>
+              <h2 className="text-2xl font-black text-slate-900">Admin Role Management</h2>
 
               {/* Add new admin */}
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                <h3 className="font-black text-white">Grant Admin Access</h3>
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
+                <h3 className="font-black text-slate-900">Grant Admin Access</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">User Email</label>
                     <input value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-sm outline-none focus:border-blue-500 transition-colors"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-bold text-sm outline-none focus:border-blue-500 transition-colors"
                       placeholder="user@email.com"/>
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Admin Level</label>
                     <select value={newAdminRole} onChange={e => setNewAdminRole(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white font-bold text-sm outline-none focus:border-blue-500 transition-colors">
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-bold text-sm outline-none focus:border-blue-500 transition-colors">
                       {Object.entries(ROLE_META).filter(([k]) => k !== 'super').map(([key, meta]) => (
                         <option key={key} value={key}>{meta.label}</option>
                       ))}
@@ -3465,13 +3465,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   {adminRoles.map(ar => {
                     const meta = ROLE_META[ar.role];
                     return (
-                      <div key={ar.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex items-center justify-between gap-4">
+                      <div key={ar.id} className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center font-black text-white">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-50 flex items-center justify-center font-black text-slate-900">
                             {(ar.email || 'A')[0].toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-black text-white text-sm">{ar.email}</p>
+                            <p className="font-black text-slate-900 text-sm">{ar.email}</p>
                             <p className="text-[9px] text-slate-500 uppercase">{meta?.desc}</p>
                           </div>
                         </div>
@@ -3481,7 +3481,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           </span>
                           {ar.user_id !== session.user.id && ar.is_active && (
                             <button onClick={() => handleRevokeAdmin(ar.id)}
-                              className="px-3 py-1.5 bg-red-900/40 border border-red-700/40 text-red-400 font-black text-[9px] uppercase rounded-lg hover:bg-red-900/60 transition-colors">
+                              className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 font-black text-[9px] uppercase rounded-lg hover:bg-red-50 transition-colors">
                               Revoke
                             </button>
                           )}
@@ -3524,8 +3524,8 @@ function TicketMessages({ ticketId, session }) {
     <div className="flex-1 overflow-y-auto p-4 space-y-3">
       {messages.map(m => (
         <div key={m.id} className={`flex ${m.sender_type === 'agent' ? 'justify-end' : 'justify-start'}`}>
-          <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${m.sender_type === 'agent' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}`}>
-            {m.sender_type === 'agent' && <p className="text-[9px] font-black text-blue-200 uppercase mb-1">Admin</p>}
+          <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${m.sender_type === 'agent' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-50 text-slate-800 rounded-tl-none'}`}>
+            {m.sender_type === 'agent' && <p className="text-[9px] font-black text-blue-600 uppercase mb-1">Admin</p>}
             {m.message}
           </div>
         </div>

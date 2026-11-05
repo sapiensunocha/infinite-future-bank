@@ -764,7 +764,7 @@ export default function VentureExchange({ session, balances, profile }) {
                 </Section>
 
                 <Section title="Deep Financials & KPIs" icon={<BarChart3 size={16}/>}>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                     <Field label="Monthly Revenue ($)"><input type="number" className={inp} value={compForm.monthly_revenue} onChange={e=>cf('monthly_revenue',+e.target.value)}/></Field>
                     <Field label="Gross Margin (%)"><input type="number" className={inp} value={compForm.gross_margin} onChange={e=>cf('gross_margin',+e.target.value)}/></Field>
                     <Field label="EBITDA ($)"><input type="number" className={inp} value={compForm.ebitda} onChange={e=>cf('ebitda',+e.target.value)}/></Field>
@@ -775,7 +775,7 @@ export default function VentureExchange({ session, balances, profile }) {
                 </Section>
 
                 <Section title="Capital & Strategic Needs" icon={<Target size={16}/>}>
-                  <div className="grid grid-cols-2 gap-5 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
                     <Field label="Funding Goal ($)" required><input type="number" className={inp} value={compForm.funding_goal} onChange={e=>cf('funding_goal',+e.target.value)}/></Field>
                     <Field label="Current Valuation ($)"><input type="number" className={inp} value={compForm.valuation} onChange={e=>cf('valuation',+e.target.value)}/></Field>
                   </div>
@@ -950,7 +950,7 @@ export default function VentureExchange({ session, balances, profile }) {
 
         {/* ═════════ DEAL ROOM MODAL (SMART CONTRACT GENERATION) ═════════ */}
         {selectedCompany && (
-          <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/80 backdrop-blur-xl p-4 animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
             <div className="bg-white rounded-[3rem] w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div className="flex items-center gap-3">
@@ -1000,7 +1000,7 @@ export default function VentureExchange({ session, balances, profile }) {
                 <div className="space-y-6">
                    <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-3xl">
                       <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-800 mb-4 flex items-center gap-2"><FileText size={14}/> Configure Smart Contract</h4>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <Field label="Structure"><select className={sel} value={dealForm.deal_type} onChange={e=>setDealForm(p=>({...p,deal_type:e.target.value}))}>{CAPITAL_TYPES.map(c=><option key={c}>{c}</option>)}</select></Field>
                         <Field label="Valuation ($)"><input type="number" className={inp} value={dealForm.valuation} onChange={e=>setDealForm(p=>({...p,valuation:+e.target.value}))}/></Field>
                         <Field label="Investment ($)"><input type="number" className={inp} value={dealForm.amount} onChange={e=>setDealForm(p=>({...p,amount:+e.target.value}))}/></Field>
@@ -1016,7 +1016,7 @@ export default function VentureExchange({ session, balances, profile }) {
                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-800 mb-4">Fund Release Milestones</h4>
                       {milestoneForm.map((m, i) => (
                         <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3 relative mb-3 shadow-sm">
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <Field label="Trigger Event"><input className={inp} value={m.title} onChange={e=>{const a=[...milestoneForm];a[i]={...m,title:e.target.value};setMilestoneForm(a);}}/></Field>
                             <Field label="Release ($)"><input type="number" className={inp} value={m.fund_amount} onChange={e=>{const a=[...milestoneForm];a[i]={...m,fund_amount:+e.target.value};setMilestoneForm(a);}}/></Field>
                           </div>

@@ -9,7 +9,7 @@ export default function StatementExportModal({
   if (!showStatementModal) return null;
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
       <div className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl border border-slate-100">
         <div className="flex justify-between items-center mb-8">
            <h3 className="font-black text-xl text-slate-800 uppercase tracking-tighter">Export Statements</h3>

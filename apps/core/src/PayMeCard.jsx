@@ -101,7 +101,7 @@ export default function PayMeCard({ profile, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       
       {/* INVISIBLE BACKDROP */}
       <div className="absolute inset-0 cursor-pointer" onClick={onClose}></div>
@@ -212,7 +212,7 @@ export default function PayMeCard({ profile, onClose }) {
           {/* --- VIEW: SCAN (CAMERA) --- */}
           {mode === 'scan' && (
             <div className="flex flex-col items-center w-full animate-in fade-in slide-in-from-right-4">
-              <div className="w-full bg-slate-900 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl relative mb-6">
+              <div className="w-full bg-white rounded-3xl overflow-hidden border-4 border-slate-200 shadow-sm relative mb-6">
                 
                 <div className="w-full aspect-square relative">
                   <Scanner
@@ -221,7 +221,7 @@ export default function PayMeCard({ profile, onClose }) {
                     scanDelay={1000}
                   />
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-48 h-48 border-2 border-emerald-400/80 rounded-2xl animate-pulse shadow-[0_0_15px_rgba(52,211,153,0.5)]"></div>
+                    <div className="w-48 h-48 border-2 border-emerald-200 rounded-2xl animate-pulse shadow-[0_0_15px_rgba(52,211,153,0.5)]"></div>
                   </div>
                 </div>
 

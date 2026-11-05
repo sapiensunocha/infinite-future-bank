@@ -54,7 +54,7 @@ export default function CommercialUnderwriting({
     <div className="max-w-4xl mx-auto animate-in fade-in zoom-in-95 duration-500">
 
       {/* Tab selector */}
-      <div className="flex flex-wrap gap-2 mb-8 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl w-fit">
+      <div className="flex flex-wrap gap-2 mb-8 bg-white border border-slate-200 p-1.5 rounded-2xl w-fit">
         {BIZ_TABS.map(tab => {
           const Icon = tab.icon;
           return (
@@ -62,7 +62,7 @@ export default function CommercialUnderwriting({
               key={tab.id}
               onClick={() => setBizView(tab.id)}
               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                bizView === tab.id ? TAB_ACTIVE[tab.id] : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                bizView === tab.id ? TAB_ACTIVE[tab.id] : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
               }`}>
               <Icon size={13}/> {tab.label}{tab.gate && <FeatureBadge id={tab.gate} compact />}
             </button>
@@ -115,12 +115,12 @@ export default function CommercialUnderwriting({
       {/* Corporate Underwriting (existing) */}
       {bizView === 'underwriting' && (
       <div>
-      <div className="bg-slate-900 border border-slate-800 p-10 rounded-[3rem] shadow-xl text-white mb-8 relative overflow-hidden">
+      <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-xl text-slate-900 mb-8 relative overflow-hidden">
         <div className="relative z-10">
           <h2 className="text-3xl font-black tracking-tight mb-2 flex items-center gap-3">
-            <Building className="text-blue-400"/> Corporate Underwriting
+            <Building className="text-blue-600"/> Corporate Underwriting
           </h2>
-          <p className="text-sm text-slate-400 max-w-xl leading-relaxed">
+          <p className="text-sm text-slate-500 max-w-xl leading-relaxed">
             Submit your financial telemetry to Pascaline. If your metrics meet institutional safety thresholds, you will be cleared to raise capital directly within the IFB Dark Pool.
           </p>
         </div>
@@ -243,26 +243,26 @@ export default function CommercialUnderwriting({
 
       {/* Capital Platform teaser — visible to all non-eligible users */}
       {commercialProfile?.pascaline_status !== 'eligible_for_funding' && (
-        <div className="mt-8 bg-slate-900 border border-slate-700 p-8 rounded-[3rem] relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-indigo-900/20 pointer-events-none" />
+        <div className="mt-8 bg-white border border-slate-200 p-8 rounded-[3rem] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 pointer-events-none" />
           <div className="relative z-10 flex items-start gap-6">
-            <div className="w-14 h-14 bg-blue-500/20 text-blue-400 rounded-2xl flex items-center justify-center shrink-0">
+            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0">
               <TrendingUp size={28} />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-black text-white">Capital Platform</h3>
-                <span className="flex items-center gap-1 px-3 py-1 bg-slate-700 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <h3 className="text-lg font-black text-slate-900">Capital Platform</h3>
+                <span className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest">
                   <Lock size={10} /> Locked
                 </span>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed mb-4">
+              <p className="text-sm text-slate-500 leading-relaxed mb-4">
                 Raise structured capital — grants, debt, equity, or hybrid — with AI-powered analysis, milestone-based tranche releases, and blockchain-signed agreements. Unlock once Pascaline approves your telemetry.
               </p>
               <div className="grid grid-cols-3 gap-4">
                 {['AI Deal Structuring', 'Milestone Governance', 'Blockchain Signing'].map(f => (
-                  <div key={f} className="bg-slate-800/60 rounded-xl p-3 text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{f}</p>
+                  <div key={f} className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{f}</p>
                   </div>
                 ))}
               </div>

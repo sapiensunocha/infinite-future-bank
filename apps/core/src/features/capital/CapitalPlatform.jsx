@@ -387,7 +387,7 @@ export default function CapitalPlatform({ session, profile }) {
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400 resize-none"/>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Sector</label>
               <select value={form.sector} onChange={e => setForm(p => ({...p, sector: e.target.value}))} required
@@ -405,7 +405,7 @@ export default function CapitalPlatform({ session, profile }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Geography / Country</label>
               <input value={form.geography} onChange={e => setForm(p => ({...p, geography: e.target.value}))} required placeholder="e.g. Kenya, West Africa, Global"
@@ -420,7 +420,7 @@ export default function CapitalPlatform({ session, profile }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Capital Needed (USD)</label>
               <input type="number" min="1000" required value={form.capital_needed} onChange={e => setForm(p => ({...p, capital_needed: e.target.value}))} placeholder="500000"
@@ -433,7 +433,7 @@ export default function CapitalPlatform({ session, profile }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Timeline (months)</label>
               <input type="number" min="1" max="120" required value={form.timeline_months} onChange={e => setForm(p => ({...p, timeline_months: e.target.value}))}

@@ -6,7 +6,7 @@ import {
   Lock, Plus, Globe, UploadCloud, FileCheck, AlertTriangle,
   TrendingUp, Users, Briefcase, ArrowRightLeft, CheckCircle2,
   Building, MapPin, DollarSign, FileWarning, ScanFace, XCircle,
-  Leaf, Sun, Droplets, Recycle, Truck, TreePine, Ban, Smartphone
+  Leaf, Sun, Droplets, Recycle, Truck, TreePine, Ban, Smartphone, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import FaceAuthManager from '../features/auth/FaceAuthManager';
 import { useFaceAuth } from '../features/auth/useFaceAuth';
@@ -16,10 +16,14 @@ import PhoneField from '../components/PhoneField';
 export default function SettingsHub({
   session, profile, subTab, setSubTab, setActiveTab,
   onSignOut, fetchAllData, triggerNotification,
-  lang, setLanguage
+  lang, setLanguage, mobileDetail: detailProp, setMobileDetail: setDetailProp,
 }) {
   // Local States specific to Settings
   const [isLoading, setIsLoading] = useState(false);
+  // Phones: show the menu first, then one section at a time (desktop shows both side by side).
+  const [localDetail, setLocalDetail] = useState(false);
+  const mobileDetail = detailProp ?? localDetail;
+  const setMobileDetail = setDetailProp ?? setLocalDetail;
   const [editedName, setEditedName] = useState(profile?.full_name || '');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [emailChange, setEmailChange] = useState({ newEmail: '', otp: '', step: 'init' });
@@ -368,8 +372,9 @@ export default function SettingsHub({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 animate-in fade-in zoom-in-95 duration-500">
-      <div className="md:col-span-1 space-y-2 bg-white/60 backdrop-blur-xl border border-white/40 p-4 rounded-3xl shadow-sm h-fit">
+    <div className="ui-page grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 animate-in fade-in duration-300">
+      <div className={`${mobileDetail ? 'hidden md:block' : ''} md:col-span-1 space-y-1 ui-card p-2 md:p-3 h-fit`}>
+        <h1 className="md:hidden text-2xl font-semibold tracking-tight text-slate-900 px-2 pt-2 pb-3">Settings</h1>
         {[
           { id: 'PROFILE', label: 'Identity & Legal', icon: <User size={18} /> },
           { id: 'PHONE', label: 'Phone Verification', icon: <Smartphone size={18} /> },
@@ -381,17 +386,20 @@ export default function SettingsHub({
           { id: 'ABOUT', label: 'About IFB', icon: <Info size={18} /> },
           { id: 'GREEN_FINANCE', label: 'Green Finance', icon: <Leaf size={18} /> },
         ].map((item) => (
-          <button key={item.id} onClick={() => setSubTab(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${subTab === item.id ? 'bg-blue-600/10 text-blue-600 shadow-inner' : 'text-slate-500 hover:bg-white/50 hover:text-slate-800'}`}>
-            {item.icon} {item.label}
+          <button key={item.id} onClick={() => { setSubTab(item.id); setMobileDetail(true); }} className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[15px] font-medium transition-colors ${subTab === item.id ? 'md:bg-blue-50 md:text-blue-700 text-slate-800' : 'text-slate-700 hover:bg-slate-50'}`}>
+            <span className="text-slate-500">{item.icon}</span> <span className="flex-1 text-left">{item.label}</span> <ChevronRight size={18} className="md:hidden text-slate-300" />
           </button>
         ))}
-        <div className="my-4 border-t border-slate-200/50"></div>
-        <button onClick={onSignOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 hover:text-red-600 transition-all">
-          <LogOut size={18} /> Secure Exit
+        <div className="my-2 border-t border-slate-100"></div>
+        <button onClick={onSignOut} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-[15px] font-medium text-red-600 hover:bg-red-50 transition-colors">
+          <LogOut size={18} /> Sign out
         </button>
       </div>
 
-      <div className="md:col-span-3 bg-white/60 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-sm">
+      <div className={`${mobileDetail ? '' : 'hidden md:block'} md:col-span-3 ui-card p-4 sm:p-6 md:p-8 min-w-0`}>
+        <button type="button" onClick={() => setMobileDetail(false)} className="md:hidden -ml-1 mb-3 h-10 pr-3 inline-flex items-center gap-1 text-[15px] font-medium text-blue-600">
+          <ChevronLeft size={20} /> Settings
+        </button>
         
         {/* =======================
             PROFILE TAB (UPGRADED KYC)
@@ -399,11 +407,11 @@ export default function SettingsHub({
         {subTab === 'PROFILE' && (
           <div className="space-y-8 max-w-3xl">
             <div>
-              <h2 className="text-2xl font-black text-slate-800 mb-2">Institutional Identity & KYC</h2>
-              <p className="text-xs text-slate-500">Global Anti-Money Laundering (AML) and Counter-Terrorism Financing (CTF) compliance interface.</p>
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 mb-1">Identity & verification</h2>
+              <p className="text-sm text-slate-500">Verify your identity to unlock deposits, withdrawals and higher limits. Required by anti-money-laundering rules.</p>
             </div>
             
-            <div className="flex items-center gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 bg-slate-50 p-4 sm:p-6 rounded-2xl border border-slate-200/60">
               <button type="button" className="relative group cursor-pointer border-0 p-0 bg-transparent" onClick={handleAvatarClick}>
                 <div className="w-20 h-20 rounded-2xl bg-slate-200 border border-slate-300 shadow-sm flex items-center justify-center overflow-hidden">
                   {profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <span className="text-3xl font-black text-slate-400">{profile?.full_name?.charAt(0).toUpperCase() || <User size={40} />}</span>}
@@ -413,22 +421,22 @@ export default function SettingsHub({
                 </div>
                 <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
               </button>
-              <div className="flex-1 space-y-3">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500">Public Display Name</label>
-                <div className="flex gap-3">
-                  <input type="text" value={editedName} onChange={(e) => setEditedName(e.target.value)} className="flex-1 bg-white border border-slate-200 rounded-xl p-3 font-bold text-sm text-slate-800 outline-none focus:border-blue-500 transition-all" />
-                  <button onClick={handleNameUpdate} disabled={isLoading} className="px-6 bg-blue-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-600 transition-all disabled:opacity-50">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <label className="ui-label">Display name</label>
+                <div className="flex gap-2">
+                  <input type="text" value={editedName} onChange={(e) => setEditedName(e.target.value)} className="ui-input flex-1 min-w-0" />
+                  <button onClick={handleNameUpdate} disabled={isLoading} className="ui-btn ui-btn-primary !w-auto px-5 shrink-0">
                     Save
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] shadow-sm">
+            <div className="sm:bg-white sm:border sm:border-slate-200 sm:p-6 md:p-8 sm:rounded-2xl">
               <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                   <Fingerprint className="text-blue-600" size={20}/>
-                  Global Regulatory Verification (Tier 1)
+                  Identity verification
                 </h3>
                 {(profile?.kyc_status === 'verified' || profile?.kyc_status === 'approved') && (
                   <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg flex items-center gap-1"><ShieldCheck size={12}/> Verified</span>

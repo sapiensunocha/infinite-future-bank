@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
+import { Capacitor } from '@capacitor/core';
+
+// Native app (Android/iOS) gets app-only styling, e.g. no website footers.
+if (Capacitor.isNativePlatform()) document.documentElement.classList.add('is-native-app');
 import 'leaflet/dist/leaflet.css';
 
 // Register AFR Network Node service worker
