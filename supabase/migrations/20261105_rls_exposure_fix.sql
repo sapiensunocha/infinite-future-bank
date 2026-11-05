@@ -48,6 +48,37 @@ BEGIN
 END;
 $$;
 
+-- ---------------------------------------------------------------------------
+-- Helpers for objects that turn out to be VIEWS in production (row-level
+-- security cannot be enabled on a view; e.g. profile_achievements is a view).
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public._is_table(p_table text)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE n.nspname = 'public' AND c.relname = p_table AND c.relkind IN ('r', 'p')
+  );
+$$;
+
+-- Views run with their owner's rights, so the only lever is the grant:
+-- anonymous visitors lose all access; p_auth_read = true also grants SELECT to
+-- logged-in users, NULL leaves their current access unchanged (review needed).
+CREATE OR REPLACE FUNCTION public._lock_view(p_table text, p_auth_read boolean)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  EXECUTE format('REVOKE ALL ON public.%I FROM anon', p_table);
+  IF p_auth_read IS TRUE THEN
+    EXECUTE format('GRANT SELECT ON public.%I TO authenticated', p_table);
+  END IF;
+  RAISE NOTICE '% is a view: anonymous access revoked; row-level security does not apply to views', p_table;
+END;
+$$;
+
 -- ===========================================================================
 -- 1. STRICTLY PRIVATE — owner reads/writes own rows, admins read all, anon none.
 --    Owner column is user_id. The app only ever reads these for the logged-in
@@ -60,6 +91,7 @@ DECLARE
 BEGIN
   FOREACH t IN ARRAY tbls LOOP
     IF to_regclass('public.' || t) IS NULL THEN CONTINUE; END IF;
+    IF NOT public._is_table(t) THEN PERFORM public._lock_view(t, NULL); CONTINUE; END IF;
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
     PERFORM public._drop_all_policies(t);
     EXECUTE format($f$CREATE POLICY %I ON public.%I FOR SELECT TO authenticated USING (user_id = auth.uid())$f$, t || '_sel_own', t);
@@ -81,6 +113,8 @@ $$;
 DO $$
 BEGIN
   IF to_regclass('public.profile_achievements') IS NULL THEN RETURN; END IF;
+  -- In production this is a view: keep it readable for logged-in users (profile badges), not anon.
+  IF NOT public._is_table('profile_achievements') THEN PERFORM public._lock_view('profile_achievements', true); RETURN; END IF;
   ALTER TABLE public.profile_achievements ENABLE ROW LEVEL SECURITY;
   PERFORM public._drop_all_policies('profile_achievements');
   CREATE POLICY profile_achievements_sel_auth ON public.profile_achievements FOR SELECT TO authenticated USING (true);
@@ -104,6 +138,7 @@ DECLARE
   cols text;
 BEGIN
   IF to_regclass('public.venturex_companies') IS NULL THEN RETURN; END IF;
+  IF NOT public._is_table('venturex_companies') THEN PERFORM public._lock_view('venturex_companies', NULL); RETURN; END IF;
   ALTER TABLE public.venturex_companies ENABLE ROW LEVEL SECURITY;
   PERFORM public._drop_all_policies('venturex_companies');
   CREATE POLICY venturex_companies_owner ON public.venturex_companies FOR ALL TO authenticated
@@ -138,6 +173,7 @@ DECLARE
   cols text;
 BEGIN
   IF to_regclass('public.npo_profiles') IS NULL THEN RETURN; END IF;
+  IF NOT public._is_table('npo_profiles') THEN PERFORM public._lock_view('npo_profiles', NULL); RETURN; END IF;
   ALTER TABLE public.npo_profiles ENABLE ROW LEVEL SECURITY;
   PERFORM public._drop_all_policies('npo_profiles');
   CREATE POLICY npo_profiles_owner ON public.npo_profiles FOR ALL TO authenticated
@@ -170,6 +206,7 @@ DECLARE
   cols text;
 BEGIN
   IF to_regclass('public.social_posts') IS NULL THEN RETURN; END IF;
+  IF NOT public._is_table('social_posts') THEN PERFORM public._lock_view('social_posts', NULL); RETURN; END IF;
   ALTER TABLE public.social_posts ENABLE ROW LEVEL SECURITY;
   PERFORM public._drop_all_policies('social_posts');
   CREATE POLICY social_posts_author ON public.social_posts FOR ALL TO authenticated
@@ -208,6 +245,7 @@ DECLARE
 BEGIN
   FOREACH t IN ARRAY tbls LOOP
     IF to_regclass('public.' || t) IS NULL THEN CONTINUE; END IF;
+    IF NOT public._is_table(t) THEN RAISE NOTICE '% is a view: left as is (public catalog)', t; CONTINUE; END IF;
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
     PERFORM public._drop_all_policies(t);
     EXECUTE format($f$CREATE POLICY %I ON public.%I FOR SELECT USING (true)$f$, t || '_sel_public', t);
@@ -222,6 +260,7 @@ $$;
 DO $$
 BEGIN
   IF to_regclass('public.ifb_events') IS NULL THEN RETURN; END IF;
+  IF NOT public._is_table('ifb_events') THEN RAISE NOTICE 'ifb_events is a view: left as is (public)'; RETURN; END IF;
   ALTER TABLE public.ifb_events ENABLE ROW LEVEL SECURITY;
   PERFORM public._drop_all_policies('ifb_events');
   CREATE POLICY ifb_events_sel_public ON public.ifb_events FOR SELECT USING (true);
@@ -237,6 +276,7 @@ $$;
 DO $$
 BEGIN
   IF to_regclass('public.npo_impact_reports') IS NULL THEN RETURN; END IF;
+  IF NOT public._is_table('npo_impact_reports') THEN RAISE NOTICE 'npo_impact_reports is a view: left as is (public)'; RETURN; END IF;
   ALTER TABLE public.npo_impact_reports ENABLE ROW LEVEL SECURITY;
   PERFORM public._drop_all_policies('npo_impact_reports');
   CREATE POLICY npo_impact_sel_public ON public.npo_impact_reports FOR SELECT USING (true);
@@ -252,6 +292,8 @@ $$;
 -- Clean up the temporary helper.
 -- ---------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS public._drop_all_policies(text);
+DROP FUNCTION IF EXISTS public._lock_view(text, boolean);
+DROP FUNCTION IF EXISTS public._is_table(text);
 
 -- ===========================================================================
 -- OPS NOTES
