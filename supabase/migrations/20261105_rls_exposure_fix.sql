@@ -225,7 +225,7 @@ BEGIN
     EXECUTE format(
       'CREATE VIEW public.social_feed_view WITH (security_invoker = false) AS '
       'SELECT %s, pr.full_name AS author_name, pr.role AS author_role '
-      'FROM public.social_posts p JOIN public.profiles pr ON pr.id = p.author_id', cols);
+      'FROM public.social_posts p LEFT JOIN public.profiles pr ON pr.id = p.author_id', cols);
     REVOKE ALL ON public.social_feed_view FROM anon, authenticated;
     GRANT SELECT ON public.social_feed_view TO anon, authenticated;
   END IF;
