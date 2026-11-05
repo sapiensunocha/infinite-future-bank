@@ -53,11 +53,11 @@ const VENTUREX_STAGES = [
 ];
 
 const STATUS_CONFIG = {
-  registered:      { label: 'Registered',      color: 'bg-slate-500',   text: 'text-slate-300' },
-  payment_pending: { label: 'Payment Pending',  color: 'bg-amber-500',   text: 'text-amber-300' },
-  active:          { label: 'Active',           color: 'bg-emerald-500', text: 'text-emerald-300' },
-  in_pipeline:     { label: 'In Pipeline',      color: 'bg-blue-500',    text: 'text-blue-300' },
-  archived:        { label: 'Archived',         color: 'bg-red-500',     text: 'text-red-300' },
+  registered:      { label: 'Registered',      color: 'bg-slate-500',   text: 'text-slate-600' },
+  payment_pending: { label: 'Payment Pending',  color: 'bg-amber-500',   text: 'text-amber-600' },
+  active:          { label: 'Active',           color: 'bg-emerald-500', text: 'text-emerald-600' },
+  in_pipeline:     { label: 'In Pipeline',      color: 'bg-blue-500',    text: 'text-blue-600' },
+  archived:        { label: 'Archived',         color: 'bg-red-500',     text: 'text-red-600' },
 };
 
 const FORM_STEPS = [
@@ -71,15 +71,15 @@ const FORM_STEPS = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const inp  = 'w-full bg-[#1a2035] border border-slate-700/60 px-4 py-3 rounded-xl text-sm font-medium text-white outline-none focus:border-blue-500/60 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-500';
+const inp  = 'w-full bg-white border border-slate-200 px-4 py-3 rounded-xl text-sm font-medium text-slate-900 outline-none focus:border-blue-200 focus:ring-2 focus:ring-blue-200 transition-all placeholder:text-slate-400';
 const sel  = inp + ' cursor-pointer appearance-none';
-const lbl  = 'block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5';
-const card = 'bg-[#111827] border border-slate-800/80 rounded-2xl p-6';
+const lbl  = 'block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5';
+const card = 'bg-white border border-slate-200 rounded-2xl p-6';
 
 function Field({ label, required, children }) {
   return (
     <div>
-      <label className={lbl}>{label}{required && <span className="text-red-400 ml-1">*</span>}</label>
+      <label className={lbl}>{label}{required && <span className="text-red-600 ml-1">*</span>}</label>
       {children}
     </div>
   );
@@ -135,7 +135,7 @@ function LoginView({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#070B14] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-1 mb-6">
@@ -143,29 +143,29 @@ function LoginView({ onLogin }) {
               <span key={l} className="text-5xl font-black" style={{ color: ['#4285F4','#EA4335','#FBBC04','#34A853'][i] }}>{l}</span>
             ))}
           </div>
-          <h1 className="text-2xl font-black text-white">KYC Admin Portal</h1>
-          <p className="text-slate-400 text-sm mt-2">Restricted access — authorized personnel only</p>
+          <h1 className="text-2xl font-black text-slate-900">KYC Admin Portal</h1>
+          <p className="text-slate-500 text-sm mt-2">Restricted access — authorized personnel only</p>
         </div>
 
-        <div className="bg-[#0F1629] border border-slate-700/50 rounded-3xl p-8">
-          <div className="flex items-center gap-3 mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
-            <Shield size={20} className="text-amber-400 flex-shrink-0" />
-            <p className="text-amber-200 text-xs font-semibold">
+        <div className="bg-white border border-slate-200 rounded-3xl p-8">
+          <div className="flex items-center gap-3 mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+            <Shield size={20} className="text-amber-600 flex-shrink-0" />
+            <p className="text-amber-600 text-xs font-semibold">
               This portal is monitored. Each access is logged with timestamp and IP. Misuse will result in immediate suspension.
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3">
-              <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
-              <p className="text-red-300 text-sm">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+              <AlertCircle size={16} className="text-red-600 flex-shrink-0" />
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
           <form onSubmit={submit} className="space-y-5">
             <Field label="Admin Email" required>
               <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="admin@infinitefuturebank.org"
                   className={inp + ' pl-11'} />
@@ -174,20 +174,20 @@ function LoginView({ onLogin }) {
 
             <Field label="Access Passcode" required>
               <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input type={showPass ? 'text' : 'password'} required value={passcode} onChange={e => setPasscode(e.target.value)}
                   placeholder="Enter passcode provided by HQ"
                   className={inp + ' pl-11 pr-11'} />
                 <button type="button" onClick={() => setShowPass(v => !v)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900">
                   <Eye size={16} />
                 </button>
               </div>
             </Field>
 
-            <div className="bg-[#1a2035] border border-slate-700/60 rounded-2xl p-5">
-              <p className="text-slate-300 text-sm font-bold mb-3">Terms & Risk Acknowledgment</p>
-              <div className="space-y-2 text-slate-400 text-xs mb-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5">
+              <p className="text-slate-600 text-sm font-bold mb-3">Terms & Risk Acknowledgment</p>
+              <div className="space-y-2 text-slate-500 text-xs mb-4">
                 <p>• I acknowledge this system handles confidential client data and is subject to IFB data policies.</p>
                 <p>• I confirm I am an authorized IFB representative with clearance to register VentureX projects.</p>
                 <p>• I understand that all actions are logged, audited, and legally binding.</p>
@@ -195,10 +195,10 @@ function LoginView({ onLogin }) {
               </div>
               <label className="flex items-start gap-3 cursor-pointer">
                 <div onClick={() => setAccepted(v => !v)}
-                  className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${accepted ? 'bg-blue-600 border-blue-600' : 'border-slate-600 hover:border-blue-500'}`}>
-                  {accepted && <Check size={12} className="text-white" />}
+                  className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${accepted ? 'bg-blue-600 border-blue-600' : 'border-slate-200 hover:border-blue-500'}`}>
+                  {accepted && <Check size={12} className="text-slate-900" />}
                 </div>
-                <span className="text-slate-300 text-sm font-semibold">I accept the terms and risk acknowledgment above</span>
+                <span className="text-slate-600 text-sm font-semibold">I accept the terms and risk acknowledgment above</span>
               </label>
             </div>
 
@@ -255,15 +255,15 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Projects', value: stats.total, icon: BarChart3, color: 'text-blue-400' },
-          { label: 'Active', value: stats.active, icon: CheckCircle2, color: 'text-emerald-400' },
-          { label: 'In Pipeline', value: stats.pipeline, icon: Layers, color: 'text-violet-400' },
-          { label: 'Payment Pending', value: stats.pending, icon: Clock, color: 'text-amber-400' },
+          { label: 'Total Projects', value: stats.total, icon: BarChart3, color: 'text-blue-600' },
+          { label: 'Active', value: stats.active, icon: CheckCircle2, color: 'text-emerald-600' },
+          { label: 'In Pipeline', value: stats.pipeline, icon: Layers, color: 'text-violet-600' },
+          { label: 'Payment Pending', value: stats.pending, icon: Clock, color: 'text-amber-600' },
         ].map(s => (
           <div key={s.label} className={card}>
             <s.icon size={20} className={s.color + ' mb-3'} />
-            <p className="text-2xl font-black text-white">{s.value}</p>
-            <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+            <p className="text-2xl font-black text-slate-900">{s.value}</p>
+            <p className="text-xs text-slate-500 mt-1">{s.label}</p>
           </div>
         ))}
       </div>
@@ -271,7 +271,7 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
           <input value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, email, or sector..."
             className={inp + ' pl-11'} />
@@ -289,13 +289,13 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
       {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <RefreshCw size={24} className="animate-spin text-blue-400" />
+          <RefreshCw size={24} className="animate-spin text-blue-600" />
         </div>
       ) : filtered.length === 0 ? (
         <div className={card + ' text-center py-16'}>
           <Briefcase size={40} className="text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 font-bold">No projects found</p>
-          <button onClick={onNewProject} className="mt-4 text-blue-400 text-sm hover:text-blue-300">Register your first project →</button>
+          <p className="text-slate-500 font-bold">No projects found</p>
+          <button onClick={onNewProject} className="mt-4 text-blue-600 text-sm hover:text-blue-600">Register your first project →</button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -305,21 +305,21 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
             const paid = p.kyc_project_payments?.some(pay => pay.payment_status === 'completed');
             return (
               <button key={p.id} onClick={() => onSelectProject(p)}
-                className="w-full text-left bg-[#111827] border border-slate-800/80 hover:border-slate-600/80 rounded-2xl p-5 transition-all group">
+                className="w-full text-left bg-white border border-slate-200 hover:border-slate-200 rounded-2xl p-5 transition-all group">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <p className="font-black text-white">{p.founder_name}</p>
+                      <p className="font-black text-slate-900">{p.founder_name}</p>
                       <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${sc.color} bg-opacity-20 ${sc.text}`}>
                         {sc.label}
                       </span>
                       {p.venturex_stage && (
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
                           {p.venturex_stage}
                         </span>
                       )}
                     </div>
-                    <p className="text-slate-400 text-sm truncate">{p.founder_email}</p>
+                    <p className="text-slate-500 text-sm truncate">{p.founder_email}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                       <span>{p.sector}</span>
                       <span>·</span>
@@ -327,10 +327,10 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
                       {p.funding_amount_needed && <><span>·</span><span>{p.funding_currency} {Number(p.funding_amount_needed).toLocaleString()}</span></>}
                       <span>·</span>
                       <span>{docs} doc{docs !== 1 ? 's' : ''}</span>
-                      {paid && <><span>·</span><span className="text-emerald-400">✓ Paid</span></>}
+                      {paid && <><span>·</span><span className="text-emerald-600">✓ Paid</span></>}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-500 group-hover:text-slate-300 transition-colors">
+                  <div className="flex items-center gap-2 text-slate-500 group-hover:text-slate-600 transition-colors">
                     <ChevronRight size={18} />
                   </div>
                 </div>
@@ -506,25 +506,25 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
           const done = i < step;
           return (
             <div key={s.id} className="flex items-center gap-2 flex-shrink-0">
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${active ? 'bg-blue-600 text-white' : done ? 'bg-emerald-600/20 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}>
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${active ? 'bg-blue-600 text-white' : done ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-500'}`}>
                 {done ? <Check size={14} /> : <Icon size={14} />}
                 <span className="text-xs font-bold hidden sm:block">{s.title}</span>
               </div>
-              {i < steps.length - 1 && <div className={`w-6 h-px flex-shrink-0 ${i < step ? 'bg-emerald-500' : 'bg-slate-700'}`} />}
+              {i < steps.length - 1 && <div className={`w-6 h-px flex-shrink-0 ${i < step ? 'bg-emerald-500' : 'bg-slate-100'}`} />}
             </div>
           );
         })}
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3">
-          <AlertCircle size={16} className="text-red-400" />
-          <p className="text-red-300 text-sm">{error}</p>
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+          <AlertCircle size={16} className="text-red-600" />
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
 
       <div className={card}>
-        <h2 className="text-lg font-black text-white mb-6">{steps[step].title}</h2>
+        <h2 className="text-lg font-black text-slate-900 mb-6">{steps[step].title}</h2>
 
         {/* STEP 0: Founder */}
         {step === 0 && (
@@ -551,14 +551,14 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                 onChange={e => set('founder_resume_text', e.target.value)}
                 placeholder="Brief professional background, key achievements, relevant experience..." />
             </Field>
-            <div className="flex items-center gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+            <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
               <div onClick={() => set('create_user_account', !form.create_user_account)}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 cursor-pointer transition-all ${form.create_user_account ? 'bg-blue-600 border-blue-600' : 'border-slate-600'}`}>
-                {form.create_user_account && <Check size={12} className="text-white" />}
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 cursor-pointer transition-all ${form.create_user_account ? 'bg-blue-600 border-blue-600' : 'border-slate-200'}`}>
+                {form.create_user_account && <Check size={12} className="text-slate-900" />}
               </div>
               <div>
-                <p className="text-white text-sm font-bold">Create DEUS account for founder</p>
-                <p className="text-slate-400 text-xs">Sends an email invite to the founder to access their DEUS dashboard</p>
+                <p className="text-slate-900 text-sm font-bold">Create DEUS account for founder</p>
+                <p className="text-slate-500 text-xs">Sends an email invite to the founder to access their DEUS dashboard</p>
               </div>
             </div>
           </div>
@@ -572,9 +572,9 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                 <div className="grid grid-cols-2 gap-3">
                   {[['project','Idea / Project',Rocket],['company','Existing Company',Building2]].map(([val, lbl2, Icon]) => (
                     <button key={val} type="button" onClick={() => set('project_type', val)}
-                      className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${form.project_type === val ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-slate-500'}`}>
-                      <Icon size={20} className={form.project_type === val ? 'text-blue-400' : 'text-slate-400'} />
-                      <span className="text-xs font-bold text-white">{lbl2}</span>
+                      className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${form.project_type === val ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-500'}`}>
+                      <Icon size={20} className={form.project_type === val ? 'text-blue-600' : 'text-slate-500'} />
+                      <span className="text-xs font-bold text-slate-900">{lbl2}</span>
                     </button>
                   ))}
                 </div>
@@ -635,10 +635,10 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                   ['other','Other (specify below)',Plus],
                 ].map(([val, lbl2, Icon]) => (
                   <button key={val} type="button" onClick={() => toggleFinancing(val)}
-                    className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 text-left ${form.financing_types.includes(val) ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-slate-500'}`}>
-                    <Icon size={18} className={form.financing_types.includes(val) ? 'text-blue-400' : 'text-slate-500'} />
-                    <span className="text-sm font-bold text-white">{lbl2}</span>
-                    {form.financing_types.includes(val) && <Check size={14} className="text-blue-400 ml-auto" />}
+                    className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 text-left ${form.financing_types.includes(val) ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-500'}`}>
+                    <Icon size={18} className={form.financing_types.includes(val) ? 'text-blue-600' : 'text-slate-500'} />
+                    <span className="text-sm font-bold text-slate-900">{lbl2}</span>
+                    {form.financing_types.includes(val) && <Check size={14} className="text-blue-600 ml-auto" />}
                   </button>
                 ))}
               </div>
@@ -655,7 +655,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
             <div className="grid md:grid-cols-2 gap-5">
               <Field label="Funding Amount Needed" required>
                 <div className="relative">
-                  <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input type="number" min="0" className={inp + ' pl-11'} value={form.funding_amount_needed}
                     onChange={e => set('funding_amount_needed', e.target.value)}
                     placeholder="e.g. 500000" />
@@ -670,16 +670,16 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
 
             {/* Tier suggestion */}
             {form.stage && (
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5">
-                <p className="text-slate-300 text-sm font-bold mb-4">Recommended Activation Tiers</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                <p className="text-slate-600 text-sm font-bold mb-4">Recommended Activation Tiers</p>
                 <div className="space-y-3">
                   {PAYMENT_TIERS.map(t => (
-                    <div key={t.id} className={`flex items-center justify-between p-3 rounded-xl transition-all ${form.payment_tier === t.id ? 'bg-blue-600/20 border border-blue-500/40' : 'bg-slate-800/60 border border-slate-700/40'}`}>
+                    <div key={t.id} className={`flex items-center justify-between p-3 rounded-xl transition-all ${form.payment_tier === t.id ? 'bg-blue-50 border border-blue-200' : 'bg-slate-50 border border-slate-200'}`}>
                       <div>
-                        <p className="text-white text-sm font-bold">{t.label}</p>
-                        <p className="text-slate-400 text-xs">{t.description}</p>
+                        <p className="text-slate-900 text-sm font-bold">{t.label}</p>
+                        <p className="text-slate-500 text-xs">{t.description}</p>
                       </div>
-                      <p className="text-slate-300 text-sm font-black">
+                      <p className="text-slate-600 text-sm font-black">
                         {t.max ? `${t.min.toLocaleString()} – ${t.max.toLocaleString()}` : `${t.min.toLocaleString()}+`}
                       </p>
                     </div>
@@ -693,7 +693,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
         {/* STEP 3: Documents */}
         {step === 3 && (
           <div className="space-y-5">
-            <p className="text-slate-400 text-sm">Upload documents on behalf of the founder. All files are encrypted and stored securely.</p>
+            <p className="text-slate-500 text-sm">Upload documents on behalf of the founder. All files are encrypted and stored securely.</p>
             {[
               ['resume',        'Founder Resume / CV',           'PDF, DOC, DOCX'],
               ['passport',      'Passport / National ID (KYC)',  'PDF, JPG, PNG'],
@@ -702,29 +702,29 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
             ].map(([type, label, hint]) => {
               const file = form.docs[type];
               return (
-                <div key={type} className="bg-[#1a2035] border border-slate-700/60 rounded-2xl p-5">
+                <div key={type} className="bg-white border border-slate-200 rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-white text-sm font-bold">{label}</p>
+                      <p className="text-slate-900 text-sm font-bold">{label}</p>
                       <p className="text-slate-500 text-xs">{hint}</p>
                     </div>
                     {file ? (
                       <div className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-emerald-400" />
-                        <span className="text-emerald-400 text-xs font-bold">Ready</span>
+                        <CheckCircle2 size={16} className="text-emerald-600" />
+                        <span className="text-emerald-600 text-xs font-bold">Ready</span>
                         <button onClick={() => { const d = { ...form.docs }; delete d[type]; set('docs', d); }}
-                          className="text-slate-500 hover:text-red-400 ml-2">
+                          className="text-slate-500 hover:text-red-600 ml-2">
                           <X size={14} />
                         </button>
                       </div>
                     ) : (
                       <button onClick={() => fileRefs[type]?.current?.click()}
-                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-bold">
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-600 text-sm font-bold">
                         <Upload size={14} /> Upload
                       </button>
                     )}
                   </div>
-                  {file && <p className="text-slate-400 text-xs truncate">{file.name} ({(file.size / 1024).toFixed(1)} KB)</p>}
+                  {file && <p className="text-slate-500 text-xs truncate">{file.name} ({(file.size / 1024).toFixed(1)} KB)</p>}
                   <input ref={fileRefs[type]} type="file"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx" className="hidden"
                     onChange={e => { if (e.target.files?.[0]) uploadDoc(type, e.target.files[0]); }} />
@@ -737,23 +737,23 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
         {/* STEP 4: Payment */}
         {step === 4 && (
           <div className="space-y-5">
-            <p className="text-slate-400 text-sm">Record the activation payment for this project. Payment is required to activate the account and enter the VentureX pipeline.</p>
+            <p className="text-slate-500 text-sm">Record the activation payment for this project. Payment is required to activate the account and enter the VentureX pipeline.</p>
 
             <Field label="Activation Tier" required>
               <div className="space-y-3">
                 {PAYMENT_TIERS.map(t => (
                   <button key={t.id} type="button" onClick={() => { set('payment_tier', t.id); set('payment_amount', t.min.toString()); }}
-                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${form.payment_tier === t.id ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-slate-500'}`}>
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${form.payment_tier === t.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-500'}`}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white font-bold">{t.label}</p>
-                        <p className="text-slate-400 text-xs">{t.description}</p>
+                        <p className="text-slate-900 font-bold">{t.label}</p>
+                        <p className="text-slate-500 text-xs">{t.description}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-white font-black text-sm">
+                        <p className="text-slate-900 font-black text-sm">
                           {form.funding_currency} {t.min.toLocaleString()}{t.max ? ` – ${t.max.toLocaleString()}` : '+'}
                         </p>
-                        {form.payment_tier === t.id && <Check size={14} className="text-blue-400 ml-auto" />}
+                        {form.payment_tier === t.id && <Check size={14} className="text-blue-600 ml-auto" />}
                       </div>
                     </div>
                   </button>
@@ -764,7 +764,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
             <div className="grid md:grid-cols-2 gap-5">
               <Field label="Payment Amount" required>
                 <div className="relative">
-                  <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input type="number" min="100000" className={inp + ' pl-11'} value={form.payment_amount}
                     onChange={e => set('payment_amount', e.target.value)} placeholder="100000" />
                 </div>
@@ -785,9 +785,9 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                   ['offline',       'Offline / Cash',   Wifi],
                 ].map(([val, lbl2, Icon]) => (
                   <button key={val} type="button" onClick={() => set('payment_method', val)}
-                    className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${form.payment_method === val ? 'border-blue-500 bg-blue-500/10' : 'border-slate-700 hover:border-slate-500'}`}>
-                    <Icon size={18} className={form.payment_method === val ? 'text-blue-400' : 'text-slate-500'} />
-                    <span className="text-sm font-bold text-white">{lbl2}</span>
+                    className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${form.payment_method === val ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-500'}`}>
+                    <Icon size={18} className={form.payment_method === val ? 'text-blue-600' : 'text-slate-500'} />
+                    <span className="text-sm font-bold text-slate-900">{lbl2}</span>
                   </button>
                 ))}
               </div>
@@ -802,7 +802,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
               </Field>
             </div>
 
-            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-200 text-xs">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-600 text-xs">
               Skipping payment is possible — the project will be registered as <strong>Payment Pending</strong>. You can record payment later from the project detail view.
             </div>
           </div>
@@ -826,16 +826,16 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                 ['Documents', Object.keys(form.docs).length > 0 ? Object.keys(form.docs).join(', ') : 'None uploaded'],
                 ['Create Account', form.create_user_account ? 'Yes — invite will be sent' : 'No'],
               ].map(([k, v]) => (
-                <div key={k} className="bg-slate-800/50 rounded-xl p-4">
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider mb-1">{k}</p>
-                  <p className="text-white text-sm font-semibold">{v}</p>
+                <div key={k} className="bg-slate-50 rounded-xl p-4">
+                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider mb-1">{k}</p>
+                  <p className="text-slate-900 text-sm font-semibold">{v}</p>
                 </div>
               ))}
             </div>
 
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-5 text-blue-200 text-sm">
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 text-blue-600 text-sm">
               <p className="font-bold mb-2">What happens next:</p>
-              <ul className="space-y-1 text-xs text-blue-300">
+              <ul className="space-y-1 text-xs text-blue-600">
                 <li>Project registered in IFB VentureX database</li>
                 {form.create_user_account && <li>Invite email sent to {form.founder_email}</li>}
                 {Object.keys(form.docs).length > 0 && <li>{Object.keys(form.docs).length} document(s) uploaded securely</li>}
@@ -849,7 +849,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
       {/* Navigation */}
       <div className="flex items-center justify-between mt-6">
         <button onClick={step === 0 ? onCancel : back}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-bold text-sm px-4 py-3">
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors font-bold text-sm px-4 py-3">
           <ChevronLeft size={16} /> {step === 0 ? 'Cancel' : 'Back'}
         </button>
 
@@ -934,18 +934,18 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
       {/* Header */}
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
-          <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-bold mb-3 transition-colors">
+          <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-bold mb-3 transition-colors">
             <ArrowLeft size={16} /> All Projects
           </button>
-          <h2 className="text-2xl font-black text-white">{project.founder_name}</h2>
-          <p className="text-slate-400 text-sm">{project.founder_email}</p>
+          <h2 className="text-2xl font-black text-slate-900">{project.founder_name}</h2>
+          <p className="text-slate-500 text-sm">{project.founder_email}</p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           <span className={`text-xs font-black uppercase tracking-wide px-3 py-1.5 rounded-full ${sc.color} bg-opacity-20 ${sc.text}`}>
             {sc.label}
           </span>
           {project.venturex_stage && (
-            <span className="text-xs font-black uppercase tracking-wide px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-300">
+            <span className="text-xs font-black uppercase tracking-wide px-3 py-1.5 rounded-full bg-blue-50 text-blue-600">
               {project.venturex_stage}
             </span>
           )}
@@ -953,10 +953,10 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-slate-900 p-1 rounded-xl overflow-x-auto">
+      <div className="flex gap-1 mb-6 bg-white p-1 rounded-xl overflow-x-auto">
         {[['overview','Overview'],['pipeline','Pipeline'],['documents','Documents'],['payment','Payment']].map(([t,l]) => (
           <button key={t} onClick={() => setActiveTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === t ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === t ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}>
             {l}
           </button>
         ))}
@@ -978,22 +978,22 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
               ['Website', project.website || '—'],
               ['Registered By', project.registered_by],
             ].map(([k,v]) => (
-              <div key={k} className="bg-slate-900 rounded-xl p-4">
+              <div key={k} className="bg-white rounded-xl p-4">
                 <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider mb-1">{k}</p>
-                <p className="text-white text-sm font-semibold">{v}</p>
+                <p className="text-slate-900 text-sm font-semibold">{v}</p>
               </div>
             ))}
           </div>
           {project.business_description && (
             <div className={card}>
               <p className={lbl}>Business Description</p>
-              <p className="text-slate-300 text-sm leading-relaxed">{project.business_description}</p>
+              <p className="text-slate-600 text-sm leading-relaxed">{project.business_description}</p>
             </div>
           )}
           {project.revenue_model && (
             <div className={card}>
               <p className={lbl}>Revenue Model</p>
-              <p className="text-slate-300 text-sm leading-relaxed">{project.revenue_model}</p>
+              <p className="text-slate-600 text-sm leading-relaxed">{project.revenue_model}</p>
             </div>
           )}
           {project.financing_types?.length > 0 && (
@@ -1001,7 +1001,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
               <p className={lbl}>Financing Types</p>
               <div className="flex flex-wrap gap-2 mt-2">
                 {project.financing_types.map(f => (
-                  <span key={f} className="bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full capitalize">{f}</span>
+                  <span key={f} className="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full capitalize">{f}</span>
                 ))}
               </div>
             </div>
@@ -1024,7 +1024,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
             {project.status !== 'archived' && (
               <button onClick={() => updateProject({ status: 'archived' }, 'project_archived')}
                 disabled={saving}
-                className="bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold px-4 py-2.5 rounded-xl transition-all">
+                className="bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold px-4 py-2.5 rounded-xl transition-all">
                 Archive
               </button>
             )}
@@ -1035,28 +1035,28 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
       {/* Pipeline Tab */}
       {activeTab === 'pipeline' && (
         <div className="space-y-4">
-          <p className="text-slate-400 text-sm">Move the project through the IFB VentureX pipeline stages.</p>
+          <p className="text-slate-500 text-sm">Move the project through the IFB VentureX pipeline stages.</p>
           <div className="space-y-3">
             {VENTUREX_STAGES.map((s, i) => {
               const isCurrent = project.venturex_stage === s.id;
               const isPast = VENTUREX_STAGES.findIndex(x => x.id === project.venturex_stage) > i;
               return (
-                <div key={s.id} className={`flex items-center gap-4 p-5 rounded-2xl border-2 transition-all ${isCurrent ? 'border-blue-500 bg-blue-500/10' : isPast ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-slate-800 bg-slate-900/50'}`}>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isCurrent ? s.color : isPast ? 'bg-emerald-500' : 'bg-slate-800'}`}>
-                    {isPast ? <Check size={18} className="text-white" /> : <span className="text-white font-black">{i + 1}</span>}
+                <div key={s.id} className={`flex items-center gap-4 p-5 rounded-2xl border-2 transition-all ${isCurrent ? 'border-blue-500 bg-blue-50' : isPast ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isCurrent ? s.color : isPast ? 'bg-emerald-500' : 'bg-slate-50'}`}>
+                    {isPast ? <Check size={18} className="text-slate-900" /> : <span className="text-slate-900 font-black">{i + 1}</span>}
                   </div>
                   <div className="flex-1">
-                    <p className={`font-black text-sm ${isCurrent ? 'text-white' : isPast ? 'text-emerald-300' : 'text-slate-400'}`}>{s.label}</p>
+                    <p className={`font-black text-sm ${isCurrent ? 'text-slate-900' : isPast ? 'text-emerald-600' : 'text-slate-500'}`}>{s.label}</p>
                     <p className="text-slate-500 text-xs mt-0.5">{s.desc}</p>
                   </div>
                   {!isCurrent && project.status === 'in_pipeline' && (
                     <button onClick={() => updateProject({ venturex_stage: s.id, status: 'in_pipeline' }, `stage_changed_to_${s.id}`)}
                       disabled={saving}
-                      className="text-blue-400 hover:text-blue-300 text-xs font-bold px-3 py-1.5 rounded-lg border border-blue-500/30 hover:border-blue-400/50 transition-all">
+                      className="text-blue-600 hover:text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg border border-blue-200 hover:border-blue-200 transition-all">
                       Set
                     </button>
                   )}
-                  {isCurrent && <span className="text-blue-400 text-xs font-black">CURRENT</span>}
+                  {isCurrent && <span className="text-blue-600 text-xs font-black">CURRENT</span>}
                 </div>
               );
             })}
@@ -1068,11 +1068,11 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
       {activeTab === 'documents' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-slate-400 text-sm">{project.kyc_project_documents?.length || 0} document(s) on file</p>
+            <p className="text-slate-500 text-sm">{project.kyc_project_documents?.length || 0} document(s) on file</p>
             <div className="flex gap-2 flex-wrap">
               {['resume','passport','business_plan','legal','other'].map(t => (
                 <button key={t} onClick={() => { setUploadType(t); fileRef.current?.click(); }}
-                  className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg font-bold capitalize transition-all">
+                  className="text-xs bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold capitalize transition-all">
                   + {t.replace('_',' ')}
                 </button>
               ))}
@@ -1083,23 +1083,23 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
           {!project.kyc_project_documents?.length ? (
             <div className={card + ' text-center py-12'}>
               <FileText size={32} className="text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 font-bold">No documents uploaded</p>
+              <p className="text-slate-500 font-bold">No documents uploaded</p>
             </div>
           ) : (
             <div className="space-y-3">
               {project.kyc_project_documents.map(doc => (
-                <div key={doc.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div key={doc.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center">
-                      <FileText size={18} className="text-blue-400" />
+                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center">
+                      <FileText size={18} className="text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-white text-sm font-bold">{doc.file_name}</p>
+                      <p className="text-slate-900 text-sm font-bold">{doc.file_name}</p>
                       <p className="text-slate-500 text-xs capitalize">{doc.doc_type.replace('_',' ')} · {new Date(doc.uploaded_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                   {doc.file_url && (
-                    <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300">
+                    <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-600">
                       <Download size={16} />
                     </a>
                   )}
@@ -1116,13 +1116,13 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
           {project.kyc_project_payments?.filter(p => p.payment_status === 'completed').length > 0 ? (
             <div className="space-y-3">
               {project.kyc_project_payments.map(p => (
-                <div key={p.id} className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5">
+                <div key={p.id} className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <CheckCircle2 size={20} className="text-emerald-400" />
-                    <span className="text-emerald-400 text-xs font-black uppercase">Completed</span>
+                    <CheckCircle2 size={20} className="text-emerald-600" />
+                    <span className="text-emerald-600 text-xs font-black uppercase">Completed</span>
                   </div>
-                  <p className="text-2xl font-black text-white">{p.currency} {Number(p.amount).toLocaleString()}</p>
-                  <p className="text-slate-400 text-sm mt-1 capitalize">{p.payment_method} · {p.tier} tier</p>
+                  <p className="text-2xl font-black text-slate-900">{p.currency} {Number(p.amount).toLocaleString()}</p>
+                  <p className="text-slate-500 text-sm mt-1 capitalize">{p.payment_method} · {p.tier} tier</p>
                   {p.paid_at && <p className="text-slate-500 text-xs mt-2">{new Date(p.paid_at).toLocaleString()}</p>}
                 </div>
               ))}
@@ -1130,7 +1130,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
           ) : (
             <div className={card + ' text-center py-12'}>
               <DollarSign size={32} className="text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 font-bold mb-4">No payment recorded</p>
+              <p className="text-slate-500 font-bold mb-4">No payment recorded</p>
               <button onClick={() => setShowPayForm(true)}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all">
                 Record Payment
@@ -1140,7 +1140,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
 
           {showPayForm && (
             <div className={card}>
-              <h3 className="text-white font-black mb-5">Record Payment</h3>
+              <h3 className="text-slate-900 font-black mb-5">Record Payment</h3>
               <div className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field label="Tier" required>
@@ -1166,7 +1166,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
                   <input className={inp} value={payForm.notes} onChange={e => setPayForm(p => ({ ...p, notes: e.target.value }))} placeholder="Payment notes..." />
                 </Field>
                 <div className="flex gap-3">
-                  <button onClick={() => setShowPayForm(false)} className="px-5 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold hover:border-slate-500 transition-all">Cancel</button>
+                  <button onClick={() => setShowPayForm(false)} className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:border-slate-500 transition-all">Cancel</button>
                   <button onClick={recordPayment} disabled={saving}
                     className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-sm py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
                     {saving ? <RefreshCw size={16} className="animate-spin" /> : <><CheckCircle2 size={16} /> Confirm Payment</>}
@@ -1204,22 +1204,22 @@ export default function AdminKYCPortal() {
   if (!adminSession) return <LoginView onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       {/* Top bar */}
-      <div className="bg-[#0F1629] border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             {['D','E','U','S'].map((l,i) => (
               <span key={l} className="text-xl font-black" style={{ color: ['#4285F4','#EA4335','#FBBC04','#34A853'][i] }}>{l}</span>
             ))}
           </div>
-          <div className="w-px h-5 bg-slate-700" />
-          <span className="text-slate-300 text-sm font-bold">KYC Admin Portal</span>
+          <div className="w-px h-5 bg-slate-100" />
+          <span className="text-slate-600 text-sm font-bold">KYC Admin Portal</span>
           {view !== 'projects' && (
             <>
-              <div className="w-px h-5 bg-slate-700" />
+              <div className="w-px h-5 bg-slate-100" />
               <button onClick={() => { setView('projects'); setSelectedProject(null); }}
-                className="text-slate-400 hover:text-white text-sm transition-colors">
+                className="text-slate-500 hover:text-slate-900 text-sm transition-colors">
                 {view === 'new_project' ? 'New Project' : 'Project Detail'}
               </button>
             </>
@@ -1227,10 +1227,10 @@ export default function AdminKYCPortal() {
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <p className="text-white text-sm font-bold">{adminSession.name}</p>
+            <p className="text-slate-900 text-sm font-bold">{adminSession.name}</p>
             <p className="text-slate-500 text-xs">{adminSession.email}</p>
           </div>
-          <button onClick={handleLogout} className="text-slate-400 hover:text-red-400 transition-colors text-sm font-bold flex items-center gap-2">
+          <button onClick={handleLogout} className="text-slate-500 hover:text-red-600 transition-colors text-sm font-bold flex items-center gap-2">
             <XCircle size={16} /> Logout
           </button>
         </div>

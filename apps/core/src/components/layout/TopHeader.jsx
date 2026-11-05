@@ -38,7 +38,8 @@ export default function TopHeader({
         <button
           id="tour-app-drawer"
           onClick={() => setIsAppDrawerOpen(!isAppDrawerOpen)}
-          className="text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none cursor-pointer"
+          className="hidden md:inline-flex text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none cursor-pointer"
+          aria-label="Services"
         >
           <LayoutGrid size={22} />
         </button>
@@ -46,6 +47,7 @@ export default function TopHeader({
           isAppDrawerOpen={isAppDrawerOpen}
           setIsAppDrawerOpen={setIsAppDrawerOpen}
           setActiveAppPopup={setActiveAppPopup}
+          onSeeAll={() => setActiveTab('SERVICES')}
         />
 
         {/* Search Bar */}

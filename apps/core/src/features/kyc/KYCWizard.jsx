@@ -19,9 +19,9 @@ const STEPS = [
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
-const inp = 'w-full bg-slate-800/50 border border-slate-700/60 px-4 py-3 rounded-xl text-sm font-medium text-white outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 transition-all placeholder:text-slate-500 hover:border-slate-600';
+const inp = 'ui-input';
 const sel = inp + ' cursor-pointer';
-const lbl = 'block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5';
+const lbl = 'ui-label';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -31,25 +31,25 @@ function Field({ label, children }) {
 
 function Sect({ icon: Icon, title }) {
   return (
-    <div className="flex items-center gap-2 border-b border-slate-700/40 pb-2 mb-4 mt-7 first:mt-0">
-      <Icon size={13} className="text-violet-400 shrink-0" />
-      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{title}</span>
+    <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-4 mt-7 first:mt-0">
+      <Icon size={18} className="text-blue-600 shrink-0" />
+      <span className="text-base font-semibold text-slate-900">{title}</span>
     </div>
   );
 }
 
 function Toggle({ id, checked, onChange, color = 'violet', children }) {
   const ring = {
-    violet: 'border-violet-700/40 bg-violet-950/20',
-    amber:  'border-amber-700/30  bg-amber-950/20',
-    red:    'border-red-700/30    bg-red-950/20',
-    blue:   'border-blue-700/30   bg-blue-950/20',
+    violet: 'border-blue-200 bg-blue-50',
+    amber:  'border-amber-200  bg-amber-50',
+    red:    'border-red-200    bg-red-50',
+    blue:   'border-blue-200   bg-blue-50',
   };
   return (
     <div className={`flex items-start gap-3 border rounded-xl p-4 ${ring[color]}`}>
       <input type="checkbox" id={id} checked={checked} onChange={onChange}
-        className="w-4 h-4 mt-0.5 rounded shrink-0 cursor-pointer accent-violet-500" />
-      <label htmlFor={id} className="text-xs font-semibold text-slate-300 leading-relaxed cursor-pointer">{children}</label>
+        className="w-5 h-5 mt-0.5 rounded shrink-0 cursor-pointer accent-blue-600" />
+      <label htmlFor={id} className="text-sm text-slate-700 leading-relaxed cursor-pointer">{children}</label>
     </div>
   );
 }
@@ -95,15 +95,15 @@ function CameraCapture({ onCapture, onClose }) {
   return (
     <div className="fixed inset-0 z-[300] bg-black flex flex-col">
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/80 to-transparent">
-        <span className="text-white font-black text-sm tracking-tight">IFB Secure Camera</span>
-        <button onClick={close} className="text-white/70 hover:text-white transition-colors"><X size={22}/></button>
+        <span className="text-slate-900 font-black text-sm tracking-tight">IFB Secure Camera</span>
+        <button onClick={close} className="text-slate-500 hover:text-slate-900 transition-colors"><X size={22}/></button>
       </div>
       {camErr ? (
         <div className="flex-1 flex items-center justify-center p-8">
-          <div className="bg-slate-900 rounded-2xl p-6 max-w-sm text-center space-y-4">
-            <AlertTriangle size={32} className="text-amber-400 mx-auto"/>
-            <p className="text-white font-bold text-sm">{camErr}</p>
-            <button onClick={close} className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-colors">
+          <div className="bg-white rounded-2xl p-6 max-w-sm text-center space-y-4">
+            <AlertTriangle size={32} className="text-amber-600 mx-auto"/>
+            <p className="text-slate-900 font-bold text-sm">{camErr}</p>
+            <button onClick={close} className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-colors">
               Use Upload Instead
             </button>
           </div>
@@ -116,11 +116,11 @@ function CameraCapture({ onCapture, onClose }) {
         <div className="border-2 border-white/30 rounded-2xl" style={{ width: '80%', aspectRatio: '1.58' }} />
       </div>
       <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center gap-10 pb-10 pt-8 bg-gradient-to-t from-black/70 to-transparent">
-        <button onClick={close} className="w-12 h-12 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30">
+        <button onClick={close} className="w-12 h-12 rounded-full bg-slate-50 text-slate-900 flex items-center justify-center hover:bg-white/30">
           <X size={18}/>
         </button>
         <button onClick={snap} disabled={!ready}
-          className="w-20 h-20 rounded-full bg-white shadow-2xl border-[5px] border-white/40 disabled:opacity-30 active:scale-90 transition-all" />
+          className="w-20 h-20 rounded-full bg-white shadow-sm border-[5px] border-white/40 disabled:opacity-30 active:scale-90 transition-all" />
         <div className="w-12"/>
       </div>
     </div>
@@ -153,37 +153,37 @@ function DocZone({ label, field, files, onChange, required, accept = 'image/*,ap
           onClose={() => setCameraOpen(false)}
         />
       )}
-      <label className={lbl}>{label}{required && <span className="text-violet-400 ml-0.5">*</span>}</label>
+      <label className={lbl}>{label}{required && <span className="text-blue-600 ml-0.5">*</span>}</label>
 
       {previewUrl ? (
-        <div className="relative rounded-xl overflow-hidden border border-slate-600/50 group cursor-pointer" onClick={() => fileRef.current.click()}>
+        <div className="relative rounded-xl overflow-hidden border border-slate-200 group cursor-pointer" onClick={() => fileRef.current.click()}>
           <img src={previewUrl} alt="" className="w-full h-32 object-cover" />
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <span className="text-white text-[10px] font-black uppercase bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-sm">Replace</span>
+            <span className="text-slate-900 text-[10px] font-black uppercase bg-slate-50 px-3 py-1.5 rounded-lg backdrop-blur-sm">Replace</span>
           </div>
           <div className="absolute top-2 right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-            <CheckCircle2 size={12} className="text-white"/>
+            <CheckCircle2 size={12} className="text-slate-900"/>
           </div>
-          <p className="absolute bottom-0 left-0 right-0 bg-black/60 text-[9px] text-white font-bold px-2 py-1 truncate">{file.name}</p>
+          <p className="absolute bottom-0 left-0 right-0 bg-slate-50 text-[9px] text-slate-900 font-bold px-2 py-1 truncate">{file.name}</p>
         </div>
       ) : file ? (
-        <div className="flex items-center gap-3 bg-emerald-900/20 border border-emerald-700/40 rounded-xl p-3 cursor-pointer" onClick={() => fileRef.current.click()}>
-          <CheckCircle2 size={16} className="text-emerald-400 shrink-0"/>
-          <span className="text-xs text-emerald-300 font-bold truncate flex-1">{file.name}</span>
-          <button type="button" onClick={e => { e.stopPropagation(); onChange(field, null); }} className="text-slate-500 hover:text-red-400 transition-colors">
+        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 cursor-pointer" onClick={() => fileRef.current.click()}>
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0"/>
+          <span className="text-xs text-emerald-600 font-bold truncate flex-1">{file.name}</span>
+          <button type="button" onClick={e => { e.stopPropagation(); onChange(field, null); }} className="text-slate-500 hover:text-red-600 transition-colors">
             <X size={14}/>
           </button>
         </div>
       ) : (
-        <div className="border-2 border-dashed border-slate-600/50 hover:border-violet-500/50 rounded-xl p-3 transition-all bg-slate-800/20">
+        <div className="border-2 border-dashed border-slate-200 hover:border-blue-200 rounded-xl p-3 transition-all bg-slate-50">
           <div className={`grid gap-2 ${capture ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <button type="button" onClick={() => fileRef.current.click()}
-              className="flex items-center justify-center gap-2 py-3 bg-slate-700/40 hover:bg-slate-700/80 rounded-lg text-slate-400 hover:text-white transition-all">
+              className="flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
               <Upload size={14}/><span className="text-[10px] font-black uppercase">Upload</span>
             </button>
             {capture && (
               <button type="button" onClick={() => setCameraOpen(true)}
-                className="flex items-center justify-center gap-2 py-3 bg-slate-700/40 hover:bg-violet-700/40 rounded-lg text-slate-400 hover:text-violet-300 transition-all">
+                className="flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-blue-700/40 rounded-lg text-slate-500 hover:text-blue-600 transition-all">
                 <Camera size={14}/><span className="text-[10px] font-black uppercase">Camera</span>
               </button>
             )}
@@ -200,50 +200,50 @@ function DocZone({ label, field, files, onChange, required, accept = 'image/*,ap
 
 function AIPanel({ scanning, fields, confidence }) {
   return (
-    <div className="bg-violet-950/25 border border-violet-700/35 rounded-2xl p-4">
+    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
       <div className="flex items-center gap-2 mb-3">
-        <Brain size={14} className="text-violet-400"/>
-        <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">AI Scan</span>
-        {scanning && <Loader2 size={10} className="animate-spin text-violet-400 ml-auto"/>}
-        {!scanning && fields?.length > 0 && <Sparkles size={10} className="text-emerald-400 ml-auto"/>}
+        <Brain size={14} className="text-blue-600"/>
+        <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">AI Scan</span>
+        {scanning && <Loader2 size={10} className="animate-spin text-blue-600 ml-auto"/>}
+        {!scanning && fields?.length > 0 && <Sparkles size={10} className="text-emerald-600 ml-auto"/>}
       </div>
 
       {scanning ? (
         <div className="space-y-3">
-          <div className="h-1.5 bg-violet-900/50 rounded-full overflow-hidden">
-            <div className="h-full bg-violet-500 rounded-full w-3/5 animate-pulse"/>
+          <div className="h-1.5 bg-blue-50 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full w-3/5 animate-pulse"/>
           </div>
-          <p className="text-[10px] text-slate-400">Analysing with Gemini AI…</p>
+          <p className="text-[10px] text-slate-500">Analysing with Gemini AI…</p>
           {['Full name', 'Date of birth', 'Nationality', 'Document no.', 'Expiry'].map(f => (
             <div key={f} className="flex items-center gap-2 opacity-40">
-              <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse shrink-0"/>
-              <span className="text-[9px] text-slate-400">{f}</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0"/>
+              <span className="text-[9px] text-slate-500">{f}</span>
             </div>
           ))}
         </div>
       ) : fields?.length > 0 ? (
         <div className="space-y-1.5">
-          <p className="text-[9px] font-black text-emerald-400 uppercase tracking-wider mb-3">✓ {fields.length} fields auto-filled</p>
+          <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wider mb-3">✓ {fields.length} fields auto-filled</p>
           {fields.map(f => (
-            <div key={f.key} className="flex items-center justify-between gap-2 py-1 border-b border-slate-700/25 last:border-0">
-              <span className="text-[9px] text-slate-400 font-medium shrink-0">{f.label}</span>
+            <div key={f.key} className="flex items-center justify-between gap-2 py-1 border-b border-slate-200 last:border-0">
+              <span className="text-[9px] text-slate-500 font-medium shrink-0">{f.label}</span>
               <div className="flex items-center gap-1 min-w-0">
-                <span className="text-[9px] text-white font-bold truncate max-w-[70px]">{f.value}</span>
-                <span className={`text-[7px] font-black px-1 py-0.5 rounded shrink-0 ${(f.confidence||0)>=0.8?'bg-emerald-900/60 text-emerald-400':(f.confidence||0)>=0.6?'bg-amber-900/60 text-amber-400':'bg-red-900/60 text-red-400'}`}>
+                <span className="text-[9px] text-slate-900 font-bold truncate max-w-[70px]">{f.value}</span>
+                <span className={`text-[7px] font-black px-1 py-0.5 rounded shrink-0 ${(f.confidence||0)>=0.8?'bg-emerald-50 text-emerald-600':(f.confidence||0)>=0.6?'bg-amber-50 text-amber-600':'bg-red-50 text-red-600'}`}>
                   {Math.round((f.confidence||0)*100)}%
                 </span>
               </div>
             </div>
           ))}
           {confidence != null && (
-            <div className="mt-3 pt-2 border-t border-slate-700/30">
+            <div className="mt-3 pt-2 border-t border-slate-200">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] text-slate-400 font-black uppercase">Confidence</span>
-                <span className={`text-[9px] font-black ${confidence>=0.8?'text-emerald-400':confidence>=0.6?'text-amber-400':'text-red-400'}`}>
+                <span className="text-[9px] text-slate-500 font-black uppercase">Confidence</span>
+                <span className={`text-[9px] font-black ${confidence>=0.8?'text-emerald-600':confidence>=0.6?'text-amber-600':'text-red-600'}`}>
                   {Math.round(confidence*100)}%
                 </span>
               </div>
-              <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all ${confidence>=0.8?'bg-emerald-500':confidence>=0.6?'bg-amber-500':'bg-red-500'}`}
                   style={{ width: `${confidence*100}%` }}/>
               </div>
@@ -656,12 +656,12 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
   const renderPersonal = () => (
     <div className="space-y-4">
       <Sect icon={User} title="Legal Identity" />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="First Name *"><input className={inp} value={form.legal_first_name} onChange={e => set('legal_first_name', e.target.value)} placeholder="As on ID"/></Field>
         <Field label="Middle Name"><input className={inp} value={form.legal_middle_name} onChange={e => set('legal_middle_name', e.target.value)} placeholder="If applicable"/></Field>
         <Field label="Last Name *"><input className={inp} value={form.legal_last_name} onChange={e => set('legal_last_name', e.target.value)} placeholder="As on ID"/></Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Date of Birth *"><input type="date" className={inp} value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)}/></Field>
         <Field label="Gender">
           <select className={sel} value={form.gender} onChange={e => set('gender', e.target.value)}>
@@ -669,11 +669,11 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           </select>
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Primary Nationality *"><input className={inp} value={form.nationality} onChange={e => set('nationality', e.target.value)} placeholder="Country"/></Field>
         <Field label="Country of Birth"><input className={inp} value={form.country_of_birth} onChange={e => set('country_of_birth', e.target.value)} placeholder="Country"/></Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Marital Status">
           <select className={sel} value={form.marital_status} onChange={e => set('marital_status', e.target.value)}>
             <option value="">Select</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
@@ -689,11 +689,11 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       )}
 
       <Sect icon={MapPin} title="Contact Information" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Primary Phone *"><input type="tel" className={inp} value={form.phone_primary} onChange={e => set('phone_primary', e.target.value)} placeholder="+1 555 000 0000"/></Field>
         <Field label="WhatsApp"><input type="tel" className={inp} value={form.whatsapp_number} onChange={e => set('whatsapp_number', e.target.value)} placeholder="+1 555 000 0000"/></Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Email (Primary)"><input type="email" className={inp} value={form.email_primary} readOnly/></Field>
         <Field label="Email (Secondary)"><input type="email" className={inp} value={form.email_secondary} onChange={e => set('email_secondary', e.target.value)} placeholder="Optional"/></Field>
       </div>
@@ -701,13 +701,13 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       <Sect icon={MapPin} title="Residential Address" />
       <Field label="Address Line 1 *"><input className={inp} value={form.residential_address_line1} onChange={e => set('residential_address_line1', e.target.value)} placeholder="Street address"/></Field>
       <Field label="Address Line 2"><input className={inp} value={form.residential_address_line2} onChange={e => set('residential_address_line2', e.target.value)} placeholder="Apt, suite (optional)"/></Field>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <Field label="City *"><input className={inp} value={form.residential_city} onChange={e => set('residential_city', e.target.value)}/></Field>
         <Field label="State / Region"><input className={inp} value={form.residential_state} onChange={e => set('residential_state', e.target.value)}/></Field>
         <Field label="Postal Code"><input className={inp} value={form.residential_postal_code} onChange={e => set('residential_postal_code', e.target.value)}/></Field>
         <Field label="Country *"><input className={inp} value={form.residential_country} onChange={e => set('residential_country', e.target.value)}/></Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Years at This Address"><input type="number" className={inp} min="0" value={form.years_at_address} onChange={e => set('years_at_address', e.target.value)}/></Field>
         <Field label="Home Ownership">
           <select className={sel} value={form.home_ownership} onChange={e => set('home_ownership', e.target.value)}>
@@ -723,7 +723,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       {/* Left: doc details + uploads */}
       <div className="lg:col-span-3 space-y-4">
         <Sect icon={FileText} title="ID Document Details" />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Document Type *">
             <select className={sel} value={form.id_type} onChange={e => set('id_type', e.target.value)}>
               <option value="">Select</option>
@@ -735,7 +735,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           </Field>
           <Field label="Document Number *"><input className={inp} value={form.id_number} onChange={e => set('id_number', e.target.value)} placeholder="As printed on ID"/></Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Expiry Date">
             <input type="date" className={inp} value={form.id_expiry} onChange={e => {
               const val = e.target.value;
@@ -754,7 +754,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         <Field label="Tax ID / TIN / SSN"><input className={inp} value={form.tax_id} onChange={e => set('tax_id', e.target.value)} placeholder="Home country tax number"/></Field>
 
         <Sect icon={Camera} title="Document Capture — AI Auto-Fill" />
-        <div className="bg-violet-950/15 border border-violet-700/25 rounded-xl px-3 py-2 text-[10px] text-violet-300 font-medium">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-[10px] text-blue-600 font-medium">
           Upload or photograph your ID — Gemini AI reads it instantly and fills your details on step 1.
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -769,9 +769,9 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           <DocZone label="Selfie — Face Only" field="selfie" files={files} onChange={setFile} accept="image/*" capture />
           <DocZone label="Selfie Holding ID" field="selfie_with_id" files={files} onChange={setFile} accept="image/*" capture required />
         </div>
-        <div className="bg-blue-950/20 border border-blue-700/30 rounded-xl p-3">
-          <p className="text-[9px] font-black uppercase tracking-wider text-blue-400 mb-1">Selfie tips</p>
-          <ul className="text-[9px] text-slate-400 space-y-0.5 list-disc list-inside">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+          <p className="text-[9px] font-black uppercase tracking-wider text-blue-600 mb-1">Selfie tips</p>
+          <ul className="text-[9px] text-slate-500 space-y-0.5 list-disc list-inside">
             <li>Face fully visible, good lighting, no sunglasses</li>
             <li>Hold your ID next to your face — all text must be readable</li>
             <li>Plain or neutral background preferred</li>
@@ -784,9 +784,9 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         <div className="lg:sticky lg:top-4 space-y-3">
           <AIPanel scanning={aiScanning} fields={aiFields} confidence={aiConfidence} />
           {aiFields.length > 0 && (
-            <div className="bg-emerald-950/20 border border-emerald-700/30 rounded-xl p-3">
-              <p className="text-[9px] font-black text-emerald-400 uppercase mb-1">Step 1 auto-filled</p>
-              <p className="text-[9px] text-slate-400">Navigate back to verify AI-extracted values before continuing.</p>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+              <p className="text-[9px] font-black text-emerald-600 uppercase mb-1">Step 1 auto-filled</p>
+              <p className="text-[9px] text-slate-500">Navigate back to verify AI-extracted values before continuing.</p>
             </div>
           )}
         </div>
@@ -797,7 +797,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
   const renderFinances = () => (
     <div className="space-y-4">
       <Sect icon={Briefcase} title="Employment" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Employment Status *">
           <select className={sel} value={form.employment_status} onChange={e => set('employment_status', e.target.value)}>
             <option value="">Select</option>
@@ -811,18 +811,18 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         </Field>
         <Field label="Industry / Sector"><input className={inp} value={form.industry} onChange={e => set('industry', e.target.value)} placeholder="e.g. Finance, Tech, Healthcare"/></Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Employer Name"><input className={inp} value={form.employer_name} onChange={e => set('employer_name', e.target.value)}/></Field>
         <Field label="Job Title"><input className={inp} value={form.job_title} onChange={e => set('job_title', e.target.value)}/></Field>
       </div>
 
       <Sect icon={DollarSign} title="Income" />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Monthly Income (USD)"><input type="number" className={inp} min="0" value={form.monthly_income_usd} onChange={e => set('monthly_income_usd', e.target.value)}/></Field>
         <Field label="Annual Income (USD)"><input type="number" className={inp} min="0" value={form.annual_income_usd} onChange={e => set('annual_income_usd', e.target.value)}/></Field>
       </div>
       <Field label="Other Income Sources"><input className={inp} value={form.other_income_sources} onChange={e => set('other_income_sources', e.target.value)} placeholder="e.g. rental income, dividends, freelance"/></Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Primary Source of Funds *">
           <select className={sel} value={form.source_of_funds} onChange={e => set('source_of_funds', e.target.value)}>
             <option value="">Select</option>
@@ -850,14 +850,14 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       <Field label="Source of Funds Details">
         <textarea className={inp} rows={2} value={form.source_of_funds_details} onChange={e => set('source_of_funds_details', e.target.value)} placeholder="Briefly describe how you acquired your funds"/>
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Expected Monthly Deposits (USD)"><input type="number" className={inp} min="0" value={form.expected_monthly_deposits_usd} onChange={e => set('expected_monthly_deposits_usd', e.target.value)}/></Field>
         <Field label="Expected Monthly Withdrawals (USD)"><input type="number" className={inp} min="0" value={form.expected_monthly_withdrawals_usd} onChange={e => set('expected_monthly_withdrawals_usd', e.target.value)}/></Field>
       </div>
       <Field label="Expected Transaction Types"><input className={inp} value={form.expected_transaction_purpose} onChange={e => set('expected_transaction_purpose', e.target.value)} placeholder="e.g. wire transfers, P2P, crypto purchases"/></Field>
 
       <Sect icon={Globe} title="Wealth & Assets" />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Net Worth (USD)"><input type="number" className={inp} min="0" value={form.total_net_worth_usd} onChange={e => set('total_net_worth_usd', e.target.value)}/></Field>
         <Field label="Liquid Assets (USD)"><input type="number" className={inp} min="0" value={form.liquid_assets_usd} onChange={e => set('liquid_assets_usd', e.target.value)}/></Field>
         <Field label="Real Estate (USD)"><input type="number" className={inp} min="0" value={form.real_estate_value_usd} onChange={e => set('real_estate_value_usd', e.target.value)}/></Field>
@@ -879,7 +879,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         I am or have been a Politically Exposed Person (PEP) — a current or former government official, politician, military officer, or judicial figure, or a close associate / family member of one.
       </Toggle>
       {form.politically_exposed_person && (
-        <div className="grid grid-cols-2 gap-3 pl-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-3">
           <Field label="PEP Role / Position"><input className={inp} value={form.pep_role} onChange={e => set('pep_role', e.target.value)} placeholder="e.g. Minister of Finance"/></Field>
           <Field label="PEP Country"><input className={inp} value={form.pep_country} onChange={e => set('pep_country', e.target.value)}/></Field>
         </div>
@@ -911,7 +911,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       )}
 
       <Sect icon={Briefcase} title="Investor Profile" />
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Investment Experience">
           <select className={sel} value={form.investment_experience} onChange={e => set('investment_experience', e.target.value)}>
             <option value="">Select</option><option value="none">None</option><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="expert">Expert</option>
@@ -935,11 +935,11 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       </Toggle>
       {form.is_corporate && (
         <div className="space-y-4 pl-3 pt-1">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Legal Company Name *"><input className={inp} value={form.company_legal_name} onChange={e => set('company_legal_name', e.target.value)}/></Field>
             <Field label="Registration Number *"><input className={inp} value={form.company_registration_number} onChange={e => set('company_registration_number', e.target.value)}/></Field>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Country of Registration"><input className={inp} value={form.company_registration_country} onChange={e => set('company_registration_country', e.target.value)}/></Field>
             <Field label="Company Type">
               <select className={sel} value={form.company_type} onChange={e => set('company_type', e.target.value)}>
@@ -948,7 +948,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
             </Field>
           </div>
           <Field label="Business Activity"><input className={inp} value={form.company_industry} onChange={e => set('company_industry', e.target.value)}/></Field>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Field label="UBO Full Name"><input className={inp} value={form.ubo_full_name} onChange={e => set('ubo_full_name', e.target.value)}/></Field>
             <Field label="UBO Nationality"><input className={inp} value={form.ubo_nationality} onChange={e => set('ubo_nationality', e.target.value)}/></Field>
             <Field label="UBO Ownership %"><input type="number" className={inp} min="0" max="100" value={form.ubo_ownership_percentage} onChange={e => set('ubo_ownership_percentage', e.target.value)}/></Field>
@@ -1001,38 +1001,38 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           { label: 'FATCA', val: form.fatca_applicable ? 'Applicable' : 'N/A' },
           { label: 'Documents', val: `${Object.values(files).filter(Boolean).length} uploaded` },
         ].map(({ label, val }) => (
-          <div key={label} className="bg-slate-800/50 border border-slate-700/40 rounded-xl p-3">
+          <div key={label} className="bg-slate-50 border border-slate-200 rounded-xl p-3">
             <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">{label}</p>
-            <p className="text-xs font-bold text-white mt-0.5 truncate">{val}</p>
+            <p className="text-xs font-bold text-slate-900 mt-0.5 truncate">{val}</p>
           </div>
         ))}
       </div>
 
       {/* Upload progress indicator */}
       {Object.keys(uploadProgress).length > 0 && (
-        <div className="space-y-1.5 bg-slate-800/30 border border-slate-700/30 rounded-xl p-3">
+        <div className="space-y-1.5 bg-slate-50 border border-slate-200 rounded-xl p-3">
           {Object.entries(uploadProgress).map(([doc, status]) => (
             <div key={doc} className="flex items-center gap-2">
-              {status === 'uploading' ? <Loader2 size={10} className="animate-spin text-violet-400 shrink-0"/> : <CheckCircle2 size={10} className="text-emerald-400 shrink-0"/>}
-              <span className="text-[9px] font-bold text-slate-400 flex-1 capitalize">{doc.replace(/_/g,' ')}</span>
-              <span className={`text-[8px] font-black ${status === 'done' ? 'text-emerald-400' : 'text-violet-400'}`}>{status}</span>
+              {status === 'uploading' ? <Loader2 size={10} className="animate-spin text-blue-600 shrink-0"/> : <CheckCircle2 size={10} className="text-emerald-600 shrink-0"/>}
+              <span className="text-[9px] font-bold text-slate-500 flex-1 capitalize">{doc.replace(/_/g,' ')}</span>
+              <span className={`text-[8px] font-black ${status === 'done' ? 'text-emerald-600' : 'text-blue-600'}`}>{status}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* AML Declaration */}
-      <div className="bg-slate-800/40 border border-slate-600/40 rounded-2xl p-5">
-        <h4 className="font-black text-white text-sm mb-3 flex items-center gap-2">
-          <Shield size={14} className="text-violet-400"/> AML / CTF Declaration
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+        <h4 className="font-black text-slate-900 text-sm mb-3 flex items-center gap-2">
+          <Shield size={14} className="text-blue-600"/> AML / CTF Declaration
         </h4>
-        <p className="text-xs text-slate-400 leading-relaxed mb-4">
+        <p className="text-xs text-slate-500 leading-relaxed mb-4">
           I hereby declare that all information provided in this application is true, accurate, and complete to the best of my knowledge. I understand that providing false information is a criminal offence under applicable AML/CTF regulations. I consent to IFB performing background checks, sanctions screening, and periodic KYC reviews as required by FATF, FATCA, CRS, and applicable local regulations. I authorise IFB to verify my identity, address, and financial information with third-party providers, credit bureaus, and government databases. I acknowledge that my account may be suspended pending investigation if suspicious activity is detected.
         </p>
-        <div className="flex items-start gap-3 bg-violet-950/30 border border-violet-700/40 rounded-xl p-4">
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
           <input type="checkbox" id="aml_agree" checked={form.aml_terms_agreed} onChange={e => set('aml_terms_agreed', e.target.checked)}
-            className="w-5 h-5 accent-violet-500 mt-0.5 shrink-0 cursor-pointer"/>
-          <label htmlFor="aml_agree" className="text-xs font-black text-slate-300 cursor-pointer leading-relaxed">
+            className="w-5 h-5 accent-blue-500 mt-0.5 shrink-0 cursor-pointer"/>
+          <label htmlFor="aml_agree" className="text-xs font-black text-slate-600 cursor-pointer leading-relaxed">
             I have read and agree to the AML/CTF declaration, Terms of Service, and Privacy Policy. I consent to identity verification and ongoing monitoring.
           </label>
         </div>
@@ -1060,17 +1060,17 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
     <div className="space-y-6">
 
       {prefilled && (
-        <div className="bg-amber-950/20 border border-amber-700/30 rounded-xl px-4 py-3 flex items-center gap-2">
-          <AlertTriangle size={13} className="text-amber-400 shrink-0"/>
-          <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">Previous submission loaded — update what's flagged and resubmit.</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-2">
+          <AlertTriangle size={13} className="text-amber-600 shrink-0"/>
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Previous submission loaded — update what's flagged and resubmit.</p>
         </div>
       )}
 
       {/* ── Step indicator ── */}
       <div className="relative">
         {/* connecting track */}
-        <div className="absolute top-5 left-5 right-5 h-0.5 bg-slate-700/70">
-          <div className="h-full bg-gradient-to-r from-emerald-500 to-violet-600 transition-all duration-500 ease-out"
+        <div className="absolute top-5 left-5 right-5 h-0.5 bg-slate-100">
+          <div className="h-full bg-gradient-to-r from-emerald-500 to-blue-600 transition-all duration-500 ease-out"
             style={{ width: `${progressPct}%` }}/>
         </div>
         <div className="relative z-10 flex items-center justify-between">
@@ -1082,13 +1082,13 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
               <button key={s.id} type="button" onClick={() => i < step && setStep(i)}
                 disabled={i > step}
                 className={`flex flex-col items-center gap-1.5 group ${i <= step ? 'cursor-pointer' : 'cursor-default'}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${done ? 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/30' : active ? 'bg-violet-600 border-violet-400 shadow-lg shadow-violet-500/40 scale-110' : 'bg-slate-800 border-slate-600'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${done ? 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/30' : active ? 'bg-blue-600 border-blue-400 shadow-lg shadow-blue-500/40 scale-110' : 'bg-slate-50 border-slate-200'}`}>
                   {done
-                    ? <CheckCheck size={15} className="text-white"/>
-                    : <Icon size={15} className={active ? 'text-white' : 'text-slate-500'}/>
+                    ? <CheckCheck size={15} className="text-slate-900"/>
+                    : <Icon size={15} className={active ? 'text-slate-900' : 'text-slate-500'}/>
                   }
                 </div>
-                <span className={`text-[8px] font-black uppercase tracking-widest hidden sm:block whitespace-nowrap transition-colors ${active ? 'text-violet-400' : done ? 'text-emerald-400' : 'text-slate-600'}`}>
+                <span className={`text-[8px] font-black uppercase tracking-widest hidden sm:block whitespace-nowrap transition-colors ${active ? 'text-blue-600' : done ? 'text-emerald-600' : 'text-slate-600'}`}>
                   {s.label}
                 </span>
               </button>
@@ -1099,8 +1099,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
       {/* ── Step title ── */}
       <div>
-        <h3 className="text-lg font-black text-white flex items-center gap-2">
-          <S.icon size={18} className="text-violet-400"/>
+        <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+          <S.icon size={18} className="text-blue-600"/>
           {S.label}
         </h3>
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-0.5">{S.hint}</p>
@@ -1110,16 +1110,16 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       <div>{renderStep()}</div>
 
       {/* ── Navigation ── */}
-      <div className="flex justify-between items-center border-t border-slate-700/40 pt-5">
+      <div className="flex justify-between items-center border-t border-slate-200 pt-5">
         <button type="button" onClick={() => setStep(s => Math.max(s - 1, 0))} disabled={step === 0}
-          className="flex items-center gap-2 px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 border border-slate-700/50">
+          className="flex items-center gap-2 px-5 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 border border-slate-200">
           <ChevronLeft size={14}/> Back
         </button>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-slate-600 font-bold hidden sm:block">{step + 1} / {STEPS.length}</span>
           {step < STEPS.length - 1 ? (
             <button type="button" onClick={() => setStep(s => Math.min(s + 1, STEPS.length - 1))}
-              className="flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-violet-900/40">
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-900/40">
               Continue <ChevronRight size={14}/>
             </button>
           ) : (

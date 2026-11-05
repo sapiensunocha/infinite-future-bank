@@ -363,7 +363,7 @@ export default function Agents({ session, profile, balances }) {
 
       {/* ⚙️ Deployment Modal (Unchanged) */}
       {isConfiguring && selectedAgent && (
-        <div className="fixed inset-0 z-[210] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-900/60 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[210] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-900/40 animate-in fade-in duration-300">
           <div className="bg-white border border-slate-200 shadow-2xl rounded-[3.5rem] max-w-lg w-full p-10 relative overflow-hidden">
             <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[60px] pointer-events-none"></div>
             <div className="relative z-10">
@@ -391,7 +391,7 @@ export default function Agents({ session, profile, balances }) {
 
       {/* 🎯 Assign Task Modal */}
       {taskModalAgent && (
-        <div className="fixed inset-0 z-[210] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-900/60 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[210] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-900/40 animate-in fade-in duration-300">
           <div className="bg-white border border-slate-200 shadow-2xl rounded-[3.5rem] max-w-lg w-full p-10 relative">
             <h2 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2"><Target size={20} className="text-blue-600"/> Assign Directive</h2>
             <p className="text-xs text-slate-500 mb-8">Dispatch {taskModalAgent.name} to execute operations on GCP.</p>
@@ -413,7 +413,7 @@ export default function Agents({ session, profile, balances }) {
 
       {/* 💬 Agent Chat Terminal & Execution Tracker */}
       {!isConfiguring && !taskModalAgent && selectedAgent && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6 backdrop-blur-sm bg-slate-900/60 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6 backdrop-blur-sm bg-slate-900/40 animate-in fade-in duration-300">
           <div className="bg-white border border-slate-200 shadow-2xl rounded-[3rem] max-w-3xl w-full h-[85vh] flex flex-col overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500"></div>
             

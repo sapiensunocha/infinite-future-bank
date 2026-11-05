@@ -181,7 +181,7 @@ export default function TicketingSystem({ session }) {
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Event Name</label>
               <input required type="text" value={newEvent.name} onChange={e => setNewEvent({...newEvent, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-indigo-500" placeholder="e.g., Founder's Gala 2026"/>
             </div>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Capacity (Tickets)</label>
                 <input required type="number" min="1" value={newEvent.capacity} onChange={e => setNewEvent({...newEvent, capacity: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold outline-none focus:border-indigo-500"/>

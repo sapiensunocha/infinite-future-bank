@@ -145,3 +145,74 @@ html[data-theme="dark"] [style*="background-image"],
 html[data-theme="dark"] svg.lucide {
   filter: invert(1) hue-rotate(180deg);
 }
+/* ==============================================================
+   IFB DESIGN SYSTEM (2026-11 redesign)
+   One light theme, one type scale, one set of components.
+   Use these classes in new code; the overrides below bring
+   older screens into line without rewriting each one.
+   ============================================================== */
+:root {
+  --ifb-bg: #f6f7fb;
+  --ifb-surface: #ffffff;
+  --ifb-border: #e5e7eb;
+  --ifb-text: #0f172a;
+  --ifb-muted: #64748b;
+  --ifb-brand: #2563eb;
+}
+
+@layer base {
+  html, body { background: var(--ifb-bg); color: var(--ifb-text); }
+  body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-feature-settings: 'cv11', 'ss01'; }
+}
+
+@layer components {
+  /* Page container: full width on phones, centred and capped on the web. */
+  .ui-page { @apply w-full max-w-5xl mx-auto; }
+  .ui-card { @apply bg-white border border-slate-200/80 rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.04)]; }
+  .ui-amount { @apply font-semibold tabular-nums tracking-tight; }
+
+  .ui-btn { @apply w-full h-12 px-5 rounded-xl text-[15px] font-semibold inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed; }
+  .ui-btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800; }
+  .ui-btn-secondary { @apply bg-white text-slate-800 border border-slate-200 hover:bg-slate-50; }
+
+  .ui-label { @apply block text-sm font-medium text-slate-700 mb-1.5; }
+  .ui-input { @apply w-full h-12 px-4 rounded-xl border border-slate-200 bg-white text-base text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10; }
+
+  /* Home quick actions */
+  /* Phones: icon circles with a label underneath. Web: a row of labelled buttons. */
+  .ui-action { @apply flex flex-col items-center gap-2 py-1 rounded-2xl active:scale-95 transition-transform md:flex-row md:gap-2.5 md:h-12 md:py-0 md:pl-1.5 md:pr-4 md:bg-white md:border md:border-slate-200 md:hover:bg-slate-50 md:active:scale-100; }
+  .ui-action-icon { @apply w-12 h-12 md:w-9 md:h-9 rounded-2xl md:rounded-xl flex items-center justify-center shadow-sm md:shadow-none; }
+  .ui-action-label { @apply text-xs md:text-sm font-medium md:font-semibold text-slate-700 md:text-slate-800 text-center leading-tight whitespace-nowrap; }
+
+  /* Small service tiles (Home "Services" row) */
+  .ui-tile { @apply flex flex-col items-center gap-1.5 px-1 py-2.5 rounded-xl hover:bg-slate-50 active:bg-slate-100 text-center; }
+  .ui-tile-icon { @apply w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center; }
+  .ui-tile-label { @apply text-xs font-medium text-slate-700 leading-tight line-clamp-2; }
+}
+
+/* ---- Consistency overrides for older screens ---------------- */
+
+/* 1. Nothing smaller than 11px: the old 8–10px micro labels were unreadable. */
+.text-\[7px\], .text-\[8px\], .text-\[9px\], .text-\[10px\] { font-size: 11px !important; line-height: 1.35 !important; }
+.text-\[11px\] { font-size: 12px !important; }
+
+/* 2. Forms: 16px text (stops iOS zoom) and a 44px+ touch target everywhere. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+select, textarea {
+  font-size: 16px !important;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not(.sr-only):not([hidden]),
+select {
+  min-height: 44px;
+}
+
+/* 3. The native app is an app, not a website: no website footers inside it. */
+html.is-native-app footer,
+html.is-native-app .web-only { display: none !important; }
+@media (max-width: 767px) {
+  #main-scroll footer { display: none !important; }
+}
+
+/* 4. Calmer micro-labels: the old ALL-CAPS labels used very wide tracking. */
+.tracking-widest { letter-spacing: 0.06em !important; }
+.tracking-\[0\.2em\], .tracking-\[0\.22em\], .tracking-\[0\.25em\], .tracking-\[0\.3em\] { letter-spacing: 0.08em !important; }

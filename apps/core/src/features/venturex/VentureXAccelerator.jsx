@@ -207,7 +207,7 @@ const MODULES = [
     title: 'Idea Validation',
     tagline: 'Prove demand before you build',
     icon: Lightbulb,
-    color: 'text-yellow-400',
+    color: 'text-yellow-600',
     bg: 'bg-yellow-400/10',
     deliverables: ['Customer interview guide', 'Demand signals report', 'Go/no-go decision framework'],
     timeline: '2 weeks',
@@ -219,7 +219,7 @@ const MODULES = [
     title: 'MVP Architecture',
     tagline: 'Build the right thing, not everything',
     icon: Code,
-    color: 'text-blue-400',
+    color: 'text-blue-600',
     bg: 'bg-blue-400/10',
     deliverables: ['Feature priority matrix', 'Tech stack recommendation', '60-day build plan'],
     timeline: '3 weeks',
@@ -231,7 +231,7 @@ const MODULES = [
     title: 'Brand & Positioning',
     tagline: 'Be unforgettable in your market',
     icon: Palette,
-    color: 'text-pink-400',
+    color: 'text-pink-600',
     bg: 'bg-pink-400/10',
     deliverables: ['Brand identity brief', 'Messaging framework', 'Competitor positioning map'],
     timeline: '2 weeks',
@@ -243,7 +243,7 @@ const MODULES = [
     title: 'Go-to-Market Strategy',
     tagline: 'Your first 1,000 customers',
     icon: Rocket,
-    color: 'text-orange-400',
+    color: 'text-orange-600',
     bg: 'bg-orange-400/10',
     deliverables: ['GTM playbook', 'Channel strategy', '90-day acquisition plan'],
     timeline: '3 weeks',
@@ -255,7 +255,7 @@ const MODULES = [
     title: 'Fundraising Prep',
     tagline: 'Raise on your terms',
     icon: TrendingUp,
-    color: 'text-emerald-400',
+    color: 'text-emerald-600',
     bg: 'bg-emerald-400/10',
     deliverables: ['Pitch deck review', 'Financial model', 'Investor target list'],
     timeline: '4 weeks',
@@ -267,7 +267,7 @@ const MODULES = [
     title: 'Growth & Scaling',
     tagline: 'From traction to dominance',
     icon: BarChart,
-    color: 'text-purple-400',
+    color: 'text-purple-600',
     bg: 'bg-purple-400/10',
     deliverables: ['Growth audit', 'Retention playbook', 'Hiring plan'],
     timeline: '6 weeks',
@@ -316,7 +316,7 @@ function MiniChat({ context, placeholder }) {
     <div className="mt-3">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors"
+        className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-600 transition-colors"
       >
         <MessageSquare size={13} />
         {open ? 'Close AI Advisor' : 'Ask AI Advisor'}
@@ -324,7 +324,7 @@ function MiniChat({ context, placeholder }) {
       </button>
 
       {open && (
-        <div className="mt-2 rounded-xl border border-slate-700 bg-slate-900 overflow-hidden">
+        <div className="mt-2 rounded-xl border border-slate-200 bg-white overflow-hidden">
           <div className="max-h-48 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 && (
               <p className="text-slate-500 text-xs italic">{placeholder || 'Ask anything about this module…'}</p>
@@ -334,7 +334,7 @@ function MiniChat({ context, placeholder }) {
                 <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed ${
                   m.role === 'user'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-slate-800 text-slate-300 border border-slate-700'
+                    : 'bg-slate-50 text-slate-600 border border-slate-200'
                 }`}>
                   {m.text}
                 </div>
@@ -342,25 +342,25 @@ function MiniChat({ context, placeholder }) {
             ))}
             {loading && (
               <div className="flex gap-2">
-                <div className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-400 flex items-center gap-1">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-500 flex items-center gap-1">
                   <Loader2 size={11} className="animate-spin" /> Thinking…
                 </div>
               </div>
             )}
             <div ref={endRef} />
           </div>
-          <div className="border-t border-slate-700 flex">
+          <div className="border-t border-slate-200 flex">
             <input
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && send()}
               placeholder="Ask a question…"
-              className="flex-1 bg-transparent px-3 py-2 text-xs text-white placeholder-slate-600 outline-none"
+              className="flex-1 bg-transparent px-3 py-2 text-xs text-slate-900 placeholder-slate-600 outline-none"
             />
             <button
               onClick={send}
               disabled={loading || !input.trim()}
-              className="px-3 py-2 text-blue-400 hover:text-blue-300 disabled:opacity-40 transition-colors"
+              className="px-3 py-2 text-blue-600 hover:text-blue-600 disabled:opacity-40 transition-colors"
             >
               <Send size={13} />
             </button>
@@ -390,7 +390,7 @@ function ScoreRing({ score }) {
           style={{ transition: 'stroke-dasharray 1s ease' }}
         />
       </svg>
-      <span className="absolute text-xl font-black text-white">{score}</span>
+      <span className="absolute text-xl font-black text-slate-900">{score}</span>
     </div>
   );
 }
@@ -399,11 +399,11 @@ function ScoreRing({ score }) {
 function Modal({ open, onClose, children }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-full relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-slate-500 hover:text-slate-900 transition-colors"
         >
           <X size={18} />
         </button>
@@ -421,14 +421,14 @@ function OverviewTab({ onApply }) {
     <div className="space-y-12">
       {/* Hero */}
       <div className="text-center space-y-4 pt-6">
-        <p className="font-black uppercase tracking-widest text-[10px] text-blue-400">
+        <p className="font-black uppercase tracking-widest text-[10px] text-blue-600">
           IFB Accelerator — Selective Cohort Program
         </p>
-        <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
           From Idea to Revenue.<br />
-          <span className="text-blue-400">No Shortcuts.</span>
+          <span className="text-blue-600">No Shortcuts.</span>
         </h1>
-        <p className="text-slate-400 max-w-lg mx-auto text-base leading-relaxed">
+        <p className="text-slate-500 max-w-lg mx-auto text-base leading-relaxed">
           A selective, execution-first program for founders who are serious about building
           companies that last — not chasing hype.
         </p>
@@ -443,10 +443,10 @@ function OverviewTab({ onApply }) {
       {/* Trust metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {TRUST_METRICS.map(({ value, label, icon: Icon }) => (
-          <div key={label} className="bg-slate-800 border border-slate-700 rounded-2xl p-5 text-center">
-            <Icon size={20} className="text-blue-400 mx-auto mb-2" />
-            <div className="text-2xl font-black text-white">{value}</div>
-            <div className="text-[11px] text-slate-400 mt-1 uppercase tracking-wide">{label}</div>
+          <div key={label} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center">
+            <Icon size={20} className="text-blue-600 mx-auto mb-2" />
+            <div className="text-2xl font-black text-slate-900">{value}</div>
+            <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wide">{label}</div>
           </div>
         ))}
       </div>
@@ -475,11 +475,11 @@ function OverviewTab({ onApply }) {
               icon: Zap,
             },
           ].map(({ step, title, desc, icon: Icon }) => (
-            <div key={step} className="bg-slate-800 border border-slate-700 rounded-2xl p-6 relative">
+            <div key={step} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative">
               <span className="font-black text-4xl text-slate-700 absolute top-4 right-5 select-none">{step}</span>
-              <Icon size={22} className="text-blue-400 mb-3" />
-              <h3 className="font-bold text-white mb-2">{title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
+              <Icon size={22} className="text-blue-600 mb-3" />
+              <h3 className="font-bold text-slate-900 mb-2">{title}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -490,25 +490,25 @@ function OverviewTab({ onApply }) {
         <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-6">Founder Results</p>
         <div className="grid sm:grid-cols-2 gap-4">
           {CASE_STUDIES.map(cs => (
-            <div key={cs.name} className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div key={cs.name} className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
               <div className={`bg-gradient-to-r ${cs.color} p-5`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-black text-white text-lg">{cs.name}</p>
-                    <p className="text-white/70 text-xs mt-0.5">{cs.sector} · {cs.country}</p>
+                    <p className="font-black text-slate-900 text-lg">{cs.name}</p>
+                    <p className="text-slate-500 text-xs mt-0.5">{cs.sector} · {cs.country}</p>
                   </div>
-                  <div className="bg-white/20 rounded-xl px-3 py-1.5 text-center">
-                    <div className="text-[10px] text-white/70 uppercase tracking-wide">Joined at</div>
-                    <div className="font-bold text-white text-sm">{cs.stage}</div>
+                  <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
+                    <div className="text-[10px] text-slate-500 uppercase tracking-wide">Joined at</div>
+                    <div className="font-bold text-slate-900 text-sm">{cs.stage}</div>
                   </div>
                 </div>
               </div>
               <div className="p-5 space-y-3">
                 <div className="flex items-center gap-2">
-                  <TrendingUp size={14} className="text-emerald-400" />
-                  <span className="text-emerald-400 font-bold text-sm">{cs.outcome}</span>
+                  <TrendingUp size={14} className="text-emerald-600" />
+                  <span className="text-emerald-600 font-bold text-sm">{cs.outcome}</span>
                 </div>
-                <blockquote className="text-slate-400 text-sm italic leading-relaxed border-l-2 border-slate-600 pl-3">
+                <blockquote className="text-slate-500 text-sm italic leading-relaxed border-l-2 border-slate-200 pl-3">
                   "{cs.quote}"
                 </blockquote>
                 <p className="text-slate-500 text-xs">— {cs.founder}</p>
@@ -519,9 +519,9 @@ function OverviewTab({ onApply }) {
       </div>
 
       {/* Bottom CTA */}
-      <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border border-blue-800/50 rounded-2xl p-8 text-center">
-        <p className="text-white font-black text-xl mb-2">Ready to build something real?</p>
-        <p className="text-slate-400 text-sm mb-5">Applications reviewed within minutes. Cohort spots are limited.</p>
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 text-center">
+        <p className="text-slate-900 font-black text-xl mb-2">Ready to build something real?</p>
+        <p className="text-slate-500 text-sm mb-5">Applications reviewed within minutes. Cohort spots are limited.</p>
         <button
           onClick={onApply}
           className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-xl transition-colors"
@@ -589,14 +589,14 @@ Application:
 
   if (result) {
     const { score, decision, tier_recommended, strengths, concerns, personalized_message } = result;
-    const decisionColor = decision === 'accepted' ? 'text-emerald-400 bg-emerald-400/10 border-emerald-700'
-      : decision === 'waitlisted' ? 'text-yellow-400 bg-yellow-400/10 border-yellow-700'
-      : 'text-slate-400 bg-slate-700 border-slate-600';
+    const decisionColor = decision === 'accepted' ? 'text-emerald-600 bg-emerald-400/10 border-emerald-200'
+      : decision === 'waitlisted' ? 'text-yellow-600 bg-yellow-400/10 border-yellow-200'
+      : 'text-slate-500 bg-slate-100 border-slate-200';
     const decisionLabel = decision === 'accepted' ? 'Accepted' : decision === 'waitlisted' ? 'Waitlisted' : 'Not Selected';
 
     return (
       <div className="max-w-xl mx-auto space-y-6 pt-4">
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 text-center space-y-4">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center space-y-4">
           <p className="font-black uppercase tracking-widest text-[10px] text-slate-500">Application Review</p>
           <ScoreRing score={score} />
           <div>
@@ -604,44 +604,44 @@ Application:
               {decisionLabel}
             </span>
             {tier_recommended && (
-              <p className="text-slate-400 text-xs mt-2">Recommended tier: <span className="text-blue-400 font-semibold">{tier_recommended}</span></p>
+              <p className="text-slate-500 text-xs mt-2">Recommended tier: <span className="text-blue-600 font-semibold">{tier_recommended}</span></p>
             )}
           </div>
         </div>
 
         {strengths?.length > 0 && (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-2">
             <p className="font-black uppercase tracking-widest text-[10px] text-emerald-500 mb-3">Strengths</p>
             {strengths.map((s, i) => (
               <div key={i} className="flex items-start gap-2">
-                <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 shrink-0" />
-                <p className="text-slate-300 text-sm">{s}</p>
+                <CheckCircle2 size={14} className="text-emerald-600 mt-0.5 shrink-0" />
+                <p className="text-slate-600 text-sm">{s}</p>
               </div>
             ))}
           </div>
         )}
 
         {concerns?.length > 0 && (
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-2">
             <p className="font-black uppercase tracking-widest text-[10px] text-yellow-500 mb-3">Areas to Strengthen</p>
             {concerns.map((c, i) => (
               <div key={i} className="flex items-start gap-2">
-                <AlertTriangle size={14} className="text-yellow-400 mt-0.5 shrink-0" />
-                <p className="text-slate-300 text-sm">{c}</p>
+                <AlertTriangle size={14} className="text-yellow-600 mt-0.5 shrink-0" />
+                <p className="text-slate-600 text-sm">{c}</p>
               </div>
             ))}
           </div>
         )}
 
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
           <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-2">From IFB Admissions AI</p>
-          <p className="text-slate-300 text-sm leading-relaxed italic">"{personalized_message}"</p>
+          <p className="text-slate-600 text-sm leading-relaxed italic">"{personalized_message}"</p>
         </div>
 
         {decision === 'accepted' && (
-          <div className="bg-emerald-900/30 border border-emerald-700 rounded-2xl p-5 text-center space-y-3">
-            <p className="text-emerald-400 font-black text-lg">Welcome to the IFB Accelerator</p>
-            <p className="text-slate-400 text-sm">Your personalized program is ready. Let's build.</p>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-3">
+            <p className="text-emerald-600 font-black text-lg">Welcome to the IFB Accelerator</p>
+            <p className="text-slate-500 text-sm">Your personalized program is ready. Let's build.</p>
             <button
               onClick={onAccepted}
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl transition-colors"
@@ -656,7 +656,7 @@ Application:
             localStorage.removeItem(storageKey);
             setResult(null);
           }}
-          className="w-full text-center text-xs text-slate-600 hover:text-slate-400 transition-colors py-2"
+          className="w-full text-center text-xs text-slate-600 hover:text-slate-500 transition-colors py-2"
         >
           Start a new application
         </button>
@@ -668,8 +668,8 @@ Application:
     <div className="max-w-xl mx-auto pt-4">
       <div className="mb-6">
         <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-1">Selective Application</p>
-        <h2 className="text-xl font-black text-white">Apply to IFB Accelerator</h2>
-        <p className="text-slate-400 text-sm mt-1">
+        <h2 className="text-xl font-black text-slate-900">Apply to IFB Accelerator</h2>
+        <p className="text-slate-500 text-sm mt-1">
           Our AI admission officer reviews every application instantly. Be honest — it helps us match you to the right program.
         </p>
       </div>
@@ -677,20 +677,20 @@ Application:
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Startup Name *</label>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Startup Name *</label>
             <input
               required value={form.name}
               onChange={e => setField('name', e.target.value)}
               placeholder="e.g. AgriConnect"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Current Stage *</label>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Current Stage *</label>
             <select
               required value={form.stage}
               onChange={e => setField('stage', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
             >
               {['Idea', 'Side Project', 'MVP', 'Revenue', 'Scaling'].map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -700,38 +700,38 @@ Application:
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">One-Line Pitch *</label>
+          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">One-Line Pitch *</label>
           <input
             required value={form.pitch}
             onChange={e => setField('pitch', e.target.value)}
             placeholder="e.g. We connect smallholder farmers to B2B buyers, eliminating the middleman."
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors"
           />
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Monthly Revenue (USD)</label>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Monthly Revenue (USD)</label>
             <input
               type="number" min="0" value={form.revenue}
               onChange={e => setField('revenue', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Team Size</label>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Team Size</label>
             <input
               type="number" min="1" value={form.teamSize}
               onChange={e => setField('teamSize', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Time / Week *</label>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Time / Week *</label>
             <select
               required value={form.timeCommitment}
               onChange={e => setField('timeCommitment', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
             >
               {['<5h', '5–10h', '10–20h', '20h+'].map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -741,24 +741,24 @@ Application:
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Biggest Challenge Right Now *</label>
+          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Biggest Challenge Right Now *</label>
           <textarea
             required value={form.challenge}
             onChange={e => setField('challenge', e.target.value)}
             rows={3}
             placeholder="Be specific. What's the one thing keeping you from moving faster?"
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Why IFB Accelerator? *</label>
+          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Why IFB Accelerator? *</label>
           <textarea
             required value={form.why}
             onChange={e => setField('why', e.target.value)}
             rows={3}
             placeholder="What specifically do you want to get out of this program? What does success look like for you in 12 months?"
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
           />
         </div>
 
@@ -843,10 +843,10 @@ function ProgramTab({ uid, onGoApply }) {
   if (!accepted) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md space-y-4">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 max-w-md space-y-4">
           <Lock size={32} className="text-slate-500 mx-auto" />
-          <h3 className="text-white font-black text-lg">Program Locked</h3>
-          <p className="text-slate-400 text-sm">
+          <h3 className="text-slate-900 font-black text-lg">Program Locked</h3>
+          <p className="text-slate-500 text-sm">
             Complete your application first. Accepted founders get immediate access to their personalized 7-stage roadmap.
           </p>
           <button
@@ -866,14 +866,14 @@ function ProgramTab({ uid, onGoApply }) {
     <div className="space-y-8 pt-2">
       {/* Header */}
       <div>
-        <p className="font-black uppercase tracking-widest text-[10px] text-blue-400 mb-1">Your IFB Accelerator Program</p>
-        <h2 className="text-2xl font-black text-white">{app?.form?.name || 'Your Startup'}</h2>
+        <p className="font-black uppercase tracking-widest text-[10px] text-blue-600 mb-1">Your IFB Accelerator Program</p>
+        <h2 className="text-2xl font-black text-slate-900">{app?.form?.name || 'Your Startup'}</h2>
         <div className="mt-3">
           <div className="flex justify-between text-xs text-slate-500 mb-1.5">
             <span>Stage {progress.currentStage} of {ROADMAP_STAGES.length}</span>
             <span>{progressPct}% complete</span>
           </div>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-slate-50 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all duration-700"
               style={{ width: `${progressPct}%` }}
@@ -889,8 +889,8 @@ function ProgramTab({ uid, onGoApply }) {
           { label: 'Tasks Completed', value: totalTasks },
           { label: 'Current Stage', value: currentStageName },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-slate-800 border border-slate-700 rounded-xl p-3 text-center">
-            <div className="text-white font-black text-lg">{value}</div>
+          <div key={label} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+            <div className="text-slate-900 font-black text-lg">{value}</div>
             <div className="text-[10px] text-slate-500 uppercase tracking-wide mt-0.5">{label}</div>
           </div>
         ))}
@@ -901,7 +901,7 @@ function ProgramTab({ uid, onGoApply }) {
         <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-5">7-Stage Roadmap</p>
         <div className="relative">
           {/* Vertical line */}
-          <div className="absolute left-5 top-0 bottom-0 w-px bg-slate-700" />
+          <div className="absolute left-5 top-0 bottom-0 w-px bg-slate-100" />
 
           <div className="space-y-4">
             {ROADMAP_STAGES.map(stage => {
@@ -918,13 +918,13 @@ function ProgramTab({ uid, onGoApply }) {
                         ? 'bg-emerald-600 border-emerald-500'
                         : isCurrent
                         ? 'bg-blue-600 border-blue-500'
-                        : 'bg-slate-800 border-slate-600'
+                        : 'bg-slate-50 border-slate-200'
                     }`}>
                       {isCompleted
-                        ? <Check size={16} className="text-white" />
+                        ? <Check size={16} className="text-slate-900" />
                         : isLocked
                         ? <Lock size={13} className="text-slate-500" />
-                        : <span className="text-white font-black text-xs">{stage.id}</span>
+                        : <span className="text-slate-900 font-black text-xs">{stage.id}</span>
                       }
                     </div>
                   </div>
@@ -932,28 +932,28 @@ function ProgramTab({ uid, onGoApply }) {
                   {/* Stage content */}
                   <div className={`flex-1 rounded-2xl border p-5 transition-colors ${
                     isCompleted
-                      ? 'bg-emerald-900/20 border-emerald-800/50'
+                      ? 'bg-emerald-50 border-emerald-200'
                       : isCurrent
-                      ? 'bg-blue-900/20 border-blue-800/50'
-                      : 'bg-slate-800/50 border-slate-700/50 opacity-60'
+                      ? 'bg-blue-50 border-blue-200'
+                      : 'bg-slate-50 border-slate-200 opacity-60'
                   }`}>
                     <div className="flex items-center justify-between mb-1">
                       <h3 className={`font-black text-base ${
-                        isCompleted ? 'text-emerald-400' : isCurrent ? 'text-white' : 'text-slate-500'
+                        isCompleted ? 'text-emerald-600' : isCurrent ? 'text-slate-900' : 'text-slate-500'
                       }`}>
                         {stage.title}
                       </h3>
                       <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
                         isCompleted
-                          ? 'bg-emerald-900/50 text-emerald-400'
+                          ? 'bg-emerald-50 text-emerald-600'
                           : isCurrent
-                          ? 'bg-blue-900/50 text-blue-400'
-                          : 'bg-slate-700 text-slate-500'
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'bg-slate-100 text-slate-500'
                       }`}>
                         {stage.period}
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm mb-4">{stage.desc}</p>
+                    <p className="text-slate-500 text-sm mb-4">{stage.desc}</p>
 
                     {/* Tasks */}
                     <div className="space-y-2">
@@ -967,12 +967,12 @@ function ProgramTab({ uid, onGoApply }) {
                               className={`mt-0.5 shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors ${
                                 done
                                   ? 'bg-emerald-600 border-emerald-500'
-                                  : 'border-slate-600 group-hover:border-blue-500'
+                                  : 'border-slate-200 group-hover:border-blue-500'
                               }`}
                             >
-                              {done && <Check size={10} className="text-white" />}
+                              {done && <Check size={10} className="text-slate-900" />}
                             </button>
-                            <span className={`text-sm leading-relaxed ${done ? 'line-through text-slate-600' : 'text-slate-300'}`}>
+                            <span className={`text-sm leading-relaxed ${done ? 'line-through text-slate-600' : 'text-slate-600'}`}>
                               {task}
                             </span>
                           </label>
@@ -997,24 +997,24 @@ function ProgramTab({ uid, onGoApply }) {
       </div>
 
       {/* Weekly Execution Engine */}
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-        <p className="font-black uppercase tracking-widest text-[10px] text-blue-400 mb-1">Weekly Execution Engine</p>
-        <h3 className="text-white font-bold text-lg mb-4">This Week's Focus — {currentStageName}</h3>
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+        <p className="font-black uppercase tracking-widest text-[10px] text-blue-600 mb-1">Weekly Execution Engine</p>
+        <h3 className="text-slate-900 font-bold text-lg mb-4">This Week's Focus — {currentStageName}</h3>
         <div className="space-y-3">
           {weeklyTasks.map((task, idx) => {
             const done = weeklyTasksDone[idx];
             return (
-              <div key={idx} className="flex items-start gap-3 bg-slate-900 rounded-xl p-3">
+              <div key={idx} className="flex items-start gap-3 bg-white rounded-xl p-3">
                 <button
                   onClick={() => toggleWeeklyTask(idx)}
                   className={`mt-0.5 shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                    done ? 'bg-blue-600 border-blue-500' : 'border-slate-600 hover:border-blue-500'
+                    done ? 'bg-blue-600 border-blue-500' : 'border-slate-200 hover:border-blue-500'
                   }`}
                 >
-                  {done && <Check size={11} className="text-white" />}
+                  {done && <Check size={11} className="text-slate-900" />}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm ${done ? 'line-through text-slate-600' : 'text-slate-300'}`}>{task}</p>
+                  <p className={`text-sm ${done ? 'line-through text-slate-600' : 'text-slate-600'}`}>{task}</p>
                   <MiniChat
                     context={`Week ${progress.currentStage} focus task: "${task}". Stage: ${currentStageName}.`}
                     placeholder={`Ask for help with: ${task}`}
@@ -1050,8 +1050,8 @@ function ModulesTab({ uid }) {
     <div className="space-y-4 pt-2">
       <div className="mb-4">
         <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-1">Service Modules</p>
-        <h2 className="text-xl font-black text-white">Deep-Dive Execution Modules</h2>
-        <p className="text-slate-400 text-sm mt-1">Each module is a focused sprint with deliverables, expert guidance, and an AI advisor.</p>
+        <h2 className="text-xl font-black text-slate-900">Deep-Dive Execution Modules</h2>
+        <p className="text-slate-500 text-sm mt-1">Each module is a focused sprint with deliverables, expert guidance, and an AI advisor.</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
@@ -1061,7 +1061,7 @@ function ModulesTab({ uid }) {
           const isExpanded = expanded === mod.id;
 
           return (
-            <div key={mod.id} className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <div key={mod.id} className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
               <div className="p-5">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
@@ -1070,12 +1070,12 @@ function ModulesTab({ uid }) {
                       <Icon size={18} className={mod.color} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white text-sm">{mod.title}</h3>
+                      <h3 className="font-bold text-slate-900 text-sm">{mod.title}</h3>
                       <p className={`text-xs ${mod.color}`}>{mod.tagline}</p>
                     </div>
                   </div>
                   {isEnrolled && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-800 px-2 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-400/10 border border-emerald-200 px-2 py-1 rounded-full">
                       <CheckCircle2 size={10} /> Enrolled
                     </span>
                   )}
@@ -1088,15 +1088,15 @@ function ModulesTab({ uid }) {
                 </div>
 
                 {/* Outcome */}
-                <p className="text-xs text-slate-400 mb-3 leading-relaxed">
-                  <span className="text-white font-semibold">Outcome:</span> {mod.outcome}
+                <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                  <span className="text-slate-900 font-semibold">Outcome:</span> {mod.outcome}
                 </p>
 
                 {/* Deliverables */}
                 <div className="space-y-1 mb-4">
                   {mod.deliverables.map((d, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-xs text-slate-400">
-                      <Check size={10} className="text-blue-400 shrink-0" /> {d}
+                    <div key={i} className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <Check size={10} className="text-blue-600 shrink-0" /> {d}
                     </div>
                   ))}
                 </div>
@@ -1113,16 +1113,16 @@ function ModulesTab({ uid }) {
                   ) : (
                     <button
                       disabled
-                      className="flex-1 bg-emerald-900/40 text-emerald-400 font-bold text-xs py-2.5 rounded-xl border border-emerald-800/50 cursor-default"
+                      className="flex-1 bg-emerald-50 text-emerald-600 font-bold text-xs py-2.5 rounded-xl border border-emerald-200 cursor-default"
                     >
                       Enrolled ✓
                     </button>
                   )}
                   <button
                     onClick={() => setExpanded(isExpanded ? null : mod.id)}
-                    className="px-3 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors"
+                    className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
                   >
-                    <MessageSquare size={14} className="text-blue-400" />
+                    <MessageSquare size={14} className="text-blue-600" />
                   </button>
                 </div>
 
@@ -1204,8 +1204,8 @@ function PricingTab({ uid, userEmail }) {
     <div className="space-y-8 pt-2">
       <div>
         <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-1">Accelerator Pricing</p>
-        <h2 className="text-xl font-black text-white">Choose Your Program Tier</h2>
-        <p className="text-slate-400 text-sm mt-1">All tiers include AI advisors, community access, and the IFB execution framework.</p>
+        <h2 className="text-xl font-black text-slate-900">Choose Your Program Tier</h2>
+        <p className="text-slate-500 text-sm mt-1">All tiers include AI advisors, community access, and the IFB execution framework.</p>
       </div>
 
       {/* Tier cards */}
@@ -1213,10 +1213,10 @@ function PricingTab({ uid, userEmail }) {
         {TIERS.map(tier => (
           <div
             key={tier.name}
-            className={`relative bg-slate-800 rounded-2xl border p-6 flex flex-col ${
+            className={`relative bg-slate-50 rounded-2xl border p-6 flex flex-col ${
               tier.popular
-                ? 'border-blue-500 ring-1 ring-blue-500/30'
-                : 'border-slate-700'
+                ? 'border-blue-500 ring-1 ring-blue-200'
+                : 'border-slate-200'
             }`}
           >
             {tier.popular && (
@@ -1228,20 +1228,20 @@ function PricingTab({ uid, userEmail }) {
             )}
 
             <div className="mb-4">
-              <h3 className="text-white font-black text-lg">{tier.name}</h3>
+              <h3 className="text-slate-900 font-black text-lg">{tier.name}</h3>
               <p className="text-slate-500 text-xs mt-0.5">{tier.target}</p>
             </div>
 
             <div className="mb-5">
-              <span className="text-3xl font-black text-white">${tier.price.toLocaleString()}</span>
+              <span className="text-3xl font-black text-slate-900">${tier.price.toLocaleString()}</span>
               <span className="text-slate-500 text-sm">/month</span>
             </div>
 
             <div className="space-y-2.5 flex-1 mb-6">
               {tier.features.map((f, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <CheckCircle2 size={13} className="text-blue-400 mt-0.5 shrink-0" />
-                  <span className="text-slate-300 text-sm">{f}</span>
+                  <CheckCircle2 size={13} className="text-blue-600 mt-0.5 shrink-0" />
+                  <span className="text-slate-600 text-sm">{f}</span>
                 </div>
               ))}
             </div>
@@ -1251,7 +1251,7 @@ function PricingTab({ uid, userEmail }) {
               className={`w-full font-bold py-2.5 rounded-xl transition-colors text-sm ${
                 tier.popular
                   ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                  : 'bg-slate-700 hover:bg-slate-600 text-white'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
               }`}
             >
               Select Plan
@@ -1261,15 +1261,15 @@ function PricingTab({ uid, userEmail }) {
       </div>
 
       {/* Performance alignment */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-800 border border-slate-600 rounded-2xl p-6">
+      <div className="bg-gradient-to-r from-white to-slate-50 border border-slate-200 rounded-2xl p-6">
         <div className="flex items-start gap-3">
-          <Info size={18} className="text-blue-400 shrink-0 mt-0.5" />
+          <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-black uppercase tracking-widest text-[10px] text-blue-400 mb-1.5">Performance Alignment</p>
-            <p className="text-slate-300 text-sm leading-relaxed">
-              Founders in the <span className="text-white font-semibold">Growth</span> and <span className="text-white font-semibold">Venture</span> tiers
-              who reach $100K+ ARR with IFB support offer an optional <span className="text-white font-semibold">1% equity pledge</span> or
-              <span className="text-white font-semibold"> $5,000 milestone bonus</span>. This aligns our incentives: we only win when you win.
+            <p className="font-black uppercase tracking-widest text-[10px] text-blue-600 mb-1.5">Performance Alignment</p>
+            <p className="text-slate-600 text-sm leading-relaxed">
+              Founders in the <span className="text-slate-900 font-semibold">Growth</span> and <span className="text-slate-900 font-semibold">Venture</span> tiers
+              who reach $100K+ ARR with IFB support offer an optional <span className="text-slate-900 font-semibold">1% equity pledge</span> or
+              <span className="text-slate-900 font-semibold"> $5,000 milestone bonus</span>. This aligns our incentives: we only win when you win.
             </p>
           </div>
         </div>
@@ -1282,11 +1282,11 @@ function PricingTab({ uid, userEmail }) {
           {ADDONS.map(addon => {
             const Icon = addon.icon;
             return (
-              <div key={addon.title} className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                <Icon size={18} className="text-slate-400 mb-2" />
-                <p className="text-white font-bold text-sm">{addon.title}</p>
+              <div key={addon.title} className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <Icon size={18} className="text-slate-500 mb-2" />
+                <p className="text-slate-900 font-bold text-sm">{addon.title}</p>
                 <p className="text-slate-500 text-xs mt-1 leading-relaxed">{addon.desc}</p>
-                <p className="text-blue-400 font-black text-base mt-2">${addon.price}</p>
+                <p className="text-blue-600 font-black text-base mt-2">${addon.price}</p>
               </div>
             );
           })}
@@ -1296,16 +1296,16 @@ function PricingTab({ uid, userEmail }) {
       {/* Plan selected modal */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
         <div className="text-center space-y-4">
-          <div className="w-14 h-14 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto">
-            <CheckCircle2 size={28} className="text-blue-400" />
+          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto">
+            <CheckCircle2 size={28} className="text-blue-600" />
           </div>
-          <h3 className="text-white font-black text-lg">{selectedPlan} Plan Selected</h3>
-          <p className="text-slate-400 text-sm leading-relaxed">
+          <h3 className="text-slate-900 font-black text-lg">{selectedPlan} Plan Selected</h3>
+          <p className="text-slate-500 text-sm leading-relaxed">
             Your IFB advisor will contact you at{' '}
-            <span className="text-blue-400 font-semibold">{userEmail || 'your email address'}</span>{' '}
+            <span className="text-blue-600 font-semibold">{userEmail || 'your email address'}</span>{' '}
             within 24 hours to complete enrollment and get you started.
           </p>
-          <div className="bg-slate-800 rounded-xl p-4 text-left">
+          <div className="bg-slate-50 rounded-xl p-4 text-left">
             <p className="text-slate-500 text-xs">What happens next:</p>
             <div className="mt-2 space-y-1.5">
               {[
@@ -1313,9 +1313,9 @@ function PricingTab({ uid, userEmail }) {
                 'Onboarding call scheduled (30 minutes)',
                 'Program access granted immediately after',
               ].map((step, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-slate-300">
+                <div key={i} className="flex items-center gap-2 text-xs text-slate-600">
                   <div className="w-4 h-4 rounded-full bg-blue-600/30 flex items-center justify-center shrink-0">
-                    <span className="text-blue-400 font-bold text-[9px]">{i + 1}</span>
+                    <span className="text-blue-600 font-bold text-[9px]">{i + 1}</span>
                   </div>
                   {step}
                 </div>
@@ -1345,16 +1345,16 @@ export default function VentureXAccelerator({ session, myCompany }) {
   function goToTab(tab) { setInnerTab(tab); }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-white text-slate-900">
       {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-950 sticky top-0 z-20">
+      <div className="border-b border-slate-200 bg-white sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center gap-3 py-3 mb-1">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Rocket size={16} className="text-white" />
+              <Rocket size={16} className="text-slate-900" />
             </div>
             <div>
-              <h1 className="text-white font-black text-sm leading-none">IFB Accelerator</h1>
+              <h1 className="text-slate-900 font-black text-sm leading-none">IFB Accelerator</h1>
               <p className="text-slate-500 text-[10px] uppercase tracking-widest">Startup Execution Platform</p>
             </div>
           </div>
@@ -1368,7 +1368,7 @@ export default function VentureXAccelerator({ session, myCompany }) {
                 className={`shrink-0 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-colors ${
                   innerTab === tab
                     ? 'bg-blue-600 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                    : 'bg-slate-50 text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 {tab}

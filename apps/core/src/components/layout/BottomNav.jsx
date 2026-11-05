@@ -47,7 +47,7 @@ export default function BottomNav({
             </span>
           )}
         </div>
-        <span className={`text-[9px] font-black uppercase tracking-wide leading-none ${active ? 'text-blue-600' : 'text-slate-400'}`}>
+        <span className={`text-[11px] font-medium leading-none ${active ? 'text-blue-600' : 'text-slate-500'}`}>
           {label}
         </span>
       </button>
@@ -71,7 +71,7 @@ export default function BottomNav({
           >
             <CreditCard size={21} className="text-white" />
           </button>
-          <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 mt-1 leading-none">Pay Card</span>
+          <span className="text-[11px] font-medium text-blue-600 mt-1 leading-none">Pay card</span>
         </div>
 
         {right.map(item => <NavBtn key={item.id} {...item} />)}

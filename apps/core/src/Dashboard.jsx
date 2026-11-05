@@ -66,6 +66,7 @@ const TapToPay          = lazyLoad(() => import('./features/terminal/TapToPay'))
 const VentureXPayRequest = lazyLoad(() => import('./features/venturex/VentureXPayRequest'));
 const VentureXListings   = lazyLoad(() => import('./features/venturex/VentureXListings'));
 const AdminDashboard    = lazyLoad(() => import('./AdminDashboard'));
+const ServicesPage      = lazyLoad(() => import('./views/ServicesPage'));
 
 const ScreenLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[60vh]">
@@ -81,6 +82,8 @@ export default function Dashboard({ session, onSignOut }) {
   // Gated features (not built yet / need a licence) never render their screen.
   const shownTab = isGated(activeTab) ? null : activeTab;
   const [subTab, setSubTab] = useState('PROFILE');
+  const [settingsDetail, setSettingsDetail] = useState(false); // phones: a settings section is open
+  const openVerification = () => { setSubTab('PROFILE'); setSettingsDetail(true); setActiveTab('SETTINGS'); };
   const [activeModal, setActiveModal] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showBalances, setShowBalances] = useState(true);
@@ -147,7 +150,7 @@ export default function Dashboard({ session, onSignOut }) {
     INVEST: 'Investments', LISTINGS: '🌍 Company Listings', PLANNER: 'Planner', LIFESTYLE: 'Lifestyle',
     SOS: 'Emergency SOS', TRAINING: 'Training', SETTINGS: 'Settings',
     AGENTS: 'My Team', INSURANCE: 'Insurance', TRANSACTIONS: 'Transactions',
-    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node'
+    COMMERCIAL_HUB: 'Business Hub', NETWORK: 'AFR Network Node', SERVICES: 'Services'
   };
 
   const triggerGlobalActionNotification = (type, message) => {
@@ -371,6 +374,7 @@ export default function Dashboard({ session, onSignOut }) {
                 setShowVault={setShowVault}
                 setShowNFC={setShowNFC}
                 setActiveAppPopup={setActiveAppPopup}
+                onVerify={openVerification}
               />
             )}
             
@@ -386,6 +390,8 @@ export default function Dashboard({ session, onSignOut }) {
                 triggerNotification={triggerGlobalActionNotification}
                 lang={lang}
                 setLanguage={setLanguage}
+                mobileDetail={settingsDetail}
+                setMobileDetail={setSettingsDetail}
               />
             )}
             
@@ -404,10 +410,11 @@ export default function Dashboard({ session, onSignOut }) {
               />
             )}
             
+            {activeTab === 'SERVICES' && <ServicesPage setActiveTab={setActiveTab} setActiveAppPopup={setActiveAppPopup} />}
             {isGated(activeTab) && <ComingSoonPanel id={activeTab} />}
             {shownTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
             {shownTab === 'NETWORK' && (
-              <div className="bg-slate-950 rounded-[2rem] min-h-[400px] p-4 -mx-2">
+              <div className="ui-page">
                 <AFRNetworkPanel session={session} profile={profile} />
               </div>
             )}
@@ -501,7 +508,7 @@ export default function Dashboard({ session, onSignOut }) {
       {/* 💳 DEPOSIT / 💸 WITHDRAWAL overlays */}
       <Suspense fallback={null}>
       {showDepositUI && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-4 sm:p-8">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-4 sm:p-8">
            <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
              <button 
                 onClick={() => setShowDepositUI(false)} 
@@ -509,7 +516,7 @@ export default function Dashboard({ session, onSignOut }) {
              >
                 <X size={20} /> Close Terminal
              </button>
-             <div className="w-full bg-slate-900 rounded-2xl shadow-xl overflow-hidden border border-slate-800">
+             <div className="w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
                <DepositInterface session={session} onClose={() => setShowDepositUI(false)} onSuccess={fetchAllData} />
              </div>
            </div>
@@ -518,7 +525,7 @@ export default function Dashboard({ session, onSignOut }) {
       
       {/* 💸 WITHDRAWAL OVERLAY */}
       {isWithdrawOpen && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-4 sm:p-8">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-4 sm:p-8">
            <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
              <button
                 onClick={() => setIsWithdrawOpen(false)}
@@ -542,11 +549,11 @@ export default function Dashboard({ session, onSignOut }) {
       {/* 🔒 VAULT MANAGER OVERLAY */}
       <Suspense fallback={null}>
       {showVault && (
-        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-0 sm:p-8">
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-0 sm:p-8">
           <div className="relative w-full sm:max-w-lg animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
-            <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
+            <div className="bg-white border border-slate-200 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-sm overflow-y-auto max-h-[92vh] p-6">
               <div className="flex justify-end mb-2">
-                <button onClick={() => setShowVault(false)} className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors">
+                <button onClick={() => setShowVault(false)} className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors">
                   <X size={14}/>
                 </button>
               </div>
@@ -562,7 +569,7 @@ export default function Dashboard({ session, onSignOut }) {
 
       {/* 📶 NFC TAP & PAY OVERLAY */}
       {showNFC && (
-        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-0 sm:p-8">
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-0 sm:p-8">
           <div className="relative w-full sm:max-w-sm animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
             <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
               <div className="flex justify-end mb-2">
@@ -593,7 +600,7 @@ export default function Dashboard({ session, onSignOut }) {
 
       {/* 💳 TAP TO PAY OVERLAY */}
       {showTapToPay && (
-        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-2xl animate-in fade-in duration-300 p-0 sm:p-8">
+        <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-0 sm:p-8">
           <div className="relative w-full sm:max-w-sm animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
             <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
               <TapToPay

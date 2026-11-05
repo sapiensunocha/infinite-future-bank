@@ -259,7 +259,7 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
                 rows={2} placeholder="What brings your community together?"
                 className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-indigo-400 resize-none"/>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Contribution Amount ($)</label>
                 <input type="number" min="1" required value={form.contribution_amount}

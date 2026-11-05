@@ -144,17 +144,17 @@ export default function FaceAuthManager({ mode, storedDescriptor, onEnrolled, on
   const handleCancel = () => { stopCamera(); onCancel(); };
 
   return (
-    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
+    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
       <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl">
 
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center gap-3 bg-slate-900 text-white">
+        <div className="p-5 border-b border-slate-100 flex items-center gap-3 bg-white text-slate-900">
           <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center">
             <ScanFace size={18} />
           </div>
           <div>
             <h3 className="font-black text-sm">{mode === 'enroll' ? 'Enrol Face Login' : 'Face Recognition'}</h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">IFB Biometric Vault</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">IFB Biometric Vault</p>
           </div>
         </div>
 

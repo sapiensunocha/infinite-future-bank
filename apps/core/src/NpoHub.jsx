@@ -1217,7 +1217,7 @@ export default function NpoHub({ session }) {
 
       {/* ================================================================= DONATE MODAL */}
       {donateTarget && (
-        <div className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={e => e.target===e.currentTarget && closeDonate()}>
+        <div className="fixed inset-0 z-[500] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={e => e.target===e.currentTarget && closeDonate()}>
           <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               {/* Header */}
@@ -1286,7 +1286,7 @@ export default function NpoHub({ session }) {
                   </div>
 
                   {/* Donor info */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Your Name</label>
                       <input className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-sm outline-none focus:border-blue-500" value={donateName} onChange={e => setDonateName(e.target.value)} placeholder="Full name"/>
