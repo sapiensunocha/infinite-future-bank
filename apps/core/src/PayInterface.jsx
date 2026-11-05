@@ -160,11 +160,12 @@ export default function PayInterface() {
       const txRef = `P2P-${Date.now()}-${session.user.id.slice(0,6)}`;
       await supabase.from('notifications').insert([{
         user_id: receiver.id,
+        related_user_id: session.user.id,
         type: 'payment_received',
         title: `${asset} ${numAmount.toFixed(2)} received`,
         body: `From ${session.user.email} · Ref: ${txRef}`,
         read: false,
-      }]).catch(() => {});
+      }]).then(() => {}, () => {}); // query builders have no .catch(); calling it threw after a successful transfer
 
       steps[3].status = "completed";
       setExecutionPlan(prev => ({ ...prev, steps: [...steps], currentDetail: "Capital successfully transferred.", progressPct: 100 }));

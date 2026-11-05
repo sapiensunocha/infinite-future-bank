@@ -4,8 +4,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, getAuthedUser, HttpError, jsonResponse, requireAdmin } from "../_shared/auth.ts";
 
-const EMAIL_API_KEY = Deno.env.get('EMAIL_API_KEY');
-const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'Support <support@yourdomain.com>';
+// Same key and sending domain as the other IFB email functions (send-confirmation-email,
+// send-invoice-email, ...). The old fallback sender 'support@yourdomain.com' is not a
+// verified Resend domain, so every message was rejected.
+const EMAIL_API_KEY = Deno.env.get('RESEND_API_KEY') ?? Deno.env.get('EMAIL_API_KEY');
+const EMAIL_FROM = Deno.env.get('EMAIL_FROM') ?? 'Infinite Future Bank <noreply@infinitefuturebank.org>';
 const INTERNAL_DOMAIN = '@infinitefuturebank.org';
 
 Deno.serve(async (req) => {
@@ -35,7 +38,11 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${EMAIL_API_KEY}` },
       body: JSON.stringify({ from: EMAIL_FROM, to: recipients, subject, html }),
     });
-    if (!res.ok) throw new HttpError(502, 'Email provider rejected the message');
+    if (!res.ok) {
+      // Logged for the operator (Supabase function logs); never returned to the caller.
+      console.error('send-email: Resend rejected the message', res.status, (await res.text()).slice(0, 300));
+      throw new HttpError(502, 'Email provider rejected the message');
+    }
     const data = await res.json();
     return jsonResponse(req, { id: data?.id ?? null });
   } catch (error) {
