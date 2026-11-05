@@ -11,6 +11,8 @@ import BottomNav from './components/layout/BottomNav';
 import TransactionModal from './components/modals/TransactionModal';
 import StatementExportModal from './components/modals/StatementExportModal';
 import GlobalToastAlert from './components/ui/GlobalToastAlert';
+import ComingSoonPanel from './components/ui/ComingSoonPanel';
+import { isGated } from './config/featureAvailability';
 
 // Joyride constants (stable string values — avoids eager import of react-joyride)
 const JOYRIDE_STATUS = { FINISHED: 'finished', SKIPPED: 'skipped' };
@@ -76,6 +78,8 @@ export default function Dashboard({ session, onSignOut }) {
 
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('NET_POSITION');
+  // Gated features (not built yet / need a licence) never render their screen.
+  const shownTab = isGated(activeTab) ? null : activeTab;
   const [subTab, setSubTab] = useState('PROFILE');
   const [activeModal, setActiveModal] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -400,22 +404,23 @@ export default function Dashboard({ session, onSignOut }) {
               />
             )}
             
-            {activeTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
-            {activeTab === 'NETWORK' && (
+            {isGated(activeTab) && <ComingSoonPanel id={activeTab} />}
+            {shownTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
+            {shownTab === 'NETWORK' && (
               <div className="bg-slate-950 rounded-[2rem] min-h-[400px] p-4 -mx-2">
                 <AFRNetworkPanel session={session} profile={profile} />
               </div>
             )}
-            {activeTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
-            {activeTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
-            {activeTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
-            {activeTab === 'LISTINGS' && <VentureXListings session={session} profile={profile} />}
-            {activeTab === 'PLANNER' && <FinancialPlanner balances={balances} />}
-            {activeTab === 'LIFESTYLE' && <GlobalLifestyle session={session} profile={profile} balances={balances} />}
-            {activeTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} />}
-            {activeTab === 'TRAINING' && <Training session={session} />}
-            {activeTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
-            {activeTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
+            {shownTab === 'ACCOUNTS' && <AccountHub session={session} balances={balances} profile={profile} showBalances={showBalances} />}
+            {shownTab === 'ORGANIZE' && <OrganizationSuite session={session} balances={balances} pockets={pockets} recipients={recipients} showBalances={showBalances} />}
+            {shownTab === 'INVEST' && <WealthInvest session={session} balances={balances} profile={profile} investments={investments} showBalances={showBalances} />}
+            {shownTab === 'LISTINGS' && <VentureXListings session={session} profile={profile} />}
+            {shownTab === 'PLANNER' && <FinancialPlanner balances={balances} />}
+            {shownTab === 'LIFESTYLE' && <GlobalLifestyle session={session} profile={profile} balances={balances} />}
+            {shownTab === 'SOS' && <EmergencySOS session={session} balances={balances} profile={profile} />}
+            {shownTab === 'TRAINING' && <Training session={session} />}
+            {shownTab === 'AGENTS' && <Agents session={session} profile={profile} balances={balances} />}
+            {shownTab === 'INSURANCE' && <InsuranceHub profile={profile} />}
 
             </Suspense>
           </div>

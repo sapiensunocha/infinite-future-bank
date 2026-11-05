@@ -1,5 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { X, Loader2 } from 'lucide-react';
+import ComingSoonPanel from '../ui/ComingSoonPanel';
+import { isGated } from '../../config/featureAvailability';
 
 // Lazy-load every popup screen — only one is ever visible at a time
 // Previously all were static imports bundling 11 heavy components into Dashboard
@@ -50,6 +52,8 @@ export default function AppPopupModal({
   commercialProfile, profile, triggerGlobalActionNotification
 }) {
   if (!activeAppPopup) return null;
+  // Gated features (not built yet / need a licence) never render their screen.
+  const shownPopup = isGated(activeAppPopup) ? null : activeAppPopup;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
@@ -79,22 +83,23 @@ export default function AppPopupModal({
         {/* Scrollable content — each screen loads only when first opened */}
         <div className="flex-1 overflow-y-auto no-scrollbar scroll-container bg-slate-50 p-4 md:p-8">
           <Suspense fallback={<ModalLoader />}>
-            {activeAppPopup === 'PAYROLL'           && <Payroll session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} />}
-            {activeAppPopup === 'BILLS'             && <PayBills session={session} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'CONTRACTS'         && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'LOANS'             && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
-            {activeAppPopup === 'NPO'               && <NpoHub session={session} />}
-            {activeAppPopup === 'MERCHANT_BILLING'  && <BillingTerminal session={session} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'PAYMENT_PAGES'     && <PaymentPages session={session} profile={profile} />}
-            {activeAppPopup === 'MERCHANT_TICKETS'  && <TicketGate session={session} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'VENTURE_EXCHANGE'  && <VentureExchange session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
-            {activeAppPopup === 'P2P_EXCHANGE'      && <P2PExchange session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'CLYRIX'            && <ClyrixHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
-            {activeAppPopup === 'PRAXCI'            && <PraxciHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
-            {activeAppPopup === 'DEUS_MARKET'       && <DeusMarket session={session} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'PENSION_FUND'      && <PensionFund session={session} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'AGRI_SHIELD'       && <AgriShield session={session} balances={balances} fetchAllData={fetchAllData} />}
-            {activeAppPopup === 'CAPITAL_NETWORK'   && <CapitalNetwork session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
+            {isGated(activeAppPopup) && <ComingSoonPanel id={activeAppPopup} />}
+            {shownPopup === 'PAYROLL'           && <Payroll session={session} balances={balances} fetchAllData={fetchAllData} commercialProfile={commercialProfile} />}
+            {shownPopup === 'BILLS'             && <PayBills session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'CONTRACTS'         && <SmartContracts session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'LOANS'             && <Loans session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
+            {shownPopup === 'NPO'               && <NpoHub session={session} />}
+            {shownPopup === 'MERCHANT_BILLING'  && <BillingTerminal session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'PAYMENT_PAGES'     && <PaymentPages session={session} profile={profile} />}
+            {shownPopup === 'MERCHANT_TICKETS'  && <TicketGate session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'VENTURE_EXCHANGE'  && <VentureExchange session={session} balances={balances} fetchAllData={fetchAllData} profile={profile} />}
+            {shownPopup === 'P2P_EXCHANGE'      && <P2PExchange session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'CLYRIX'            && <ClyrixHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
+            {shownPopup === 'PRAXCI'            && <PraxciHub session={session} profile={profile} balances={balances} triggerNotification={triggerGlobalActionNotification} />}
+            {shownPopup === 'DEUS_MARKET'       && <DeusMarket session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'PENSION_FUND'      && <PensionFund session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'AGRI_SHIELD'       && <AgriShield session={session} balances={balances} fetchAllData={fetchAllData} />}
+            {shownPopup === 'CAPITAL_NETWORK'   && <CapitalNetwork session={session} profile={profile} balances={balances} fetchAllData={fetchAllData} />}
           </Suspense>
         </div>
       </div>

@@ -5,6 +5,7 @@ import {
   Building2
 } from 'lucide-react';
 import AppSwitcher from '../AppSwitcher';
+import FeatureBadge from '../ui/FeatureBadge';
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, setActiveTab, onSignOut, onOpenAdmin, t, commercialProfile, supabase }) {
   const isCapitalEligible = commercialProfile?.pascaline_status === 'eligible_for_funding';
@@ -70,7 +71,9 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
                   : 'text-slate-500 hover:bg-white/60 hover:text-slate-800 active:bg-white/80'
               }`}
             >
-              {item.icon} {item.label}
+              <span className="shrink-0">{item.icon}</span>
+              <span className="flex-1 min-w-0 text-left truncate">{item.label}</span>
+              <FeatureBadge id={item.id} compact className="shrink-0" />
             </button>
           ))}
         </nav>

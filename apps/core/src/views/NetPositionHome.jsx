@@ -7,6 +7,7 @@ import {
   ChevronRight, Wifi, Shield, Leaf, ShoppingBag, RefreshCw
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
+import FeatureBadge from "../components/ui/FeatureBadge";
 import { useTranslation } from '../i18n/useTranslation';
 
 // ─── tiny transaction icon helper ───────────────────────────
@@ -340,7 +341,7 @@ export default function NetPositionHome({
                 <TrendingUp size={18} />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-900">IFB Pension</p>
+                <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">IFB Pension <FeatureBadge id="PENSION_FUND" /></p>
                 <p className="text-[10px] text-slate-500 mt-0.5">Retirement & growth</p>
               </div>
             </button>
@@ -352,7 +353,7 @@ export default function NetPositionHome({
                 <Leaf size={18} />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-900">AgriShield</p>
+                <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">AgriShield <FeatureBadge id="AGRI_SHIELD" /></p>
                 <p className="text-[10px] text-slate-500 mt-0.5">Agricultural protection</p>
               </div>
             </button>

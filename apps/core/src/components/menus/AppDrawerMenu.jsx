@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import FeatureBadge from "../ui/FeatureBadge";
 import { Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket, Calculator, Ticket, HeartPulse, GraduationCap, X, ShoppingBag, TrendingUp, Leaf, Gift, Link2 } from 'lucide-react';
 
 const APPS = [
@@ -73,6 +74,7 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                   <Icon size={18} />
                 </div>
                 <span className="text-[10px] font-semibold text-slate-700 leading-tight">{label}</span>
+                <FeatureBadge id={id} />
               </button>
             ))}
           </div>
@@ -87,8 +89,11 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                   onClick={() => open(id)}
                   className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800 transition-colors group"
                 >
-                  <Icon size={18} className="text-blue-600 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-semibold">{label}</span>
+                  <Icon size={18} className="text-blue-600 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="flex-1 min-w-0 flex flex-col items-start gap-1 text-left">
+                    <span className="text-xs font-semibold">{label}</span>
+                    <FeatureBadge id={id} compact />
+                  </span>
                 </button>
               ))}
             </div>
@@ -104,8 +109,11 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                   onClick={() => open(id)}
                   className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800 transition-colors group"
                 >
-                  <Icon size={18} className="text-indigo-600 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-semibold">{label}</span>
+                  <Icon size={18} className="text-indigo-600 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="flex-1 min-w-0 flex flex-col items-start gap-1 text-left">
+                    <span className="text-xs font-semibold">{label}</span>
+                    <FeatureBadge id={id} compact />
+                  </span>
                 </button>
               ))}
             </div>
@@ -120,8 +128,11 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                 onClick={() => open(id)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800 transition-colors group"
               >
-                <Icon size={18} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-semibold">{label}</span>
+                <Icon size={18} className="text-emerald-600 shrink-0 group-hover:scale-110 transition-transform" />
+                <span className="flex-1 min-w-0 flex flex-col items-start gap-1 text-left">
+                    <span className="text-xs font-semibold">{label}</span>
+                    <FeatureBadge id={id} compact />
+                  </span>
               </button>
             ))}
           </div>
@@ -136,8 +147,11 @@ export default function AppDrawerMenu({ isAppDrawerOpen, setIsAppDrawerOpen, set
                   onClick={() => open(id)}
                   className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800 transition-colors group"
                 >
-                  <Icon size={18} className="text-blue-600 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-semibold">{label}</span>
+                  <Icon size={18} className="text-blue-600 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="flex-1 min-w-0 flex flex-col items-start gap-1 text-left">
+                    <span className="text-xs font-semibold">{label}</span>
+                    <FeatureBadge id={id} compact />
+                  </span>
                 </button>
               ))}
             </div>
