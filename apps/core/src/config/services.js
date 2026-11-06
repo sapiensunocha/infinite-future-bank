@@ -4,7 +4,7 @@
 import {
   Users, Receipt, FileCode, HandCoins, HeartHandshake, ArrowRightLeft, Rocket,
   Calculator, Ticket, HeartPulse, GraduationCap, ShoppingBag, TrendingUp, Leaf,
-  Gift, Link2,
+  Gift, Link2, Tractor,
 } from 'lucide-react';
 
 export const SERVICE_GROUPS = [
@@ -16,6 +16,7 @@ export const SERVICE_GROUPS = [
       { id: 'MERCHANT_TICKETS', Icon: Ticket,         label: 'Box Office',      desc: 'Sell event tickets',               featured: true },
       { id: 'PAYROLL',          Icon: Users,          label: 'Payroll',         desc: 'Pay your team',                    featured: true },
       { id: 'MERCHANT_BILLING', Icon: Calculator,     label: 'Invoicing',       desc: 'Bill your clients' },
+      { id: 'PARTNER_HUB',      Icon: Tractor,        label: 'Partner Hub',     desc: 'Farmers, fields and field teams' },
     ],
   },
   {
