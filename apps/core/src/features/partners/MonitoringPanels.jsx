@@ -4,6 +4,9 @@ import { Loader2, RefreshCw, BellRing, CheckCircle2, Download, X, PauseCircle, P
 import { FieldsOverviewMap } from './FieldMapEditor';
 import * as api from './partnersApi';
 
+// Until Phase 2 is switched on (migration + functions), its tables/functions don't exist yet.
+const NOT_CONNECTED = /does not exist|schema cache|Could not find|not found|not configured|404/i;
+const friendly = (msg) => (NOT_CONNECTED.test(msg || '') ? 'MICHAEL monitoring is not connected yet. Alerts and reports will appear here once it is switched on.' : msg);
 const fmtDate = (d) => (d ? new Date(d).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–');
 const Spinner = () => <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-blue-600" /></div>;
 const LevelChip = ({ level }) => {
@@ -25,7 +28,7 @@ export function SyncButton({ partner, onDone }) {
       setMsg({ ok: !r.errors?.length, text: `${r.registered ?? 0} registered, ${r.rejected ?? 0} rejected, ${r.removed ?? 0} removed, risk updated for ${r.risk_updated ?? 0} fields.${errs}` });
       onDone?.();
     } catch (e) {
-      setMsg({ ok: false, text: /not configured/i.test(e.message) ? 'MICHAEL is not connected yet (server keys missing).' : e.message });
+      setMsg({ ok: false, text: friendly(e.message) });
     } finally { setBusy(false); }
   };
   return (
@@ -181,7 +184,7 @@ export function RiskFieldsTab({ partner, refreshKey, canManage, onChanged }) {
 // ───────────────────────────── Alerts inbox
 export function AlertsTab({ partner, canEdit, refreshKey }) {
   const [status, setStatus] = useState('open'); const [rows, setRows] = useState(null); const [err, setErr] = useState('');
-  const load = useCallback(() => { setRows(null); api.listAlerts(partner.id, { status }).then(setRows).catch((e) => setErr(e.message)); }, [partner.id, status]);
+  const load = useCallback(() => { setRows(null); api.listAlerts(partner.id, { status }).then(setRows).catch((e) => { setErr(friendly(e.message)); setRows([]); }); }, [partner.id, status]);
   useEffect(() => { load(); }, [load, refreshKey]);
   const ack = async (id) => { try { await api.ackAlert(id); load(); } catch (e) { setErr(e.message); } };
   return (
@@ -234,7 +237,7 @@ function periodRange(kind) {
 export function ReportsTab({ partner }) {
   const [kind, setKind] = useState('week'); const [s, setS] = useState(null); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const range = useMemo(() => periodRange(kind), [kind]);
-  useEffect(() => { setS(null); setErr(''); api.riskSummary(partner.id, range.from.toISOString(), range.to.toISOString()).then(setS).catch((e) => setErr(e.message)); }, [partner.id, range]);
+  useEffect(() => { setS(null); setErr(''); api.riskSummary(partner.id, range.from.toISOString(), range.to.toISOString()).then(setS).catch((e) => setErr(friendly(e.message))); }, [partner.id, range]);
   const exportCsv = async () => {
     setBusy(true);
     try {
