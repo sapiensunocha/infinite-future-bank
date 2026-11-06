@@ -8,6 +8,7 @@ import { postgis } from '@electric-sql/pglite-postgis';
 import { readFileSync } from 'fs';
 
 const MIG = process.argv[2];
+const MIG2 = process.argv[3];   // optional: 20261111_michael_monitoring.sql
 const db = await PGlite.create({ extensions: { postgis } });
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) { pass++; console.log('  ok  ', m); } else { fail++; console.log('  FAIL', m); } };
@@ -37,6 +38,7 @@ await db.exec(readFileSync(MIG, 'utf8'));
 console.log('migration applied');
 await db.exec(readFileSync(MIG, 'utf8'));
 console.log('migration applied twice (idempotent)');
+if (MIG2) { await db.exec(readFileSync(MIG2, 'utf8')); await db.exec(readFileSync(MIG2, 'utf8')); console.log('monitoring migration applied twice (idempotent)'); }
 
 const U = { admin: 'a', owner: 'b', agent: 'c', viewer: 'd', outsider: 'e' };
 async function as(who, sql, params = []) {
@@ -105,6 +107,42 @@ ok(audit.some(a => a.entity === 'partner_members') && audit.some(a => a.action =
 const ov = (await as('viewer', `SELECT partner_overview($1) o`, [pid])).rows[0].o;
 ok(ov.farmers === 1 && ov.fields === 1 && Number(ov.hectares) > 1.2 && ov.farmers_female === 1, `overview: ${JSON.stringify(ov)}`);
 ok(/permission denied|Not allowed/.test(await err('outsider', `SELECT partner_overview($1)`, [pid])), 'outsider cannot read overview');
+
+
+if (MIG2) {
+  console.log('-- Phase 2: monitoring');
+  const fieldId = (await as('agent', `SELECT id FROM fields LIMIT 1`)).rows[0].id;
+  // the server (superuser here = service role) registers the field and stores risk + alerts
+  await db.query(`UPDATE fields SET monitoring_status='active', michael_synced_at=now() WHERE id=$1`, [fieldId]);
+  await db.query(`INSERT INTO field_risk(field_id, partner_id, score, level, indicators, observed_at) VALUES ($1,$2,72,'high','[{"hazard":"drought","level":"high"}]',now())`, [fieldId, pid]);
+  await db.query(`INSERT INTO field_alerts(event_id, field_id, partner_id, hazard, severity, detected_at, received_at, notify_result)
+                  VALUES ('ev-1',$1,$2,'drought','high', now() - interval '30 minutes', now(), '{"farmer_sms":"sent"}'),
+                         ('ev-2',$1,$2,'flood','critical', now() - interval '3 hours', now(), '{"farmer_sms":"skipped:no_valid_phone"}')`, [fieldId, pid]);
+  ok(/permission denied/.test(await err('admin', `INSERT INTO field_alerts(event_id, field_id, partner_id, hazard, severity, detected_at) VALUES ('ev-x',$1,$2,'drought','high',now())`, [fieldId, pid])), 'clients (even IFB admins in the app) cannot insert alerts');
+  ok(/duplicate key/.test(await (async () => { try { await db.query(`INSERT INTO field_alerts(event_id, field_id, partner_id, hazard, severity, detected_at) VALUES ('ev-1',$1,$2,'drought','high',now())`, [fieldId, pid]); return ''; } catch (e) { return e.message; } })()), 'same MICHAEL event is stored only once');
+  ok((await as('viewer', `SELECT count(*)::int n FROM field_alerts`)).rows[0].n === 2, 'partner viewer reads its alerts');
+  ok((await as('outsider', `SELECT count(*)::int n FROM field_alerts`)).rows[0].n === 0, 'outsider sees no alerts');
+  ok((await as('outsider', `SELECT count(*)::int n FROM field_risk`)).rows[0].n === 0, 'outsider sees no risk data');
+  ok(/permission denied/.test(await err('agent', `UPDATE field_alerts SET status='resolved'`)), 'clients cannot edit alerts directly');
+  ok(/Not allowed/.test(await err('viewer', `SELECT partner_ack_alert(id) FROM field_alerts WHERE event_id='ev-1'`)), 'viewer cannot acknowledge');
+  await as('agent', `SELECT partner_ack_alert(id) FROM field_alerts WHERE event_id='ev-1'`);
+  ok((await as('agent', `SELECT status FROM field_alerts WHERE event_id='ev-1'`)).rows[0].status === 'acknowledged', 'field agent acknowledges an alert');
+  const sum = (await as('viewer', `SELECT partner_risk_summary($1) s`, [pid])).rows[0].s;
+  ok(sum.alerts_total === 2 && sum.alerts_open === 1 && Number(sum.alerts_within_2h_pct) === 50 && sum.farmers_notified === 1 && sum.risk_levels.high === 1 && sum.top_fields.length === 1,
+     `weekly summary: ${JSON.stringify({ t: sum.alerts_total, open: sum.alerts_open, within2h: sum.alerts_within_2h_pct, notified: sum.farmers_notified, levels: sum.risk_levels })}`);
+  ok(/Not allowed/.test(await err('outsider', `SELECT partner_risk_summary($1)`, [pid])), 'outsider cannot read the summary');
+  ok(/Not allowed/.test(await err('agent', `SELECT partner_set_monitoring($1, true)`, [fieldId])), 'field agent cannot pause monitoring');
+  await as('owner', `SELECT partner_set_monitoring($1, true)`, [fieldId]);
+  ok((await db.query(`SELECT count(*)::int n FROM michael_field_removals WHERE field_id=$1 AND synced_at IS NULL`, [fieldId])).rows[0].n === 1, 'pausing queues removal from MICHAEL');
+  await as('owner', `SELECT partner_set_monitoring($1, false)`, [fieldId]);
+  const st = (await db.query(`SELECT monitoring_status, michael_synced_at FROM fields WHERE id=$1`, [fieldId])).rows[0];
+  ok(st.monitoring_status === 'pending' && st.michael_synced_at === null && (await db.query(`SELECT count(*)::int n FROM michael_field_removals WHERE field_id=$1`, [fieldId])).rows[0].n === 0, 'resuming re-queues registration');
+  await db.query(`UPDATE fields SET monitoring_status='active', michael_synced_at=now() WHERE id=$1`, [fieldId]);
+  await as('owner', `DELETE FROM fields WHERE id=$1`, [fieldId]);
+  ok((await db.query(`SELECT count(*)::int n FROM michael_field_removals WHERE field_id=$1`, [fieldId])).rows[0].n === 1, 'deleting a monitored field queues removal from MICHAEL');
+  ok((await db.query(`SELECT count(*)::int n FROM field_alerts`)).rows[0].n === 0, 'its alerts and risk are deleted with it');
+  ok(/permission denied/.test(await err('agent', `SELECT * FROM michael_field_removals`)), 'clients cannot read the removal queue');
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
