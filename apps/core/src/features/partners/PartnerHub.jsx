@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Users, Map as MapIcon, LayoutDashboard, UserPlus, Upload, Search, ChevronLeft, ChevronRight, Plus,
-  Loader2, Sprout, Ruler, Activity, Trash2, ShieldCheck, Building2, CheckCircle2, AlertTriangle, X,
+  Loader2, Sprout, Ruler, Activity, Trash2, ShieldCheck, Building2, CheckCircle2, AlertTriangle, X, BellRing, FileBarChart,
 } from 'lucide-react';
 import FieldMapEditor, { FieldsOverviewMap } from './FieldMapEditor';
+import { AlertsTab, MonitoringSummary, ReportsTab, RiskFieldsTab, SyncButton } from './MonitoringPanels';
 import * as api from './partnersApi';
 
 const ADMIN_ROLES = ['admin', 'admin_l3', 'superadmin'];
@@ -51,7 +52,7 @@ function Progress({ label, value, target, unit }) {
 }
 
 // ───────────────────────────────────────────────────────────── Overview
-function OverviewTab({ partner, refreshKey }) {
+function OverviewTab({ partner, refreshKey, canManage, onSynced, onOpenAlerts }) {
   const [ov, setOv] = useState(null); const [err, setErr] = useState('');
   useEffect(() => { api.overview(partner.id).then(setOv).catch((e) => setErr(e.message)); }, [partner.id, refreshKey]);
   if (err) return <Notice>{err}</Notice>;
@@ -60,6 +61,7 @@ function OverviewTab({ partner, refreshKey }) {
   const ha = Number(ov.hectares || 0); const mha = Number(ov.monitored_hectares || 0);
   return (
     <div className="space-y-4">
+      <MonitoringSummary partner={partner} refreshKey={refreshKey} onOpenAlerts={onOpenAlerts} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Stat icon={Users} label="Farmers" value={ov.farmers.toLocaleString()} sub={`${ov.farmers_last_30d} in the last 30 days`} />
         <Stat icon={Sprout} label="Fields" value={ov.fields.toLocaleString()} />
@@ -77,6 +79,7 @@ function OverviewTab({ partner, refreshKey }) {
           </p>
         </div>
       )}
+      {canManage && <SyncButton partner={partner} onDone={onSynced} />}
     </div>
   );
 }
@@ -328,34 +331,6 @@ function FarmersTab({ partner, canEdit, canManage, onChanged }) {
   );
 }
 
-// ───────────────────────────────────────────────────────────── Fields
-function FieldsTab({ partner, refreshKey }) {
-  const [rows, setRows] = useState(null); const [err, setErr] = useState('');
-  useEffect(() => { api.listFields(partner.id).then(setRows).catch((x) => setErr(x.message)); }, [partner.id, refreshKey]);
-  if (err) return <Notice>{err}</Notice>;
-  if (!rows) return <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-blue-600" /></div>;
-  return (
-    <div className="space-y-3">
-      <FieldsOverviewMap fields={rows} height={380} />
-      <div className="flex flex-wrap gap-3 text-sm text-slate-600">
-        {Object.entries(STATUS_LABEL).map(([k, v]) => <span key={k} className={`px-2 py-1 rounded-lg ${STATUS_STYLE[k]}`}>{v}: {rows.filter((r) => r.monitoring_status === k).length}</span>)}
-      </div>
-      <div className="ui-card divide-y divide-slate-100 overflow-hidden">
-        {rows.length === 0 && <p className="px-4 py-8 text-sm text-slate-500 text-center">No fields mapped yet. Open a farmer and use “Map a field”.</p>}
-        {rows.slice(0, 200).map((x) => (
-          <div key={x.id} className="flex items-center gap-3 px-4 py-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-medium text-slate-900 truncate">{x.name}{x.crop ? ` · ${x.crop}` : ''}</p>
-              <p className="text-sm text-slate-500 flex items-center gap-2 flex-wrap"><span className="truncate">{x.farmers?.full_name} · {Number(x.area_ha).toFixed(2)} ha</span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${STATUS_STYLE[x.monitoring_status]}`}>{STATUS_LABEL[x.monitoring_status]}</span></p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ───────────────────────────────────────────────────────────── Team
 function TeamTab({ partner, canManage, myId }) {
   const [rows, setRows] = useState(null); const [email, setEmail] = useState(''); const [role, setRole] = useState('field_agent');
@@ -471,6 +446,8 @@ export default function PartnerHub({ session, profile }) {
     { id: 'overview', label: 'Overview', Icon: LayoutDashboard },
     { id: 'farmers', label: 'Farmers', Icon: Users },
     { id: 'fields', label: 'Fields', Icon: MapIcon },
+    { id: 'alerts', label: 'Alerts', Icon: BellRing },
+    { id: 'reports', label: 'Reports', Icon: FileBarChart },
     { id: 'team', label: 'Team', Icon: ShieldCheck },
   ];
 
@@ -491,16 +468,18 @@ export default function PartnerHub({ session, profile }) {
 
       <div className="flex gap-1 p-1 bg-slate-100 rounded-xl overflow-x-auto no-scrollbar">
         {TABS.map(({ id, label, Icon }) => (
-          <button key={id} type="button" onClick={() => setTab(id)}
-            className={`flex-1 min-w-0 px-1 h-10 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 ${tab === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>
+          <button key={id} type="button" onClick={(e) => { setTab(id); e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}
+            className={`flex-1 min-w-[76px] px-2 h-10 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 ${tab === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>
             <Icon size={15} className="hidden sm:block" /> {label}
           </button>
         ))}
       </div>
 
-      {partner && tab === 'overview' && <OverviewTab partner={partner} refreshKey={refreshKey} />}
+      {partner && tab === 'overview' && <OverviewTab partner={partner} refreshKey={refreshKey} canManage={canManage} onSynced={bump} onOpenAlerts={() => setTab('alerts')} />}
       {partner && tab === 'farmers' && <FarmersTab partner={partner} canEdit={canEdit && partner.status === 'active'} canManage={canManage} onChanged={bump} />}
-      {partner && tab === 'fields' && <FieldsTab partner={partner} refreshKey={refreshKey} />}
+      {partner && tab === 'fields' && <RiskFieldsTab partner={partner} refreshKey={refreshKey} canManage={canManage} onChanged={bump} />}
+      {partner && tab === 'alerts' && <AlertsTab partner={partner} canEdit={canEdit} refreshKey={refreshKey} />}
+      {partner && tab === 'reports' && <ReportsTab partner={partner} />}
       {partner && tab === 'team' && <TeamTab partner={partner} canManage={canManage} myId={myId} />}
     </div>
   );

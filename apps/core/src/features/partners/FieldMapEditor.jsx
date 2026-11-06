@@ -128,7 +128,7 @@ export default function FieldMapEditor({ value, onChange, height = 360 }) {
 }
 
 // Read-only map of many fields, coloured by monitoring status.
-export function FieldsOverviewMap({ fields, height = 320, onSelect }) {
+export function FieldsOverviewMap({ fields, height = 320, onSelect, colorFor }) {
   const shapes = (fields || []).map((f) => ({ f, pts: (f.boundary_geojson?.coordinates?.[0] || []).map(([lng, lat]) => [lat, lng]) })).filter((s) => s.pts.length >= 4);
   const all = shapes.flatMap((s) => s.pts);
   const color = (s) => ({ active: '#16a34a', paused: '#94a3b8', rejected: '#dc2626' }[s] || '#2563eb');
@@ -140,7 +140,7 @@ export function FieldsOverviewMap({ fields, height = 320, onSelect }) {
         {all.length >= 2 && <FitTo points={all} />}
         {shapes.map(({ f, pts }) => (
           <Polygon key={f.id} positions={pts} eventHandlers={{ click: () => onSelect?.(f) }}
-            pathOptions={{ color: color(f.monitoring_status), weight: 2, fillOpacity: 0.3 }} />
+            pathOptions={{ color: colorFor ? colorFor(f) : color(f.monitoring_status), weight: 2, fillOpacity: 0.35 }} />
         ))}
       </MapContainer>
     </div>

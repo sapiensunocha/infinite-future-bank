@@ -21,11 +21,11 @@ It delivers Annex A1 of agreement GHV-IFB-2026-001 (Greenhouse Ventures, Cameroo
 ## Endpoints (MICHAEL)
 | Method & path | Purpose |
 |---|---|
-| `PUT /api/v1/agri/fields` | Bulk upsert, at most 500 per call. Item: `external_id` (IFB field UUID), `partner_code`, `country` (ISO2), `crop`, `planting_date`, `boundary` (GeoJSON Polygon, `[lng, lat]`), optional `thresholds`. Response per item: `created` / `updated` / `rejected` + reason, `area_ha`, `centroid`. |
+| `PUT /api/v1/agri/fields` | Bulk upsert, at most 500 per call. Request `{ "fields": [ { external_id, partner_code, country, crop, planting_date, boundary, thresholds? } ] }`: `external_id` is the IFB field UUID, `country` is ISO2, `boundary` is a GeoJSON Polygon in `[lng, lat]`. Response `{ "results": [ { external_id, status: "created" \| "updated" \| "rejected", reason?, area_ha?, centroid? } ] }`, with one result per item. |
 | `DELETE /api/v1/agri/fields/{external_id}` | Stop monitoring. History is kept for 24 months. |
 | `GET /api/v1/agri/fields/{external_id}/risk` | Current risk: `score` 0–100, `level` (low / moderate / high / critical), `observed_at`, `indicators[]`. Each indicator has `hazard`, `value`, `unit`, `level`, `baseline`, `source`, `observed_at`. |
 | `GET /api/v1/agri/fields/{external_id}/history?from&to&hazard` | Daily time series. |
-| `GET /api/v1/agri/risk?partner_code=GHV&level_min=high` | A partner's fields at or above a risk level. |
+| `GET /api/v1/agri/risk?partner_code=GHV&level_min=high` | A partner's fields at or above a risk level. Response `{ "fields": [ { external_id, score, level, indicators, observed_at } ] }`. IFB calls it with `level_min=low` to refresh every field. |
 | `GET /health`, `GET /api/v1/agri/status` | Liveness; data freshness per source. |
 | `POST /api/v1/agri/sandbox/trigger-alert` | Sandbox only: send a test alert. |
 
@@ -46,8 +46,13 @@ Hazards: `crop_stress`, `disease_risk`, `drought`, `flood`, `rainfall_anomaly`, 
 
 ## IFB side (status)
 - **Phase 1 (done):** fields stored with validated PostGIS boundaries (0.01–500 ha) and the `monitoring_status` values `pending` / `active` / `paused` / `rejected`, plus `michael_synced_at`. A boundary change resets the sync.
-- **Phase 2 (next):**
-  - a `michael-agri-sync` function, which registers pending fields and sets them `active` or `rejected`;
-  - the `michael-agri-webhook` receiver, which stores alerts and sends SMS/WhatsApp to the farmer and field agent;
-  - a risk view per field in the Partner Hub;
-  - weekly and quarterly reports.
+- **Phase 2 (built):**
+  - `michael-agri-sync` runs every 15 minutes, or when an admin taps "Sync now". It handles removals, registrations (fields become `active` or `rejected` with MICHAEL's reason) and the risk refresh.
+  - `michael-agri-webhook` checks the signature and timestamp, then stores the alert once per `event_id`. It texts the farmer for high and critical alerts (SMS, with WhatsApp as a fallback), emails partner owners and admins, and resolves open alerts when it receives `alert_resolved`.
+  - `partner-agri-report` sends the weekly email (Mondays) and the quarterly summary.
+  - The Partner Hub shows a risk map, an alerts inbox with acknowledge, and reports with CSV export.
+- **Secrets to set on IFB:**
+  - `MICHAEL_BASE_URL`;
+  - `MICHAEL_API_KEY` (the new key; `michael-proxy` now reads it too, so the old hard-coded key can be revoked);
+  - `MICHAEL_WEBHOOK_SECRET`;
+  - for farmer SMS, `TWILIO_MESSAGING_SERVICE_SID` or `TWILIO_SMS_FROM`. `TWILIO_WA_FROM` is already set and is used as the fallback.

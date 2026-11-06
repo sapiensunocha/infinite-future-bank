@@ -161,3 +161,61 @@ export function fromGeoJsonPolygon(g) {
   const ring = g?.coordinates?.[0] || [];
   return ring.slice(0, -1).map(([lng, lat]) => [lat, lng]);
 }
+
+// ───────────────────────────── Phase 2: MICHAEL monitoring
+export const HAZARD_LABEL = {
+  crop_stress: 'Crop stress', disease_risk: 'Disease risk', drought: 'Drought', flood: 'Flood',
+  rainfall_anomaly: 'Unusual rainfall', soil_moisture_anomaly: 'Unusual soil moisture', fire: 'Fire', storm: 'Storm',
+};
+export const LEVEL_STYLE = {
+  low:      { label: 'Low',      color: '#16a34a', chip: 'bg-emerald-50 text-emerald-700' },
+  moderate: { label: 'Moderate', color: '#d97706', chip: 'bg-amber-50 text-amber-700' },
+  high:     { label: 'High',     color: '#ea580c', chip: 'bg-orange-50 text-orange-700' },
+  critical: { label: 'Critical', color: '#dc2626', chip: 'bg-red-50 text-red-700' },
+};
+
+export async function listRisk(partnerId) {
+  return unwrap(await supabase.from('field_risk').select('field_id, score, level, indicators, observed_at, fetched_at').eq('partner_id', partnerId));
+}
+export async function listAlerts(partnerId, { status = 'open', limit = 200 } = {}) {
+  let q = supabase.from('field_alerts')
+    .select('id, field_id, hazard, severity, metric, value, threshold, message_en, message_fr, detected_at, received_at, status, acknowledged_at, notify_result, fields(name, crop, farmers(full_name, phone))')
+    .eq('partner_id', partnerId).order('detected_at', { ascending: false }).limit(limit);
+  if (status !== 'all') q = q.eq('status', status);
+  return unwrap(await q);
+}
+export async function alertsBetween(partnerId, from, to) {
+  return unwrap(await supabase.from('field_alerts')
+    .select('detected_at, received_at, hazard, severity, status, value, threshold, notify_result, fields(name, crop, area_ha, farmers(full_name))')
+    .eq('partner_id', partnerId).gte('detected_at', from).lt('detected_at', to).order('detected_at', { ascending: false }).limit(5000));
+}
+export async function ackAlert(id) {
+  return unwrap(await supabase.rpc('partner_ack_alert', { p_alert: id }));
+}
+export async function setMonitoring(fieldId, paused) {
+  return unwrap(await supabase.rpc('partner_set_monitoring', { p_field: fieldId, p_paused: paused }));
+}
+export async function riskSummary(partnerId, from, to) {
+  return unwrap(await supabase.rpc('partner_risk_summary', { p_partner: partnerId, p_from: from, p_to: to }));
+}
+export async function syncNow(partnerId) {
+  const { data, error } = await supabase.functions.invoke('michael-agri-sync', { body: { partner_id: partnerId } });
+  if (error) {
+    let msg = error.message;
+    try { const b = await error.context?.json?.(); if (b?.error) msg = b.error; } catch { /* keep generic */ }
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export function toCsv(rows) {
+  if (!rows.length) return '';
+  const cols = Object.keys(rows[0]);
+  const cell = (v) => { const s = v == null ? '' : String(v); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  return [cols.join(','), ...rows.map((r) => cols.map((c) => cell(r[c])).join(','))].join('\n');
+}
+export function downloadText(filename, text, type = 'text/csv') {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
