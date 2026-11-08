@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../services/supabaseClient';
 import {
   User, MapPin, Briefcase, Shield, Building2, FileText,
   CheckCircle2, ChevronRight, ChevronLeft, Upload, Loader2,
   Globe, DollarSign, ShieldCheck, X, Camera,
-  Brain, ScanFace, Sparkles, AlertTriangle, CheckCheck
+  Brain, ScanFace, Sparkles, AlertTriangle, CheckCheck, SwitchCamera, BadgeCheck
 } from 'lucide-react';
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
@@ -54,30 +55,52 @@ function Toggle({ id, checked, onChange, color = 'violet', children }) {
   );
 }
 
+// ── Third-party ID check (Smile ID via the kyc-verify-id function) ─────────────
+const COUNTRY_CODES = { nigeria: 'NG', ng: 'NG', ghana: 'GH', gh: 'GH', kenya: 'KE', ke: 'KE', uganda: 'UG', ug: 'UG', 'south africa': 'ZA', za: 'ZA' };
+const SMILE_TYPE = {
+  NG: { nin: 'NIN_V2', bvn: 'BVN', voters_card: 'VOTER_ID', drivers_license: 'DRIVERS_LICENSE', passport: 'PASSPORT' },
+  GH: { national_id: 'GHANA_CARD', voters_card: 'VOTER_ID', drivers_license: 'DRIVERS_LICENSE', passport: 'PASSPORT' },
+  KE: { national_id: 'NATIONAL_ID', passport: 'PASSPORT' },
+  UG: { national_id: 'NATIONAL_ID_NO_PHOTO' },
+  ZA: { national_id: 'NATIONAL_ID' },
+};
+const countryCode = (v) => COUNTRY_CODES[String(v || '').trim().toLowerCase()] || null;
+
 // ── Camera modal ──────────────────────────────────────────────────────────────
 
-function CameraCapture({ onCapture, onClose }) {
+function CameraCapture({ onCapture, onClose, facing = 'environment' }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const [ready, setReady] = useState(false);
-
+  const [mode, setMode] = useState(facing);          // 'user' = front camera, 'environment' = back camera
+  const [canSwitch, setCanSwitch] = useState(true);
   const [camErr, setCamErr] = useState('');
+
+  const stop = () => { streamRef.current?.getTracks().forEach(t => t.stop()); streamRef.current = null; };
+
   useEffect(() => {
+    let cancelled = false;
+    setReady(false);
+    stop();
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } } })
+      .getUserMedia({ video: { facingMode: { ideal: mode }, width: { ideal: mode === 'user' ? 1280 : 1920 } }, audio: false })
       .then(stream => {
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play().then(() => setReady(true));
+          videoRef.current.play().then(() => setReady(true)).catch(() => setReady(true));
         }
+        navigator.mediaDevices.enumerateDevices?.()
+          .then(d => setCanSwitch(d.filter(x => x.kind === 'videoinput').length > 1))
+          .catch(() => {});
       })
       .catch(() => {
         setCamErr('Camera access denied. Please allow camera permission in your browser settings, then try again. Or use "Upload" to select a photo from your device.');
       });
-    return () => streamRef.current?.getTracks().forEach(t => t.stop());
-  }, []);
+    return () => { cancelled = true; stop(); };
+  }, [mode]);
 
   const snap = () => {
     const v = videoRef.current, c = canvasRef.current;
@@ -85,18 +108,20 @@ function CameraCapture({ onCapture, onClose }) {
     c.width = v.videoWidth; c.height = v.videoHeight;
     c.getContext('2d').drawImage(v, 0, 0);
     c.toBlob(blob => {
-      streamRef.current?.getTracks().forEach(t => t.stop());
+      stop();
       onCapture(new File([blob], `kyc_${Date.now()}.jpg`, { type: 'image/jpeg' }));
     }, 'image/jpeg', 0.92);
   };
 
-  const close = () => { streamRef.current?.getTracks().forEach(t => t.stop()); onClose(); };
+  const close = () => { stop(); onClose(); };
+  const isFront = mode === 'user';
 
-  return (
-    <div className="fixed inset-0 z-[300] bg-black flex flex-col">
+  // Rendered on <body> so the app header / bottom bar (and any transformed parent) can't cover it.
+  return createPortal(
+    <div className="fixed inset-0 z-[2000] bg-black flex flex-col">
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/80 to-transparent">
-        <span className="text-slate-900 font-black text-sm tracking-tight">IFB Secure Camera</span>
-        <button onClick={close} className="text-slate-500 hover:text-slate-900 transition-colors"><X size={22}/></button>
+        <span className="text-white font-black text-sm tracking-tight">{isFront ? 'Selfie camera' : 'ID camera'}</span>
+        <button onClick={close} aria-label="Close camera" className="text-white/80 hover:text-white transition-colors"><X size={22}/></button>
       </div>
       {camErr ? (
         <div className="flex-1 flex items-center justify-center p-8">
@@ -109,27 +134,35 @@ function CameraCapture({ onCapture, onClose }) {
           </div>
         </div>
       ) : null}
-      <video ref={videoRef} playsInline muted className={`flex-1 w-full object-cover ${camErr ? 'hidden' : ''}`} />
+      {/* Front camera preview is mirrored like a mirror; the saved photo is not. */}
+      <video ref={videoRef} playsInline muted autoPlay className={`flex-1 w-full object-cover ${camErr ? 'hidden' : ''}`} style={isFront ? { transform: 'scaleX(-1)' } : undefined} />
       <canvas ref={canvasRef} className="hidden" />
-      {/* guide overlay */}
+      {/* guide overlay: face oval for selfies, card frame for IDs */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <div className="border-2 border-white/30 rounded-2xl" style={{ width: '80%', aspectRatio: '1.58' }} />
+        {isFront
+          ? <div className="border-2 border-white/50 rounded-[50%]" style={{ width: '62%', aspectRatio: '0.78' }} />
+          : <div className="border-2 border-white/40 rounded-2xl" style={{ width: '80%', aspectRatio: '1.58' }} />}
       </div>
       <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center gap-10 pb-10 pt-8 bg-gradient-to-t from-black/70 to-transparent">
-        <button onClick={close} className="w-12 h-12 rounded-full bg-slate-50 text-slate-900 flex items-center justify-center hover:bg-white/30">
+        <button onClick={close} aria-label="Cancel" className="w-12 h-12 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/30">
           <X size={18}/>
         </button>
-        <button onClick={snap} disabled={!ready}
+        <button onClick={snap} disabled={!ready} aria-label="Take photo"
           className="w-20 h-20 rounded-full bg-white shadow-sm border-[5px] border-white/40 disabled:opacity-30 active:scale-90 transition-all" />
-        <div className="w-12"/>
+        <button onClick={() => setMode(m => (m === 'user' ? 'environment' : 'user'))} disabled={!canSwitch}
+          aria-label={isFront ? 'Switch to back camera' : 'Switch to front camera'} title="Switch camera"
+          className="w-12 h-12 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/30 disabled:opacity-30">
+          <SwitchCamera size={20}/>
+        </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 // ── Document upload zone ──────────────────────────────────────────────────────
 
-function DocZone({ label, field, files, onChange, required, accept = 'image/*,application/pdf', capture = false }) {
+function DocZone({ label, field, files, onChange, required, accept = 'image/*,application/pdf', capture = false, facing = 'environment' }) {
   const fileRef = useRef();
   const [cameraOpen, setCameraOpen] = useState(false);
   const file = files[field];
@@ -149,6 +182,7 @@ function DocZone({ label, field, files, onChange, required, accept = 'image/*,ap
     <div>
       {cameraOpen && (
         <CameraCapture
+          facing={facing}
           onCapture={f => { onChange(field, f); setCameraOpen(false); }}
           onClose={() => setCameraOpen(false)}
         />
@@ -381,6 +415,36 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const setFile = (key, val) => setFiles(f => ({ ...f, [key]: val }));
 
+  const [idCheck, setIdCheck] = useState({ status: 'idle', text: '' }); // idle | checking | verified | failed
+  const idCountry = countryCode(form.id_issuing_country) || countryCode(form.nationality);
+  const smileIdType = idCountry ? SMILE_TYPE[idCountry]?.[form.id_type] : null;
+  useEffect(() => { setIdCheck({ status: 'idle', text: '' }); }, [form.id_type, form.id_number, idCountry]);
+
+  const runIdCheck = async () => {
+    setIdCheck({ status: 'checking', text: '' });
+    try {
+      const { data, error } = await supabase.functions.invoke('kyc-verify-id', {
+        body: {
+          country: idCountry, id_type: smileIdType, id_number: form.id_number,
+          first_name: form.legal_first_name, last_name: form.legal_last_name,
+          dob: form.date_of_birth || undefined, phone: form.phone_primary || undefined,
+        },
+      });
+      let msg = data?.error;
+      if (error || msg) {
+        try { msg = msg || (await error?.context?.json())?.error; } catch { /* ignore */ }
+        throw new Error(msg || 'ID check is unavailable right now. You can still continue — our team will review your ID.');
+      }
+      setIdCheck(data.verified
+        ? { status: 'verified', text: 'ID number confirmed and your name matches.' }
+        : { status: 'failed', text: data.name_match && /no match/i.test(data.name_match)
+            ? 'The name on this ID does not match the name you entered.'
+            : (data.result_text || 'We could not confirm this ID number. Check it and try again.') });
+    } catch (e) {
+      setIdCheck({ status: 'failed', text: e.message });
+    }
+  };
+
   // W1: Pre-populate from existing submission when resubmitting (needs_more_info OR rejected)
   useEffect(() => {
     if (!['needs_more_info', 'rejected'].includes(profile?.kyc_status) || !session?.user?.id) return;
@@ -499,7 +563,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       req('residential_address_line1', 'Address'); req('residential_city', 'City'); req('residential_country', 'Country');
     } else if (i === 1) {
       req('id_type', 'Document type'); req('id_number', 'Document number');
-      doc('id_front', 'Photo of ID (front)'); doc('selfie_with_id', 'Selfie holding ID');
+      if (!['nin', 'bvn'].includes(form.id_type) || idCheck.status !== 'verified') doc('id_front', 'Photo of ID (front)');
+      doc('selfie_with_id', 'Selfie holding ID');
     } else if (i === 2) {
       req('employment_status', 'Employment status'); req('source_of_funds', 'Source of funds'); req('purpose_of_account', 'Purpose of account');
     } else if (i === 3) {
@@ -768,12 +833,33 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
               <option value="">Select</option>
               <option value="passport">Passport</option>
               <option value="national_id">National ID Card</option>
+              <option value="nin">NIN — National Identification Number (Nigeria)</option>
+              <option value="bvn">BVN — Bank Verification Number (Nigeria)</option>
+              <option value="voters_card">Voter&apos;s Card</option>
               <option value="drivers_license">Driver's Licence</option>
               <option value="residence_permit">Residence Permit</option>
             </select>
           </Field>
           <Field label="Document Number *"><input className={inp} value={form.id_number} onChange={e => set('id_number', e.target.value)} placeholder="As printed on ID"/></Field>
         </div>
+        {smileIdType && (
+          <div className={`rounded-xl border p-3 flex flex-col sm:flex-row sm:items-center gap-3 ${idCheck.status === 'verified' ? 'bg-emerald-50 border-emerald-200' : idCheck.status === 'failed' ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="flex-1 text-xs font-bold">
+              {idCheck.status === 'verified'
+                ? <span className="text-emerald-700 flex items-center gap-2"><BadgeCheck size={16}/> {idCheck.text}</span>
+                : idCheck.status === 'failed'
+                  ? <span className="text-amber-700 flex items-center gap-2"><AlertTriangle size={16}/> {idCheck.text}</span>
+                  : <span className="text-slate-600">Confirm your ID number instantly with the official register (Smile ID). Uses the name and date of birth from step 1.</span>}
+            </div>
+            {idCheck.status !== 'verified' && (
+              <button type="button" onClick={runIdCheck}
+                disabled={idCheck.status === 'checking' || form.id_number.trim().length < 5 || !form.legal_first_name || !form.legal_last_name}
+                className="shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2">
+                {idCheck.status === 'checking' ? <><Loader2 size={12} className="animate-spin"/> Checking…</> : <><ShieldCheck size={12}/> Verify ID</>}
+              </button>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Expiry Date">
             <input type="date" className={inp} value={form.id_expiry} onChange={e => {
@@ -805,8 +891,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
         <Sect icon={ScanFace} title="Selfie Verification" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <DocZone label="Selfie — Face Only" field="selfie" files={files} onChange={setFile} accept="image/*" capture />
-          <DocZone label="Selfie Holding ID" field="selfie_with_id" files={files} onChange={setFile} accept="image/*" capture required />
+          <DocZone label="Selfie — Face Only" field="selfie" files={files} onChange={setFile} accept="image/*" capture facing="user" />
+          <DocZone label="Selfie Holding ID" field="selfie_with_id" files={files} onChange={setFile} accept="image/*" capture facing="user" required />
         </div>
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
           <p className="text-[9px] font-black uppercase tracking-wider text-blue-600 mb-1">Selfie tips</p>
