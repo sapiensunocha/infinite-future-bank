@@ -95,31 +95,8 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
 
   // Instant In-App Deposit States
   const [instantSuccess, setInstantSuccess] = useState(null);
-  const [isInstantLoading, setIsInstantLoading] = useState(false);
-  const [instantError, setInstantError] = useState(null);
 
-  const handleInstantDeposit = async (customAmt) => {
-    const val = parseFloat(customAmt || amount);
-    if (!val || val <= 0) return;
-    setIsInstantLoading(true);
-    setInstantError(null);
-    try {
-      const { data, error } = await supabase.rpc('instant_deposit', {
-        p_amount: val,
-        p_asset: 'USD'
-      });
-      if (error) {
-        throw new Error(error.message || 'Deposit failed');
-      }
-      setInstantSuccess({ amount: val, newBalance: data?.new_balance });
-      onSuccess?.();
-    } catch (err) {
-      console.error("Direct deposit error:", err);
-      setInstantError(err.message || "Failed to process direct deposit. Please try again.");
-    } finally {
-      setIsInstantLoading(false);
-    }
-  };
+  // Instant Direct Deposit was removed: it credited money without any payment (instant_deposit RPC dropped).
 
   const FLW_CURRENCY_MAP = {
     GH: { currency: 'GHS', rate: 15.5,  label: 'Ghana (GHS)' },
@@ -564,25 +541,6 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               <div className="pt-4 border-t border-slate-200">
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 text-center">Select Liquidity Network</label>
                 <div className="space-y-3">
-                  {/* Recommended: Instant Direct Banking Rails (100% In-App) */}
-                  <button 
-                    disabled={!amount || parseFloat(amount) <= 0} 
-                    onClick={() => setRoutingMethod('instant')} 
-                    className="w-full bg-gradient-to-r from-blue-600/30 via-indigo-600/20 to-emerald-600/20 hover:from-blue-600/40 hover:via-indigo-600/30 hover:to-emerald-600/30 border border-blue-200 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left relative overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.25)]"
-                  >
-                    <div className="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest flex items-center gap-1">
-                      <Zap size={10} fill="currentColor" /> Recommended
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/30 text-blue-300 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors shadow-inner">
-                      <Landmark size={24}/>
-                    </div>
-                    <div>
-                      <h4 className="font-black text-slate-900 text-base">Instant Direct Deposit</h4>
-                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">IFB Core Treasury • 0% Fee • In-App</p>
-                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">Instant credit directly to your Liquid USD wallet</p>
-                    </div>
-                  </button>
-
                   <button disabled={!amount || parseFloat(amount) <= 0} onClick={() => { setRoutingMethod('card'); handleInitializeCard(); }} className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left">
                     <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-400 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors"><CreditCard size={24}/></div>
                     <div>
@@ -613,68 +571,6 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   </button>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* =========================================
-              INSTANT DIRECT DEPOSIT CONFIRMATION VIEW
-          ========================================= */}
-          {!instantSuccess && activeTab === 'NEW' && routingMethod === 'instant' && (
-            <div className="space-y-6 animate-in fade-in zoom-in-95">
-              <button onClick={() => setRoutingMethod(null)} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                <ArrowLeft size={14}/> Back to Networks
-              </button>
-
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(37,99,235,0.25)]">
-                  <Landmark size={32}/>
-                </div>
-                <h3 className="text-xl font-black text-slate-900 mb-1">Instant Direct Deposit</h3>
-                <p className="text-xs font-bold text-slate-500">Direct Banking Settlement • In-App Execution</p>
-              </div>
-
-              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-bold">Deposit Amount:</span>
-                  <span className="text-slate-900 font-black text-base">${parseFloat(amount || 0).toFixed(2)} USD</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-bold">Routing Network:</span>
-                  <span className="text-blue-600 font-bold">IFB Treasury Rails</span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-bold">Processing Fee:</span>
-                  <span className="text-emerald-600 font-bold">$0.00 (Free)</span>
-                </div>
-                <div className="flex justify-between items-center text-xs border-t border-slate-200 pt-3">
-                  <span className="text-slate-500 font-bold">Estimated Delivery:</span>
-                  <span className="text-slate-900 font-bold flex items-center gap-1">
-                    <Clock size={12} className="text-emerald-600"/> Instant (&lt; 1 sec)
-                  </span>
-                </div>
-              </div>
-
-              {instantError && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center text-xs font-bold text-red-600">
-                  {instantError}
-                </div>
-              )}
-
-              <button
-                disabled={isInstantLoading || !amount || parseFloat(amount) <= 0}
-                onClick={() => handleInstantDeposit()}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 border border-blue-200 disabled:opacity-40"
-              >
-                {isInstantLoading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} /> Processing Settlement...
-                  </>
-                ) : (
-                  <>
-                    <Zap size={18} fill="currentColor" /> Authorize ${parseFloat(amount || 0).toFixed(2)} Deposit
-                  </>
-                )}
-              </button>
             </div>
           )}
 

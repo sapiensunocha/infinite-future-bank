@@ -486,7 +486,46 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
     }
   };
 
+  // Required fields per step. Before 8 Nov 2026 only the AML box was checked,
+  // so an empty application (no name, no ID) could be submitted.
+  const missingForStep = (i) => {
+    const blank = (v) => v == null || String(v).trim() === '';
+    const need = [];
+    const req = (key, label) => { if (blank(form[key])) need.push(label); };
+    const doc = (key, label) => { if (!files[key]) need.push(label); };
+    if (i === 0) {
+      req('legal_first_name', 'First name'); req('legal_last_name', 'Last name'); req('date_of_birth', 'Date of birth');
+      req('nationality', 'Nationality'); req('phone_primary', 'Primary phone');
+      req('residential_address_line1', 'Address'); req('residential_city', 'City'); req('residential_country', 'Country');
+    } else if (i === 1) {
+      req('id_type', 'Document type'); req('id_number', 'Document number');
+      doc('id_front', 'Photo of ID (front)'); doc('selfie_with_id', 'Selfie holding ID');
+    } else if (i === 2) {
+      req('employment_status', 'Employment status'); req('source_of_funds', 'Source of funds'); req('purpose_of_account', 'Purpose of account');
+    } else if (i === 3) {
+      if (form.is_corporate) { req('company_legal_name', 'Company legal name'); req('company_registration_number', 'Company registration number'); }
+    } else if (i === STEPS.length - 1) {
+      doc('proof_of_address', 'Proof of address');
+      if (form.is_corporate) { doc('certificate_of_incorporation', 'Certificate of incorporation'); doc('ubo_id_document', 'Owner (UBO) ID'); }
+    }
+    return need;
+  };
+
+  const goNext = () => {
+    const need = missingForStep(step);
+    if (need.length) { triggerNotification('error', `Please complete: ${need.join(', ')}.`); return; }
+    setStep(s => Math.min(s + 1, STEPS.length - 1));
+  };
+
   const handleSubmit = async () => {
+    for (let i = 0; i < STEPS.length; i++) {
+      const need = missingForStep(i);
+      if (need.length) {
+        setStep(i);
+        triggerNotification('error', `Please complete: ${need.join(', ')}.`);
+        return;
+      }
+    }
     if (!form.aml_terms_agreed) {
       triggerNotification('error', 'You must accept the AML/CTF declaration to proceed.');
       return;
@@ -1118,7 +1157,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-slate-600 font-bold hidden sm:block">{step + 1} / {STEPS.length}</span>
           {step < STEPS.length - 1 ? (
-            <button type="button" onClick={() => setStep(s => Math.min(s + 1, STEPS.length - 1))}
+            <button type="button" onClick={goNext}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-900/40">
               Continue <ChevronRight size={14}/>
             </button>

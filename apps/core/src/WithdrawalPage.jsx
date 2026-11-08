@@ -60,7 +60,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
   // Standard Bank/Card Form State
   const [bankType, setBankType] = useState('ach'); 
   const [formData, setFormData] = useState({
-    accountName: '', accountNumber: '', routingNumber: '', iban: '', swiftBic: '', country: '', cardNumber: '', expiry: '', cvc: ''
+    accountName: '', accountNumber: '', routingNumber: '', iban: '', swiftBic: '', country: ''
   });
 
   const fiatOptions = [
@@ -217,9 +217,6 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     } else if (bankType === 'swift') {
       methodLabel = 'SWIFT Wire';
       details = `Name: ${formData.accountName} | IBAN: ${formData.iban} | BIC: ${formData.swiftBic} | Country: ${formData.country}`;
-    } else if (bankType === 'card') {
-      methodLabel = 'Card Payout';
-      details = `Name: ${formData.accountName} | Card: ${formData.cardNumber} | Exp: ${formData.expiry}`;
     }
 
     handleFindProcessors(methodLabel, details);
@@ -643,9 +640,6 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                   <button type="button" onClick={() => {setBankType('swift'); setError('');}} className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${bankType === 'swift' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                     <Globe size={14} /> SWIFT
                   </button>
-                  <button type="button" onClick={() => {setBankType('card'); setError('');}} className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${bankType === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                    <CreditCard size={14} /> Card
-                  </button>
                 </div>
 
                 <div className="space-y-3 min-h-[180px]">
@@ -664,35 +658,6 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                       <div className="flex gap-3">
                         <input required type="text" placeholder="SWIFT / BIC Code" value={formData.swiftBic} onChange={e => setFormData({...formData, swiftBic: e.target.value.toUpperCase()})} className="flex-1 bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors tracking-wider" />
                         <input required type="text" placeholder="Country (e.g. GB)" maxLength="2" value={formData.country} onChange={e => setFormData({...formData, country: e.target.value.toUpperCase()})} className="w-1/3 bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors text-center" />
-                      </div>
-                    </div>
-                  )}
-
-                  {bankType === 'card' && (
-                    <div className="animate-in fade-in space-y-3">
-                      <input required type="text" placeholder="Name on Card" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors" />
-                      <div className="relative">
-                        <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input required type="text" placeholder="Card Number" maxLength="19" 
-                          value={formData.cardNumber} 
-                          onChange={e => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            setFormData({...formData, cardNumber: val.replace(/(\d{4})/g, '$1 ').trim()});
-                          }} 
-                          className="w-full bg-slate-50 p-4 pl-12 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors tracking-widest" 
-                        />
-                      </div>
-                      <div className="flex gap-3">
-                        <input required type="text" placeholder="MM/YY" maxLength="5" 
-                          value={formData.expiry} 
-                          onChange={e => {
-                            let val = e.target.value.replace(/\D/g, '');
-                            if (val.length >= 2) val = val.substring(0,2) + '/' + val.substring(2,4);
-                            setFormData({...formData, expiry: val});
-                          }} 
-                          className="flex-1 bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors text-center tracking-widest" 
-                        />
-                        <input type="password" placeholder="CVC" maxLength="4" value={formData.cvc} onChange={e => setFormData({...formData, cvc: e.target.value.replace(/\D/g, '')})} className="w-1/3 bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors text-center tracking-widest" />
                       </div>
                     </div>
                   )}
@@ -736,10 +701,12 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                 {/* Mobile Money → Instant FLW payout form */}
                 {p2pFiatMethod === 'Mobile Money' && (
                   <form onSubmit={handleFlwMobileMoney} className="animate-in fade-in slide-in-from-bottom-2 space-y-4">
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
-                      <Zap size={14} className="text-emerald-600 shrink-0"/>
-                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wide">Instant via Flutterwave — no human processor needed</p>
-                    </div>
+                    {availableNetworksForCountry.length > 0 && (
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
+                        <Zap size={14} className="text-emerald-600 shrink-0"/>
+                        <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wide">Instant via Flutterwave — no human processor needed</p>
+                      </div>
+                    )}
 
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                       <MobileMoneyAccounts
@@ -775,7 +742,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                         </div>
                       ) : (
                         <p className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 p-3 rounded-xl">
-                          No automated mobile money networks for this country. Routing to Community of Trust instead.
+                          Instant mobile money payout is not available for this country yet. A verified local agent will send the money to this number instead.
                         </p>
                       )}
                     </div>
@@ -790,12 +757,25 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                       <p className="text-[10px] text-slate-400 font-bold mt-1">Include country code, e.g. +233 for Ghana.</p>
                     </div>
 
+{availableNetworksForCountry.length > 0 ? (
                     <button
-                      type="submit" disabled={isProcessing || availableNetworksForCountry.length === 0}
+                      type="submit" disabled={isProcessing}
                       className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:-translate-y-1 disabled:opacity-50"
                     >
                       {isProcessing ? <Loader2 className="animate-spin" size={16} /> : <><Zap size={16}/> Send ${amount} via {flwNetwork} Instantly</>}
                     </button>
+                    ) : (
+                    <button
+                      type="button" disabled={isProcessing || isLoadingBankers || flwPhone.replace(/\D/g, '').length < 8}
+                      onClick={() => {
+                        const label = COUNTRY_OPTIONS.find(c => c.code === flwCountry)?.label || flwCountry;
+                        handleFindProcessors('Mobile Money', `${label} · ${flwPhone.trim()}`);
+                      }}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:-translate-y-1 disabled:opacity-50"
+                    >
+                      {isLoadingBankers ? <Loader2 className="animate-spin" size={16} /> : <>Find a local agent to send ${amount}</>}
+                    </button>
+                    )}
                   </form>
                 )}
 
