@@ -182,15 +182,6 @@ export function useFaceAuth(session) {
     throw new Error('Face login is only available in the mobile app. Please sign in with your password.');
   }, []);
 
-  // ─── FETCH stored descriptor for web verify ──────────────────────────────────
-  const fetchStoredDescriptor = useCallback(async (email) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('face_descriptor, face_login_enabled')
-      .eq('email_lower', email.toLowerCase())
-      .maybeSingle();
-    return data;
-  }, []);
 
   return {
     faceEnabled,
@@ -203,6 +194,5 @@ export function useFaceAuth(session) {
     disableFace,
     nativeFaceLogin,
     webFaceLogin,
-    fetchStoredDescriptor,
   };
 }

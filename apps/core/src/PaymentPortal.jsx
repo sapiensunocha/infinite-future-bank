@@ -152,7 +152,7 @@ export default function PaymentPortal({ session }) {
 
         // Fetch the receiver profile
         const { data: profileData, error: dbError } = await supabase
-          .from('profiles')
+          .from('profiles_public')
           .select('id, full_name, avatar_url, active_tier')
           .eq('id', targetId)
           .maybeSingle();

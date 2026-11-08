@@ -4,6 +4,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { APP_URL, STRIPE_PUBLIC_KEY } from './config/constants';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from './services/supabaseClient';
+import { attachPublicProfiles, fetchAgents } from './services/publicProfiles';
 import { useTranslation } from './i18n/useTranslation';
 import { ShieldCheck, Loader2, X, ArrowLeft, CreditCard, Users, UploadCloud, CheckCircle2, Star, Landmark, Smartphone, Wallet, HandCoins, AlertTriangle, ScanLine, History, Clock, Activity, FileText, MapPin, Navigation, Map, Zap, ExternalLink } from 'lucide-react';
 
@@ -212,15 +213,14 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
       const { data, error } = await supabase
         .from('p2p_orders')
         .select(`
-          id, created_at, status, amount_usd, payment_method, metadata, updated_at,
-          processor:profiles!p2p_orders_processor_id_fkey(full_name)
+          id, created_at, completed_at, status, amount_usd, payment_method, metadata, processor_id
         `)
         .eq('user_id', session.user.id)
         .eq('order_type', 'deposit')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDepositHistory(data || []);
+      setDepositHistory(await attachPublicProfiles((data || []).map(o => ({ ...o, updated_at: o.completed_at })), 'processor_id', 'processor'));
     } catch (err) {
       console.error(err);
     } finally {
@@ -312,11 +312,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
   const handleFindProcessors = async () => {
     setIsInitializing(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, cot_rating, cot_completed_tx, cot_payment_methods, latitude, longitude')
-        .eq('is_cot_processor', true)
-        .limit(30);
+      const { data, error } = await fetchAgents(30);
       if (error) throw error;
 
       let list = data || [];

@@ -4,6 +4,7 @@ import {
   CheckCircle2, Clock, XCircle, CreditCard, Building, Zap, Wallet,
   Search, ChevronRight
 } from 'lucide-react';
+import ReceiptModal from './components/modals/ReceiptModal';
 
 const TABS = ['ALL', 'SUCCEEDED', 'PENDING', 'FAILED'];
 
@@ -41,8 +42,9 @@ const StatusBadge = ({ status }) => {
   return <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg w-fit border border-red-100"><XCircle size={10} /> Failed</span>;
 };
 
-export default function TransactionLedger({ transactions, formatCurrency, setShowStatementModal }) {
+export default function TransactionLedger({ transactions, formatCurrency, setShowStatementModal, holderName }) {
   const [activeTxTab, setActiveTxTab] = useState('ALL');
+  const [receiptTx, setReceiptTx] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const currentMonth = new Date().getMonth();
@@ -149,7 +151,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
             const dateStr = new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             const timeStr = new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
             return (
-              <div key={tx.id} className="flex items-center gap-4 px-4 py-3.5 active:bg-slate-50 transition-colors">
+              <button type="button" key={tx.id} onClick={() => setReceiptTx(tx)} aria-label="Open receipt" className="w-full text-left flex items-center gap-4 px-4 py-3.5 active:bg-slate-50 hover:bg-slate-50/60 transition-colors">
                 <div className={`w-12 h-12 rounded-2xl ${iconBg} ${iconText} flex items-center justify-center shrink-0`}>
                   <Icon size={20} />
                 </div>
@@ -170,7 +172,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
                   </div>
                 </div>
                 <ChevronRight size={14} className="text-slate-300 shrink-0 ml-1" />
-              </div>
+              </button>
             );
           })}
         </div>
@@ -193,7 +195,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
                 const uiStatus = tx.status === 'completed' ? 'Succeeded' : tx.status === 'pending' ? 'Pending' : 'Failed';
                 const { Icon, iconBg, iconText, methodBadge, displayTitle } = parseTransactionUi(tx);
                 return (
-                  <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors cursor-pointer">
+                  <tr key={tx.id} onClick={() => setReceiptTx(tx)} title="Open receipt" className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors cursor-pointer">
                     <td className="p-4 whitespace-nowrap">
                       <p className="text-sm font-bold text-slate-800">{new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                       <p className="text-xs font-bold text-slate-400">{new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
@@ -230,6 +232,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
           )}
         </div>
       </div>
+      {receiptTx && <ReceiptModal tx={receiptTx} holderName={holderName} onClose={() => setReceiptTx(null)} />}
     </div>
   );
 }

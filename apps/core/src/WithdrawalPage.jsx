@@ -3,6 +3,7 @@ import NigeriaBankPayout from './components/NigeriaBankPayout';
 import MobileMoneyAccounts from './components/MobileMoneyAccounts';
 import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check, Zap } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
+import { attachPublicProfiles, fetchAgents } from './services/publicProfiles';
 
 const WITHDRAWAL_FEE_PCT = 0.005; // 0.5% IFB routing fee
 
@@ -87,15 +88,14 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
       const { data, error } = await supabase
         .from('p2p_orders')
         .select(`
-          id, created_at, status, amount_usd, payment_method, metadata, updated_at, proof_image_url, ai_verification_status,
-          processor:profiles!p2p_orders_processor_id_fkey(full_name)
+          id, created_at, completed_at, status, amount_usd, payment_method, metadata, proof_image_url, ai_verification_status, processor_id
         `)
         .eq('user_id', userId)
         .eq('order_type', 'withdraw')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrderHistory(data || []);
+      setOrderHistory(await attachPublicProfiles((data || []).map(o => ({ ...o, updated_at: o.completed_at })), 'processor_id', 'processor'));
     } catch (err) {
       showToast('Could not load withdrawal history. Pull to refresh.', true);
     } finally {
@@ -178,11 +178,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     setStep(4);
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, cot_rating, cot_completed_tx, location')
-        .eq('is_cot_processor', true)
-        .limit(10);
+      const { data, error } = await fetchAgents(10);
 
       if (error) throw error;
 
@@ -192,7 +188,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
       if (data && data.length > 0) {
         setNearbyBankers(data.map(b => ({ 
           ...b, 
-          location: b.location || 'Global Remote',
+          location: b.country || 'Verified agent',
           avg_time: `${Math.floor(Math.random() * 15) + 5} mins` 
         })));
       } else {
