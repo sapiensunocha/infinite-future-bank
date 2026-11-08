@@ -65,6 +65,11 @@ const CheckoutForm = ({ amount, onBack, onComplete }) => {
   );
 };
 
+const DIAL_CODES = {
+  GH: '+233', NG: '+234', KE: '+254', UG: '+256', RW: '+250', TZ: '+255', ZM: '+260', ET: '+251', ZA: '+27', EG: '+20',
+  MZ: '+258', SL: '+232', GN: '+224', CM: '+237', SN: '+221', CI: '+225', ML: '+223', BF: '+226', TG: '+228', BJ: '+229',
+};
+
 export default function DepositInterface({ session, onClose, onSuccess }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('NEW'); // 'NEW' or 'HISTORY'
@@ -97,25 +102,54 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
   const [instantSuccess, setInstantSuccess] = useState(null);
   const [isInstantLoading, setIsInstantLoading] = useState(false);
   const [instantError, setInstantError] = useState(null);
+  const [instantCurrency, setInstantCurrency] = useState('USD');   // USD (card) or NGN (card / bank transfer / USSD)
+  const [instantPending, setInstantPending] = useState(null);      // { reference, checkout_url, charge_amount, charge_currency, amount_usd }
+  const instantPollRef = useRef(null);
+
+  // Instant Direct Deposit — a real Flutterwave charge. The wallet is credited by the server
+  // (flutterwave-webhook → complete_deposit_intent) only after Flutterwave confirms payment.
+  const pollInstantDeposit = (reference) => {
+    clearInterval(instantPollRef.current);
+    const started = Date.now();
+    instantPollRef.current = setInterval(async () => {
+      if (Date.now() - started > 20 * 60 * 1000) { clearInterval(instantPollRef.current); return; }
+      const { data } = await supabase.functions.invoke('instant-deposit', { body: { action: 'status', reference } });
+      if (data?.status === 'succeeded') {
+        clearInterval(instantPollRef.current);
+        setInstantPending(null);
+        setInstantSuccess({ amount: Number(data.amount_usd), newBalance: null });
+        onSuccess?.();
+      } else if (data?.status === 'failed' || data?.status === 'expired') {
+        clearInterval(instantPollRef.current);
+        setInstantPending(null);
+        setInstantError('The payment was not completed. No money was taken from your wallet.');
+      }
+    }, 5000);
+  };
+  useEffect(() => () => clearInterval(instantPollRef.current), []);
 
   const handleInstantDeposit = async (customAmt) => {
     const val = parseFloat(customAmt || amount);
     if (!val || val <= 0) return;
     setIsInstantLoading(true);
     setInstantError(null);
+    // Open the payment window now (inside the tap) so browsers don't block it, then point it at checkout.
+    const payWin = typeof window !== 'undefined' ? window.open('', '_blank') : null;
     try {
-      const { data, error } = await supabase.rpc('instant_deposit', {
-        p_amount: val,
-        p_asset: 'USD'
+      const { data, error } = await supabase.functions.invoke('instant-deposit', {
+        body: { action: 'create', amount_usd: val, currency: instantCurrency },
       });
-      if (error) {
-        throw new Error(error.message || 'Deposit failed');
+      if (error || data?.error) {
+        let msg = data?.error;
+        try { msg = msg || (await error?.context?.json())?.error; } catch { /* ignore */ }
+        throw new Error(msg || 'Could not start the deposit. Please try again.');
       }
-      setInstantSuccess({ amount: val, newBalance: data?.new_balance });
-      onSuccess?.();
+      setInstantPending(data);
+      if (payWin) payWin.location.href = data.checkout_url; else window.location.assign(data.checkout_url);
+      pollInstantDeposit(data.reference);
     } catch (err) {
-      console.error("Direct deposit error:", err);
-      setInstantError(err.message || "Failed to process direct deposit. Please try again.");
+      payWin?.close();
+      setInstantError(err.message || 'Could not start the deposit. Please try again.');
     } finally {
       setIsInstantLoading(false);
     }
@@ -231,9 +265,10 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
     flwSuccessRef.current = false;
     try {
       const flwCfg = FLW_CURRENCY_MAP[flwCountry];
-      const localAmount = Math.round(parseFloat(amount) * flwCfg.rate);
+      // The server quotes the local amount at Flutterwave's live rate and records it,
+      // so the wallet is credited exactly the USD shown here (no fixed exchange table).
       const { data, error } = await supabase.functions.invoke('flutterwave-collect', {
-        body: { amount: localAmount, currency: flwCfg.currency, phone: flwPhone },
+        body: { amount_usd: parseFloat(amount), currency: flwCfg.currency, phone: flwPhone },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -259,7 +294,9 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
           if (paymentData.status === 'successful' || paymentData.status === 'completed') {
             flwSuccessRef.current = true;
             setFlwSuccess(true);
-            setInstantSuccess({ amount: parseFloat(amount), newBalance: null });
+            // Credited by the server once Flutterwave confirms; the success screen opens then.
+            if (data.reference) pollInstantDeposit(data.reference);
+            else setInstantSuccess({ amount: parseFloat(amount), newBalance: null });
           }
         },
         onclose: () => {
@@ -578,8 +615,8 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                     </div>
                     <div>
                       <h4 className="font-black text-slate-900 text-base">Instant Direct Deposit</h4>
-                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">IFB Core Treasury • 0% Fee • In-App</p>
-                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">Instant credit directly to your Liquid USD wallet</p>
+                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Card · Bank transfer · USSD • 0% IFB fee</p>
+                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">Pay in USD or Naira — credited as soon as payment clears</p>
                     </div>
                   </button>
 
@@ -621,7 +658,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
           ========================================= */}
           {!instantSuccess && activeTab === 'NEW' && routingMethod === 'instant' && (
             <div className="space-y-6 animate-in fade-in zoom-in-95">
-              <button onClick={() => setRoutingMethod(null)} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
+              <button onClick={() => { clearInterval(instantPollRef.current); setInstantPending(null); setInstantError(null); setRoutingMethod(null); }} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
                 <ArrowLeft size={14}/> Back to Networks
               </button>
 
@@ -630,7 +667,17 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   <Landmark size={32}/>
                 </div>
                 <h3 className="text-xl font-black text-slate-900 mb-1">Instant Direct Deposit</h3>
-                <p className="text-xs font-bold text-slate-500">Direct Banking Settlement • In-App Execution</p>
+                <p className="text-xs font-bold text-slate-500">Secure checkout by Flutterwave • credited automatically</p>
+              </div>
+
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+                {[['USD', 'Pay in USD', 'Card · Apple / Google Pay'], ['NGN', 'Pay in Naira', 'Card · Bank transfer · USSD']].map(([c, t, d]) => (
+                  <button key={c} type="button" disabled={!!instantPending} onClick={() => setInstantCurrency(c)}
+                    className={`flex-1 py-2.5 px-2 rounded-lg text-left transition-all ${instantCurrency === c ? 'bg-white shadow-sm text-blue-700' : 'text-slate-500'}`}>
+                    <span className="block text-xs font-black">{t}</span>
+                    <span className="block text-[10px] font-bold opacity-70">{d}</span>
+                  </button>
+                ))}
               </div>
 
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
@@ -640,19 +687,36 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-bold">Routing Network:</span>
-                  <span className="text-blue-600 font-bold">IFB Treasury Rails</span>
+                  <span className="text-blue-600 font-bold">Flutterwave</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-bold">Processing Fee:</span>
-                  <span className="text-emerald-600 font-bold">$0.00 (Free)</span>
+                  <span className="text-emerald-600 font-bold">$0.00 IFB fee</span>
                 </div>
                 <div className="flex justify-between items-center text-xs border-t border-slate-200 pt-3">
                   <span className="text-slate-500 font-bold">Estimated Delivery:</span>
                   <span className="text-slate-900 font-bold flex items-center gap-1">
-                    <Clock size={12} className="text-emerald-600"/> Instant (&lt; 1 sec)
+                    <Clock size={12} className="text-emerald-600"/> As soon as payment clears
                   </span>
                 </div>
               </div>
+
+              {instantCurrency === 'NGN' && !instantPending && (
+                <p className="text-[11px] font-bold text-slate-500 text-center">You will see the exact Naira amount, at the current rate, before you pay.</p>
+              )}
+
+              {instantPending && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-center space-y-2">
+                  <p className="text-xs font-black text-blue-800 flex items-center justify-center gap-2"><Loader2 className="animate-spin" size={14}/> Waiting for your payment…</p>
+                  <p className="text-[11px] font-bold text-blue-700">
+                    Pay {instantPending.charge_currency === 'NGN' ? '₦' : '$'}{Number(instantPending.charge_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} on the Flutterwave page.
+                    {instantPending.fx_rate ? ` Rate: ₦${Number(instantPending.fx_rate).toLocaleString()} per $1.` : ''} Your wallet updates here automatically.
+                  </p>
+                  <a href={instantPending.checkout_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] font-black text-blue-700 underline">
+                    <ExternalLink size={12}/> Open the payment page again
+                  </a>
+                </div>
+              )}
 
               {instantError && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center text-xs font-bold text-red-600">
@@ -661,17 +725,17 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               )}
 
               <button
-                disabled={isInstantLoading || !amount || parseFloat(amount) <= 0}
+                disabled={isInstantLoading || !!instantPending || !amount || parseFloat(amount) <= 0}
                 onClick={() => handleInstantDeposit()}
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 border border-blue-200 disabled:opacity-40"
               >
                 {isInstantLoading ? (
                   <>
-                    <Loader2 className="animate-spin" size={18} /> Processing Settlement...
+                    <Loader2 className="animate-spin" size={18} /> Opening secure checkout...
                   </>
                 ) : (
                   <>
-                    <Zap size={18} fill="currentColor" /> Authorize ${parseFloat(amount || 0).toFixed(2)} Deposit
+                    <Zap size={18} fill="currentColor" /> Pay ${parseFloat(amount || 0).toFixed(2)} {instantCurrency === 'NGN' ? 'in Naira' : ''}
                   </>
                 )}
               </button>
@@ -731,7 +795,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                         type="tel"
                         value={flwPhone}
                         onChange={e => setFlwPhone(e.target.value)}
-                        placeholder="+233 XX XXX XXXX"
+                        placeholder={`${DIAL_CODES[flwCountry] || '+'} phone number`}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-bold p-3 outline-none focus:border-amber-500 transition-all placeholder:text-slate-400"
                       />
                     </div>
@@ -751,7 +815,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                       </select>
                       {flwCountry && amount && parseFloat(amount) > 0 && (
                         <p className="text-[9px] font-bold text-amber-600 mt-2 text-center">
-                          ≈ {Math.round(parseFloat(amount) * FLW_CURRENCY_MAP[flwCountry].rate).toLocaleString()} {FLW_CURRENCY_MAP[flwCountry].currency}
+                          About {Math.round(parseFloat(amount) * FLW_CURRENCY_MAP[flwCountry].rate).toLocaleString()} {FLW_CURRENCY_MAP[flwCountry].currency}. The exact amount at the live rate is shown before you pay.
                         </p>
                       )}
                     </div>

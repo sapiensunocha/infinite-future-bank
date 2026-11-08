@@ -8,7 +8,7 @@
  */
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import * as faceapi from 'face-api.js';
-import { Camera, ScanFace, CheckCircle2, XCircle, Loader2, ShieldCheck } from 'lucide-react';
+import { Camera, ScanFace, CheckCircle2, XCircle, Loader2, ShieldCheck, SwitchCamera } from 'lucide-react';
 
 const MODEL_URL = '/models';
 const MATCH_THRESHOLD = 0.52; // Euclidean distance — lower = stricter
@@ -43,6 +43,8 @@ export default function FaceAuthManager({ mode, storedDescriptor, onEnrolled, on
   const [phase, setPhase] = useState('loading'); // loading | ready | scanning | done | error
   const [statusMsg, setStatusMsg] = useState('Loading AI face models...');
   const [overlayColor, setOverlayColor] = useState('rgba(66,133,244,0.25)');
+  const [facing, setFacing] = useState('user');   // always opens on the front camera
+  const [switching, setSwitching] = useState(false);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -141,6 +143,29 @@ export default function FaceAuthManager({ mode, storedDescriptor, onEnrolled, on
 
   const handleCapture = () => { scanFace(streamRef.current, false); };
 
+  // Switch between the front and back camera (e.g. someone helping the user enrol).
+  const handleSwitchCamera = async () => {
+    if (switching || phase === 'scanning') return;
+    const next = facing === 'user' ? 'environment' : 'user';
+    setSwitching(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: next }, width: { ideal: 640 }, height: { ideal: 480 } }
+      });
+      stopCamera();
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => {});
+      }
+      setFacing(next);
+    } catch {
+      setStatusMsg('Could not switch camera on this device.');
+    } finally {
+      setSwitching(false);
+    }
+  };
+
   const handleCancel = () => { stopCamera(); onCancel(); };
 
   return (
@@ -165,8 +190,21 @@ export default function FaceAuthManager({ mode, storedDescriptor, onEnrolled, on
             muted
             playsInline
             className="w-full h-full object-cover"
-            style={{ transform: 'scaleX(-1)' }}
+            style={facing === 'user' ? { transform: 'scaleX(-1)' } : undefined}
           />
+          {/* Switch front / back camera */}
+          {phase !== 'loading' && phase !== 'error' && (
+            <button
+              type="button"
+              onClick={handleSwitchCamera}
+              disabled={switching || phase === 'scanning'}
+              aria-label={facing === 'user' ? 'Switch to back camera' : 'Switch to front camera'}
+              title="Switch camera"
+              className="absolute top-3 right-3 z-10 w-11 h-11 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/70 disabled:opacity-40"
+            >
+              {switching ? <Loader2 size={18} className="animate-spin" /> : <SwitchCamera size={20} />}
+            </button>
+          )}
           {/* Face oval guide */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div

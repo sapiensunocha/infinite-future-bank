@@ -3,7 +3,12 @@ import { Share2, Users, Copy, ShieldCheck, Zap, Network } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 import { APP_URL } from './config/constants';
 
-export default function CapitalNetwork({ session, profile, balances, formatCurrency, fetchAllData }) {
+const defaultFormatCurrency = (val) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(val) || 0);
+
+// Both callers (AppPopupModal, CommercialUnderwriting) open this without a formatter,
+// which crashed the Referrals screen — fall back to a USD formatter.
+export default function CapitalNetwork({ session, profile, balances, formatCurrency = defaultFormatCurrency, fetchAllData }) {
   const [isCopied, setIsCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [localReferralCode, setLocalReferralCode] = useState(profile?.referral_code || null);

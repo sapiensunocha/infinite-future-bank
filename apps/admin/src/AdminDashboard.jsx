@@ -106,6 +106,22 @@ const VTX_STAGES  = ['idea','pre_revenue','early','growth','scale','mvp','ipo_re
 const fmtUSD = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0);
 const fmtNum = n => Number(n || 0).toLocaleString();
 
+// KYC buckets are private: swap stored object URLs for 10-minute signed URLs before display
+// (same helper as apps/core/src/AdminDashboard.jsx). Without this, document images are broken.
+const KYC_OBJECT_RE = /\/object\/(?:public\/|sign\/|authenticated\/)?(kyc_documents|kyc-documents)\/(.+?)(?:\?|$)/;
+async function signKycUrls(rows) {
+  return Promise.all((rows || []).map(async row => {
+    const signed = { ...row };
+    await Promise.all(Object.keys(row).filter(k => k.endsWith('_url') && typeof row[k] === 'string').map(async k => {
+      const m = row[k].match(KYC_OBJECT_RE);
+      if (!m) return;
+      const { data } = await supabase.storage.from(m[1]).createSignedUrl(decodeURIComponent(m[2]), 600);
+      signed[k] = data?.signedUrl || null;
+    }));
+    return signed;
+  }));
+}
+
 function StatCard({ icon: Icon, label, value, sub, color = 'text-blue-400', bg = 'bg-blue-900/20' }) {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
@@ -340,7 +356,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
     setLoading(true);
     try {
       const { data } = await supabase.rpc('admin_get_kyc_queue', { p_limit: 200 });
-      setKycQueue(data || []);
+      setKycQueue(await signKycUrls(data || []));
     } finally { setLoading(false); }
   }, []);
 
@@ -389,7 +405,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
     setLoading(true);
     try {
       const { data } = await supabase.rpc('admin_get_kyc_submissions', { p_limit: 200, p_status: null });
-      setAllDocs(data || []);
+      setAllDocs(await signKycUrls(data || []));
     } finally { setLoading(false); }
   }, []);
 

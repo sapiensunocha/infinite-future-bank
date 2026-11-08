@@ -69,28 +69,24 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
   const executePayroll = async () => {
     if (!payrollConfirm) return;
     if (isLoading) return;
-    const { totalGross, calculatedFee, activeEmps } = payrollConfirm;
+    const { totalGross } = payrollConfirm;
     setPayrollConfirm(null);
     setIsLoading(true);
     try {
-      // Execute Atomic Balance Deduction via v2 Engine (Handles Revenue Split)
-      const { data, error: rpcError } = await supabase.rpc('process_corporate_payroll_v2', {
-        p_employer_id: session.user.id,
-        p_total_gross_amount: totalGross
-      });
-
+      // The server reads your staff list, pays each employee with an IFB account straight into
+      // their wallet, charges the 2% fee on what was paid and records the run (run_payroll).
+      const { data, error: rpcError } = await supabase.rpc('run_payroll', { p_expected_gross: totalGross });
       if (rpcError) throw rpcError;
-
-      // Log the Run for Tax Compliance & Reporting
-      await supabase.from('payroll_runs').insert([{
-        employer_id: session.user.id,
-        total_gross: totalGross,
-        total_tax: calculatedFee,
-        employee_count: activeEmps.length,
-        status: 'completed'
-      }]);
-
-      showToast(`Payroll Success: ${formatCurrency(totalGross)} distributed. Fee: ${formatCurrency(calculatedFee)}`, "success");
+      if (!data?.success) {
+        const missing = (data?.unpaid || []).map(u => u.name).join(', ');
+        throw new Error((data?.error || 'Payroll could not run.') + (missing ? ` Not on IFB yet: ${missing}.` : ''));
+      }
+      const unpaid = data.unpaid || [];
+      showToast(
+        `Paid ${data.paid_count} employee${data.paid_count === 1 ? '' : 's'} ${formatCurrency(data.total_paid)} (fee ${formatCurrency(data.fee)}).` +
+        (unpaid.length ? ` Not paid (no IFB account): ${unpaid.map(u => u.name).join(', ')}.` : ''),
+        unpaid.length ? 'error' : 'success'
+      );
       await fetchAllData();
     } catch (err) {
       showToast(err.message, "error");

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NigeriaBankPayout from './components/NigeriaBankPayout';
 import MobileMoneyAccounts from './components/MobileMoneyAccounts';
 import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check, Zap } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
@@ -57,10 +58,16 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [selectedOrderProof, setSelectedOrderProof] = useState(null);
 
+  // Card payout (cards are saved encrypted by the payout-cards function; only brand/last 4 are readable here)
+  const [payoutCards, setPayoutCards] = useState([]);
+  const [selectedCardId, setSelectedCardId] = useState('new');
+  const [cardForm, setCardForm] = useState({ holder: '', number: '', expiry: '' });
+  const [cardPayoutDone, setCardPayoutDone] = useState(null);
+
   // Standard Bank/Card Form State
   const [bankType, setBankType] = useState('ach'); 
   const [formData, setFormData] = useState({
-    accountName: '', accountNumber: '', routingNumber: '', iban: '', swiftBic: '', country: '', cardNumber: '', expiry: '', cvc: ''
+    accountName: '', accountNumber: '', routingNumber: '', iban: '', swiftBic: '', country: ''
   });
 
   const fiatOptions = [
@@ -206,6 +213,45 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     }
   };
 
+  const loadPayoutCards = async () => {
+    const { data } = await supabase.from('payout_cards')
+      .select('id, brand, last4, exp_month, exp_year, holder_name').eq('status', 'active').order('created_at', { ascending: false });
+    setPayoutCards(data || []);
+    setSelectedCardId((data && data[0]?.id) || 'new');
+  };
+  useEffect(() => { if (bankType === 'card') loadPayoutCards(); }, [bankType]);
+
+  const handleCardPayout = async (e) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    setError('');
+    try {
+      let cardId = selectedCardId;
+      if (cardId === 'new') {
+        const [mm, yy] = cardForm.expiry.split('/');
+        const { data, error: fnErr } = await supabase.functions.invoke('payout-cards', {
+          body: { action: 'add', holder_name: cardForm.holder, number: cardForm.number, exp_month: Number(mm), exp_year: Number(yy) },
+        });
+        if (fnErr || data?.error) {
+          let msg = data?.error;
+          try { msg = msg || (await fnErr?.context?.json())?.error; } catch { /* ignore */ }
+          throw new Error(msg || 'Could not save this card.');
+        }
+        cardId = data.card.id;
+      }
+      const { data: res, error: rpcErr } = await supabase.rpc('request_card_payout', { p_card_id: cardId, p_amount: parseFloat(amount) });
+      if (rpcErr) throw rpcErr;
+      if (!res?.success) throw new Error(res?.error || 'Card withdrawal could not be started.');
+      setCardForm({ holder: '', number: '', expiry: '' });
+      setCardPayoutDone(res);
+      onSuccess?.();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleBankToP2PTransition = (e) => {
     e.preventDefault();
     let methodLabel = '';
@@ -217,9 +263,6 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     } else if (bankType === 'swift') {
       methodLabel = 'SWIFT Wire';
       details = `Name: ${formData.accountName} | IBAN: ${formData.iban} | BIC: ${formData.swiftBic} | Country: ${formData.country}`;
-    } else if (bankType === 'card') {
-      methodLabel = 'Card Payout';
-      details = `Name: ${formData.accountName} | Card: ${formData.cardNumber} | Exp: ${formData.expiry}`;
     }
 
     handleFindProcessors(methodLabel, details);
@@ -596,6 +639,19 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                   <p className="text-sm font-bold text-blue-800 text-center">Select how you want to receive your <span className="font-black">${amount}</span></p>
                 </div>
 
+                {/* Option 0: Nigerian bank account — direct Flutterwave transfer, no agent */}
+                <button onClick={() => { setMethod('NGBANK'); setStep(3); }} className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-blue-100 bg-blue-50/40 hover:bg-blue-50 transition-all text-left relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest shadow-sm">Direct</div>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:scale-110 transition-transform"><Landmark size={24} /></div>
+                    <div>
+                      <p className="font-black text-slate-800">Nigerian bank account</p>
+                      <p className="text-xs font-bold text-blue-600 mt-0.5">Any bank or Opay / Moniepoint · paid in Naira</p>
+                    </div>
+                  </div>
+                  <ArrowRight size={18} className="text-blue-400" />
+                </button>
+
                 {/* Option 1: P2P */}
                 <button 
                   onClick={() => { setMethod('P2P'); setStep(3); }} 
@@ -614,12 +670,11 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
 
                 {/* Option 2: Standard Bank */}
                 <button onClick={() => { setMethod('BANK'); setStep(3); }} className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-slate-100 hover:border-blue-100 hover:bg-blue-50/50 transition-all text-left group">
-                  <div className="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest shadow-sm">IFB Handled</div>
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors"><Landmark size={24} /></div>
                     <div>
-                      <p className="font-black text-slate-800">Global Bank / Card</p>
-                      <p className="text-xs font-bold text-slate-400 mt-0.5">International Wire & ACH</p>
+                      <p className="font-black text-slate-800">International bank or card</p>
+                      <p className="text-xs font-bold text-slate-400 mt-0.5">US ACH & SWIFT via a verified agent · card payouts by IFB</p>
                     </div>
                   </div>
                   <ArrowRight size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
@@ -629,9 +684,14 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
               </div>
             )}
 
+            {/* STEP 3 (N): NIGERIAN BANK — direct transfer */}
+            {step === 3 && method === 'NGBANK' && (
+              <NigeriaBankPayout amount={amount} onBack={() => setStep(2)} onDone={() => onSuccess?.()} />
+            )}
+
             {/* STEP 3 (A): GLOBAL BANK WITHDRAWAL (Routes to P2P) */}
             {step === 3 && method === 'BANK' && (
-              <form onSubmit={handleBankToP2PTransition} className="space-y-5 animate-in slide-in-from-right-4">
+              <form onSubmit={bankType === 'card' ? handleCardPayout : handleBankToP2PTransition} className="space-y-5 animate-in slide-in-from-right-4">
                 <button type="button" onClick={() => setStep(2)} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 flex items-center gap-2 mb-2 transition-colors">
                   <ArrowLeft size={14}/> Back to Methods
                 </button>
@@ -643,7 +703,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                   <button type="button" onClick={() => {setBankType('swift'); setError('');}} className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${bankType === 'swift' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                     <Globe size={14} /> SWIFT
                   </button>
-                  <button type="button" onClick={() => {setBankType('card'); setError('');}} className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${bankType === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                  <button type="button" onClick={() => {setBankType('card'); setError(''); setCardPayoutDone(null);}} className={`flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${bankType === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                     <CreditCard size={14} /> Card
                   </button>
                 </div>
@@ -668,39 +728,61 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                     </div>
                   )}
 
-                  {bankType === 'card' && (
+                  {bankType === 'card' && cardPayoutDone && (
+                    <div className="animate-in fade-in p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
+                      <CheckCircle size={28} className="mx-auto text-emerald-600" />
+                      <p className="font-black text-emerald-800">${Number(cardPayoutDone.amount).toFixed(2)} on its way to {cardPayoutDone.card}</p>
+                      <p className="text-xs font-bold text-emerald-700">The money is held safely while IFB sends it to your card. You will get a notification when it arrives. If it fails, the money comes straight back to your wallet.</p>
+                    </div>
+                  )}
+
+                  {bankType === 'card' && !cardPayoutDone && (
                     <div className="animate-in fade-in space-y-3">
-                      <input required type="text" placeholder="Name on Card" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors" />
-                      <div className="relative">
-                        <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input required type="text" placeholder="Card Number" maxLength="19" 
-                          value={formData.cardNumber} 
-                          onChange={e => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            setFormData({...formData, cardNumber: val.replace(/(\d{4})/g, '$1 ').trim()});
-                          }} 
-                          className="w-full bg-slate-50 p-4 pl-12 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors tracking-widest" 
-                        />
-                      </div>
-                      <div className="flex gap-3">
-                        <input required type="text" placeholder="MM/YY" maxLength="5" 
-                          value={formData.expiry} 
-                          onChange={e => {
-                            let val = e.target.value.replace(/\D/g, '');
-                            if (val.length >= 2) val = val.substring(0,2) + '/' + val.substring(2,4);
-                            setFormData({...formData, expiry: val});
-                          }} 
-                          className="flex-1 bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors text-center tracking-widest" 
-                        />
-                        <input type="password" placeholder="CVC" maxLength="4" value={formData.cvc} onChange={e => setFormData({...formData, cvc: e.target.value.replace(/\D/g, '')})} className="w-1/3 bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors text-center tracking-widest" />
-                      </div>
+                      {payoutCards.length > 0 && (
+                        <div className="space-y-2">
+                          {payoutCards.map(c => (
+                            <button key={c.id} type="button" onClick={() => setSelectedCardId(c.id)}
+                              className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all ${selectedCardId === c.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                              <CreditCard size={18} className="text-slate-500" />
+                              <span className="font-black text-slate-800 text-sm">{c.brand} •••• {c.last4}</span>
+                              <span className="ml-auto text-xs font-bold text-slate-400">{String(c.exp_month).padStart(2, '0')}/{String(c.exp_year).slice(-2)}</span>
+                            </button>
+                          ))}
+                          <button type="button" onClick={() => setSelectedCardId('new')}
+                            className={`w-full p-3 rounded-xl border-2 text-xs font-black uppercase tracking-widest ${selectedCardId === 'new' ? 'border-blue-500 text-blue-700 bg-blue-50' : 'border-dashed border-slate-300 text-slate-500'}`}>
+                            + Use a new card
+                          </button>
+                        </div>
+                      )}
+                      {selectedCardId === 'new' && (
+                        <>
+                          <input required type="text" placeholder="Name on Card" autoComplete="cc-name" value={cardForm.holder} onChange={e => setCardForm({ ...cardForm, holder: e.target.value })} className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors" />
+                          <div className="relative">
+                            <CreditCard size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input required type="text" inputMode="numeric" autoComplete="cc-number" placeholder="Card Number" maxLength="23"
+                              value={cardForm.number}
+                              onChange={e => setCardForm({ ...cardForm, number: e.target.value.replace(/\D/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ') })}
+                              className="w-full bg-slate-50 p-4 pl-12 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors tracking-widest" />
+                          </div>
+                          <input required type="text" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" maxLength="5" pattern="(0[1-9]|1[0-2])/[0-9]{2}"
+                            value={cardForm.expiry}
+                            onChange={e => { let v = e.target.value.replace(/\D/g, '').slice(0, 4); if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2); setCardForm({ ...cardForm, expiry: v }); }}
+                            className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors text-center tracking-widest" />
+                        </>
+                      )}
+                      <p className="text-[11px] font-bold text-slate-500 flex items-start gap-2">
+                        <Lock size={12} className="mt-0.5 shrink-0" />
+                        No CVC needed. Your card number is encrypted and never shown to agents or stored in readable form.
+                      </p>
                     </div>
                   )}
                 </div>
 
-                <button type="submit" className="w-full bg-blue-600 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 flex justify-center gap-2 transition-all shadow-lg hover:-translate-y-1 mt-6">
-                  Initialize Escrow Routing <ArrowRight size={16}/>
+                {!(bankType === 'card' && cardPayoutDone) && (
+                <button type="submit" disabled={isProcessing} className="w-full bg-blue-600 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 flex justify-center gap-2 transition-all shadow-lg hover:-translate-y-1 mt-6 disabled:opacity-50">
+                  {isProcessing ? <Loader2 className="animate-spin" size={16} /> : bankType === 'card' ? <>Withdraw ${amount} to card <ArrowRight size={16}/></> : <>Initialize Escrow Routing <ArrowRight size={16}/></>}
                 </button>
+                )}
               </form>
             )}
 
@@ -736,10 +818,12 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                 {/* Mobile Money → Instant FLW payout form */}
                 {p2pFiatMethod === 'Mobile Money' && (
                   <form onSubmit={handleFlwMobileMoney} className="animate-in fade-in slide-in-from-bottom-2 space-y-4">
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
-                      <Zap size={14} className="text-emerald-600 shrink-0"/>
-                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wide">Instant via Flutterwave — no human processor needed</p>
-                    </div>
+                    {availableNetworksForCountry.length > 0 && (
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
+                        <Zap size={14} className="text-emerald-600 shrink-0"/>
+                        <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wide">Instant via Flutterwave — no human processor needed</p>
+                      </div>
+                    )}
 
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                       <MobileMoneyAccounts
@@ -775,7 +859,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                         </div>
                       ) : (
                         <p className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 p-3 rounded-xl">
-                          No automated mobile money networks for this country. Routing to Community of Trust instead.
+                          Instant mobile money payout is not available for this country yet. A verified local agent will send the money to this number instead.
                         </p>
                       )}
                     </div>
@@ -790,12 +874,25 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                       <p className="text-[10px] text-slate-400 font-bold mt-1">Include country code, e.g. +233 for Ghana.</p>
                     </div>
 
+{availableNetworksForCountry.length > 0 ? (
                     <button
-                      type="submit" disabled={isProcessing || availableNetworksForCountry.length === 0}
+                      type="submit" disabled={isProcessing}
                       className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:-translate-y-1 disabled:opacity-50"
                     >
                       {isProcessing ? <Loader2 className="animate-spin" size={16} /> : <><Zap size={16}/> Send ${amount} via {flwNetwork} Instantly</>}
                     </button>
+                    ) : (
+                    <button
+                      type="button" disabled={isProcessing || isLoadingBankers || flwPhone.replace(/\D/g, '').length < 8}
+                      onClick={() => {
+                        const label = COUNTRY_OPTIONS.find(c => c.code === flwCountry)?.label || flwCountry;
+                        handleFindProcessors('Mobile Money', `${label} · ${flwPhone.trim()}`);
+                      }}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest p-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 hover:-translate-y-1 disabled:opacity-50"
+                    >
+                      {isLoadingBankers ? <Loader2 className="animate-spin" size={16} /> : <>Find a local agent to send ${amount}</>}
+                    </button>
+                    )}
                   </form>
                 )}
 

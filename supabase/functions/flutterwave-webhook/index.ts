@@ -15,6 +15,7 @@ import {
   PAGE_ORDER_REF_PREFIX,
   verifyFlutterwave,
 } from "../_shared/page-orders.ts";
+import { isInstantRef } from "../_shared/money-rails.ts";
 
 const WEBHOOK_HASH = Deno.env.get("FLUTTERWAVE_WEBHOOK_HASH");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -76,6 +77,31 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ received: true, page_order: true }), { status: 200 });
   }
 
+  // ── Instant Deposit: charge.completed for an 'IFB.INSTANT.<intent id>' tx_ref ──
+  //    Credits exactly the USD amount quoted on the deposit intent, once, after
+  //    Flutterwave confirms the charge (amount + currency checked in the database).
+  if (eventType === "charge.completed" && isInstantRef(data.tx_ref)) {
+    let v;
+    try {
+      v = await verifyFlutterwave(data.id as string | number);
+    } catch (e) {
+      console.error("FLW instant deposit verify failed:", e instanceof Error ? e.message : e);
+      return new Response("verification failed", { status: 500 }); // FLW retries
+    }
+    if (!v.ok || v.tx_ref !== data.tx_ref) {
+      return new Response(JSON.stringify({ received: true, skipped: true }), { status: 200 });
+    }
+    const { data: outcome, error } = await sb.rpc("complete_deposit_intent", {
+      p_tx_ref: v.tx_ref, p_paid_amount: v.amount_cents / 100, p_paid_currency: v.currency, p_provider_ref: v.ref,
+    });
+    if (error) {
+      console.error("FLW complete_deposit_intent failed:", error.code);
+      return new Response("credit failed", { status: 500 });
+    }
+    if (outcome === "mismatch") console.warn("FLW instant deposit amount/currency mismatch — manual review", v.tx_ref);
+    return new Response(JSON.stringify({ received: true, instant_deposit: outcome }), { status: 200 });
+  }
+
   // ── charge.completed — mobile money / card collection succeeded ──────────────
   // The webhook body is only a hint: we re-fetch the transaction from Flutterwave
   // (GET /transactions/{id}/verify) and credit only the verified amount/currency.
@@ -110,7 +136,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ received: true }), { status: 200 });
     }
 
-    if (txRef?.startsWith(PAGE_ORDER_REF_PREFIX)) {
+    if (txRef?.startsWith(PAGE_ORDER_REF_PREFIX) || isInstantRef(txRef)) {
       // Payment page charge whose webhook body lacked tx_ref: never a deposit.
       return new Response(JSON.stringify({ received: true, skipped: true }), { status: 200 });
     }
