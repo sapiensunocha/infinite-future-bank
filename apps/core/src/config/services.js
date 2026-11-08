@@ -15,7 +15,7 @@ export const SERVICE_GROUPS = [
       { id: 'PAYMENT_PAGES',    Icon: Link2,          label: 'Payment Pages',   desc: 'Payment links with your own form', featured: true },
       { id: 'MERCHANT_TICKETS', Icon: Ticket,         label: 'Box Office',      desc: 'Sell event tickets',               featured: true },
       { id: 'PAYROLL',          Icon: Users,          label: 'Payroll',         desc: 'Pay your team',                    featured: true },
-      { id: 'MERCHANT_BILLING', Icon: Calculator,     label: 'Invoicing',       desc: 'Bill your clients' },
+      { id: 'MERCHANT_BILLING', Icon: Calculator,     label: 'Invoicing',       desc: 'Send invoices and get paid' },
       { id: 'PARTNER_HUB',      Icon: Tractor,        label: 'Partner Hub',     desc: 'Farmers, fields and field teams' },
     ],
   },

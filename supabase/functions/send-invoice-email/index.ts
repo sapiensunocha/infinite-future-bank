@@ -1,77 +1,61 @@
-// send-invoice-email
-// Sends a branded IFB invoice / payment request to a recipient via Resend.
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// send-invoice-email — emails a "Request money" pay link (Receive → Request payment).
+//   POST { to, amount?, reason? }   (signed-in user)
+// Security (was an open relay: anyone could send IFB-branded mail with any link):
+//   * login required; the sender name comes from the requester's profile
+//   * the pay link is built HERE from the requester's id — a caller-supplied link is ignored
+//   * all text is HTML-escaped; one recipient per call; max 20 requests per user per hour
+// Invoices use the `invoices` function instead.
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders, errorResponse, getAuthedUser, HttpError, jsonResponse } from "../_shared/auth.ts";
+import { esc, sendEmail } from "../_shared/notify.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const APP_URL = Deno.env.get("APP_URL") ?? "https://app.infinitefuturebank.org";
+const FROM = Deno.env.get("EMAIL_FROM") ?? "Infinite Future Bank <noreply@infinitefuturebank.org>";
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
   try {
-    const { to, from_name, amount, reason, pay_link } = await req.json();
-    if (!to || !pay_link) throw new Error("to and pay_link are required");
+    if (req.method !== "POST") throw new HttpError(405, "Method not allowed");
+    const user = await getAuthedUser(req);
+    const b = await req.json().catch(() => ({}));
+    const to = String(b.to ?? "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to) || to.length > 254) throw new HttpError(400, "Enter a valid email address");
+    const raw = Number(b.amount);
+    const amount = Number.isFinite(raw) && raw > 0 ? raw : null;   // older apps send "0" for "no amount"
+    if (amount !== null && amount > 1_000_000) throw new HttpError(400, "Check the amount");
+    const reason = String(b.reason ?? "").trim().slice(0, 140);
 
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) throw new Error("Missing RESEND_API_KEY");
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    const since = new Date(Date.now() - 3600_000).toISOString();
+    const { count } = await admin.from("app_telemetry").select("id", { count: "exact", head: true })
+      .eq("event", "payment_request_email").gte("created_at", since).filter("metadata->>user_id", "eq", user.id);
+    if ((count ?? 0) >= 20) throw new HttpError(429, "Too many request emails. Please try again later.");
 
-    const displayAmount = amount ? `$${Number(amount).toFixed(2)}` : "See link";
+    const { data: prof } = await admin.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle();
+    const name = String(prof?.full_name || "An IFB user");
+    const link = `${APP_URL}/pay?to=${user.id}${amount ? `&amount=${amount}` : ""}${reason ? `&reason=${encodeURIComponent(reason)}` : ""}`;
+    const display = amount ? `$${amount.toFixed(2)}` : "a payment";
 
-    const html = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
-    <tr><td align="center">
-      <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);border:1px solid #e2e8f0;">
-        <!-- Header -->
-        <tr><td style="background:linear-gradient(135deg,#1e40af,#4f46e5);padding:32px 40px;text-align:center;">
-          <span style="font-size:32px;font-weight:900;letter-spacing:6px;color:#fff;">DEUS</span>
-          <p style="margin:8px 0 0;color:#bfdbfe;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Infinite Future Bank</p>
-        </td></tr>
-        <!-- Body -->
-        <tr><td style="padding:40px;">
-          <p style="margin:0 0 8px;font-size:13px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Payment Request</p>
-          <h1 style="margin:0 0 24px;font-size:28px;font-weight:900;color:#0f172a;">${displayAmount}</h1>
-          <p style="margin:0 0 6px;font-size:14px;color:#475569;"><strong>From:</strong> ${from_name || "Your contact"}</p>
-          ${reason ? `<p style="margin:0 0 24px;font-size:14px;color:#475569;"><strong>For:</strong> ${reason}</p>` : "<p style='margin:0 0 24px;'></p>"}
-          <a href="${pay_link}" style="display:inline-block;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;text-decoration:none;padding:16px 32px;border-radius:14px;font-weight:900;font-size:14px;letter-spacing:1px;text-transform:uppercase;">Pay Now</a>
-          <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;">Or copy this link: <a href="${pay_link}" style="color:#3b82f6;">${pay_link}</a></p>
-        </td></tr>
-        <!-- Footer -->
-        <tr><td style="background:#f8fafc;padding:24px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-          <p style="margin:0;font-size:11px;color:#94a3b8;">Sent via DEUS · Infinite Future Bank · Regulated Financial Infrastructure</p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+    const html = `<!doctype html><html><body style="margin:0;background:#f6f7fb;font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px"><tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden">
+<tr><td style="background:#2563eb;padding:20px 28px;color:#fff;font-size:16px;font-weight:700">Infinite Future Bank</td></tr>
+<tr><td style="padding:28px">
+<p style="margin:0 0 4px;color:#64748b;font-size:13px">Payment request</p>
+<p style="margin:0 0 16px;font-size:28px;font-weight:700">${esc(display)}</p>
+<p style="margin:0 0 6px;font-size:14px;color:#475569"><strong>From:</strong> ${esc(name)}</p>
+${reason ? `<p style="margin:0 0 20px;font-size:14px;color:#475569"><strong>For:</strong> ${esc(reason)}</p>` : ""}
+<p style="margin:24px 0 8px;text-align:center"><a href="${esc(link)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:14px 28px;border-radius:12px">Pay ${esc(display)}</a></p>
+<p style="margin:0;text-align:center;font-size:12px;color:#94a3b8">${esc(link)}</p>
+</td></tr>
+<tr><td style="padding:16px 28px;background:#f8fafc;font-size:11px;color:#94a3b8">Sent because ${esc(name)} requested a payment from you with Infinite Future Bank. If you don't know them, ignore this email.</td></tr>
+</table></td></tr></table></body></html>`;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
-      body: JSON.stringify({
-        from: "DEUS — IFB <noreply@infinitefuturebank.org>",
-        to: [to],
-        subject: `${from_name || "Someone"} is requesting ${displayAmount} via IFB`,
-        html,
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Email sending failed");
-
-    return new Response(JSON.stringify({ sent: true, id: data.id }), {
-      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    console.error("send-invoice-email error:", (err as Error).message);
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const status = await sendEmail([to], `${name} is requesting ${display} via IFB`, html, { from: FROM, replyTo: prof?.email || user.email || undefined });
+    await admin.from("app_telemetry").insert([{ event: "payment_request_email", metadata: { user_id: user.id, status } }]);
+    if (status !== "sent") throw new HttpError(502, "The email could not be sent. Share the link instead.");
+    return jsonResponse(req, { sent: true });
+  } catch (e) {
+    return errorResponse(req, e);
   }
 });

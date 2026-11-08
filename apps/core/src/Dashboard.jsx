@@ -412,7 +412,7 @@ export default function Dashboard({ session, onSignOut }) {
             
             {activeTab === 'SERVICES' && <ServicesPage setActiveTab={setActiveTab} setActiveAppPopup={setActiveAppPopup} />}
             {isGated(activeTab) && <ComingSoonPanel id={activeTab} />}
-            {shownTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} />}
+            {shownTab === 'TRANSACTIONS' && <TransactionLedger transactions={transactions} formatCurrency={formatCurrency} setShowStatementModal={setShowStatementModal} holderName={profile?.full_name} />}
             {shownTab === 'NETWORK' && (
               <div className="ui-page">
                 <AFRNetworkPanel session={session} profile={profile} />

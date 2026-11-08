@@ -73,12 +73,8 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
     if (userSearchQuery.length > 2) {
       setIsLoading(true);
       const delaySearch = setTimeout(async () => {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, email')
-          .or(`full_name.ilike.%${userSearchQuery}%,email.ilike.%${userSearchQuery}%`)
-          .neq('id', session.user.id)
-          .limit(5);
+        // Exact email or name search on the server; emails come back masked.
+        const { data, error } = await supabase.rpc('find_ifb_users', { p_query: userSearchQuery, p_limit: 5 });
           
         if (!error && data) {
           setFoundUsers(data);

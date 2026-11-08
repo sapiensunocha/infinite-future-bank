@@ -5,6 +5,7 @@ import {
   Wifi, Shield, RefreshCw, MoreHorizontal, X, LayoutGrid, BarChart2,
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
+import ReceiptModal from '../components/modals/ReceiptModal';
 import FeatureBadge from '../components/ui/FeatureBadge';
 import { FEATURED_SERVICES } from '../config/services';
 import { useTranslation } from '../i18n/useTranslation';
@@ -90,6 +91,7 @@ export default function NetPositionHome({
   const runMore = (fn) => { setMoreOpen(false); fn(); };
 
   const recentTxs = transactions.slice(0, 5);
+  const [receiptTx, setReceiptTx] = useState(null);
   const homeServices = FEATURED_SERVICES.slice(0, 7);
 
   return (
@@ -214,7 +216,7 @@ export default function NetPositionHome({
             const label = tx.description || tx.transaction_type || 'Transaction';
             const dateStr = new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
-              <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
+              <button type="button" key={tx.id} onClick={() => setReceiptTx(tx)} aria-label="Open receipt" className="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-slate-50 active:bg-slate-100 transition-colors">
                 <span className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center shrink-0`}><Icon size={18} /></span>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-medium text-slate-900 truncate first-letter:uppercase">{label}</p>
@@ -226,7 +228,7 @@ export default function NetPositionHome({
                 <p className={`ui-amount text-[15px] shrink-0 ${isPos ? 'text-emerald-600' : 'text-slate-900'}`}>
                   {isPos ? '+' : ''}{formatCurrency(tx.amount)}
                 </p>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -276,6 +278,7 @@ export default function NetPositionHome({
           </div>
         </div>
       )}
+      {receiptTx && <ReceiptModal tx={receiptTx} holderName={profile?.full_name} onClose={() => setReceiptTx(null)} />}
     </div>
   );
 }

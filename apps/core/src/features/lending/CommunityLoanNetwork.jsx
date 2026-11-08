@@ -106,7 +106,7 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
 
     const { data: m } = await supabase
       .from('cln_members')
-      .select('*, profiles(full_name, avatar_url)')
+      .select('*, profiles:profiles_public(full_name, avatar_url)')
       .eq('community_id', comm.id);
     setMembers(m || []);
   };

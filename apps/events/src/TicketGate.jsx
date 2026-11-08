@@ -96,7 +96,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
     setExploreLoading(true);
     const { data } = await supabase
       .from('ifb_events')
-      .select('*, profiles!organizer_id(full_name, avatar_url)')
+      .select('*, profiles:profiles_public!organizer_id(full_name, avatar_url)')
       .order('event_date', { ascending: true });
     if (data) {
       setAllEvents(data);

@@ -48,7 +48,7 @@ export async function sendFarmerMessage(phone: string | null | undefined, body: 
   return { channel: 'whatsapp', status: await sendWhatsApp(phone, body) };
 }
 
-export async function sendEmail(to: string[], subject: string, html: string): Promise<string> {
+export async function sendEmail(to: string[], subject: string, html: string, opts: { from?: string; replyTo?: string } = {}): Promise<string> {
   const key = Deno.env.get('RESEND_API_KEY');
   if (!key) return 'skipped:email_not_configured';
   const list = to.filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)).slice(0, 20);
@@ -58,8 +58,9 @@ export async function sendEmail(to: string[], subject: string, html: string): Pr
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: Deno.env.get('ALERTS_EMAIL_FROM') ?? 'IFB MICHAEL Alerts <noreply@infinitefuturebank.org>',
+        from: opts.from ?? Deno.env.get('ALERTS_EMAIL_FROM') ?? 'IFB MICHAEL Alerts <noreply@infinitefuturebank.org>',
         to: list, subject: subject.slice(0, 200), html,
+        ...(opts.replyTo && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.replyTo) ? { reply_to: opts.replyTo } : {}),
       }),
     });
     return res.ok ? 'sent' : `failed:${res.status}`;

@@ -18,7 +18,7 @@ export default function PublicEventPage() {
       const { data: eventData } = await supabase.from('ifb_events').select('*').eq('id', id).single();
       if (eventData) {
         setEvent(eventData);
-        const { data: profileData } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', eventData.organizer_id).single();
+        const { data: profileData } = await supabase.from('profiles_public').select('full_name, avatar_url').eq('id', eventData.organizer_id).maybeSingle();
         if (profileData) setOrgProfile(profileData);
       }
       setIsLoading(false);

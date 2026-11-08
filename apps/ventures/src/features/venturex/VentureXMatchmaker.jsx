@@ -126,7 +126,7 @@ export default function VentureXMatchmaker({ session, profile, balances }) {
     try {
       const [compRes, invRes, listRes] = await Promise.all([
         supabase.from('venturex_companies').select('*').eq('user_id', session.user.id).eq('status', 'active').maybeSingle(),
-        supabase.from('venturex_investors').select('*, profiles(full_name, avatar_url)').eq('is_active', true).limit(30),
+        supabase.from('venturex_investors').select('*, profiles:profiles_public(full_name, avatar_url)').eq('is_active', true).limit(30),
         supabase.from('venturex_product_listings').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
       ]);
       if (compRes.data) {
