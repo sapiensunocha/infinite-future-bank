@@ -9,21 +9,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, getAuthedUser, HttpError, jsonResponse } from "../_shared/auth.ts";
 import { verifyFlutterwaveByRef } from "../_shared/page-orders.ts";
 import { instantRef, isInstantRef } from "../_shared/money-rails.ts";
+import { collectRate } from "../_shared/flw-rates.ts";
 
 const FLW = "https://api.flutterwave.com/v3";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://app.infinitefuturebank.org";
-
-async function ngnPerUsd(amountUsd: number, secret: string): Promise<number> {
-  // How many NGN Flutterwave needs to deliver `amountUsd` USD.
-  const res = await fetch(
-    `${FLW}/transfers/rates?amount=${amountUsd}&destination_currency=USD&source_currency=NGN`,
-    { headers: { Authorization: `Bearer ${secret}` }, signal: AbortSignal.timeout(10_000) },
-  );
-  const j = await res.json().catch(() => null);
-  const ngn = Number(j?.data?.source?.amount);
-  if (!res.ok || !(ngn > 0)) throw new HttpError(503, "Naira rate is unavailable right now. Try USD or again shortly.");
-  return ngn / amountUsd;
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders(req) });
@@ -64,7 +53,7 @@ Deno.serve(async (req: Request) => {
       .eq("user_id", user.id).eq("status", "pending").gte("created_at", since);
     if ((count ?? 0) >= 5) throw new HttpError(429, "Too many unfinished deposits. Complete or wait for one to expire.");
 
-    const fxRate = currency === "NGN" ? await ngnPerUsd(amountUsd, secret) : 1;
+    const fxRate = currency === "NGN" ? await collectRate(secret, "NGN") : 1;
     const chargeAmount = Math.ceil(amountUsd * fxRate * 100) / 100;
     const intentId = crypto.randomUUID();
     const reference = instantRef(intentId);

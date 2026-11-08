@@ -65,6 +65,11 @@ const CheckoutForm = ({ amount, onBack, onComplete }) => {
   );
 };
 
+const DIAL_CODES = {
+  GH: '+233', NG: '+234', KE: '+254', UG: '+256', RW: '+250', TZ: '+255', ZM: '+260', ET: '+251', ZA: '+27', EG: '+20',
+  MZ: '+258', SL: '+232', GN: '+224', CM: '+237', SN: '+221', CI: '+225', ML: '+223', BF: '+226', TG: '+228', BJ: '+229',
+};
+
 export default function DepositInterface({ session, onClose, onSuccess }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('NEW'); // 'NEW' or 'HISTORY'
@@ -260,9 +265,10 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
     flwSuccessRef.current = false;
     try {
       const flwCfg = FLW_CURRENCY_MAP[flwCountry];
-      const localAmount = Math.round(parseFloat(amount) * flwCfg.rate);
+      // The server quotes the local amount at Flutterwave's live rate and records it,
+      // so the wallet is credited exactly the USD shown here (no fixed exchange table).
       const { data, error } = await supabase.functions.invoke('flutterwave-collect', {
-        body: { amount: localAmount, currency: flwCfg.currency, phone: flwPhone },
+        body: { amount_usd: parseFloat(amount), currency: flwCfg.currency, phone: flwPhone },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -288,7 +294,9 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
           if (paymentData.status === 'successful' || paymentData.status === 'completed') {
             flwSuccessRef.current = true;
             setFlwSuccess(true);
-            setInstantSuccess({ amount: parseFloat(amount), newBalance: null });
+            // Credited by the server once Flutterwave confirms; the success screen opens then.
+            if (data.reference) pollInstantDeposit(data.reference);
+            else setInstantSuccess({ amount: parseFloat(amount), newBalance: null });
           }
         },
         onclose: () => {
@@ -787,7 +795,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                         type="tel"
                         value={flwPhone}
                         onChange={e => setFlwPhone(e.target.value)}
-                        placeholder="+233 XX XXX XXXX"
+                        placeholder={`${DIAL_CODES[flwCountry] || '+'} phone number`}
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-bold p-3 outline-none focus:border-amber-500 transition-all placeholder:text-slate-400"
                       />
                     </div>
@@ -807,7 +815,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                       </select>
                       {flwCountry && amount && parseFloat(amount) > 0 && (
                         <p className="text-[9px] font-bold text-amber-600 mt-2 text-center">
-                          ≈ {Math.round(parseFloat(amount) * FLW_CURRENCY_MAP[flwCountry].rate).toLocaleString()} {FLW_CURRENCY_MAP[flwCountry].currency}
+                          About {Math.round(parseFloat(amount) * FLW_CURRENCY_MAP[flwCountry].rate).toLocaleString()} {FLW_CURRENCY_MAP[flwCountry].currency}. The exact amount at the live rate is shown before you pay.
                         </p>
                       )}
                     </div>

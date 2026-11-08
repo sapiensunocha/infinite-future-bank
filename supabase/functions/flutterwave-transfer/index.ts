@@ -4,7 +4,8 @@
 // Falls back gracefully: if FLW rejects the network/country, returns { flw_supported: false }
 // so the caller can route to human processors instead.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders as buildCors, getAuthedUser, parseAmount } from "../_shared/auth.ts";
+import { corsHeaders as buildCors, getAuthedUser, HttpError, parseAmount } from "../_shared/auth.ts";
+import { payoutRate } from "../_shared/flw-rates.ts";
 
 const FLW_SECRET   = Deno.env.get("FLUTTERWAVE_SECRET_KEY") ?? "";
 const FLW_BASE     = "https://api.flutterwave.com/v3";
@@ -98,9 +99,20 @@ Deno.serve(async (req) => {
     return jsonRes({ flw_supported: false, reason: `${network} not supported in ${country} via Flutterwave` });
   }
 
-  // Fail closed until USD -> local FX conversion exists (see TODO(FX BUG) below).
+  // Live payouts stay off until the owner sets FLW_WITHDRAWALS_ENABLED=true after a sandbox test.
   if (Deno.env.get("FLW_WITHDRAWALS_ENABLED") !== "true") {
     return jsonRes({ flw_supported: false, error: "Mobile Money withdrawals are temporarily unavailable" }, 503);
+  }
+
+  // `amount` is USD (debited from liquid_usd). Convert to the recipient's currency at the
+  // live Flutterwave rate; Flutterwave debits IFB's USD balance (debit_currency USD).
+  let localAmount: number;
+  let rate: number;
+  try {
+    rate = await payoutRate(FLW_SECRET, resolved.currency);
+    localAmount = Math.floor(amount * rate * 100) / 100;
+  } catch (e) {
+    return jsonRes({ flw_supported: true, error: e instanceof HttpError ? e.message : "Exchange rate unavailable" }, 503);
   }
 
   const fee = Math.round(amount * 0.005 * 100) / 100;
@@ -116,11 +128,6 @@ Deno.serve(async (req) => {
   });
   if (debitErr) return jsonRes({ error: "Insufficient balance" }, 400);
 
-  // TODO(FX BUG): `amount` is USD (debited from liquid_usd) but is sent to Flutterwave
-  // as an amount in the LOCAL currency (resolved.currency), so a $10 withdrawal pays out
-  // 10 GHS/KES/etc. Convert USD -> local with a live, locked quote (e.g. FLW
-  // GET /v3/transfers/rates) before enabling this in production.
-
   // 2. Call Flutterwave Transfer API. On any failure, refund the debit.
   let flwData: any = null;
   let flwOk = false;
@@ -135,11 +142,11 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         account_bank:    resolved.bank_code,
         account_number:  phone,
-        amount,
+        amount:          localAmount,
         narration:       narration ?? `IFB Wallet Withdrawal`,
         currency:        resolved.currency,
         reference,
-        debit_currency:  resolved.currency,
+        debit_currency:  "USD",
         callback_url:    `${SUPABASE_URL}/functions/v1/flutterwave-webhook`,
         meta: {
           sender:           "IFB Infinite Future Bank",
@@ -186,6 +193,8 @@ Deno.serve(async (req) => {
       flw_reference:    reference,
       flw_bank_code:    resolved.bank_code,
       flw_currency:     resolved.currency,
+      rate,
+      amount_local:     localAmount,
       recipient_phone:  phone,
       fee_usd:          fee,
       country,
@@ -214,6 +223,8 @@ Deno.serve(async (req) => {
       flw_status:     flwStatus,
       order_id:       order?.id,
       currency:       resolved.currency,
+      amount_local:   localAmount,
+      rate,
       message:        `Withdrawal of $${amount} submitted via ${network}. Ref: ${reference}`,
   });
 });

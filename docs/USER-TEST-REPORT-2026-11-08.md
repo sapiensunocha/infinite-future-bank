@@ -102,3 +102,30 @@
 
 ---
 *Test scripts and screenshots: local test harness (not committed). Production checks were read-only and metadata-only; no customer data was read.*
+
+---
+
+## 8. Status after fixes (PR #16, not yet live)
+
+| # | Finding | Status |
+|---|---|---|
+| B1 | Send money | ✅ Fixed: safe `p2p_transfer` (migration 20261112) |
+| B2 | Instant Direct Deposit | ✅ Kept, rebuilt on a real Flutterwave charge (USD, or NGN by card / bank transfer / USSD) |
+| B3 | Pay a payment request | ✅ Fixed: `process_payment_request` |
+| B4 | Payroll | ✅ Fixed: server-side `run_payroll` pays staff who have IFB accounts and lists those who don't (migration 20261114) |
+| B5 | Referrals crash | ✅ Fixed |
+| B6 | Nigerian mobile money dead end | ✅ Fixed: hands off to a local agent |
+| R1 | Logged-out profile leak | ✅ Fixed: only name, avatar and tier are public |
+| R2 | Empty KYC accepted | ✅ Fixed: required fields checked per step and on submit |
+| R3 | KYC "public" links | ⚠️ Correction: the AI review already downloads files securely, so it was never broken. The separate **admin app** did show broken images; it now uses 10-minute signed links. |
+| R4 | "IFB Handled" label | ✅ Relabelled honestly: "International bank or card — ACH & SWIFT via a verified agent" |
+| R5 | Card number + CVC sent to agents | ✅ Card payout kept, but without CVC: encrypted card number, escrow, settled by IFB |
+| R6 | Bank details typed as free text | ✅ New **Nigerian bank account** payout: bank list, NUBAN, account-name lookup, direct Flutterwave transfer |
+| R7 | Fixed exchange rates | ✅ Live Flutterwave rates for mobile-money deposits, Instant Deposit and payouts. The mobile-money payout currency bug ($10 paid out as 10 cedis) is also fixed. |
+| New | Payroll tables had row security **off**: any user could read or change every company's staff and salaries | ✅ Fixed (migration 20261114) |
+| Gap | NIN / BVN, Nigerian wording | ✅ NIN, BVN and voter's card ID types, a Smile ID check, and Nigerian placeholders |
+| Gap | Selfie camera | ✅ Opens on the front camera with a switch-camera icon |
+
+**Still open:**
+- Signed-in users can read every profile's email and GPS. This needs recipient and agent lookups redesigned.
+- Automatic card payouts need a card-payout provider contract.

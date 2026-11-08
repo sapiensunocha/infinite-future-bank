@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NigeriaBankPayout from './components/NigeriaBankPayout';
 import MobileMoneyAccounts from './components/MobileMoneyAccounts';
 import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check, Zap } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
@@ -638,6 +639,19 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
                   <p className="text-sm font-bold text-blue-800 text-center">Select how you want to receive your <span className="font-black">${amount}</span></p>
                 </div>
 
+                {/* Option 0: Nigerian bank account — direct Flutterwave transfer, no agent */}
+                <button onClick={() => { setMethod('NGBANK'); setStep(3); }} className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-blue-100 bg-blue-50/40 hover:bg-blue-50 transition-all text-left relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest shadow-sm">Direct</div>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:scale-110 transition-transform"><Landmark size={24} /></div>
+                    <div>
+                      <p className="font-black text-slate-800">Nigerian bank account</p>
+                      <p className="text-xs font-bold text-blue-600 mt-0.5">Any bank or Opay / Moniepoint · paid in Naira</p>
+                    </div>
+                  </div>
+                  <ArrowRight size={18} className="text-blue-400" />
+                </button>
+
                 {/* Option 1: P2P */}
                 <button 
                   onClick={() => { setMethod('P2P'); setStep(3); }} 
@@ -656,12 +670,11 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
 
                 {/* Option 2: Standard Bank */}
                 <button onClick={() => { setMethod('BANK'); setStep(3); }} className="w-full flex items-center justify-between p-5 rounded-2xl border-2 border-slate-100 hover:border-blue-100 hover:bg-blue-50/50 transition-all text-left group">
-                  <div className="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest shadow-sm">IFB Handled</div>
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors"><Landmark size={24} /></div>
                     <div>
-                      <p className="font-black text-slate-800">Global Bank / Card</p>
-                      <p className="text-xs font-bold text-slate-400 mt-0.5">International Wire & ACH</p>
+                      <p className="font-black text-slate-800">International bank or card</p>
+                      <p className="text-xs font-bold text-slate-400 mt-0.5">US ACH & SWIFT via a verified agent · card payouts by IFB</p>
                     </div>
                   </div>
                   <ArrowRight size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
@@ -669,6 +682,11 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
 
                 <button onClick={() => setStep(1)} className="w-full text-center text-xs font-bold text-slate-400 pt-4 hover:text-slate-600 uppercase tracking-widest">Go Back</button>
               </div>
+            )}
+
+            {/* STEP 3 (N): NIGERIAN BANK — direct transfer */}
+            {step === 3 && method === 'NGBANK' && (
+              <NigeriaBankPayout amount={amount} onBack={() => setStep(2)} onDone={() => onSuccess?.()} />
             )}
 
             {/* STEP 3 (A): GLOBAL BANK WITHDRAWAL (Routes to P2P) */}

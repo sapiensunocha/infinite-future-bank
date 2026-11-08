@@ -794,8 +794,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
       <Sect icon={MapPin} title="Contact Information" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="Primary Phone *"><input type="tel" className={inp} value={form.phone_primary} onChange={e => set('phone_primary', e.target.value)} placeholder="+1 555 000 0000"/></Field>
-        <Field label="WhatsApp"><input type="tel" className={inp} value={form.whatsapp_number} onChange={e => set('whatsapp_number', e.target.value)} placeholder="+1 555 000 0000"/></Field>
+        <Field label="Primary Phone *"><input type="tel" className={inp} value={form.phone_primary} onChange={e => set('phone_primary', e.target.value)} placeholder="With country code, e.g. +234 803 123 4567"/></Field>
+        <Field label="WhatsApp"><input type="tel" className={inp} value={form.whatsapp_number} onChange={e => set('whatsapp_number', e.target.value)} placeholder="With country code, e.g. +234 803 123 4567"/></Field>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Email (Primary)"><input type="email" className={inp} value={form.email_primary} readOnly/></Field>
@@ -875,8 +875,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           </Field>
           <Field label="Issuing Country"><input className={inp} value={form.id_issuing_country} onChange={e => set('id_issuing_country', e.target.value)}/></Field>
         </div>
-        <Field label="Issuing Authority"><input className={inp} value={form.id_issuing_authority} onChange={e => set('id_issuing_authority', e.target.value)} placeholder="e.g. Home Affairs, DVLA, State Dept"/></Field>
-        <Field label="Tax ID / TIN / SSN"><input className={inp} value={form.tax_id} onChange={e => set('tax_id', e.target.value)} placeholder="Home country tax number"/></Field>
+        <Field label="Issuing Authority"><input className={inp} value={form.id_issuing_authority} onChange={e => set('id_issuing_authority', e.target.value)} placeholder="e.g. NIMC, FRSC, INEC, Immigration"/></Field>
+        <Field label="Tax ID (TIN)"><input className={inp} value={form.tax_id} onChange={e => set('tax_id', e.target.value)} placeholder="e.g. FIRS TIN — optional"/></Field>
 
         <Sect icon={Camera} title="Document Capture — AI Auto-Fill" />
         <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-[10px] text-blue-600 font-medium">

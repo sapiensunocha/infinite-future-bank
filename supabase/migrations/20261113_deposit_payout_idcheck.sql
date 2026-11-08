@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS public.deposit_intents (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   amount_usd      NUMERIC(14,2) NOT NULL CHECK (amount_usd >= 1 AND amount_usd <= 10000),
-  charge_currency TEXT NOT NULL CHECK (charge_currency IN ('USD', 'NGN')),
+  charge_currency TEXT NOT NULL CHECK (charge_currency ~ '^[A-Z]{3}$'),   -- USD, NGN, or a mobile-money currency (GHS, KES, …)
   charge_amount   NUMERIC(16,2) NOT NULL CHECK (charge_amount > 0),
   fx_rate         NUMERIC(18,6),                 -- local units per 1 USD at quote time
   provider        TEXT NOT NULL DEFAULT 'flutterwave',
