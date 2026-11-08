@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ShieldAlert, Lock, Loader2, Landmark, Send, Download, Plus, ArrowRightLeft, QrCode,
   ArrowDownRight, ArrowUpRight, Zap, CreditCard, Building, Wallet, ChevronRight,
-  Wifi, Shield, RefreshCw, MoreHorizontal, X, LayoutGrid, BarChart2,
+  Wifi, Shield, RefreshCw, MoreHorizontal, X, LayoutGrid, BarChart2, LifeBuoy
 } from 'lucide-react';
 import HeroBanner from '../HeroBanner';
 import ReceiptModal from '../components/modals/ReceiptModal';
@@ -87,6 +87,7 @@ export default function NetPositionHome({
     { id: 'TRANSFER', Icon: ArrowRightLeft, label: t('actions.exchange'), desc: 'Move money between accounts',   run: () => setActiveModal('TRANSFER') },
     { id: 'NFC',      Icon: Wifi,           label: 'Tap & Pay',           desc: 'Pay with your phone',           run: () => setShowNFC && setShowNFC(true) },
     { id: 'VAULT',    Icon: Shield,         label: 'Vault',               desc: 'Lock money away safely',        run: () => setShowVault && setShowVault(true) },
+    { id: 'HELP',     Icon: LifeBuoy,       label: 'Help & support',      desc: 'Chat with us, disputes, trace a payment', run: () => window.dispatchEvent(new CustomEvent('ifb:open-help')) },
   ];
   const runMore = (fn) => { setMoreOpen(false); fn(); };
 
