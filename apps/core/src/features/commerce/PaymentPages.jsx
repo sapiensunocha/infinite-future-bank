@@ -432,7 +432,7 @@ function ShareSheet({ page, onClose, onCopy }) {
         <p className="font-semibold text-slate-900 text-center break-words">{page.title}</p>
         <div className="w-full mt-3 flex items-center gap-2 p-2 pl-3 rounded-xl bg-slate-50 border border-slate-200">
           <span className="text-sm text-slate-600 truncate flex-1 min-w-0">{link}</span>
-          <button type="button" onClick={() => onCopy(link)} className="shrink-0 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-sm font-medium flex items-center gap-1.5"><Copy size={14} /> Copy</button>
+          <button type="button" onClick={() => onCopy(link)} className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium flex items-center gap-1.5"><Copy size={14} /> Copy</button>
         </div>
         <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
           <a className={actionCls} href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer">
@@ -527,7 +527,7 @@ function FieldEditor({ f, index, count, fieldId, onChange, onRemove, onMove }) {
   return (
     <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Field {index + 1} · <span className="font-mono normal-case text-slate-500">{fieldId}</span></span>
+        <span className="text-xs font-semibold text-slate-500">Field {index + 1} · <span className="font-mono normal-case text-slate-500">{fieldId}</span></span>
         <div className="flex gap-1">
           <IconBtn title="Move up" onClick={() => onMove(-1)} disabled={index === 0}><ArrowUp size={14} /></IconBtn>
           <IconBtn title="Move down" onClick={() => onMove(1)} disabled={index === count - 1}><ArrowDown size={14} /></IconBtn>
@@ -582,12 +582,12 @@ function FieldEditor({ f, index, count, fieldId, onChange, onRemove, onMove }) {
             </div>
           ))}
           {f.options.length < MAX_OPTIONS && (
-            <button type="button" onClick={() => set({ options: [...f.options, opt('')] })} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-500 flex items-center gap-1"><Plus size={12} /> Add option</button>
+            <button type="button" onClick={() => set({ options: [...f.options, opt('')] })} className="text-sm font-semibold text-blue-600 hover:text-blue-500 flex items-center gap-1"><Plus size={12} /> Add option</button>
           )}
         </div>
       )}
 
-      <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
+      <label className="ui-label flex items-center gap-2 cursor-pointer">
         <input type="checkbox" checked={f.required} onChange={(e) => set({ required: e.target.checked })} className="w-4 h-4 accent-blue-600" />
         Required
       </label>
@@ -752,7 +752,7 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
                 <label className={labelCls}>Max uses</label>
                 <input type="number" min="1" step="1" value={form.max_uses} onChange={(e) => set({ max_uses: e.target.value })} className={inputCls} placeholder="Unlimited" />
               </div>
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer sm:mt-6">
+              <label className="ui-label flex items-center gap-2 cursor-pointer sm:mt-6">
                 <input type="checkbox" checked={form.single_use} onChange={(e) => set({ single_use: e.target.checked })} className="w-4 h-4 accent-blue-600" />
                 Single use (deactivate after first payment)
               </label>
@@ -760,20 +760,20 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
           </section>
 
           {/* Fields */}
-          <section className="bg-slate-50 p-5 sm:p-6 rounded-[2rem] border border-slate-200 space-y-4">
+          <section className="bg-slate-50 p-5 sm:p-6 rounded-2xl border border-slate-200 space-y-4">
             <div className="flex justify-between items-center">
               <div>
                 <h4 className="text-base font-bold text-slate-900">Form fields</h4>
                 <p className="text-[11px] text-slate-400 font-medium">Customer name and email are always collected.</p>
               </div>
-              <span className="text-[10px] font-black text-slate-400">{form.fields.length}/{MAX_FIELDS}</span>
+              <span className="text-xs font-bold text-slate-400">{form.fields.length}/{MAX_FIELDS}</span>
             </div>
             {form.fields.map((f, i) => (
               <FieldEditor key={f.key} f={f} index={i} count={form.fields.length} fieldId={ids[f.key]}
                 onChange={(next) => updateField(f.key, next)} onRemove={() => removeField(f.key)} onMove={(d) => moveField(i, d)} />
             ))}
             {form.fields.length < MAX_FIELDS && (
-              <button type="button" onClick={() => set({ fields: [...form.fields, blankField()] })} className="w-full py-3 border-2 border-dashed border-slate-300 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:border-blue-400 hover:text-blue-600 flex items-center justify-center gap-2">
+              <button type="button" onClick={() => set({ fields: [...form.fields, blankField()] })} className="w-full py-3 border-2 border-dashed border-slate-300 rounded-2xl text-sm font-semibold text-slate-500 hover:border-blue-400 hover:text-blue-600 flex items-center justify-center gap-2">
                 <Plus size={14} /> Add field
               </button>
             )}
@@ -785,7 +785,7 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {[{ v: 'fixed', l: 'Fixed price (with priced options)' }, { v: 'customer_amount', l: 'Customer enters amount' }].map((m) => (
                 <button key={m.v} type="button" onClick={() => setPricing({ mode: m.v })}
-                  className={`p-3 rounded-xl border-2 text-xs font-black transition-colors ${form.pricing.mode === m.v ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}>{m.l}</button>
+                  className={`p-3 rounded-xl border-2 text-xs font-bold transition-colors ${form.pricing.mode === m.v ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}>{m.l}</button>
               ))}
             </div>
             <div>
@@ -832,12 +832,12 @@ function PageBuilder({ editing, onCancel, onSaved, showToast, kycBlocked }) {
             </div>
           )}
 
-          <button type="button" onClick={() => setShowPreviewMobile((s) => !s)} className="lg:hidden w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center justify-center gap-2">
+          <button type="button" onClick={() => setShowPreviewMobile((s) => !s)} className="ui-btn ui-btn-secondary lg:hidden">
             <Eye size={14} /> {showPreviewMobile ? 'Hide preview' : 'Show preview'}
           </button>
           {showPreviewMobile && <div className="lg:hidden">{previewPanel}</div>}
 
-          <button type="submit" disabled={isSaving || (kycBlocked && !editing)} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50">
+          <button type="submit" disabled={isSaving || (kycBlocked && !editing)} className="ui-btn ui-btn-primary">
             {isSaving ? <Loader2 className="animate-spin" size={16} /> : <><Save size={16} /> {editing ? 'Save changes' : 'Publish payment page'}</>}
           </button>
         </form>
@@ -931,11 +931,11 @@ function OrdersView({ page, onBack, showToast }) {
             </p>
           </div>
           <div className="flex gap-2">
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 rounded-lg border border-slate-300 text-base sm:text-sm outline-none focus:border-blue-500" aria-label="Filter by status">
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="ui-select" aria-label="Filter by status">
               {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s === 'all' ? 'All statuses' : s[0].toUpperCase() + s.slice(1)}</option>)}
             </select>
             <IconBtn title="Refresh" onClick={() => load()}><RefreshCw size={16} /></IconBtn>
-            <button onClick={exportCsv} disabled={!orders.length} className="px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"><Download size={15} /> Export CSV</button>
+            <button onClick={exportCsv} disabled={!orders.length} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"><Download size={15} /> Export CSV</button>
           </div>
         </div>
 
@@ -1154,7 +1154,7 @@ export default function PaymentPages({ session, profile }) {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap shrink-0">
-                        <button type="button" className={`${btn} bg-slate-900 border-slate-900 text-white hover:bg-slate-800 hover:border-slate-800`} onClick={() => setSharePage(p)}><Share2 size={15} /> Share</button>
+                        <button type="button" className={`${btn} bg-blue-600 border-slate-900 text-white hover:bg-blue-700 hover:border-slate-800`} onClick={() => setSharePage(p)}><Share2 size={15} /> Share</button>
                         <button type="button" className={btn} onClick={() => { setOrdersPage(p); setView('orders'); }}><ListOrdered size={15} /> Orders</button>
                         <button type="button" className={btn} onClick={() => { setEditing(p); setView('builder'); }}><Pencil size={15} /> Edit</button>
                         <button type="button" className={btn} onClick={() => toggleStatus(p)} disabled={busyId === p.id} title={p.status === 'active' ? 'Stop accepting payments' : 'Start accepting payments'}>
@@ -1183,7 +1183,7 @@ export default function PaymentPages({ session, profile }) {
             <span>Copy this secret now. It will not be shown again. Use it to verify the X-IFB-Signature header on webhooks for &ldquo;{secret.title}&rdquo;.</span>
           </div>
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 break-all select-all mb-4">{secret.value}</div>
-          <button onClick={() => copyText(secret.value, 'Webhook secret copied.')} className="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"><Copy size={15} /> Copy secret</button>
+          <button onClick={() => copyText(secret.value, 'Webhook secret copied.')} className="ui-btn ui-btn-primary"><Copy size={15} /> Copy secret</button>
         </Modal>
       )}
     </div>

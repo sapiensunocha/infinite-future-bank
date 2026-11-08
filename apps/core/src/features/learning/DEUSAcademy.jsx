@@ -332,7 +332,7 @@ export default function DEUSAcademy({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 flex-shrink-0">
@@ -350,8 +350,8 @@ export default function DEUSAcademy({ onClose }) {
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 leading-tight">DEUS Academy</h1>
-              <p className="text-xs font-bold text-slate-400 tracking-widest uppercase">Learn · Practice · Master</p>
+              <h1 className="text-xl font-bold text-slate-900 leading-tight">DEUS Academy</h1>
+              <p className="text-xs font-bold text-slate-500">Learn · Practice · Master</p>
             </div>
           </div>
           <button
@@ -381,7 +381,7 @@ function GridView({ modules, onSelect }) {
     <div className="p-8">
       <div className="mb-6">
         <p className="text-slate-500 font-bold text-sm">
-          <span className="text-blue-600 font-black">{modules.length} features</span> — tap any to learn how it works with real-life context.
+          <span className="text-blue-600 font-bold">{modules.length} features</span> — tap any to learn how it works with real-life context.
         </p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -396,9 +396,9 @@ function GridView({ modules, onSelect }) {
               <div className={`w-10 h-10 ${mod.bg} rounded-2xl flex items-center justify-center mb-3`}>
                 <Icon className={`w-5 h-5 ${mod.color}`} />
               </div>
-              <p className="font-black text-slate-900 text-sm leading-tight mb-1">{mod.name}</p>
+              <p className="font-bold text-slate-900 text-sm leading-tight mb-1">{mod.name}</p>
               <p className="text-xs font-bold text-slate-400 leading-snug mb-3">{mod.tagline}</p>
-              <span className="inline-flex items-center gap-1 text-xs font-black text-blue-600 group-hover:gap-2 transition-all">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 group-hover:gap-2 transition-all">
                 Explore <ChevronRight className="w-3 h-3" />
               </span>
             </button>
@@ -421,7 +421,7 @@ function DetailView({ module, quizAnswer, setQuizAnswer, onTryIt }) {
           <Icon className={`w-7 h-7 ${module.color}`} />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-slate-900">{module.name}</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{module.name}</h2>
           <p className="text-sm font-bold text-slate-400">{module.tagline}</p>
         </div>
       </div>
@@ -434,7 +434,7 @@ function DetailView({ module, quizAnswer, setQuizAnswer, onTryIt }) {
 
         {/* Who uses it */}
         <Section title="Who uses it">
-          <span className="inline-block bg-slate-100 text-slate-700 font-black text-xs px-3 py-1 rounded-full">
+          <span className="inline-block bg-slate-100 text-slate-700 font-bold text-xs px-3 py-1 rounded-full">
             {module.who}
           </span>
         </Section>
@@ -454,7 +454,7 @@ function DetailView({ module, quizAnswer, setQuizAnswer, onTryIt }) {
           <ol className="space-y-2">
             {module.steps.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5">
+                <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
                   {i + 1}
                 </span>
                 <span className="text-slate-700 font-bold text-sm leading-relaxed">{step}</span>
@@ -471,7 +471,7 @@ function DetailView({ module, quizAnswer, setQuizAnswer, onTryIt }) {
         {/* Try it button */}
         <button
           onClick={() => onTryIt(module.tab)}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-sm py-4 rounded-2xl transition-colors flex items-center justify-center gap-2"
+          className="ui-btn ui-btn-primary"
         >
           Try {module.name} now
           <ChevronRight className="w-4 h-4" />
@@ -479,7 +479,7 @@ function DetailView({ module, quizAnswer, setQuizAnswer, onTryIt }) {
 
         {/* Quiz */}
         <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6">
-          <p className="font-black text-slate-900 text-sm mb-4">
+          <p className="font-bold text-slate-900 text-sm mb-4">
             Quick check: {module.quiz.question}
           </p>
           <div className="space-y-2">
@@ -506,7 +506,7 @@ function DetailView({ module, quizAnswer, setQuizAnswer, onTryIt }) {
             })}
           </div>
           {quizAnswer !== null && (
-            <p className={`mt-4 text-sm font-black ${isCorrect ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p className={`mt-4 text-sm font-bold ${isCorrect ? 'text-emerald-600' : 'text-red-600'}`}>
               {isCorrect ? 'Correct! You got it.' : `Not quite — the correct answer is: "${module.quiz.options[module.quiz.answer]}"`}
             </p>
           )}
@@ -519,7 +519,7 @@ function DetailView({ module, quizAnswer, setQuizAnswer, onTryIt }) {
 function Section({ title, children }) {
   return (
     <div>
-      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">{title}</h3>
+      <h3 className="text-xs font-semibold text-slate-500 mb-2">{title}</h3>
       {children}
     </div>
   );

@@ -29,7 +29,7 @@ const AuthCallback = () => {
       const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
       
       if (countdown === 4) setStatus('INITIALIZING PRIVATE VAULT...');
-      if (countdown === 3) setStatus('GENERATING SECURE LEDGER...');
+      if (countdown === 3) setStatus('Preparing…');
       if (countdown === 2) setStatus('GIFTING 1 AFR WELCOME BONUS...');
       if (countdown === 1) setStatus('SECURING NETWORK PERIMETER...');
       
@@ -189,7 +189,7 @@ const AuthCallback = () => {
       setStatus('ENCRYPTION FAILED. TRY AGAIN.');
       setIsUpdating(false);
     } else {
-      setStatus('VAULT SECURED. ROUTING...');
+      setStatus('Processing…');
       setIsError(false);
       setTimeout(() => navigate('/'), 1500);
     }
@@ -199,8 +199,8 @@ const AuthCallback = () => {
     <div className="min-h-screen bg-slate-50/80 text-slate-800 relative overflow-hidden flex flex-col items-center justify-center p-6">
       
       {/* Ambient Background Glows (Matching App.jsx) */}
-      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none"></div>
-      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-200/30 to-teal-300/10 blur-3xl pointer-events-none"></div>
+      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full blur-3xl pointer-events-none bg-blue-50"></div>
+      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full blur-3xl pointer-events-none bg-blue-50"></div>
 
       {/* 🎇 FIREWORK EXPLOSION OVERLAY 🎇 */}
       <div 
@@ -219,7 +219,7 @@ const AuthCallback = () => {
       {showBoom && (
         <div className="absolute z-50 flex flex-col items-center animate-in zoom-in-50 duration-700 delay-150">
            <Sparkles size={64} className="text-white mb-4 animate-pulse" />
-           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-2xl">
+           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tighter drop-shadow-2xl">
              WELCOME TO DEUS
            </h1>
         </div>
@@ -229,13 +229,13 @@ const AuthCallback = () => {
       <div className={`relative z-10 w-full max-w-[440px] flex flex-col items-center transition-opacity duration-300 ${showBoom ? 'opacity-0' : 'opacity-100'}`}>
         
         {isRecoveryMode && !status.includes('ROUTING') ? (
-          <div className="w-full bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="w-full bg-white/80 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col items-center mb-8">
               <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-4 shadow-inner">
                 <Lock size={32} />
               </div>
-              <h2 className="text-2xl font-black tracking-tight text-slate-800">New Vault Key</h2>
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-2 text-center">Identity Verified via Secure Link</p>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-800">New Vault Key</h2>
+              <p className="text-xs font-semibold text-blue-600 mt-2 text-center">Identity Verified via Secure Link</p>
             </div>
 
             <form onSubmit={handlePasswordUpdate} className="space-y-6">
@@ -248,7 +248,7 @@ const AuthCallback = () => {
                   value={newPassword} 
                   onChange={(e) => setNewPassword(e.target.value)} 
                   placeholder="NEW PASSWORD" 
-                  className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl pl-14 pr-14 py-5 text-lg font-black outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60" 
+                  className="ui-input pl-14 pr-14 text-lg" 
                 />
                 <button 
                   type="button"
@@ -262,10 +262,10 @@ const AuthCallback = () => {
               <button 
                 type="submit" 
                 disabled={isUpdating || newPassword.length < 6} 
-                className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5"
+                className="relative w-full overflow-hidden bg-blue-600 rounded-2xl p-5 flex items-center justify-center group disabled:opacity-50 transition-all shadow-xl"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative z-10 flex items-center gap-3 text-white font-black text-sm uppercase tracking-widest">
+                <div className="relative z-10 flex items-center gap-3 text-white font-semibold text-sm">
                   {isUpdating ? <RefreshCw size={18} className="animate-spin" /> : 'Confirm Cipher'} 
                   {!isUpdating && <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
                 </div>
@@ -276,19 +276,19 @@ const AuthCallback = () => {
           <div className="flex flex-col items-center space-y-6">
             {isFirstTime && countdown > 0 ? (
               <div className="h-20 w-20 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-inner animate-in zoom-in">
-                 <span className="text-4xl font-black text-emerald-600 animate-pulse">{countdown}</span>
+                 <span className="text-4xl font-bold text-emerald-600 animate-pulse">{countdown}</span>
               </div>
             ) : status.includes('DENIED') || status.includes('EXPIRED') || status.includes('INVALID') || status.includes('USED') ? (
-              <div className="h-12 w-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-500 font-black text-xl shadow-md">X</div>
+              <div className="h-12 w-12 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-500 font-bold text-xl shadow-md">X</div>
             ) : status.includes('ROUTING') ? (
-              <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 font-black text-xl shadow-md">✓</div>
+              <div className="h-12 w-12 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 font-bold text-xl shadow-md"></div>
             ) : (
               <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-500 shadow-sm"></div>
             )}
           </div>
         )}
 
-        <p className={`mt-6 tracking-widest text-[10px] font-black uppercase text-center max-w-[280px] leading-relaxed transition-all ${isError ? 'text-red-500' : 'text-slate-400'}`}>
+        <p className={`mt-6 text-xs font-semibold text-center max-w-[280px] leading-relaxed transition-all ${isError ? 'text-red-500' : 'text-slate-400'}`}>
           {status}
         </p>
 

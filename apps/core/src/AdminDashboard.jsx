@@ -94,9 +94,9 @@ function StatCard({ icon: Icon, label, value, sub, color = 'text-blue-600', bg =
       <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mb-4`}>
         <Icon size={18} className={color}/>
       </div>
-      <p className="text-2xl font-black text-slate-900">{value}</p>
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{label}</p>
-      {sub && <p className="text-[10px] text-slate-600 mt-0.5">{sub}</p>}
+      <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <p className="text-xs font-semibold text-slate-500 mt-1">{label}</p>
+      {sub && <p className="text-xs text-slate-600 mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -484,7 +484,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
         subject: subjects[decision],
         html: `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;">
           <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
-          <p style="font-size:20px;font-weight:900;color:#0f172a;margin:0 0 24px;">⬡ DEUS</p>
+          <p style="font-size:20px;font-weight:900;color:#0f172a;margin:0 0 24px;">DEUS</p>
           ${bodies[decision]}
           <p style="margin-top:32px;font-size:11px;color:#94a3b8;">Infinite Future Bank · Automated compliance notification</p>
           </div></body></html>`,
@@ -900,9 +900,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
           <div className="w-20 h-20 bg-red-50 border border-red-200 rounded-3xl flex items-center justify-center mx-auto">
             <Lock size={36} className="text-red-600"/>
           </div>
-          <h2 className="text-2xl font-black text-slate-900">Access Denied</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Access Denied</h2>
           <p className="text-slate-500">You don't have admin rights on this platform.</p>
-          <button onClick={onClose} className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl transition-colors">
+          <button onClick={onClose} className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-900 font-semibold text-xs rounded-2xl transition-colors">
             Go Back
           </button>
         </div>
@@ -917,7 +917,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
     <div className="fixed inset-0 bg-white z-[600] flex flex-col overflow-hidden">
       {/* Global notification */}
       {notification && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[700] px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-3 animate-in slide-in-from-top-4 text-sm font-black ${notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'}`}>
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[700] px-6 py-3 rounded-2xl border shadow-sm flex items-center gap-3 animate-in slide-in-from-top-4 text-sm font-bold ${notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'}`}>
           {notification.type === 'error' ? <AlertTriangle size={16}/> : <CheckCircle size={16}/>}
           {notification.msg}
         </div>
@@ -930,15 +930,15 @@ export default function AdminDashboard({ session, profile, onClose }) {
             <Shield size={20} className="text-slate-900"/>
           </div>
           <div>
-            <h1 className="font-black text-slate-900 text-sm tracking-tight">DEUS Admin Control Center</h1>
-            <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border mt-0.5 ${roleMeta.color}`}>
+            <h1 className="font-bold text-slate-900 text-sm tracking-tight">DEUS Admin Control Center</h1>
+            <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border mt-0.5 ${roleMeta.color}`}>
               <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"/>
               {roleMeta.label}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] text-slate-500 hidden md:block">{session.user.email}</span>
+          <span className="text-xs text-slate-500 hidden md:block">{session.user.email}</span>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 text-slate-500 hover:text-slate-900 rounded-xl transition-colors">
             <X size={20}/>
           </button>
@@ -949,7 +949,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
       <div className="flex overflow-x-auto no-scrollbar border-b border-slate-200 bg-white shrink-0">
         {allowedTabs.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-5 py-3.5 whitespace-nowrap text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-600'}`}>
+            className={`flex items-center gap-2 px-5 py-3.5 whitespace-nowrap text-sm font-semibold border-b-2 transition-all ${activeTab === id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-600'}`}>
             <Icon size={13}/>{label}
           </button>
         ))}
@@ -963,8 +963,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900">Platform Overview</h2>
-                <button onClick={loadStats} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-bold text-slate-900">Platform Overview</h2>
+                <button onClick={loadStats} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
@@ -997,8 +997,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <item.icon size={20} className={item.iconColor}/>
                           <ChevronRight size={16} className="text-slate-600"/>
                         </div>
-                        <p className="text-3xl font-black text-slate-900">{item.count}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{item.label}</p>
+                        <p className="text-3xl font-bold text-slate-900">{item.count}</p>
+                        <p className="text-xs font-semibold text-slate-500 mt-1">{item.label}</p>
                       </button>
                     ))}
                   </div>
@@ -1013,16 +1013,16 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'users' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900">User Management</h2>
+                <h2 className="text-2xl font-bold text-slate-900">User Management</h2>
                 <div className="flex gap-3">
                   <div className="relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"/>
                     <input value={userSearch} onChange={e => setUserSearch(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && loadUsers(userSearch)}
                       placeholder="Search email or name..."
-                      className="bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-900 font-medium outline-none focus:border-blue-500 w-64 transition-colors"/>
+                      className="ui-input pl-9 pr-4 font-medium w-64"/>
                   </div>
-                  <button onClick={() => loadUsers(userSearch)} className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                  <button onClick={() => loadUsers(userSearch)} className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl transition-colors">
                     Search
                   </button>
                 </div>
@@ -1034,7 +1034,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     <table className="w-full">
                       <thead><tr className="border-b border-slate-200">
                         {['User', 'Email', 'Country', 'KYC', 'Liquid Balance', 'Joined', 'Actions'].map(h => (
-                          <th key={h} className="p-4 text-left text-[9px] font-black uppercase tracking-widest text-slate-500">{h}</th>
+                          <th key={h} className="p-4 text-left text-xs font-semibold text-slate-500">{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
@@ -1042,24 +1042,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <tr key={user.id} className="border-b border-slate-200 hover:bg-slate-100 transition-colors">
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-xs">
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-xs">
                                   {(user.full_name || user.email || 'U')[0].toUpperCase()}
                                 </div>
-                                <span className="font-black text-slate-900 text-sm">{user.full_name || '—'}</span>
+                                <span className="font-bold text-slate-900 text-sm">{user.full_name || '—'}</span>
                               </div>
                             </td>
                             <td className="p-4 text-xs text-slate-500">{user.email}</td>
                             <td className="p-4 text-xs text-slate-500">{user.country || '—'}</td>
                             <td className="p-4">
-                              <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${user.kyc_status === 'verified' ? 'bg-emerald-50 text-emerald-600' : user.kyc_status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
+                              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${user.kyc_status === 'verified' ? 'bg-emerald-50 text-emerald-600' : user.kyc_status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
                                 {user.kyc_status || 'unverified'}
                               </span>
                             </td>
-                            <td className="p-4 font-black text-slate-900 text-sm">{fmtUSD(user.liquid_usd)}</td>
+                            <td className="p-4 font-bold text-slate-900 text-sm">{fmtUSD(user.liquid_usd)}</td>
                             <td className="p-4 text-xs text-slate-500">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</td>
                             <td className="p-4">
                               <button onClick={() => { setSelectedUser(user); setUserDetailTab('profile'); setUserEdits({}); }}
-                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-[9px] uppercase rounded-lg transition-colors">
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm rounded-lg transition-colors">
                                 View
                               </button>
                             </td>
@@ -1077,16 +1077,16 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   {/* Header */}
                   <div className="p-5 border-b border-slate-200 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-lg">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-lg">
                         {(selectedUser.full_name || selectedUser.email || 'U')[0].toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-black text-slate-900 text-sm leading-tight">{selectedUser.full_name || '—'}</p>
-                        <p className="text-[10px] text-slate-500">{selectedUser.email}</p>
+                        <p className="font-bold text-slate-900 text-sm leading-tight">{selectedUser.full_name || '—'}</p>
+                        <p className="text-xs text-slate-500">{selectedUser.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
                         selectedUser.kyc_status === 'verified' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
                         selectedUser.kyc_status === 'suspended' ? 'text-red-600 bg-red-50 border-red-200' :
                         selectedUser.kyc_status === 'rejected' ? 'text-red-600 bg-red-50 border-red-200' :
@@ -1105,7 +1105,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       { id: 'actions', label: 'Actions', icon: ShieldAlert },
                     ].map(t => (
                       <button key={t.id} onClick={() => setUserDetailTab(t.id)}
-                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-[9px] font-black uppercase tracking-widest transition-colors border-b-2 ${userDetailTab === t.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-600'}`}>
+                        className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-sm font-semibold transition-colors border-b-2 ${userDetailTab === t.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-600'}`}>
                         <t.icon size={12}/>
                         {t.label}
                       </button>
@@ -1127,19 +1127,19 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             { key: 'date_of_birth', label: 'Date of Birth', type: 'date' },
                           ].map(({ key, label, type }) => (
                             <div key={key} className="col-span-2 space-y-1">
-                              <label className="text-[9px] font-black uppercase text-slate-500">{label}</label>
+                              <label className="ui-label">{label}</label>
                               <input
                                 type={type}
                                 value={userEdits[key] !== undefined ? userEdits[key] : (selectedUser[key] || '')}
                                 onChange={e => setUserEdits(u => ({ ...u, [key]: e.target.value }))}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                                className="ui-input"
                               />
                             </div>
                           ))}
                         </div>
                         {Object.keys(userEdits).length > 0 && (
                           <button onClick={handleSaveUserProfile} disabled={savingUser}
-                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors">
+                            className="ui-btn ui-btn-primary">
                             {savingUser ? <Loader2 size={12} className="animate-spin"/> : <Save size={12}/>}
                             Save Profile
                           </button>
@@ -1152,13 +1152,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             { label: 'Joined', val: selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : '—' },
                           ].map(({ label, val }) => (
                             <div key={label} className="flex justify-between">
-                              <span className="text-[9px] font-black uppercase text-slate-500">{label}</span>
-                              <span className="text-[10px] font-black text-slate-600">{val}</span>
+                              <span className="text-xs font-semibold text-slate-500">{label}</span>
+                              <span className="text-xs font-bold text-slate-600">{val}</span>
                             </div>
                           ))}
                         </div>
                         <button onClick={() => { setBoUser(selectedUser); setActiveTab('backoffice'); setSelectedUser(null); }}
-                          className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[9px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors">
+                          className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors">
                           <LayoutDashboard size={11}/> View in Back Office
                         </button>
                       </div>
@@ -1169,51 +1169,51 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
                           <div className="bg-slate-50 rounded-xl p-3 text-center">
-                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1">Liquid Wallet</p>
-                            <p className="text-base font-black text-slate-900">{fmtUSD(selectedUser.liquid_usd)}</p>
+                            <p className="text-xs font-semibold text-slate-500 mb-1">Liquid Wallet</p>
+                            <p className="text-base font-bold text-slate-900">{fmtUSD(selectedUser.liquid_usd)}</p>
                           </div>
                           <div className="bg-slate-50 rounded-xl p-3 text-center">
-                            <p className="text-[9px] font-black uppercase text-slate-500 mb-1">My Safe</p>
-                            <p className="text-base font-black text-slate-900">{fmtUSD(selectedUser.mysafe_digital_usd)}</p>
+                            <p className="text-xs font-semibold text-slate-500 mb-1">My Safe</p>
+                            <p className="text-base font-bold text-slate-900">{fmtUSD(selectedUser.mysafe_digital_usd)}</p>
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase text-slate-500">Wallet</label>
+                          <label className="ui-label">Wallet</label>
                           <div className="grid grid-cols-2 gap-2">
                             {['liquid', 'vault'].map(w => (
                               <button key={w} onClick={() => setBalanceAdj(b => ({ ...b, wallet: w }))}
-                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.wallet === w ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                                className={`py-2 rounded-xl font-semibold text-sm border transition-colors ${balanceAdj.wallet === w ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                 {w === 'liquid' ? 'Liquid' : 'My Safe'}
                               </button>
                             ))}
                           </div>
-                          <label className="text-[9px] font-black uppercase text-slate-500">Operation</label>
+                          <label className="ui-label">Operation</label>
                           <div className="grid grid-cols-2 gap-2">
                             {['credit', 'debit'].map(t => (
                               <button key={t} onClick={() => setBalanceAdj(b => ({ ...b, type: t }))}
-                                className={`py-2 rounded-xl font-black text-[9px] uppercase tracking-widest border transition-colors ${balanceAdj.type === t ? (t === 'credit' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-700 border-red-600 text-white') : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                                className={`py-2 rounded-xl font-semibold text-sm border transition-colors ${balanceAdj.type === t ? (t === 'credit' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-700 border-red-600 text-white') : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                 {t === 'credit' ? '+ Credit' : '− Debit'}
                               </button>
                             ))}
                           </div>
-                          <label className="text-[9px] font-black uppercase text-slate-500">Amount (USD)</label>
+                          <label className="ui-label">Amount (USD)</label>
                           <input
                             type="number" min="0" step="0.01"
                             value={balanceAdj.amount}
                             onChange={e => setBalanceAdj(b => ({ ...b, amount: e.target.value }))}
                             placeholder="0.00"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="ui-input"
                           />
-                          <label className="text-[9px] font-black uppercase text-slate-500">Reason</label>
+                          <label className="ui-label">Reason</label>
                           <input
                             type="text"
                             value={balanceAdj.reason}
                             onChange={e => setBalanceAdj(b => ({ ...b, reason: e.target.value }))}
                             placeholder="Bonus, correction, withdrawal…"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="ui-input"
                           />
                           <button onClick={handleAdjustBalance} disabled={adjLoading || !balanceAdj.amount}
-                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${balanceAdj.type === 'credit' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-700 hover:bg-red-600 text-white'} disabled:opacity-50`}>
+                            className={`w-full py-2.5 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors ${balanceAdj.type === 'credit' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-red-700 hover:bg-red-600 text-white'} disabled:opacity-50`}>
                             {adjLoading ? <Loader2 size={12} className="animate-spin"/> : <DollarSign size={12}/>}
                             Apply {balanceAdj.type === 'credit' ? 'Credit' : 'Debit'}
                           </button>
@@ -1224,26 +1224,26 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* ── NOTIFY TAB ── */}
                     {userDetailTab === 'notify' && (
                       <div className="space-y-3">
-                        <p className="text-[10px] text-slate-500">Send a direct notification to this user's app.</p>
+                        <p className="text-xs text-slate-500">Send a direct notification to this user's app.</p>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase text-slate-500">Title</label>
+                          <label className="ui-label">Title</label>
                           <input
                             type="text"
                             value={userNotif.title}
                             onChange={e => setUserNotif(n => ({ ...n, title: e.target.value }))}
                             placeholder="e.g. Account Update"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="ui-input"
                           />
-                          <label className="text-[9px] font-black uppercase text-slate-500">Message</label>
+                          <label className="ui-label">Message</label>
                           <textarea
                             value={userNotif.message}
                             onChange={e => setUserNotif(n => ({ ...n, message: e.target.value }))}
                             placeholder="Your message…"
                             rows={4}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+                            className="ui-textarea resize-none"
                           />
                           <button onClick={handleSendUserNotif} disabled={sendingUserNotif}
-                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
+                            className="ui-btn ui-btn-primary">
                             {sendingUserNotif ? <Loader2 size={12} className="animate-spin"/> : <Send size={12}/>}
                             Send Notification
                           </button>
@@ -1254,7 +1254,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* ── ACTIONS TAB ── */}
                     {userDetailTab === 'actions' && (
                       <div className="space-y-2">
-                        <p className="text-[9px] font-black uppercase text-slate-500 mb-2">KYC Status</p>
+                        <p className="text-xs font-semibold text-slate-500 mb-2">KYC Status</p>
                         {[
                           { status: 'verified', label: 'Verify KYC', icon: UserCheck, cls: 'bg-emerald-600 hover:bg-emerald-500 text-white' },
                           { status: 'pending', label: 'Mark Pending', icon: Clock, cls: 'bg-amber-700 hover:bg-amber-600 text-white' },
@@ -1272,14 +1272,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 loadUsers(userSearch);
                               } catch (e) { notify(e.message, 'error'); }
                             }}
-                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${cls}`}>
+                            className={`w-full py-2.5 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors ${cls}`}>
                             <Icon size={12}/> {label}
                           </button>
                         ))}
                         <div className="border-t border-slate-200 pt-2 mt-2">
-                          <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Account</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-2">Account</p>
                           <button onClick={handleToggleSuspend}
-                            className={`w-full py-2.5 font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 transition-colors ${selectedUser.kyc_status === 'suspended' ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-red-50 hover:bg-red-50 border border-red-200 text-red-600'}`}>
+                            className={`w-full py-2.5 font-semibold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors ${selectedUser.kyc_status === 'suspended' ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-red-50 hover:bg-red-50 border border-red-200 text-red-600'}`}>
                             {selectedUser.kyc_status === 'suspended' ? <><Unlock size={12}/> Unsuspend User</> : <><Lock size={12}/> Suspend User</>}
                           </button>
                         </div>
@@ -1296,8 +1296,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'kyc' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900">KYC Review Queue</h2>
-                <button onClick={loadKyc} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-bold text-slate-900">KYC Review Queue</h2>
+                <button onClick={loadKyc} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
@@ -1316,8 +1316,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       { label: 'Needs Info', value: fmtNum((stats.kyc_needs_info)||0), color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
                     ].map(s => (
                       <div key={s.label} className={`rounded-2xl border p-4 ${s.bg}`}>
-                        <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{s.label}</p>
+                        <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                        <p className="text-xs font-semibold text-slate-500 mt-1">{s.label}</p>
                       </div>
                     ))}
                   </div>
@@ -1327,7 +1327,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                     {/* Approval Rate donut-style */}
                     <div className="bg-white border border-slate-200 rounded-2xl p-5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Approval Rate</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-4">Approval Rate</p>
                       {(() => {
                         const total = (stats.kyc_approved||0) + (stats.kyc_rejected||0) + (stats.kyc_pending||0) + (stats.kyc_ai_reviewing||0) + (stats.kyc_needs_info||0);
                         const appRate = total > 0 ? Math.round(((stats.kyc_approved||0) / total) * 100) : 0;
@@ -1336,7 +1336,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         return (
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-4xl font-black text-emerald-600">{appRate}%</span>
+                              <span className="text-4xl font-bold text-emerald-600">{appRate}%</span>
                               <span className="text-xs text-slate-500">of all submissions</span>
                             </div>
                             <div className="w-full bg-slate-50 rounded-full h-3 overflow-hidden flex">
@@ -1344,7 +1344,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <div className="bg-red-500 h-full transition-all" style={{width:`${rejRate}%`}}/>
                               <div className="bg-amber-500 h-full transition-all" style={{width:`${pendRate}%`}}/>
                             </div>
-                            <div className="flex gap-3 text-[10px] font-bold">
+                            <div className="flex gap-3 text-xs font-bold">
                               <span className="text-emerald-600">● Approved {appRate}%</span>
                               <span className="text-red-600">● Rejected {rejRate}%</span>
                               <span className="text-amber-600">● Pending {pendRate}%</span>
@@ -1356,7 +1356,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                     {/* AI Confidence + Risk breakdown */}
                     <div className="bg-white border border-slate-200 rounded-2xl p-5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">AI Confidence & Risk</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-4">AI Confidence & Risk</p>
                       <div className="space-y-3">
                         <div>
                           <div className="flex justify-between text-xs font-bold mb-1">
@@ -1377,7 +1377,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             const pct = riskTotal > 0 ? Math.round((r.val/riskTotal)*100) : 0;
                             return (
                               <div key={r.label}>
-                                <div className="flex justify-between text-[10px] font-bold mb-1">
+                                <div className="flex justify-between text-xs font-bold mb-1">
                                   <span className={r.text}>{r.label}</span>
                                   <span className="text-slate-500">{r.val} · {pct}%</span>
                                 </div>
@@ -1393,7 +1393,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                     {/* User verification funnel */}
                     <div className="bg-white border border-slate-200 rounded-2xl p-5">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Verification Funnel</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-4">Verification Funnel</p>
                       <div className="space-y-3">
                         {[
                           { label: 'Total Users', val: stats.total_users||0, color: 'bg-slate-200', pct: 100 },
@@ -1401,7 +1401,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           { label: 'Verified', val: stats.verified_users||0, color: 'bg-emerald-600', pct: stats.total_users > 0 ? Math.round(((stats.verified_users||0)/stats.total_users)*100) : 0 },
                         ].map(f => (
                           <div key={f.label}>
-                            <div className="flex justify-between text-[10px] font-bold mb-1">
+                            <div className="flex justify-between text-xs font-bold mb-1">
                               <span className="text-slate-600">{f.label}</span>
                               <span className="text-slate-500">{fmtNum(f.val)} ({f.pct}%)</span>
                             </div>
@@ -1412,16 +1412,16 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         ))}
                         <div className="pt-2 border-t border-slate-200">
                           <div className="flex justify-between">
-                            <span className="text-[10px] text-slate-500 font-bold">New Users (7d)</span>
-                            <span className="text-[10px] text-blue-600 font-black">+{fmtNum(stats.new_users_7d||0)}</span>
+                            <span className="text-xs text-slate-500 font-bold">New Users (7d)</span>
+                            <span className="text-xs text-blue-600 font-bold">+{fmtNum(stats.new_users_7d||0)}</span>
                           </div>
                           <div className="flex justify-between mt-1">
-                            <span className="text-[10px] text-slate-500 font-bold">Failed Ops (24h)</span>
-                            <span className={`text-[10px] font-black ${(stats.failed_ops_24h||0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmtNum(stats.failed_ops_24h||0)}</span>
+                            <span className="text-xs text-slate-500 font-bold">Failed Ops (24h)</span>
+                            <span className={`text-xs font-bold ${(stats.failed_ops_24h||0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{fmtNum(stats.failed_ops_24h||0)}</span>
                           </div>
                           <div className="flex justify-between mt-1">
-                            <span className="text-[10px] text-slate-500 font-bold">30d Txn Volume</span>
-                            <span className="text-[10px] text-amber-600 font-black">{fmtUSD(stats.txn_volume||0)}</span>
+                            <span className="text-xs text-slate-500 font-bold">30d Txn Volume</span>
+                            <span className="text-xs text-amber-600 font-bold">{fmtUSD(stats.txn_volume||0)}</span>
                           </div>
                         </div>
                       </div>
@@ -1458,19 +1458,19 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       {/* ── Header ── */}
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="font-black text-slate-900 text-base">{sub.legal_full_name || sub.profiles?.full_name || '—'}</p>
+                          <p className="font-bold text-slate-900 text-base">{sub.legal_full_name || sub.profiles?.full_name || '—'}</p>
                           <p className="text-xs text-slate-500">{sub.profiles?.email}{sub.email_primary ? ` · ${sub.email_primary}` : ''}</p>
-                          <p className="text-[9px] text-slate-600 mt-0.5 font-mono">{sub.id}</p>
+                          <p className="text-xs text-slate-600 mt-0.5 font-mono">{sub.id}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1.5">
-                          <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${
+                          <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
                             sub.status === 'approved'      ? 'text-emerald-600 bg-emerald-50 border-emerald-200' :
                             sub.status === 'rejected'      ? 'text-red-600 bg-red-50 border-red-200' :
                             sub.status === 'ai_reviewing'  ? 'text-blue-600 bg-blue-50 border-blue-200' :
                                                              'text-amber-600 bg-amber-50 border-amber-200'
                           }`}>{sub.status?.replace(/_/g,' ')}</span>
                           {sub.risk_rating && (
-                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
                               sub.risk_rating === 'low'    ? 'text-emerald-600 border-emerald-200' :
                               sub.risk_rating === 'medium' ? 'text-amber-600 border-amber-200' :
                                                              'text-red-600 border-red-200'
@@ -1483,14 +1483,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <div className={`bg-${confColor}-950/20 border border-${confColor}-700/30 rounded-2xl p-4`}>
                         <div className="flex items-center justify-between mb-2">
                           <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">AI Confidence Score</p>
-                            <p className={`text-sm font-black text-${confColor}-400`}>
+                            <p className="text-xs font-semibold text-slate-500">AI Confidence Score</p>
+                            <p className={`text-sm font-bold text-${confColor}-400`}>
                               {confPct != null ? `${confPct}%` : 'Not scored yet'}
-                              {sub.ai_recommendation && <span className="ml-2 text-[10px] font-bold text-slate-500 normal-case">· {sub.ai_recommendation}</span>}
+                              {sub.ai_recommendation && <span className="ml-2 text-xs font-bold text-slate-500 normal-case">· {sub.ai_recommendation}</span>}
                             </p>
                           </div>
                           {confPct != null && (
-                            <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center text-sm font-black border-${confColor}-500 text-${confColor}-400`}>
+                            <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center text-sm font-bold border-${confColor}-500 text-${confColor}-400`}>
                               {confPct}
                             </div>
                           )}
@@ -1503,7 +1503,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         {sub.ai_flags?.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mt-3">
                             {sub.ai_flags.map(flag => (
-                              <span key={flag} className="text-[8px] font-black uppercase text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{flag.replace(/_/g,' ')}</span>
+                              <span key={flag} className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{flag.replace(/_/g,' ')}</span>
                             ))}
                           </div>
                         )}
@@ -1512,24 +1512,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       {/* ── Face check (ID front + selfie side-by-side) ── */}
                       {(sub.id_front_url || sub.selfie_with_id_url || sub.selfie_url) && (
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Face Verification</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-2">Face Verification</p>
                           <div className="grid grid-cols-3 gap-3">
                             {sub.id_front_url && (
                               <a href={sub.id_front_url} target="_blank" rel="noreferrer" className="group relative">
                                 <img src={sub.id_front_url} alt="ID Front" className="w-full h-28 object-cover rounded-xl border border-slate-200 group-hover:border-violet-200 transition-colors"/>
-                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">ID Front</span>
+                                <span className="absolute bottom-1.5 left-1.5 text-xs font-semibold bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">ID Front</span>
                               </a>
                             )}
                             {(sub.selfie_with_id_url || sub.selfie_url) && (
                               <a href={sub.selfie_with_id_url || sub.selfie_url} target="_blank" rel="noreferrer" className="group relative">
                                 <img src={sub.selfie_with_id_url || sub.selfie_url} alt="Selfie" className="w-full h-28 object-cover rounded-xl border border-slate-200 group-hover:border-violet-200 transition-colors"/>
-                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">Selfie</span>
+                                <span className="absolute bottom-1.5 left-1.5 text-xs font-semibold bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">Selfie</span>
                               </a>
                             )}
                             {sub.id_back_url && (
                               <a href={sub.id_back_url} target="_blank" rel="noreferrer" className="group relative">
                                 <img src={sub.id_back_url} alt="ID Back" className="w-full h-28 object-cover rounded-xl border border-slate-200 group-hover:border-violet-200 transition-colors"/>
-                                <span className="absolute bottom-1.5 left-1.5 text-[8px] font-black uppercase bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">ID Back</span>
+                                <span className="absolute bottom-1.5 left-1.5 text-xs font-semibold bg-slate-50 text-slate-900 px-1.5 py-0.5 rounded backdrop-blur-sm">ID Back</span>
                               </a>
                             )}
                           </div>
@@ -1553,8 +1553,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           { label: 'Country', val: sub.residential_country || '—' },
                         ].map(({ label, val }) => (
                           <div key={label} className="bg-slate-50 rounded-xl p-2.5">
-                            <p className="text-[8px] font-black uppercase text-slate-500 mb-0.5">{label}</p>
-                            <p className={`text-xs font-black truncate ${val?.toString().includes('⚠️') ? 'text-amber-600' : 'text-slate-900'}`}>{val}</p>
+                            <p className="text-xs font-semibold text-slate-500 mb-0.5">{label}</p>
+                            <p className={`text-xs font-bold truncate ${val?.toString().includes('⚠️') ? 'text-amber-600' : 'text-slate-900'}`}>{val}</p>
                           </div>
                         ))}
                       </div>
@@ -1562,12 +1562,12 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       {/* ── Additional document thumbnails ── */}
                       {imgFields.some(f => sub[f.key] && !['id_front_url','id_back_url','selfie_url','selfie_with_id_url'].includes(f.key)) && (
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Supporting Documents</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-2">Supporting Documents</p>
                           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                             {imgFields.filter(f => !['id_front_url','id_back_url','selfie_url','selfie_with_id_url'].includes(f.key) && sub[f.key]).map(f => (
                               <a key={f.key} href={sub[f.key]} target="_blank" rel="noreferrer" className="group relative">
                                 <img src={sub[f.key]} alt={f.label} className="w-full h-20 object-cover rounded-lg border border-slate-200 group-hover:border-blue-200 transition-colors"/>
-                                <span className="absolute bottom-1 left-1 text-[7px] font-black uppercase bg-slate-50 text-slate-900 px-1 py-0.5 rounded backdrop-blur-sm leading-tight">{f.label}</span>
+                                <span className="absolute bottom-1 left-1 text-xs font-semibold bg-slate-50 text-slate-900 px-1 py-0.5 rounded backdrop-blur-sm leading-tight">{f.label}</span>
                               </a>
                             ))}
                           </div>
@@ -1577,10 +1577,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       {/* ── File links for non-image documents ── */}
                       {fileFields.some(f => sub[f.key]) && (
                         <div className="flex flex-wrap gap-2">
-                          <p className="text-[9px] font-black uppercase text-slate-500 w-full">Files</p>
+                          <p className="text-xs font-semibold text-slate-500 w-full">Files</p>
                           {fileFields.filter(f => sub[f.key]).map(f => (
                             <a key={f.key} href={sub[f.key]} target="_blank" rel="noreferrer"
-                              className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1">
+                              className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1">
                               <FileText size={9}/>{f.label}
                             </a>
                           ))}
@@ -1594,22 +1594,22 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 space-y-3">
                             <div className="flex items-center gap-2">
                               <Brain size={12} className="text-violet-600"/>
-                              <span className="text-[9px] font-black uppercase tracking-widest text-violet-600">AI Doc Scan — Auto-Extract KYC Data</span>
+                              <span className="text-xs font-semibold text-violet-600">AI Doc Scan — Auto-Extract KYC Data</span>
                               {scan.scanning && <Loader2 size={10} className="animate-spin text-violet-600 ml-auto"/>}
                             </div>
                             {!scan.scanning && scan.fields?.length > 0 && (
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 {scan.fields.map(f => (
                                   <div key={f.label} className="bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-                                    <p className="text-[7px] font-black uppercase text-emerald-500">{f.label}</p>
-                                    <p className="text-[10px] font-bold text-slate-900 truncate">{f.value}</p>
-                                    <p className="text-[7px] text-emerald-600">{Math.round((f.confidence||0)*100)}% conf.</p>
+                                    <p className="text-xs font-semibold text-emerald-500">{f.label}</p>
+                                    <p className="text-xs font-bold text-slate-900 truncate">{f.value}</p>
+                                    <p className="text-xs text-emerald-600">{Math.round((f.confidence||0)*100)}% conf.</p>
                                   </div>
                                 ))}
                               </div>
                             )}
-                            {scan.error && <p className="text-[10px] text-red-600">{scan.error}</p>}
-                            <label className={`flex items-center gap-2 px-4 py-2.5 border border-dashed rounded-xl cursor-pointer transition-all text-[9px] font-black uppercase tracking-widest w-fit ${scan.scanning ? 'opacity-50 cursor-default border-slate-200 text-slate-600' : 'border-violet-600/50 hover:border-violet-500 text-violet-600 hover:bg-violet-50'}`}>
+                            {scan.error && <p className="text-xs text-red-600">{scan.error}</p>}
+                            <label className={`flex items-center gap-2 px-4 py-2.5 border border-dashed rounded-xl cursor-pointer transition-all text-xs font-semibold w-fit ${scan.scanning ? 'opacity-50 cursor-default border-slate-200 text-slate-600' : 'border-violet-600/50 hover:border-violet-500 text-violet-600 hover:bg-violet-50'}`}>
                               {scan.scanning ? <Loader2 size={11} className="animate-spin"/> : <Upload size={11}/>}
                               {scan.scanning ? 'Scanning...' : scan.fields?.length > 0 ? 'Scan Another Doc' : 'Upload Doc for AI Scan'}
                               <input type="file" className="hidden" disabled={scan.scanning}
@@ -1625,7 +1625,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         <button
                           onClick={() => handleAriaReview(sub.user_id)}
                           disabled={ariaRunning[sub.user_id]}
-                          className="w-full py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2"
+                          className="ui-btn ui-btn-primary"
                         >
                           {ariaRunning[sub.user_id]
                             ? <><Loader2 size={13} className="animate-spin"/> ARIA is reviewing…</>
@@ -1641,19 +1641,19 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           return (
                             <div className={`border rounded-xl p-4 space-y-2 ${decisionColor}`}>
                               <div className="flex items-center justify-between">
-                                <span className="font-black text-xs uppercase tracking-widest">
+                                <span className="font-semibold text-xs">
                                   ARIA: {r.decision?.replace(/_/g,' ')}
                                 </span>
-                                <span className="text-[10px] font-black opacity-70">{r.confidence}% confidence · <span className={riskColor}>{r.risk_rating?.toUpperCase()} RISK</span></span>
+                                <span className="text-xs font-bold opacity-70">{r.confidence}% confidence · <span className={riskColor}>{r.risk_rating?.toUpperCase()} RISK</span></span>
                               </div>
                               {r.reviewer_notes && <p className="text-[11px] opacity-80 leading-relaxed">{r.reviewer_notes}</p>}
                               {r.flags?.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
-                                  {r.flags.map(f => <span key={f} className="px-2 py-0.5 bg-slate-50 text-slate-600 rounded-full text-[9px] font-black uppercase">{f}</span>)}
+                                  {r.flags.map(f => <span key={f} className="px-2 py-0.5 bg-slate-50 text-slate-600 rounded-full text-xs font-semibold">{f}</span>)}
                                 </div>
                               )}
                               {(r.missing_fields?.length > 0 || r.missing_docs?.length > 0) && (
-                                <div className="text-[10px] opacity-70">
+                                <div className="text-xs opacity-70">
                                   {r.missing_fields?.length > 0 && <p>Missing fields: {r.missing_fields.join(', ')}</p>}
                                   {r.missing_docs?.length > 0 && <p>Missing docs: {r.missing_docs.join(', ')}</p>}
                                 </div>
@@ -1666,20 +1666,20 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       {/* ── Manual override row ── */}
                       <div className="flex flex-col md:flex-row gap-3 pt-2 border-t border-slate-200">
                         <input
-                          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-violet-200 focus:ring-2 focus:ring-violet-200"
+                          className="ui-input flex-1"
                           placeholder="Reviewer notes / rejection reason (optional)"
                           id={`kyc-note-${sub.id}`}
                         />
                         <button onClick={() => handleKycAction(sub.user_id, 'approved', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
                           <CheckCircle size={13}/> Approve
                         </button>
                         <button onClick={() => handleKycAction(sub.user_id, 'needs_more_info', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-5 py-2.5 bg-amber-50 hover:bg-amber-600/40 border border-amber-200 text-amber-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          className="px-5 py-2.5 bg-amber-50 hover:bg-amber-600/40 border border-amber-200 text-amber-600 font-semibold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
                           <AlertTriangle size={13}/> Request Info
                         </button>
                         <button onClick={() => handleKycAction(sub.user_id, 'rejected', document.getElementById(`kyc-note-${sub.id}`)?.value)}
-                          className="px-5 py-2.5 bg-red-50 hover:bg-red-50 border border-red-200 text-red-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
+                          className="px-5 py-2.5 bg-red-50 hover:bg-red-50 border border-red-200 text-red-600 font-semibold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 shrink-0">
                           <X size={13}/> Reject
                         </button>
                       </div>
@@ -1693,7 +1693,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── REGISTER USER ─── */}
           {activeTab === 'register' && (
             <div className="space-y-6 animate-in fade-in max-w-2xl">
-              <h2 className="text-2xl font-black text-slate-900">Register New User</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Register New User</h2>
               <div className="bg-white border border-slate-200 rounded-3xl p-8 space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
@@ -1707,17 +1707,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     { key:'source_of_revenue',label:'Source of Revenue',   type:'text' },
                   ].map(({ key, label, type }) => (
                     <div key={key}>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
+                      <label className="ui-label">{label}</label>
                       <input type={type} value={regForm[key]} onChange={e => setRegForm(f => ({...f, [key]: e.target.value}))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
+                        className="ui-input" />
                     </div>
                   ))}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Role</label>
+                    <label className="ui-label">Role</label>
                     <select value={regForm.role} onChange={e => setRegForm(f => ({...f, role: e.target.value}))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500">
+                      className="ui-select">
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
                       <option value="admin_l3">Admin L3</option>
@@ -1725,9 +1725,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">KYC Status</label>
+                    <label className="ui-label">KYC Status</label>
                     <select value={regForm.kyc_status} onChange={e => setRegForm(f => ({...f, kyc_status: e.target.value}))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-500">
+                      className="ui-select">
                       <option value="unverified">Unverified</option>
                       <option value="pending_kyc">Pending KYC</option>
                       <option value="verified">Verified</option>
@@ -1746,7 +1746,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     } catch(e) { notify(e.message, 'error'); }
                     finally { setRegistering(false); }
                   }}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  className="ui-btn ui-btn-primary">
                   {registering ? <><Loader2 size={14} className="animate-spin"/> Creating...</> : <><UserCheck size={14}/> Create User Account</>}
                 </button>
               </div>
@@ -1757,8 +1757,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'documents' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900">KYC Documents</h2>
-                <button onClick={loadDocuments} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-bold text-slate-900">KYC Documents</h2>
+                <button onClick={loadDocuments} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
@@ -1768,27 +1768,27 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     <div key={doc.id} className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="font-black text-slate-900">{doc.user_full_name || doc.legal_full_name || '—'}</p>
+                          <p className="font-bold text-slate-900">{doc.user_full_name || doc.legal_full_name || '—'}</p>
                           <p className="text-xs text-slate-500">{doc.user_email}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">{doc.user_id}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{doc.user_id}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
-                          <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${doc.status==='approved'?'text-emerald-600 bg-emerald-50 border-emerald-200':doc.status==='rejected'?'text-red-600 bg-red-50 border-red-200':'text-amber-600 bg-amber-50 border-amber-200'}`}>{doc.status?.replace(/_/g,' ')}</span>
-                          {doc.risk_rating && <span className="text-[9px] text-slate-500 font-bold">Risk: {doc.risk_rating}</span>}
-                          {doc.ai_confidence_score != null && <span className="text-[9px] text-blue-600 font-bold">AI: {doc.ai_confidence_score}%</span>}
+                          <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${doc.status==='approved'?'text-emerald-600 bg-emerald-50 border-emerald-200':doc.status==='rejected'?'text-red-600 bg-red-50 border-red-200':'text-amber-600 bg-amber-50 border-amber-200'}`}>{doc.status?.replace(/_/g,' ')}</span>
+                          {doc.risk_rating && <span className="text-xs text-slate-500 font-bold">Risk: {doc.risk_rating}</span>}
+                          {doc.ai_confidence_score != null && <span className="text-xs text-blue-600 font-bold">AI: {doc.ai_confidence_score}%</span>}
                         </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {[['Nationality', doc.nationality], ['ID Type', doc.id_type], ['Income', doc.monthly_income_usd ? fmtUSD(doc.monthly_income_usd)+'/mo' : '—'], ['PEP', doc.politically_exposed_person ? '⚠️ YES' : 'No']].map(([l,v]) => (
                           <div key={l} className="bg-slate-50 rounded-xl p-2">
-                            <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
+                            <p className="text-xs font-semibold text-slate-500">{l}</p>
                             <p className="text-xs font-bold text-slate-900">{v || '—'}</p>
                           </div>
                         ))}
                       </div>
                       {doc.ai_flags?.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {doc.ai_flags.map(f => <span key={f} className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
+                          {doc.ai_flags.map(f => <span key={f} className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
                         </div>
                       )}
                       <div className="flex flex-wrap gap-2">
@@ -1800,24 +1800,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           ['Board Resolution', doc.board_resolution_url],
                         ].filter(([,url]) => url).map(([label, url]) => (
                           <a key={label} href={url} target="_blank" rel="noreferrer"
-                            className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 flex items-center gap-1">
+                            className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 flex items-center gap-1">
                             <Eye size={10}/>{label}
                           </a>
                         ))}
                       </div>
                       {doc.status !== 'approved' && doc.status !== 'rejected' && (
                         <div className="flex gap-3 pt-2 border-t border-slate-200">
-                          <input id={`docnote-${doc.id}`} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none" placeholder="Notes..." />
+                          <input id={`docnote-${doc.id}`} className="ui-input flex-1" placeholder="Notes..." />
                           <button onClick={() => handleKycAction(doc.user_id, 'approved', document.getElementById(`docnote-${doc.id}`)?.value)}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl flex items-center gap-1">
                             <CheckCircle size={12}/> Approve
                           </button>
                           <button onClick={() => handleKycAction(doc.user_id, 'needs_more_info', document.getElementById(`docnote-${doc.id}`)?.value)}
-                            className="px-4 py-2 bg-amber-600/30 border border-amber-200 text-amber-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            className="px-4 py-2 bg-amber-600/30 border border-amber-200 text-amber-600 font-semibold text-sm rounded-xl flex items-center gap-1">
                             <AlertTriangle size={12}/> More Info
                           </button>
                           <button onClick={() => handleKycAction(doc.user_id, 'rejected', document.getElementById(`docnote-${doc.id}`)?.value)}
-                            className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 font-semibold text-sm rounded-xl flex items-center gap-1">
                             <X size={12}/> Reject
                           </button>
                         </div>
@@ -1833,11 +1833,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'transactions' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <h2 className="text-2xl font-black text-slate-900">All Transactions</h2>
+                <h2 className="text-2xl font-bold text-slate-900">All Transactions</h2>
                 <div className="flex items-center gap-3">
                   <input value={txSearch} onChange={e => setTxSearch(e.target.value)} placeholder="Search user / type / status..."
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none w-56" />
-                  <button onClick={loadTransactions} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    className="ui-input w-56" />
+                  <button onClick={loadTransactions} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
@@ -1847,7 +1847,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                        <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500">
                           {['Source','User','Type','Amount','Currency','Status','Date','Notes'].map(h => (
                             <th key={h} className="px-4 py-3 text-left">{h}</th>
                           ))}
@@ -1856,12 +1856,12 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <tbody>
                         {transactions.filter(t => !txSearch || [t.user_email,t.user_name,t.tx_type,t.status,t.source].join(' ').toLowerCase().includes(txSearch.toLowerCase())).map((tx, i) => (
                           <tr key={i} className="border-b border-slate-200 hover:bg-slate-100 transition-colors">
-                            <td className="px-4 py-3"><span className="text-[9px] font-black uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{tx.source?.replace(/_/g,' ')}</span></td>
-                            <td className="px-4 py-3"><p className="font-bold text-slate-900">{tx.user_name || '—'}</p><p className="text-slate-500 text-[10px]">{tx.user_email}</p></td>
+                            <td className="px-4 py-3"><span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{tx.source?.replace(/_/g,' ')}</span></td>
+                            <td className="px-4 py-3"><p className="font-bold text-slate-900">{tx.user_name || '—'}</p><p className="text-slate-500 text-xs">{tx.user_email}</p></td>
                             <td className="px-4 py-3 text-slate-600 font-bold">{tx.tx_type?.replace(/_/g,' ')}</td>
-                            <td className="px-4 py-3 font-black text-slate-900">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
+                            <td className="px-4 py-3 font-bold text-slate-900">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
                             <td className="px-4 py-3 text-slate-500">{tx.currency}</td>
-                            <td className="px-4 py-3"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-600':'tx.status==="failed"||tx.status==="rejected"'?'text-red-600':'text-amber-600'}`}>{tx.status}</span></td>
+                            <td className="px-4 py-3"><span className={`text-xs font-semibold px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-600':'tx.status==="failed"||tx.status==="rejected"'?'text-red-600':'text-amber-600'}`}>{tx.status}</span></td>
                             <td className="px-4 py-3 text-slate-500">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '—'}</td>
                             <td className="px-4 py-3 text-slate-500 max-w-[120px] truncate">{tx.notes || '—'}</td>
                           </tr>
@@ -1879,8 +1879,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'finance' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900">Finance & P2P Orders</h2>
-                <button onClick={loadP2p} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-bold text-slate-900">Finance & P2P Orders</h2>
+                <button onClick={loadP2p} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
@@ -1890,7 +1890,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     <table className="w-full">
                       <thead><tr className="border-b border-slate-200">
                         {['Order ID', 'User', 'Type', 'Amount', 'Payment Method', 'Status', 'Created'].map(h => (
-                          <th key={h} className="p-4 text-left text-[9px] font-black uppercase tracking-widest text-slate-500">{h}</th>
+                          <th key={h} className="p-4 text-left text-xs font-semibold text-slate-500">{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
@@ -1898,10 +1898,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                           <tr key={order.id} className="border-b border-slate-200 hover:bg-slate-100 transition-colors">
                             <td className="p-4 font-mono text-xs text-slate-500">{order.id?.slice(0,8)}</td>
                             <td className="p-4 text-xs text-slate-900 font-bold">{order.profiles?.full_name || order.profiles?.email || '—'}</td>
-                            <td className="p-4"><span className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{order.order_type}</span></td>
-                            <td className="p-4 font-black text-slate-900">{fmtUSD(order.amount_usd)}</td>
+                            <td className="p-4"><span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{order.order_type}</span></td>
+                            <td className="p-4 font-bold text-slate-900">{fmtUSD(order.amount_usd)}</td>
                             <td className="p-4 text-xs text-slate-500 max-w-32 truncate">{order.payment_method}</td>
-                            <td className="p-4"><span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${order.status === 'open' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{order.status}</span></td>
+                            <td className="p-4"><span className={`text-xs font-semibold px-2 py-1 rounded-full ${order.status === 'open' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>{order.status}</span></td>
                             <td className="p-4 text-xs text-slate-500">{new Date(order.created_at).toLocaleDateString()}</td>
                           </tr>
                         ))}
@@ -1918,18 +1918,18 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'applications' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <h2 className="text-2xl font-black text-slate-900">IFB Entrepreneur Applications</h2>
+                <h2 className="text-2xl font-bold text-slate-900">IFB Entrepreneur Applications</h2>
                 <div className="flex items-center gap-3 flex-wrap">
                   <select value={appFilter} onChange={e => setAppFilter(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
+                    className="ui-select">
                     <option value="">All Statuses</option>
                     {Object.entries(APP_STATUS_META).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                   <button onClick={() => setShowCreateApp(s => !s)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl">
                     <Plus size={12}/> Create for User
                   </button>
-                  <button onClick={loadApplications} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                  <button onClick={loadApplications} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
@@ -1938,81 +1938,81 @@ export default function AdminDashboard({ session, profile, onClose }) {
               {/* Create Application Panel */}
               {showCreateApp && (
                 <div className="bg-white border border-indigo-200 rounded-3xl p-6 space-y-5">
-                  <h3 className="font-black text-slate-900 text-sm">Register Application on Behalf of User</h3>
+                  <h3 className="font-bold text-slate-900 text-sm">Register Application on Behalf of User</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-3">
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">User ID (UUID) *</label>
+                      <label className="ui-label">User ID (UUID) *</label>
                       <input value={appForm.user_id} onChange={e => setAppForm(f=>({...f,user_id:e.target.value}))}
                         placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500 font-mono" />
+                        className="ui-input font-mono" />
                     </div>
                     {[['company_name','Company Name *','text'],['sector','Sector','text'],['country','Country','text'],
                       ['capital_ask_usd','Capital Ask (USD)','number'],['annual_revenue_usd','Annual Revenue (USD)','number'],
                       ['website','Website','text']].map(([key,label,type]) => (
                       <div key={key}>
-                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
+                        <label className="ui-label">{label}</label>
                         <input type={type} value={appForm[key]} onChange={e => setAppForm(f=>({...f,[key]:e.target.value}))}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500" />
+                          className="ui-input" />
                       </div>
                     ))}
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Stage</label>
+                      <label className="ui-label">Stage</label>
                       <select value={appForm.stage} onChange={e => setAppForm(f=>({...f,stage:e.target.value}))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
+                        className="ui-select">
                         {['idea','pre_revenue','early','growth','scale'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Package</label>
+                      <label className="ui-label">Package</label>
                       <select value={appForm.package_id} onChange={e => {
                         const pkg = PACKAGES_META[e.target.value];
                         setAppForm(f=>({...f, package_id:e.target.value, package_name:pkg?.name||e.target.value, package_price_usd:pkg?.price||0}));
-                      }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
+                      }} className="ui-select">
                         {Object.entries(PACKAGES_META).map(([k,v]) => <option key={k} value={k}>{v.name} (${v.price})</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Initial Status</label>
+                      <label className="ui-label">Initial Status</label>
                       <select value={appForm.status} onChange={e => setAppForm(f=>({...f,status:e.target.value}))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
+                        className="ui-select">
                         {Object.entries(APP_STATUS_META).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Payment Status</label>
+                      <label className="ui-label">Payment Status</label>
                       <select value={appForm.payment_status} onChange={e => setAppForm(f=>({...f,payment_status:e.target.value}))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none">
+                        className="ui-select">
                         {['admin_created','paid','refunded','waived'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Assign Advisor</label>
+                      <label className="ui-label">Assign Advisor</label>
                       <input value={appForm.assigned_advisor} onChange={e => setAppForm(f=>({...f,assigned_advisor:e.target.value}))}
                         placeholder="Advisor name or email"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-indigo-500" />
+                        className="ui-input" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Problem Statement</label>
+                    <label className="ui-label">Problem Statement</label>
                     <textarea value={appForm.problem_statement} onChange={e => setAppForm(f=>({...f,problem_statement:e.target.value}))}
-                      rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none resize-none" />
+                      rows={2} className="ui-textarea resize-none" />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Solution Statement</label>
+                    <label className="ui-label">Solution Statement</label>
                     <textarea value={appForm.solution_statement} onChange={e => setAppForm(f=>({...f,solution_statement:e.target.value}))}
-                      rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none resize-none" />
+                      rows={2} className="ui-textarea resize-none" />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Internal Notes</label>
+                    <label className="ui-label">Internal Notes</label>
                     <textarea value={appForm.notes} onChange={e => setAppForm(f=>({...f,notes:e.target.value}))}
-                      rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 outline-none resize-none" />
+                      rows={2} className="ui-textarea resize-none" />
                   </div>
                   <div className="flex gap-3">
                     <button onClick={handleCreateApp} disabled={creatingApp || !appForm.user_id || !appForm.company_name}
-                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
+                      className="ui-btn ui-btn-primary w-auto">
                       {creatingApp ? <Loader2 size={14} className="animate-spin"/> : <Rocket size={14}/>} Submit Application
                     </button>
-                    <button onClick={() => setShowCreateApp(false)} className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    <button onClick={() => setShowCreateApp(false)} className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold text-sm rounded-xl">
                       Cancel
                     </button>
                   </div>
@@ -2033,17 +2033,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               className={`w-full text-left p-5 rounded-2xl border transition-all hover:border-indigo-600 ${appDetail?.id===app.id?'border-indigo-600 bg-indigo-50':'border-slate-200 bg-white'}`}>
                               <div className="flex items-start justify-between gap-2 mb-1">
                                 <div>
-                                  <p className="font-black text-slate-900 text-sm">{app.company_name}</p>
+                                  <p className="font-bold text-slate-900 text-sm">{app.company_name}</p>
                                   <p className="text-xs text-slate-500">{app.user_full_name} · {app.user_email}</p>
                                 </div>
-                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border shrink-0 ${statusMeta.cls}`}>{statusMeta.label}</span>
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-full border shrink-0 ${statusMeta.cls}`}>{statusMeta.label}</span>
                               </div>
                               <div className="flex items-center gap-3 mt-2">
-                                <span className={`text-[9px] font-black ${pkgMeta?.color||'text-slate-500'}`}>{app.package_name}</span>
-                                <span className="text-[9px] text-slate-500">{app.sector} · {app.country}</span>
-                                {app.assigned_advisor && <span className="text-[9px] text-emerald-600">⚙ {app.assigned_advisor}</span>}
+                                <span className={`text-xs font-bold ${pkgMeta?.color||'text-slate-500'}`}>{app.package_name}</span>
+                                <span className="text-xs text-slate-500">{app.sector} · {app.country}</span>
+                                {app.assigned_advisor && <span className="text-xs text-emerald-600">{app.assigned_advisor}</span>}
                               </div>
-                              <p className="text-[9px] text-slate-600 mt-1">{new Date(app.created_at).toLocaleString()}</p>
+                              <p className="text-xs text-slate-600 mt-1">{new Date(app.created_at).toLocaleString()}</p>
                             </button>
                           );
                         })
@@ -2054,7 +2054,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   {appDetail ? (
                     <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden">
                       <div className="p-5 border-b border-slate-200">
-                        <p className="font-black text-slate-900">{appDetail.company_name}</p>
+                        <p className="font-bold text-slate-900">{appDetail.company_name}</p>
                         <p className="text-xs text-slate-500">{appDetail.user_full_name} · {appDetail.user_email}</p>
                       </div>
                       <div className="p-5 space-y-4 overflow-y-auto max-h-[70vh]">
@@ -2072,16 +2072,16 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             ['Payment', appDetail.payment_status],
                           ].map(([l,v]) => (
                             <div key={l} className="bg-slate-50 rounded-xl p-2.5">
-                              <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
+                              <p className="text-xs font-semibold text-slate-500">{l}</p>
                               <p className="text-xs font-bold text-slate-900">{v||'—'}</p>
                             </div>
                           ))}
                         </div>
                         {appDetail.problem_statement && (
-                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Problem</p><p className="text-xs text-slate-600 leading-relaxed">{appDetail.problem_statement}</p></div>
+                          <div><p className="text-xs font-semibold text-slate-500 mb-1">Problem</p><p className="text-xs text-slate-600 leading-relaxed">{appDetail.problem_statement}</p></div>
                         )}
                         {appDetail.solution_statement && (
-                          <div><p className="text-[9px] font-black uppercase text-slate-500 mb-1">Solution</p><p className="text-xs text-slate-600 leading-relaxed">{appDetail.solution_statement}</p></div>
+                          <div><p className="text-xs font-semibold text-slate-500 mb-1">Solution</p><p className="text-xs text-slate-600 leading-relaxed">{appDetail.solution_statement}</p></div>
                         )}
                         {appDetail.website && (
                           <a href={appDetail.website} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">{appDetail.website}</a>
@@ -2089,11 +2089,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                         {/* Status buttons */}
                         <div>
-                          <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Update Status</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-2">Update Status</p>
                           <div className="flex flex-wrap gap-2">
                             {Object.entries(APP_STATUS_META).map(([k,v]) => (
                               <button key={k} onClick={() => handleAppUpdate(appDetail.id, k, null, null)}
-                                className={`px-3 py-1.5 border font-black text-[9px] uppercase rounded-xl transition-colors ${appDetail.status===k?v.cls:'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
+                                className={`px-3 py-1.5 border font-semibold text-sm rounded-xl transition-colors ${appDetail.status===k?v.cls:'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
                                 {v.label}
                               </button>
                             ))}
@@ -2102,13 +2102,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                         {/* Advisor */}
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Assign Advisor</label>
+                          <label className="ui-label">Assign Advisor</label>
                           <div className="flex gap-2">
                             <input value={appAdvisor} onChange={e => setAppAdvisor(e.target.value)}
                               placeholder="Name or email"
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-indigo-500" />
+                              className="ui-input flex-1" />
                             <button onClick={() => handleAppUpdate(appDetail.id, null, appAdvisor, null)}
-                              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase rounded-xl">
+                              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl">
                               Assign
                             </button>
                           </div>
@@ -2116,11 +2116,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                         {/* Notes */}
                         <div>
-                          <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Internal Notes</label>
+                          <label className="ui-label">Internal Notes</label>
                           <textarea value={appNotes} onChange={e => setAppNotes(e.target.value)} rows={3}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none resize-none" />
+                            className="ui-textarea resize-none" />
                           <button onClick={() => handleAppUpdate(appDetail.id, null, null, appNotes)}
-                            className="mt-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-[9px] uppercase rounded-xl flex items-center gap-1">
+                            className="mt-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold text-sm rounded-xl flex items-center gap-1">
                             <Save size={12}/> Save Notes
                           </button>
                         </div>
@@ -2140,8 +2140,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'support' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900">Support Tickets</h2>
-                <button onClick={loadTickets} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors">
+                <h2 className="text-2xl font-bold text-slate-900">Support Tickets</h2>
+                <button onClick={loadTickets} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl transition-colors">
                   <RefreshCw size={12}/> Refresh
                 </button>
               </div>
@@ -2155,13 +2155,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         className={`w-full text-left p-5 rounded-2xl border transition-all hover:border-blue-600 ${selectedTicket?.id === ticket.id ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white'}`}>
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div>
-                            <p className="font-black text-slate-900 text-sm">{ticket.user_full_name || '—'}</p>
+                            <p className="font-bold text-slate-900 text-sm">{ticket.user_full_name || '—'}</p>
                             <p className="text-xs text-slate-500">{ticket.user_email}</p>
                           </div>
-                          <span className="text-[9px] font-black uppercase text-red-600 bg-red-50 px-2 py-1 rounded-full shrink-0">Open</span>
+                          <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1 rounded-full shrink-0">Open</span>
                         </div>
                         {ticket.subject && <p className="text-xs text-slate-500 truncate">{ticket.subject}</p>}
-                        <p className="text-[9px] text-slate-600 mt-1">{new Date(ticket.created_at).toLocaleString()}</p>
+                        <p className="text-xs text-slate-600 mt-1">{new Date(ticket.created_at).toLocaleString()}</p>
                       </button>
                     ))
                   }
@@ -2172,11 +2172,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <div className="bg-white border border-slate-200 rounded-3xl flex flex-col h-[600px]">
                     <div className="p-5 border-b border-slate-200 flex items-center justify-between">
                       <div>
-                        <p className="font-black text-slate-900">{selectedTicket.user_full_name || '—'}</p>
+                        <p className="font-bold text-slate-900">{selectedTicket.user_full_name || '—'}</p>
                         <p className="text-xs text-slate-500">{selectedTicket.user_email}</p>
                       </div>
                       <button onClick={() => handleCloseTicket(selectedTicket.id)}
-                        className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 font-black text-[9px] uppercase rounded-lg hover:bg-emerald-50 transition-colors">
+                        className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 font-semibold text-sm rounded-lg hover:bg-emerald-50 transition-colors">
                         Close Ticket
                       </button>
                     </div>
@@ -2185,9 +2185,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       <input value={ticketReply} onChange={e => setTicketReply(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleTicketReply()}
                         placeholder="Reply to user..."
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 font-medium outline-none focus:border-blue-500 transition-colors"/>
+                        className="ui-input flex-1 font-medium"/>
                       <button onClick={handleTicketReply} disabled={!ticketReply.trim() || sendingReply}
-                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black rounded-xl transition-colors flex items-center gap-2">
+                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-bold rounded-xl transition-colors flex items-center gap-2">
                         {sendingReply ? <Loader2 size={14} className="animate-spin"/> : <Send size={14}/>}
                       </button>
                     </div>
@@ -2205,14 +2205,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'venturex' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between flex-wrap gap-3">
-                <h2 className="text-2xl font-black text-slate-900">VentureX Management</h2>
+                <h2 className="text-2xl font-bold text-slate-900">VentureX Management</h2>
                 <div className="flex items-center gap-3">
                   <select value={vtxFilter} onChange={e => setVtxFilter(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
+                    className="ui-select">
                     <option value="">All Statuses</option>
                     {['draft','active','suspended','pending_review','rejected'].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
-                  <button onClick={loadVentureX} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                  <button onClick={loadVentureX} className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-sm rounded-xl">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
@@ -2220,35 +2220,35 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
               {/* ── QUICK PROSPECT SEND ── */}
               <details className="bg-violet-50 border border-violet-200 rounded-2xl">
-                <summary className="px-6 py-4 cursor-pointer font-black text-violet-600 text-sm flex items-center gap-2">
+                <summary className="px-6 py-4 cursor-pointer font-bold text-violet-600 text-sm flex items-center gap-2">
                   <Send size={14}/> Send Report to Prospect (account may or may not exist)
                 </summary>
                 <div className="px-6 pb-6 pt-4 border-t border-violet-200 space-y-4">
-                  <p className="text-[10px] text-violet-400/70 font-bold">Enter name + email + org name — IFB will automatically find or create their account, create their company profile, send an in-app notification, and email them the full readiness report with a Pay & Start link.</p>
+                  <p className="text-xs text-violet-400/70 font-bold">Enter name + email + org name — IFB will automatically find or create their account, create their company profile, send an in-app notification, and email them the full readiness report with a Pay & Start link.</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {[['full_name','Full Name','text'],['email','Email Address','email'],['company_name','Organization / Company Name','text'],['sector','Sector (optional)','text'],['country','Country (optional)','text']].map(([k,ph,t]) => (
                       <div key={k}>
-                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
+                        <label className="ui-label">{ph}</label>
                         <input type={t} value={prospectForm[k]} onChange={e => setProspectForm(f => ({...f, [k]: e.target.value}))}
-                          className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none" />
+                          className="ui-input" />
                       </div>
                     ))}
                     <div className="md:col-span-2">
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Estimated Cost Range (USD)</label>
+                      <label className="ui-label">Estimated Cost Range (USD)</label>
                       <div className="flex gap-2 items-center">
                         <input type="number" value={prospectForm.cost_min} onChange={e => setProspectForm(f => ({...f, cost_min: parseInt(e.target.value)||0}))}
-                          className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none" placeholder="Min" />
-                        <span className="text-slate-500 font-black">–</span>
+                          className="ui-input" placeholder="Min" />
+                        <span className="text-slate-500 font-bold">–</span>
                         <input type="number" value={prospectForm.cost_max} onChange={e => setProspectForm(f => ({...f, cost_max: parseInt(e.target.value)||0}))}
-                          className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none" placeholder="Max" />
+                          className="ui-input" placeholder="Max" />
                       </div>
                     </div>
                   </div>
 
                   {prospectResult && (
                     <div className="bg-white border border-emerald-200 rounded-xl px-4 py-3 space-y-1">
-                      <p className="text-emerald-600 font-black text-xs">{prospectResult.message}</p>
-                      <div className="flex flex-wrap gap-3 text-[9px] font-bold text-slate-500">
+                      <p className="text-emerald-600 font-bold text-xs">{prospectResult.message}</p>
+                      <div className="flex flex-wrap gap-3 text-xs font-bold text-slate-500">
                         <span>{prospectResult.created_user ? '🆕 New account created' : '✓ Existing account found'}</span>
                         <span>{prospectResult.created_company ? '🆕 Company profile created' : '✓ Existing company found'}</span>
                         <span>{prospectResult.email_sent ? '📧 Email sent' : '⚠ Email failed (check Resend key)'}</span>
@@ -2257,7 +2257,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   )}
 
                   <button onClick={handleSendProspect} disabled={prospectLoading}
-                    className="flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-black text-[10px] uppercase tracking-widest rounded-xl">
+                    className="ui-btn ui-btn-primary w-auto">
                     {prospectLoading ? <Loader2 size={13} className="animate-spin"/> : <Send size={13}/>}
                     {prospectLoading ? 'Creating & Sending...' : 'Create Everything & Send Report'}
                   </button>
@@ -2266,30 +2266,30 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
               {/* Create company on behalf */}
               <details className="bg-white border border-slate-200 rounded-2xl">
-                <summary className="px-6 py-4 cursor-pointer font-black text-slate-600 text-sm flex items-center gap-2"><Plus size={14}/> Register Company on Behalf of User</summary>
+                <summary className="px-6 py-4 cursor-pointer font-bold text-slate-600 text-sm flex items-center gap-2"><Plus size={14}/> Register Company on Behalf of User</summary>
                 <div className="px-6 pb-6 space-y-4 border-t border-slate-200 pt-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {[['vtx_uid','User ID (UUID)','text'],['vtx_name','Legal Company Name','text'],['vtx_reg','Registration Number','text'],['vtx_sector','Sector','text'],['vtx_country','Country','text'],['vtx_goal','Funding Goal (USD)','number'],['vtx_raised','Total Raised (USD)','number'],['vtx_valuation','Valuation (USD)','number'],['vtx_teamsize','Team Size','number'],['vtx_website','Website','text'],['vtx_tagline','Tagline','text']].map(([id,ph,type]) => (
                       <div key={id}>
-                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
-                        <input id={id} type={type} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500" />
+                        <label className="ui-label">{ph}</label>
+                        <input id={id} type={type} className="ui-input" />
                       </div>
                     ))}
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Stage</label>
-                      <select id="vtx_stage" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
+                      <label className="ui-label">Stage</label>
+                      <select id="vtx_stage" className="ui-select">
                         {VTX_STAGES.map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Current Round</label>
-                      <select id="vtx_round" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
+                      <label className="ui-label">Current Round</label>
+                      <select id="vtx_round" className="ui-select">
                         {['pre-seed','seed','series-a','series-b','series-c','ipo'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Initial Status</label>
-                      <select id="vtx_status" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
+                      <label className="ui-label">Initial Status</label>
+                      <select id="vtx_status" className="ui-select">
                         {['draft','active','pending_review'].map(s => <option key={s}>{s}</option>)}
                       </select>
                     </div>
@@ -2297,8 +2297,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {[['vtx_problem','Problem Statement'],['vtx_solution','Solution Statement'],['vtx_competitive','Competitive Advantage'],['vtx_hiring','Hiring Plan']].map(([id,ph]) => (
                       <div key={id}>
-                        <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{ph}</label>
-                        <textarea id={id} rows={2} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none resize-none" />
+                        <label className="ui-label">{ph}</label>
+                        <textarea id={id} rows={2} className="ui-textarea resize-none" />
                       </div>
                     ))}
                   </div>
@@ -2316,7 +2316,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     // Apply extra fields via full update (need company ID — refresh and find it)
                     notify('Company created — apply extra fields via Edit below');
                     loadVentureX();
-                  }} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
+                  }} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl flex items-center gap-2">
                     <Building2 size={12}/> Create Company
                   </button>
                 </div>
@@ -2338,21 +2338,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="font-black text-slate-900">{co.legal_name}</p>
-                                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${cr.lv.badge}`}>Lv.{cr.lv.n} {cr.lv.label}</span>
-                                  <span className="text-[9px] font-black text-slate-500">{cr.pct}% ready · {cr.missing.length} missing</span>
+                                  <p className="font-bold text-slate-900">{co.legal_name}</p>
+                                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${cr.lv.badge}`}>Lv.{cr.lv.n} {cr.lv.label}</span>
+                                  <span className="text-xs font-bold text-slate-500">{cr.pct}% ready · {cr.missing.length} missing</span>
                                 </div>
                                 <p className="text-xs text-slate-500">{co.user_full_name} · {co.user_email}</p>
-                                <p className="text-[10px] text-slate-500">{co.sector} · {co.country}</p>
+                                <p className="text-xs text-slate-500">{co.sector} · {co.country}</p>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-50 text-emerald-600':co.status==='rejected'?'bg-red-50 text-red-600':'bg-slate-100 text-slate-500'}`}>{co.status}</span>
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-50 text-emerald-600':co.status==='rejected'?'bg-red-50 text-red-600':'bg-slate-100 text-slate-500'}`}>{co.status}</span>
                                 <button onClick={() => { setVtxEditId(isEditing ? null : co.id); setVtxEdits({}); }}
-                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isEditing?'bg-blue-600 border-blue-500 text-white':'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
+                                  className={`p-1.5 rounded-lg border text-sm font-semibold flex items-center gap-1 transition-colors ${isEditing?'bg-blue-600 border-blue-500 text-white':'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
                                   <Pencil size={10}/> {isEditing ? 'Cancel' : 'Edit'}
                                 </button>
                                 <button onClick={() => setVtxProgressOpen(s => { const n = new Set(s); isProgressOpen ? n.delete(co.id) : n.add(co.id); return n; })}
-                                  className={`p-1.5 rounded-lg border text-[9px] font-black uppercase flex items-center gap-1 transition-colors ${isProgressOpen?'bg-violet-600 border-violet-500 text-white':'bg-slate-50 border-slate-200 text-slate-500 hover:border-violet-600'}`}>
+                                  className={`p-1.5 rounded-lg border text-sm font-semibold flex items-center gap-1 transition-colors ${isProgressOpen?'bg-blue-600 border-violet-500 text-white':'bg-slate-50 border-slate-200 text-slate-500 hover:border-violet-600'}`}>
                                   <Activity size={10}/> {isProgressOpen ? 'Hide' : 'Readiness'}
                                 </button>
                               </div>
@@ -2363,11 +2363,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 ['Raised', co.total_raised?fmtUSD(co.total_raised):'—'],['Valuation', co.valuation?fmtUSD(co.valuation):'—'],
                                 ['AI Score', co.investment_readiness_score!=null?`${co.investment_readiness_score}%`:'—'],
                                 ['KYC', co.user_kyc_status||'—'],
-                              ].map(([l,v]) => <div key={l} className="bg-slate-50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-slate-900">{v}</p></div>)}
+                              ].map(([l,v]) => <div key={l} className="bg-slate-50 rounded-lg p-2"><p className="text-xs font-semibold text-slate-500">{l}</p><p className="text-xs font-bold text-slate-900">{v}</p></div>)}
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {[['Financial', co.financial_verified],['Identity', co.identity_verified],['Traction', co.traction_verified],['Public', co.is_public]].map(([l,v]) => (
-                                <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-600 border-emerald-200':'text-slate-500 border-slate-200'}`}>{l}: {v?'✓':'✗'}</span>
+                                <span key={l} className={`text-xs font-semibold px-2 py-0.5 rounded border ${v?'text-emerald-600 border-emerald-200':'text-slate-500 border-slate-200'}`}>{l}: {v?'✓':'✗'}</span>
                               ))}
                             </div>
                           </div>
@@ -2380,7 +2380,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               { label:'Reject', status:'rejected', cls:'bg-red-50 text-red-600 border-red-200' },
                             ].map(({ label, status, cls }) => (
                               <button key={status} onClick={() => handleVxStatus(co.id, status)}
-                                className={`flex-1 md:flex-none py-2 px-3 border font-black text-[9px] uppercase tracking-widest rounded-xl transition-colors ${cls}`}>{label}</button>
+                                className={`flex-1 md:flex-none py-2 px-3 border font-semibold text-sm rounded-xl transition-colors ${cls}`}>{label}</button>
                             ))}
                             <div className="border-t border-slate-200 pt-2 space-y-1">
                               {[['financial_verified','Financial'],['identity_verified','Identity'],['traction_verified','Traction'],['is_public','Public']].map(([field, label]) => (
@@ -2389,14 +2389,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                   args[`p_${field}`] = !co[field];
                                   const { error } = await supabase.rpc('admin_update_venturex_company', args);
                                   if (error) notify(error.message, 'error'); else { notify(`${label} toggled`); loadVentureX(); }
-                                }} className={`w-full py-1.5 px-2 border font-black text-[8px] uppercase rounded-lg transition-colors ${co[field]?'bg-emerald-50 text-emerald-600 border-emerald-200':'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                                }} className={`w-full py-1.5 px-2 border font-semibold text-sm rounded-lg transition-colors ${co[field]?'bg-emerald-50 text-emerald-600 border-emerald-200':'bg-slate-50 text-slate-500 border-slate-200'}`}>
                                   {co[field]?'✓':''} {label}
                                 </button>
                               ))}
                             </div>
                             <div className="border-t border-slate-200 pt-2">
                               <button onClick={() => handleSendProgressReport(co)} disabled={!!vtxSendingReport[co.id]}
-                                className="w-full py-2 px-2 border border-violet-200 bg-violet-50 hover:bg-violet-50 text-violet-600 font-black text-[8px] uppercase rounded-lg flex items-center justify-center gap-1 disabled:opacity-50">
+                                className="w-full py-2 px-2 border border-violet-200 bg-violet-50 hover:bg-violet-50 text-violet-600 font-semibold text-sm rounded-lg flex items-center justify-center gap-1 disabled:opacity-50">
                                 {vtxSendingReport[co.id] ? <Loader2 size={9} className="animate-spin"/> : <Send size={9}/>}
                                 Send Report
                               </button>
@@ -2408,10 +2408,10 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         {isProgressOpen && (
                           <div className="border-t border-violet-200 p-5 space-y-5 bg-violet-50">
                             <div className="flex items-center justify-between flex-wrap gap-3">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-600">Capital Readiness — {co.legal_name}</p>
+                              <p className="text-xs font-semibold text-violet-600">Capital Readiness — {co.legal_name}</p>
                               <div className="flex items-center gap-3">
-                                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border ${cr.lv.badge}`}>Level {cr.lv.n}/5 · {cr.lv.label}</span>
-                                <span className="text-[9px] text-slate-500 font-bold">{cr.metCount}/{cr.total} complete</span>
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${cr.lv.badge}`}>Level {cr.lv.n}/5 · {cr.lv.label}</span>
+                                <span className="text-xs text-slate-500 font-bold">{cr.metCount}/{cr.total} complete</span>
                               </div>
                             </div>
                             {/* Progress bar */}
@@ -2419,30 +2419,30 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <div className="h-2 bg-slate-50 rounded-full overflow-hidden">
                                 <div className={`h-full rounded-full transition-all ${cr.lv.bar}`} style={{ width: `${cr.pct}%` }}/>
                               </div>
-                              <p className="text-[9px] text-slate-500 font-bold">Next milestone: {cr.fundingPhase}</p>
+                              <p className="text-xs text-slate-500 font-bold">Next milestone: {cr.fundingPhase}</p>
                             </div>
                             {/* Checklist */}
                             <div>
-                              <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Documentation & Verification Checklist</p>
+                              <p className="text-xs font-semibold text-slate-500 mb-2">Documentation & Verification Checklist</p>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                                 {cr.checklist.map(item => (
-                                  <div key={item.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-bold ${item.met ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                                  <div key={item.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${item.met ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                     <span className={`text-[11px] shrink-0 ${item.met ? 'text-emerald-600' : 'text-red-600'}`}>{item.met ? '✓' : '✗'}</span>
                                     <span className="leading-tight">{item.label}</span>
-                                    <span className={`ml-auto text-[8px] font-black shrink-0 px-1.5 py-0.5 rounded border ${item.met ? 'text-emerald-600 border-emerald-200' : 'text-slate-600 border-slate-200'}`}>{item.ws}</span>
+                                    <span className={`ml-auto text-xs font-bold shrink-0 px-1.5 py-0.5 rounded border ${item.met ? 'text-emerald-600 border-emerald-200' : 'text-slate-600 border-slate-200'}`}>{item.ws}</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
                             {/* Workstreams */}
                             <div>
-                              <p className="text-[9px] font-black uppercase text-slate-500 mb-2">IFB Workstreams & Support Costs ($30/hr)</p>
+                              <p className="text-xs font-semibold text-slate-500 mb-2">IFB Workstreams & Support Costs ($30/hr)</p>
                               <div className="space-y-2">
                                 {cr.workstreams.map(ws => (
-                                  <div key={ws.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-[10px] ${ws.complete ? 'bg-emerald-50 border-emerald-200' : ws.partial ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
-                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${ws.complete ? 'bg-emerald-500 text-white' : ws.partial ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600'}`}>{ws.id}</span>
+                                  <div key={ws.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border text-xs ${ws.complete ? 'bg-emerald-50 border-emerald-200' : ws.partial ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${ws.complete ? 'bg-emerald-500 text-white' : ws.partial ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600'}`}>{ws.id}</span>
                                     <span className={`flex-1 font-bold leading-tight ${ws.complete ? 'text-emerald-600' : ws.partial ? 'text-amber-600' : 'text-slate-600'}`}>{ws.label}</span>
-                                    <span className={`text-[9px] font-black shrink-0 ${ws.complete ? 'text-emerald-500' : 'text-slate-500'}`}>{ws.complete ? '✓ Done' : `${ws.hMin}–${ws.hMax}h · $${ws.cMin.toLocaleString()}–$${ws.cMax.toLocaleString()}`}</span>
+                                    <span className={`text-xs font-bold shrink-0 ${ws.complete ? 'text-emerald-500' : 'text-slate-500'}`}>{ws.complete ? '✓ Done' : `${ws.hMin}–${ws.hMax}h · $${ws.cMin.toLocaleString()}–$${ws.cMax.toLocaleString()}`}</span>
                                   </div>
                                 ))}
                               </div>
@@ -2451,14 +2451,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             <div className="flex items-center justify-between flex-wrap gap-3 pt-2 border-t border-violet-200">
                               <div>
                                 {cr.incomplete.length > 0 ? (
-                                  <p className="text-xs font-black text-slate-900">Remaining investment: <span className="text-violet-600">${cr.totalCostMin.toLocaleString()} – ${cr.totalCostMax.toLocaleString()}</span></p>
+                                  <p className="text-xs font-bold text-slate-900">Remaining investment: <span className="text-violet-600">${cr.totalCostMin.toLocaleString()} – ${cr.totalCostMax.toLocaleString()}</span></p>
                                 ) : (
-                                  <p className="text-xs font-black text-emerald-600">All workstreams complete — ready for funding!</p>
+                                  <p className="text-xs font-bold text-emerald-600">All workstreams complete — ready for funding!</p>
                                 )}
-                                <p className="text-[9px] text-slate-500">{cr.incomplete.length} workstreams remaining · {cr.missing.length} checklist items missing</p>
+                                <p className="text-xs text-slate-500">{cr.incomplete.length} workstreams remaining · {cr.missing.length} checklist items missing</p>
                               </div>
                               <button onClick={() => handleSendProgressReport(co)} disabled={!!vtxSendingReport[co.id]}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white font-black text-[10px] uppercase tracking-widest rounded-xl">
+                                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm rounded-xl">
                                 {vtxSendingReport[co.id] ? <Loader2 size={12} className="animate-spin"/> : <Send size={12}/>}
                                 Send Progress Report to {(co.user_full_name||'User').split(' ')[0]}
                               </button>
@@ -2469,7 +2469,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         {/* ── FULL EDITOR (expanded when isEditing) ── */}
                         {isEditing && (
                           <div className="border-t border-slate-200 p-5 space-y-5 bg-slate-50">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Full Company Editor — editing {co.legal_name}</p>
+                            <p className="text-xs font-semibold text-blue-600">Full Company Editor — editing {co.legal_name}</p>
 
                             {/* Core identity */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -2480,29 +2480,29 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 ['incorporation_date','Incorporation Date','date'],
                               ].map(([field,label,type]) => (
                                 <div key={field}>
-                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <label className="ui-label">{label}</label>
                                   <input type={type} value={ev(field)||''} onChange={e => setEv(field, e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-500" />
+                                    className="ui-input" />
                                 </div>
                               ))}
                               <div>
-                                <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">Product Stage</label>
+                                <label className="ui-label">Product Stage</label>
                                 <select value={ev('product_stage')||'idea'} onChange={e => setEv('product_stage', e.target.value)}
-                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
+                                  className="ui-select">
                                   {VTX_STAGES.map(s => <option key={s}>{s}</option>)}
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">Current Round</label>
+                                <label className="ui-label">Current Round</label>
                                 <select value={ev('current_round')||'pre-seed'} onChange={e => setEv('current_round', e.target.value)}
-                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
+                                  className="ui-select">
                                   {['pre-seed','seed','series-a','series-b','series-c','ipo'].map(s => <option key={s}>{s}</option>)}
                                 </select>
                               </div>
                             </div>
 
                             {/* Financials */}
-                            <p className="text-[9px] font-black uppercase text-slate-500">Financials & Funding</p>
+                            <p className="text-xs font-semibold text-slate-500">Financials & Funding</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                               {[
                                 ['funding_goal','Funding Goal'],['total_raised','Total Raised'],
@@ -2512,15 +2512,15 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 ['net_profit','Net Profit'],['ebitda','EBITDA'],
                               ].map(([field,label]) => (
                                 <div key={field}>
-                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <label className="ui-label">{label}</label>
                                   <input type="number" value={ev(field)||0} onChange={e => setEv(field, parseFloat(e.target.value)||0)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-500" />
+                                    className="ui-input" />
                                 </div>
                               ))}
                             </div>
 
                             {/* Traction */}
-                            <p className="text-[9px] font-black uppercase text-slate-500">Traction & Metrics</p>
+                            <p className="text-xs font-semibold text-slate-500">Traction & Metrics</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                               {[
                                 ['active_users','Active Users'],['team_size','Team Size'],
@@ -2531,33 +2531,33 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 ['investment_readiness_score','Readiness Score (0-100)'],
                               ].map(([field,label]) => (
                                 <div key={field}>
-                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <label className="ui-label">{label}</label>
                                   <input type="number" value={ev(field)||0} onChange={e => setEv(field, parseFloat(e.target.value)||0)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-blue-500" />
+                                    className="ui-input" />
                                 </div>
                               ))}
                             </div>
 
                             {/* Narrative */}
-                            <p className="text-[9px] font-black uppercase text-slate-500">Narrative</p>
+                            <p className="text-xs font-semibold text-slate-500">Narrative</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               {[['competitive_advantage','Competitive Advantage'],['hiring_plan','Hiring Plan']].map(([field,label]) => (
                                 <div key={field}>
-                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <label className="ui-label">{label}</label>
                                   <textarea value={ev(field)||''} onChange={e => setEv(field, e.target.value)} rows={3}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none resize-none" />
+                                    className="ui-textarea resize-none" />
                                 </div>
                               ))}
                             </div>
 
                             {/* Risk */}
-                            <p className="text-[9px] font-black uppercase text-slate-500">Risk Levels</p>
+                            <p className="text-xs font-semibold text-slate-500">Risk Levels</p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               {[['regulatory_risk','Regulatory'],['market_risk','Market'],['execution_risk','Execution']].map(([field,label]) => (
                                 <div key={field}>
-                                  <label className="block text-[8px] font-black uppercase text-slate-500 mb-1">{label}</label>
+                                  <label className="ui-label">{label}</label>
                                   <select value={ev(field)||'medium'} onChange={e => setEv(field, e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none">
+                                    className="ui-select">
                                     {['low','medium','high'].map(r => <option key={r}>{r}</option>)}
                                   </select>
                                 </div>
@@ -2565,7 +2565,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             </div>
 
                             {/* Documents */}
-                            <p className="text-[9px] font-black uppercase text-slate-500">Documents</p>
+                            <p className="text-xs font-semibold text-slate-500">Documents</p>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                               {[
                                 ['pitch_deck_url','Pitch Deck'],
@@ -2573,13 +2573,13 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 ['legal_docs_url','Legal Documents'],
                               ].map(([field, label]) => (
                                 <div key={field} className="space-y-2">
-                                  <label className="block text-[8px] font-black uppercase text-slate-500">{label}</label>
+                                  <label className="ui-label">{label}</label>
                                   {co[field] && (
-                                    <a href={co[field]} target="_blank" rel="noreferrer" className="text-[9px] text-blue-600 underline block truncate">{co[field]}</a>
+                                    <a href={co[field]} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline block truncate">{co[field]}</a>
                                   )}
                                   <input type="text" placeholder="Paste URL or upload below" value={vtxEdits[field]||''} onChange={e => setEv(field, e.target.value)}
-                                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none" />
-                                  <label className={`flex items-center gap-2 px-3 py-2 border border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-500 text-[9px] font-black uppercase text-slate-500 ${vtxUploading[field]?'opacity-50':''}`}>
+                                    className="ui-input" />
+                                  <label className={`flex items-center gap-2 px-3 py-2 border border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-500 text-xs font-semibold text-slate-500 ${vtxUploading[field]?'opacity-50':''}`}>
                                     {vtxUploading[field] ? <Loader2 size={10} className="animate-spin"/> : <Upload size={10}/>}
                                     Upload File
                                     <input type="file" className="hidden" disabled={vtxUploading[field]}
@@ -2592,11 +2592,11 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             {/* Save */}
                             <div className="flex gap-3 pt-2 border-t border-slate-200">
                               <button onClick={() => handleVtxSave(co.id)} disabled={!Object.keys(vtxEdits).length}
-                                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-widest rounded-xl flex items-center gap-2">
+                                className="ui-btn ui-btn-primary w-auto">
                                 <Save size={14}/> Save {Object.keys(vtxEdits).length > 0 ? `${Object.keys(vtxEdits).length} Changes` : ''}
                               </button>
                               <button onClick={() => { setVtxEditId(null); setVtxEdits({}); }}
-                                className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black text-[10px] uppercase tracking-widest rounded-xl">
+                                className="px-6 py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold text-sm rounded-xl">
                                 Cancel
                               </button>
                             </div>
@@ -2607,7 +2607,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         {!isEditing && (
                           <div className="px-5 pb-4 flex gap-2 flex-wrap">
                             {[['Pitch Deck', co.pitch_deck_url],['Financials', co.financial_statements_url],['Legal Docs', co.legal_docs_url]].filter(([,u])=>u).map(([l,u]) => (
-                              <a key={l} href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg hover:bg-blue-50">
+                              <a key={l} href={u} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg hover:bg-blue-50">
                                 <Eye size={10}/>{l}
                               </a>
                             ))}
@@ -2627,14 +2627,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── BACK OFFICE ─── */}
           {activeTab === 'backoffice' && (
             <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-2xl font-black text-slate-900">Back Office — Full User Control</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Back Office — Full User Control</h2>
 
               {/* Search bar */}
               <div className="flex gap-3">
                 <input value={boSearch} onChange={e => setBoSearch(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && document.getElementById('bo-search-btn')?.click()}
                   placeholder="Search by email or user UUID..."
-                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500" />
+                  className="ui-input flex-1" />
                 <button id="bo-search-btn" disabled={boLoading} onClick={async () => {
                   if (!boSearch.trim()) return;
                   setBoLoading(true); setBoUser(null); setBoEdits({}); setBoOverview(null); setBoTab('profile');
@@ -2654,7 +2654,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     loadBoOverview(uid);
                   } catch(e) { notify(e.message, 'error'); }
                   finally { setBoLoading(false); }
-                }} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-2 disabled:opacity-50">
+                }} className="ui-btn ui-btn-primary w-auto">
                   {boLoading ? <Loader2 size={14} className="animate-spin"/> : <Search size={14}/>} Search
                 </button>
               </div>
@@ -2671,17 +2671,17 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   <div className="space-y-5">
                     {/* User banner */}
                     <div className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-2xl shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-2xl shrink-0">
                         {(p.full_name||p.email||'U')[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-slate-900 text-lg">{p.full_name || '—'}</p>
+                        <p className="font-bold text-slate-900 text-lg">{p.full_name || '—'}</p>
                         <p className="text-slate-500 text-sm">{p.email}</p>
-                        <p className="text-[10px] text-slate-600 font-mono mt-0.5">{p.id}</p>
+                        <p className="text-xs text-slate-600 font-mono mt-0.5">{p.id}</p>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
-                        <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${p.kyc_status==='approved'||p.kyc_status==='verified'?'text-emerald-600 border-emerald-200':'text-amber-600 border-amber-200'}`}>{p.kyc_status||'unverified'}</span>
-                        <span className="text-[9px] text-slate-500 font-black uppercase">{p.role||'user'}</span>
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${p.kyc_status==='approved'||p.kyc_status==='verified'?'text-emerald-600 border-emerald-200':'text-amber-600 border-amber-200'}`}>{p.kyc_status||'unverified'}</span>
+                        <span className="text-xs text-slate-500 font-semibold">{p.role||'user'}</span>
                       </div>
                     </div>
 
@@ -2689,20 +2689,20 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {bals.map(b => (
                         <div key={b.currency_code} className="bg-white border border-slate-200 rounded-2xl p-4">
-                          <p className="text-[9px] font-black uppercase text-slate-500">{b.currency_code} Balance</p>
-                          <p className="text-xl font-black text-slate-900 mt-1">{Number(b.balance||0).toLocaleString()}</p>
+                          <p className="text-xs font-semibold text-slate-500">{b.currency_code} Balance</p>
+                          <p className="text-xl font-bold text-slate-900 mt-1">{Number(b.balance||0).toLocaleString()}</p>
                         </div>
                       ))}
                       {(ov.applications||[]).length > 0 && (
                         <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
-                          <p className="text-[9px] font-black uppercase text-indigo-600">IFB Applications</p>
-                          <p className="text-xl font-black text-slate-900 mt-1">{(ov.applications||[]).length}</p>
+                          <p className="text-xs font-semibold text-indigo-600">IFB Applications</p>
+                          <p className="text-xl font-bold text-slate-900 mt-1">{(ov.applications||[]).length}</p>
                         </div>
                       )}
                       {(ov.companies||[]).length > 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                          <p className="text-[9px] font-black uppercase text-blue-600">VentureX Companies</p>
-                          <p className="text-xl font-black text-slate-900 mt-1">{(ov.companies||[]).length}</p>
+                          <p className="text-xs font-semibold text-blue-600">VentureX Companies</p>
+                          <p className="text-xl font-bold text-slate-900 mt-1">{(ov.companies||[]).length}</p>
                         </div>
                       )}
                     </div>
@@ -2717,7 +2717,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         { id:'transactions',  label:'Transactions',     icon: Activity },
                       ].map(({ id, label, icon: Icon }) => (
                         <button key={id} onClick={() => setBoTab(id)}
-                          className={`flex items-center gap-2 px-5 py-3 whitespace-nowrap text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${boTab===id?'border-blue-500 text-blue-600':'border-transparent text-slate-500 hover:text-slate-600'}`}>
+                          className={`flex items-center gap-2 px-5 py-3 whitespace-nowrap text-sm font-semibold border-b-2 transition-all ${boTab===id?'border-blue-500 text-blue-600':'border-transparent text-slate-500 hover:text-slate-600'}`}>
                           <Icon size={12}/>{label}
                         </button>
                       ))}
@@ -2727,7 +2727,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {boTab === 'profile' && (
                       <div className="space-y-5">
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5">
-                          <p className="font-black text-slate-900 text-sm">Edit Profile</p>
+                          <p className="font-bold text-slate-900 text-sm">Edit Profile</p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {[
                               { key:'full_name', label:'Full Name' }, { key:'email', label:'Email' },
@@ -2737,24 +2737,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               { key:'residential_address', label:'Residential Address' },
                             ].map(({ key, label }) => (
                               <div key={key}>
-                                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
+                                <label className="ui-label">{label}</label>
                                 <input value={curVal(key)} onChange={e => editField(key, e.target.value)}
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500" />
+                                  className="ui-input" />
                               </div>
                             ))}
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">KYC Status</label>
+                              <label className="ui-label">KYC Status</label>
                               <select value={curVal('kyc_status')} onChange={e => editField('kyc_status', e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
+                                className="ui-select">
                                 {['unverified','pending_kyc','verified','approved','rejected'].map(s => <option key={s}>{s}</option>)}
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Role</label>
+                              <label className="ui-label">Role</label>
                               <select value={curVal('role')} onChange={e => editField('role', e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none">
+                                className="ui-select">
                                 {['user','admin','admin_l3','superadmin','is_cot_processor'].map(s => <option key={s}>{s}</option>)}
                               </select>
                             </div>
@@ -2768,7 +2768,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 const { data } = await supabase.rpc('admin_get_user_full', { p_user_id: p.id });
                                 setBoUser(data); setBoEdits({});
                               }
-                            }} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-2">
+                            }} className="ui-btn ui-btn-primary w-auto">
                               <CheckCircle size={14}/> Save {Object.keys(boEdits).length} Change{Object.keys(boEdits).length > 1 ? 's' : ''}
                             </button>
                           )}
@@ -2777,27 +2777,27 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         {/* KYC Submission */}
                         {kyc && Object.keys(kyc).length > 0 && (
                           <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
-                            <p className="font-black text-slate-900 text-sm">KYC Submission</p>
+                            <p className="font-bold text-slate-900 text-sm">KYC Submission</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                               {[['Status', kyc.status],['Risk', kyc.risk_rating],['AI Score', kyc.ai_confidence_score!=null?`${kyc.ai_confidence_score}%`:'—'],['AI Rec.', kyc.ai_recommendation],
                                 ['Nationality', kyc.nationality],['ID Type', kyc.id_type],['ID Number', kyc.id_number],['PEP', kyc.politically_exposed_person?'⚠️ YES':'No']
                               ].map(([l,v]) => (
                                 <div key={l} className="bg-slate-50 rounded-xl p-3">
-                                  <p className="text-[8px] font-black uppercase text-slate-500">{l}</p>
+                                  <p className="text-xs font-semibold text-slate-500">{l}</p>
                                   <p className="text-xs font-bold text-slate-900">{v||'—'}</p>
                                 </div>
                               ))}
                             </div>
                             {kyc.ai_flags?.length > 0 && (
                               <div className="flex flex-wrap gap-2">
-                                {kyc.ai_flags.map(f => <span key={f} className="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
+                                {kyc.ai_flags.map(f => <span key={f} className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">{f.replace(/_/g,' ')}</span>)}
                               </div>
                             )}
                             <div className="flex flex-wrap gap-2">
                               {[['ID Front',kyc.id_front_url],['ID Back',kyc.id_back_url],['Selfie',kyc.selfie_url],['Selfie+ID',kyc.selfie_with_id_url],
                                 ['Address Proof',kyc.proof_of_address_url],['Income',kyc.proof_of_income_url],['Bank Stmt',kyc.bank_statement_url]
                               ].filter(([,u])=>u).map(([l,u]) => (
-                                <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] font-black uppercase text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg hover:bg-blue-50 flex items-center gap-1">
+                                <a key={l} href={u} target="_blank" rel="noreferrer" className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg hover:bg-blue-50 flex items-center gap-1">
                                   <Eye size={10}/>{l}
                                 </a>
                               ))}
@@ -2806,21 +2806,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 space-y-3">
                               <div className="flex items-center gap-2">
                                 <Brain size={11} className="text-violet-600"/>
-                                <span className="text-[8px] font-black uppercase tracking-widest text-violet-600">AI Doc Scan — Extract KYC Fields</span>
+                                <span className="text-xs font-semibold text-violet-600">AI Doc Scan — Extract KYC Fields</span>
                                 {boAiScan.scanning && <Loader2 size={9} className="animate-spin text-violet-600 ml-auto"/>}
                               </div>
                               {!boAiScan.scanning && boAiScan.fields?.length > 0 && (
                                 <div className="grid grid-cols-2 gap-2">
                                   {boAiScan.fields.map(f => (
                                     <div key={f.label} className="bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-                                      <p className="text-[7px] font-black uppercase text-emerald-500">{f.label}</p>
-                                      <p className="text-[10px] font-bold text-slate-900 truncate">{f.value}</p>
+                                      <p className="text-xs font-semibold text-emerald-500">{f.label}</p>
+                                      <p className="text-xs font-bold text-slate-900 truncate">{f.value}</p>
                                     </div>
                                   ))}
                                 </div>
                               )}
-                              {boAiScan.error && <p className="text-[10px] text-red-600">{boAiScan.error}</p>}
-                              <label className={`flex items-center gap-2 px-3 py-2 border border-dashed rounded-xl cursor-pointer text-[9px] font-black uppercase w-fit ${boAiScan.scanning ? 'opacity-50 border-slate-200 text-slate-600 cursor-default' : 'border-violet-600/50 hover:border-violet-500 text-violet-600'}`}>
+                              {boAiScan.error && <p className="text-xs text-red-600">{boAiScan.error}</p>}
+                              <label className={`flex items-center gap-2 px-3 py-2 border border-dashed rounded-xl cursor-pointer text-xs font-semibold w-fit ${boAiScan.scanning ? 'opacity-50 border-slate-200 text-slate-600 cursor-default' : 'border-violet-600/50 hover:border-violet-500 text-violet-600'}`}>
                                 {boAiScan.scanning ? <Loader2 size={10} className="animate-spin"/> : <Upload size={10}/>}
                                 {boAiScan.scanning ? 'Scanning...' : 'Upload Doc for AI Scan'}
                                 <input type="file" className="hidden" disabled={boAiScan.scanning}
@@ -2830,9 +2830,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                             </div>
 
                             <div className="flex gap-3 pt-2 border-t border-slate-200">
-                              <button onClick={() => handleKycAction(p.id, 'approved', 'Admin manual approval')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><CheckCircle size={12}/> Approve KYC</button>
-                              <button onClick={() => handleKycAction(p.id, 'needs_more_info', 'Admin requested more info')} className="px-4 py-2 bg-amber-600/30 border border-amber-200 text-amber-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><AlertTriangle size={12}/> Request Info</button>
-                              <button onClick={() => handleKycAction(p.id, 'rejected', 'Admin rejection')} className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 font-black text-[9px] uppercase rounded-xl flex items-center gap-1"><X size={12}/> Reject</button>
+                              <button onClick={() => handleKycAction(p.id, 'approved', 'Admin manual approval')} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl flex items-center gap-1"><CheckCircle size={12}/> Approve KYC</button>
+                              <button onClick={() => handleKycAction(p.id, 'needs_more_info', 'Admin requested more info')} className="px-4 py-2 bg-amber-600/30 border border-amber-200 text-amber-600 font-semibold text-sm rounded-xl flex items-center gap-1"><AlertTriangle size={12}/> Request Info</button>
+                              <button onClick={() => handleKycAction(p.id, 'rejected', 'Admin rejection')} className="px-4 py-2 bg-red-50 border border-red-200 text-red-600 font-semibold text-sm rounded-xl flex items-center gap-1"><X size={12}/> Reject</button>
                             </div>
                           </div>
                         )}
@@ -2843,12 +2843,12 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {boTab === 'applications' && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <p className="font-black text-slate-900 text-sm">IFB Applications for {p.full_name}</p>
+                          <p className="font-bold text-slate-900 text-sm">IFB Applications for {p.full_name}</p>
                           <button onClick={() => {
                             setAppForm(f => ({...f, user_id: p.id}));
                             setActiveTab('applications');
                             setShowCreateApp(true);
-                          }} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[9px] uppercase tracking-widest rounded-xl">
+                          }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl">
                             <Plus size={12}/> New Application
                           </button>
                         </div>
@@ -2862,21 +2862,21 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                   <div key={app.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
                                     <div className="flex items-start justify-between gap-3">
                                       <div>
-                                        <p className="font-black text-slate-900">{app.company_name}</p>
+                                        <p className="font-bold text-slate-900">{app.company_name}</p>
                                         <p className="text-xs text-slate-500">{app.sector} · {app.country} · Stage: {app.stage?.replace(/_/g,' ')}</p>
                                       </div>
-                                      <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border shrink-0 ${sm.cls}`}>{sm.label}</span>
+                                      <span className={`text-xs font-semibold px-2 py-1 rounded-full border shrink-0 ${sm.cls}`}>{sm.label}</span>
                                     </div>
                                     <div className="flex items-center gap-4 flex-wrap">
-                                      <span className={`text-[9px] font-black ${pm?.color||'text-slate-500'}`}>{app.package_name}</span>
-                                      {app.assigned_advisor && <span className="text-[9px] text-emerald-600">Advisor: {app.assigned_advisor}</span>}
-                                      <span className="text-[9px] text-slate-500">{new Date(app.created_at).toLocaleDateString()}</span>
+                                      <span className={`text-xs font-bold ${pm?.color||'text-slate-500'}`}>{app.package_name}</span>
+                                      {app.assigned_advisor && <span className="text-xs text-emerald-600">Advisor: {app.assigned_advisor}</span>}
+                                      <span className="text-xs text-slate-500">{new Date(app.created_at).toLocaleDateString()}</span>
                                     </div>
-                                    {app.notes && <p className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-2">{app.notes}</p>}
+                                    {app.notes && <p className="text-xs text-slate-500 bg-slate-50 rounded-lg p-2">{app.notes}</p>}
                                     <div className="flex gap-2 flex-wrap">
                                       {Object.entries(APP_STATUS_META).map(([k,v]) => (
                                         <button key={k} onClick={() => handleAppUpdate(app.id, k, null, null).then(() => loadBoOverview(p.id))}
-                                          className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg transition-colors ${app.status===k?v.cls:'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
+                                          className={`px-3 py-1.5 border font-semibold text-sm rounded-lg transition-colors ${app.status===k?v.cls:'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-200'}`}>
                                           {v.label}
                                         </button>
                                       ))}
@@ -2892,9 +2892,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {boTab === 'companies' && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <p className="font-black text-slate-900 text-sm">VentureX Companies for {p.full_name}</p>
+                          <p className="font-bold text-slate-900 text-sm">VentureX Companies for {p.full_name}</p>
                           <button onClick={() => setActiveTab('venturex')}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest rounded-xl">
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-xl">
                             <Building2 size={12}/> Manage in VentureX
                           </button>
                         </div>
@@ -2905,30 +2905,30 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div key={co.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
                                   <div className="flex items-start justify-between gap-3">
                                     <div>
-                                      <p className="font-black text-slate-900">{co.legal_name}</p>
+                                      <p className="font-bold text-slate-900">{co.legal_name}</p>
                                       <p className="text-xs text-slate-500">{co.sector} · {co.country}</p>
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-50 text-emerald-600':co.status==='rejected'?'bg-red-50 text-red-600':'bg-slate-100 text-slate-500'}`}>{co.status}</span>
+                                    <span className={`text-xs font-semibold px-2 py-1 rounded-full shrink-0 ${co.status==='active'?'bg-emerald-50 text-emerald-600':co.status==='rejected'?'bg-red-50 text-red-600':'bg-slate-100 text-slate-500'}`}>{co.status}</span>
                                   </div>
                                   <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                                     {[['Stage',co.product_stage],['Goal',co.funding_goal?fmtUSD(co.funding_goal):'—'],['Raised',co.total_raised?fmtUSD(co.total_raised):'—'],
                                       ['Valuation',co.valuation?fmtUSD(co.valuation):'—'],['Score',co.investment_readiness_score!=null?`${co.investment_readiness_score}%`:'—'],
-                                    ].map(([l,v]) => <div key={l} className="bg-slate-50 rounded-lg p-2"><p className="text-[8px] font-black uppercase text-slate-500">{l}</p><p className="text-xs font-bold text-slate-900">{v}</p></div>)}
+                                    ].map(([l,v]) => <div key={l} className="bg-slate-50 rounded-lg p-2"><p className="text-xs font-semibold text-slate-500">{l}</p><p className="text-xs font-bold text-slate-900">{v}</p></div>)}
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {[['Financial',co.financial_verified],['Identity',co.identity_verified],['Traction',co.traction_verified],['Public',co.is_public]].map(([l,v]) => (
-                                      <span key={l} className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${v?'text-emerald-600 border-emerald-200':'text-slate-600 border-slate-200'}`}>{l}: {v?'✓':'✗'}</span>
+                                      <span key={l} className={`text-xs font-semibold px-2 py-0.5 rounded border ${v?'text-emerald-600 border-emerald-200':'text-slate-600 border-slate-200'}`}>{l}: {v?'✓':'✗'}</span>
                                     ))}
                                   </div>
                                   <div className="flex gap-2 flex-wrap">
                                     {[['active','Activate','text-emerald-600 border-emerald-200'],['suspended','Suspend','text-red-600 border-red-200'],['pending_review','Review','text-amber-600 border-amber-200'],['rejected','Reject','text-red-600 border-red-200']].map(([s,l,cls]) => (
                                       <button key={s} onClick={() => handleVxStatus(co.id, s).then(() => loadBoOverview(p.id))}
-                                        className={`px-3 py-1.5 border font-black text-[8px] uppercase rounded-lg ${co.status===s?cls+' bg-slate-50':'bg-slate-50 border-slate-200 text-slate-500'}`}>{l}</button>
+                                        className={`px-3 py-1.5 border font-semibold text-sm rounded-lg ${co.status===s?cls+'bg-slate-50':'bg-slate-50 border-slate-200 text-slate-500'}`}>{l}</button>
                                     ))}
                                   </div>
                                   <div className="flex flex-wrap gap-2">
                                     {[['Pitch Deck',co.pitch_deck_url],['Financials',co.financial_statements_url],['Legal Docs',co.legal_docs_url]].filter(([,u])=>u).map(([l,u]) => (
-                                      <a key={l} href={u} target="_blank" rel="noreferrer" className="text-[9px] text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg flex items-center gap-1">
+                                      <a key={l} href={u} target="_blank" rel="noreferrer" className="text-xs text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg flex items-center gap-1">
                                         <Eye size={10}/>{l}
                                       </a>
                                     ))}
@@ -2943,14 +2943,14 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {boTab === 'notifications' && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <p className="font-black text-slate-900 text-sm">Notifications for {p.full_name}</p>
+                          <p className="font-bold text-slate-900 text-sm">Notifications for {p.full_name}</p>
                           <button onClick={async () => {
                             const msg = window.prompt('Send notification message:');
                             if (!msg) return;
                             await supabase.from('notifications').insert([{ user_id: p.id, type: 'admin', message: msg, read: false, status: 'completed' }]);
                             notify('Notification sent');
                             loadBoOverview(p.id);
-                          }} className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-black text-[9px] uppercase tracking-widest rounded-xl">
+                          }} className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm rounded-xl">
                             <Bell size={12}/> Send Notification
                           </button>
                         </div>
@@ -2961,9 +2961,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div key={n.id} className={`p-4 rounded-2xl border ${n.read?'border-slate-200 bg-white':'border-blue-200 bg-blue-50'}`}>
                                   <div className="flex items-start justify-between gap-3">
                                     <p className="text-sm text-slate-900 leading-relaxed">{n.message}</p>
-                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded shrink-0 ${n.read?'text-slate-600':'text-blue-600'}`}>{n.read?'Read':'Unread'}</span>
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded shrink-0 ${n.read?'text-slate-600':'text-blue-600'}`}>{n.read?'Read':'Unread'}</span>
                                   </div>
-                                  <p className="text-[10px] text-slate-600 mt-1">{new Date(n.created_at).toLocaleString()} · {n.type}</p>
+                                  <p className="text-xs text-slate-600 mt-1">{new Date(n.created_at).toLocaleString()} · {n.type}</p>
                                 </div>
                               ))
                         }
@@ -2973,7 +2973,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* ── Transactions (view as user) ── */}
                     {boTab === 'transactions' && (
                       <div className="space-y-4">
-                        <p className="font-black text-slate-900 text-sm">Transactions for {p.full_name}</p>
+                        <p className="font-bold text-slate-900 text-sm">Transactions for {p.full_name}</p>
                         {boOverviewLoading ? <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={24}/></div> :
                           (ov.transactions||[]).length === 0
                             ? <div className="text-center py-12 text-slate-500 font-bold">No transactions.</div>
@@ -2982,18 +2982,18 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                 <div className="overflow-x-auto">
                                   <table className="w-full text-xs">
                                     <thead>
-                                      <tr className="border-b border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500">
                                         {['Source','Type','Amount','Currency','Status','Date'].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {(ov.transactions||[]).map((tx, i) => (
                                         <tr key={i} className="border-b border-slate-200 hover:bg-slate-100">
-                                          <td className="px-4 py-3"><span className="text-[9px] font-black uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{tx.source}</span></td>
+                                          <td className="px-4 py-3"><span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{tx.source}</span></td>
                                           <td className="px-4 py-3 text-slate-600 font-bold">{tx.tx_type?.replace(/_/g,' ')}</td>
-                                          <td className="px-4 py-3 font-black text-slate-900">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
+                                          <td className="px-4 py-3 font-bold text-slate-900">{tx.amount != null ? Number(tx.amount).toLocaleString() : '—'}</td>
                                           <td className="px-4 py-3 text-slate-500">{tx.currency}</td>
-                                          <td className="px-4 py-3"><span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-600':'text-amber-600'}`}>{tx.status||'—'}</span></td>
+                                          <td className="px-4 py-3"><span className={`text-xs font-semibold px-2 py-0.5 rounded ${tx.status==='completed'||tx.status==='confirmed'?'text-emerald-600':'text-amber-600'}`}>{tx.status||'—'}</span></td>
                                           <td className="px-4 py-3 text-slate-500">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '—'}</td>
                                         </tr>
                                       ))}
@@ -3014,26 +3014,26 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── BROADCAST ─── */}
           {activeTab === 'announce' && (
             <div className="space-y-6 animate-in fade-in max-w-2xl">
-              <h2 className="text-2xl font-black text-slate-900">Platform Broadcast</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Platform Broadcast</h2>
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
                 <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5"/>
                 <p className="text-xs text-amber-600 font-medium">This will send a notification to all active platform users. Use responsibly for important announcements only.</p>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Announcement Title</label>
+                  <label className="ui-label">Announcement Title</label>
                   <input value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-bold text-sm outline-none focus:border-blue-500 transition-colors"
+                    className="ui-input"
                     placeholder="e.g. IFB Platform Update — May 2026"/>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Message</label>
+                  <label className="ui-label">Message</label>
                   <textarea value={broadcastMsg} onChange={e => setBroadcastMsg(e.target.value)} rows={5}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-medium text-sm outline-none focus:border-blue-500 transition-colors resize-none"
+                    className="ui-textarea resize-none"
                     placeholder="Write your announcement here..."/>
                 </div>
                 <button onClick={handleBroadcast} disabled={!broadcastTitle.trim() || !broadcastMsg.trim() || broadcasting}
-                  className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black text-sm uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all">
+                  className="ui-btn ui-btn-primary">
                   {broadcasting ? <><Loader2 size={16} className="animate-spin"/>Sending...</> : <><Bell size={16}/>Broadcast to All Users</>}
                 </button>
               </div>
@@ -3044,8 +3044,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {activeTab === 'market_orders' && (
             <div className="space-y-6 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-900">DEUS Market Orders</h2>
-                <button onClick={loadMktOrders} disabled={mktLoading} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 text-xs font-black uppercase rounded-xl hover:bg-slate-100 transition-colors disabled:opacity-50">
+                <h2 className="text-2xl font-bold text-slate-900">DEUS Market Orders</h2>
+                <button onClick={loadMktOrders} disabled={mktLoading} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 text-xs font-semibold rounded-xl hover:bg-slate-100 transition-colors disabled:opacity-50">
                   <RefreshCw size={13} className={mktLoading ? 'animate-spin' : ''}/> Refresh
                 </button>
               </div>
@@ -3059,8 +3059,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {[['pending','Pending','text-amber-600','bg-amber-50'],['sourcing','Sourcing','text-blue-600','bg-blue-50'],['processing','Processing','text-indigo-600','bg-indigo-50'],['shipped','Shipped','text-violet-600','bg-violet-50'],['delivered','Delivered','text-emerald-600','bg-emerald-50'],['cancelled','Cancelled','text-red-600','bg-red-50']].map(([s,l,c,bg]) => (
                       <button key={s} onClick={() => setMktFilter(s)}
                         className={`${bg} border ${mktFilter===s?'border-slate-200':'border-slate-200'} rounded-2xl p-3 text-center transition-all hover:border-slate-200`}>
-                        <p className={`text-2xl font-black ${c}`}>{counts[s]||0}</p>
-                        <p className="text-[9px] font-black uppercase text-slate-500 mt-0.5">{l}</p>
+                        <p className={`text-2xl font-bold ${c}`}>{counts[s]||0}</p>
+                        <p className="text-xs font-semibold text-slate-500 mt-0.5">{l}</p>
                       </button>
                     ))}
                   </div>
@@ -3071,7 +3071,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
               <div className="grid md:grid-cols-2 gap-4">
                 {/* List */}
                 <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase text-slate-500 mb-3">
+                  <p className="text-xs font-semibold text-slate-500 mb-3">
                     {mktFilter.toUpperCase()} ORDERS ({mktOrders.filter(o=>o.status===mktFilter).length})
                   </p>
                   {mktLoading ? (
@@ -3086,23 +3086,23 @@ export default function AdminDashboard({ session, profile, onClose }) {
                       className={`w-full text-left bg-white border rounded-2xl p-4 transition-all hover:border-slate-200 ${mktSelected?.id===order.id?'border-blue-500':'border-slate-200'}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-slate-900 font-mono">{order.id.slice(0,8).toUpperCase()}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5 truncate">{order.user_name || order.user_email}</p>
-                          <p className="text-[10px] text-slate-600 mt-1">
+                          <p className="text-xs font-bold text-slate-900 font-mono">{order.id.slice(0,8).toUpperCase()}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">{order.user_name || order.user_email}</p>
+                          <p className="text-xs text-slate-600 mt-1">
                             {(order.items||[]).length} item{(order.items||[]).length!==1?'s':''} · {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-black text-slate-900">${Number(order.total_usd).toFixed(2)}</p>
-                          {order.vendor_source && <p className="text-[9px] text-slate-500 mt-0.5">via {order.vendor_source}</p>}
+                          <p className="text-sm font-bold text-slate-900">${Number(order.total_usd).toFixed(2)}</p>
+                          {order.vendor_source && <p className="text-xs text-slate-500 mt-0.5">via {order.vendor_source}</p>}
                         </div>
                       </div>
                       {/* Items preview */}
                       <div className="mt-2 space-y-0.5">
                         {(order.items||[]).slice(0,2).map((item,i) => (
-                          <p key={i} className="text-[10px] text-slate-500">{item.quantity}× {item.product_name}</p>
+                          <p key={i} className="text-xs text-slate-500">{item.quantity}× {item.product_name}</p>
                         ))}
-                        {(order.items||[]).length > 2 && <p className="text-[10px] text-slate-600">+{(order.items||[]).length-2} more</p>}
+                        {(order.items||[]).length > 2 && <p className="text-xs text-slate-600">+{(order.items||[]).length-2} more</p>}
                       </div>
                     </button>
                   ))}
@@ -3112,9 +3112,9 @@ export default function AdminDashboard({ session, profile, onClose }) {
                 {mktSelected ? (
                   <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 self-start sticky top-4">
                     <div>
-                      <p className="text-xs font-black text-slate-900 font-mono">{mktSelected.id.slice(0,8).toUpperCase()}</p>
-                      <p className="text-[10px] text-slate-500">{mktSelected.user_name} · {mktSelected.user_email}</p>
-                      <p className="text-lg font-black text-slate-900 mt-1">${Number(mktSelected.total_usd).toFixed(2)}</p>
+                      <p className="text-xs font-bold text-slate-900 font-mono">{mktSelected.id.slice(0,8).toUpperCase()}</p>
+                      <p className="text-xs text-slate-500">{mktSelected.user_name} · {mktSelected.user_email}</p>
+                      <p className="text-lg font-bold text-slate-900 mt-1">${Number(mktSelected.total_usd).toFixed(2)}</p>
                     </div>
 
                     {/* Items */}
@@ -3130,42 +3130,42 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     {/* Edit fields */}
                     <div className="space-y-3 border-t border-slate-200 pt-3">
                       <div>
-                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Status</label>
+                        <label className="ui-label">Status</label>
                         <select value={mktEdits.status||''} onChange={e=>setMktEdits(p=>({...p,status:e.target.value}))}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500">
+                          className="ui-select">
                           {['pending','sourcing','processing','shipped','out_for_delivery','delivered','cancelled'].map(s=>(
                             <option key={s} value={s}>{s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Sourced From (e.g. Amazon)</label>
+                        <label className="ui-label">Sourced From (e.g. Amazon)</label>
                         <input value={mktEdits.vendor_source||''} onChange={e=>setMktEdits(p=>({...p,vendor_source:e.target.value}))}
                           placeholder="Amazon, Walmart, Alibaba…"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500"/>
+                          className="ui-input"/>
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Tracking Number</label>
+                        <label className="ui-label">Tracking Number</label>
                         <input value={mktEdits.tracking_number||''} onChange={e=>setMktEdits(p=>({...p,tracking_number:e.target.value}))}
                           placeholder="1Z999AA10123456784"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500"/>
+                          className="ui-input"/>
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Tracking URL</label>
+                        <label className="ui-label">Tracking URL</label>
                         <input value={mktEdits.tracking_url||''} onChange={e=>setMktEdits(p=>({...p,tracking_url:e.target.value}))}
                           placeholder="https://track.ups.com/…"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500"/>
+                          className="ui-input"/>
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Estimated Delivery</label>
+                        <label className="ui-label">Estimated Delivery</label>
                         <input type="date" value={mktEdits.estimated_delivery||''} onChange={e=>setMktEdits(p=>({...p,estimated_delivery:e.target.value}))}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500"/>
+                          className="ui-input"/>
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase text-slate-500 mb-1 block">Note to Customer</label>
+                        <label className="ui-label">Note to Customer</label>
                         <textarea value={mktEdits.admin_notes||''} onChange={e=>setMktEdits(p=>({...p,admin_notes:e.target.value}))}
                           rows={3} placeholder="We've ordered this from Amazon, expect delivery in 5-7 days…"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 resize-none"/>
+                          className="ui-textarea resize-none"/>
                       </div>
                     </div>
 
@@ -3190,7 +3190,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                         await loadMktOrders();
                       } catch(e) { notify(e.message, 'error'); }
                       finally { setMktSaving(false); }
-                    }} className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-colors">
+                    }} className="ui-btn ui-btn-primary">
                       {mktSaving ? <><Loader2 size={14} className="animate-spin"/>Saving…</> : <><Send size={14}/>Save & Notify Customer</>}
                     </button>
                   </div>
@@ -3265,8 +3265,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
             return (
               <div className="space-y-6 animate-in fade-in">
                 <div className="flex items-center justify-between flex-wrap gap-3">
-                  <h2 className="text-2xl font-black text-slate-900">IFB Venture Exchange Pipeline</h2>
-                  <button onClick={loadVse} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-500 text-[10px] font-black uppercase rounded-xl hover:bg-slate-100 transition-colors">
+                  <h2 className="text-2xl font-bold text-slate-900">IFB Venture Exchange Pipeline</h2>
+                  <button onClick={loadVse} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-500 text-sm font-semibold rounded-xl hover:bg-slate-100 transition-colors">
                     <RefreshCw size={12}/> Refresh
                   </button>
                 </div>
@@ -3276,8 +3276,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   {VSE_STAGES.map(s => (
                     <button key={s} onClick={() => setVseStageFilter(vseStageFilter === s ? '' : s)}
                       className={`p-3 rounded-2xl border text-center transition-all ${vseStageFilter === s ? 'border-blue-500 bg-blue-50' : 'bg-white border-slate-200 hover:border-slate-200'}`}>
-                      <p className="text-xl font-black text-slate-900">{stageCounts[s] || 0}</p>
-                      <p className="text-[8px] text-slate-500 uppercase font-bold mt-0.5">{s.replace('_',' ')}</p>
+                      <p className="text-xl font-bold text-slate-900">{stageCounts[s] || 0}</p>
+                      <p className="text-xs text-slate-500 font-bold mt-0.5">{s.replace('_',' ')}</p>
                     </button>
                   ))}
                 </div>
@@ -3285,7 +3285,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                 {/* Filters */}
                 <div className="flex gap-3 flex-wrap">
                   <select value={vseSectorFilter} onChange={e => setVseSectorFilter(e.target.value)}
-                    className="bg-white border border-slate-200 text-slate-900 text-xs rounded-xl px-3 py-2 outline-none">
+                    className="ui-select">
                     <option value="">All Sectors</option>
                     {['Tech','Health','Mining','Agriculture','Energy','Finance','Real Estate','Manufacturing','Media','Consumer'].map(s =>
                       <option key={s} value={s}>{s}</option>
@@ -3293,7 +3293,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   </select>
                   {(vseSectorFilter || vseStageFilter) && (
                     <button onClick={() => { setVseSectorFilter(''); setVseStageFilter(''); }}
-                      className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-500 text-[10px] font-black uppercase rounded-xl hover:bg-slate-100">
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-500 text-sm font-semibold rounded-xl hover:bg-slate-100">
                       Clear Filters
                     </button>
                   )}
@@ -3316,16 +3316,16 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               else { setVseSelected(v); setVseAdminNote(v.admin_notes || ''); setVseTickerInput(v.ticker_symbol || ''); setVseSharePrice(v.share_price || ''); setVseShares(v.shares_issued || ''); setVseValuation(v.valuation || ''); }
                             }}>
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-slate-900 text-lg">
+                              <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center font-bold text-slate-900 text-lg">
                                 {v.company_name?.[0] || '?'}
                               </div>
                               <div>
-                                <p className="font-black text-slate-900">{v.company_name}</p>
-                                <p className="text-[10px] text-slate-500">{v.sector} · {v.country} · {v.profiles?.email || 'unknown'}</p>
+                                <p className="font-bold text-slate-900">{v.company_name}</p>
+                                <p className="text-xs text-slate-500">{v.sector} · {v.country} · {v.profiles?.email || 'unknown'}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${VSE_STAGE_COLORS[v.stage] || ''}`}>
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${VSE_STAGE_COLORS[v.stage] || ''}`}>
                                 {v.stage.replace('_',' ')}
                               </span>
                               <span className="text-slate-500 text-xs">{fmtM(v.annual_revenue)}</span>
@@ -3344,8 +3344,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
                                   { label: 'Founded',      value: v.founded_year || '?' },
                                 ].map(m => (
                                   <div key={m.label} className="bg-slate-50 rounded-xl p-3">
-                                    <p className="text-[9px] text-slate-500 uppercase font-bold">{m.label}</p>
-                                    <p className="text-slate-900 font-black text-sm mt-0.5">{m.value}</p>
+                                    <p className="text-xs text-slate-500 font-bold">{m.label}</p>
+                                    <p className="text-slate-900 font-bold text-sm mt-0.5">{m.value}</p>
                                   </div>
                                 ))}
                               </div>
@@ -3357,26 +3357,26 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               {/* Pre-IPO fields */}
                               {(v.stage === 'pre_ipo' || v.stage === 'listed') && (
                                 <div className="bg-slate-50 rounded-2xl p-4 space-y-3">
-                                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">IPO Details</p>
+                                  <p className="text-xs font-semibold text-slate-500">IPO Details</p>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                                     <div>
-                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Ticker</label>
-                                      <input className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none uppercase"
+                                      <label className="ui-label">Ticker</label>
+                                      <input className="ui-input mt-1"
                                         value={vseTickerInput} onChange={e => setVseTickerInput(e.target.value)} placeholder="e.g. AFRS"/>
                                     </div>
                                     <div>
-                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Share Price $</label>
-                                      <input type="number" className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none"
+                                      <label className="ui-label">Share Price $</label>
+                                      <input type="number" className="ui-input mt-1"
                                         value={vseSharePrice} onChange={e => setVseSharePrice(e.target.value)} placeholder="e.g. 10.00"/>
                                     </div>
                                     <div>
-                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Shares Issued</label>
-                                      <input type="number" className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none"
+                                      <label className="ui-label">Shares Issued</label>
+                                      <input type="number" className="ui-input mt-1"
                                         value={vseShares} onChange={e => setVseShares(e.target.value)} placeholder="e.g. 1000000"/>
                                     </div>
                                     <div>
-                                      <label className="text-[9px] text-slate-500 uppercase font-bold">Valuation $</label>
-                                      <input type="number" className="w-full mt-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-sm font-black outline-none"
+                                      <label className="ui-label">Valuation $</label>
+                                      <input type="number" className="ui-input mt-1"
                                         value={vseValuation} onChange={e => setVseValuation(e.target.value)} placeholder="e.g. 10000000"/>
                                     </div>
                                   </div>
@@ -3385,8 +3385,8 @@ export default function AdminDashboard({ session, profile, onClose }) {
 
                               {/* Admin notes */}
                               <div>
-                                <label className="text-[9px] text-slate-500 uppercase font-bold">Admin Notes / Feedback to Company</label>
-                                <textarea rows={3} className="w-full mt-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
+                                <label className="ui-label">Admin Notes / Feedback to Company</label>
+                                <textarea rows={3} className="ui-textarea mt-1"
                                   value={vseAdminNote} onChange={e => setVseAdminNote(e.target.value)}
                                   placeholder="Internal notes or guidance for the company..."/>
                               </div>
@@ -3395,24 +3395,24 @@ export default function AdminDashboard({ session, profile, onClose }) {
                               <div className="flex gap-3 flex-wrap">
                                 {v.stage !== 'listed' && v.stage !== 'rejected' && (
                                   <button onClick={() => advanceStage(v)} disabled={vseSaving}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-[10px] uppercase rounded-xl transition-colors">
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-colors">
                                     {vseSaving ? <Loader2 size={12} className="animate-spin"/> : <ArrowUpRight size={12}/>}
                                     Advance Stage
                                   </button>
                                 )}
                                 <button onClick={() => saveAdminNote(v)} disabled={vseSaving}
-                                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-[10px] uppercase rounded-xl transition-colors">
+                                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-colors">
                                   {vseSaving ? <Loader2 size={12} className="animate-spin"/> : <Send size={12}/>}
                                   Save Notes
                                 </button>
                                 {v.stage !== 'rejected' && v.stage !== 'listed' && (
                                   <button onClick={() => rejectVenture(v)} disabled={vseSaving}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 hover:bg-red-50 disabled:opacity-50 text-red-600 font-black text-[10px] uppercase rounded-xl transition-colors">
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 hover:bg-red-50 disabled:opacity-50 text-red-600 font-semibold text-sm rounded-xl transition-colors">
                                     <X size={12}/> Reject
                                   </button>
                                 )}
                                 {v.stage === 'listed' && (
-                                  <span className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-600 font-black text-[10px] uppercase rounded-xl">
+                                  <span className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-600 font-semibold text-xs rounded-xl">
                                     <Trophy size={12}/> Listed — ${v.ticker_symbol || '?'}
                                   </span>
                                 )}
@@ -3431,22 +3431,22 @@ export default function AdminDashboard({ session, profile, onClose }) {
           {/* ─── ADMIN ROLES ─── */}
           {activeTab === 'roles' && (
             <div className="space-y-8 animate-in fade-in">
-              <h2 className="text-2xl font-black text-slate-900">Admin Role Management</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Admin Role Management</h2>
 
               {/* Add new admin */}
               <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4">
-                <h3 className="font-black text-slate-900">Grant Admin Access</h3>
+                <h3 className="font-bold text-slate-900">Grant Admin Access</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">User Email</label>
+                    <label className="ui-label">User Email</label>
                     <input value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-bold text-sm outline-none focus:border-blue-500 transition-colors"
+                      className="ui-input"
                       placeholder="user@email.com"/>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Admin Level</label>
+                    <label className="ui-label">Admin Level</label>
                     <select value={newAdminRole} onChange={e => setNewAdminRole(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-bold text-sm outline-none focus:border-blue-500 transition-colors">
+                      className="ui-select">
                       {Object.entries(ROLE_META).filter(([k]) => k !== 'super').map(([key, meta]) => (
                         <option key={key} value={key}>{meta.label}</option>
                       ))}
@@ -3454,7 +3454,7 @@ export default function AdminDashboard({ session, profile, onClose }) {
                   </div>
                 </div>
                 <button onClick={handleAddAdmin} disabled={!newAdminEmail.trim() || addingAdmin}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-colors flex items-center gap-2">
+                  className="ui-btn ui-btn-primary w-auto">
                   {addingAdmin ? <Loader2 size={14} className="animate-spin"/> : <Plus size={14}/>} Grant Access
                 </button>
               </div>
@@ -3467,26 +3467,26 @@ export default function AdminDashboard({ session, profile, onClose }) {
                     return (
                       <div key={ar.id} className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-50 flex items-center justify-center font-black text-slate-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-50 flex items-center justify-center font-bold text-slate-900">
                             {(ar.email || 'A')[0].toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-black text-slate-900 text-sm">{ar.email}</p>
-                            <p className="text-[9px] text-slate-500 uppercase">{meta?.desc}</p>
+                            <p className="font-bold text-slate-900 text-sm">{ar.email}</p>
+                            <p className="text-xs text-slate-500">{meta?.desc}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-full border ${meta?.color || ''} ${!ar.is_active ? 'opacity-40' : ''}`}>
+                          <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${meta?.color || ''} ${!ar.is_active ? 'opacity-40' : ''}`}>
                             {meta?.label || ar.role} {!ar.is_active && '(Revoked)'}
                           </span>
                           {ar.user_id !== session.user.id && ar.is_active && (
                             <button onClick={() => handleRevokeAdmin(ar.id)}
-                              className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 font-black text-[9px] uppercase rounded-lg hover:bg-red-50 transition-colors">
+                              className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 font-semibold text-sm rounded-lg hover:bg-red-50 transition-colors">
                               Revoke
                             </button>
                           )}
                           {ar.user_id === session.user.id && (
-                            <span className="text-[9px] text-slate-600 uppercase font-bold">You</span>
+                            <span className="text-xs text-slate-600 font-bold">You</span>
                           )}
                         </div>
                       </div>
@@ -3525,7 +3525,7 @@ function TicketMessages({ ticketId, session }) {
       {messages.map(m => (
         <div key={m.id} className={`flex ${m.sender_type === 'agent' ? 'justify-end' : 'justify-start'}`}>
           <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${m.sender_type === 'agent' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-50 text-slate-800 rounded-tl-none'}`}>
-            {m.sender_type === 'agent' && <p className="text-[9px] font-black text-blue-600 uppercase mb-1">Admin</p>}
+            {m.sender_type === 'agent' && <p className="text-xs font-semibold text-blue-600 mb-1">Admin</p>}
             {m.message}
           </div>
         </div>

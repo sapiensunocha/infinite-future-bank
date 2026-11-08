@@ -4,11 +4,7 @@ export default function GlassCard({ children, className = '', padding = 'p-6' })
   return (
     <div 
       className={`
-        relative overflow-hidden
-        bg-ifb-surface backdrop-blur-xl 
-        border border-white/10 
-        shadow-glass rounded-2xl 
-        transition-all duration-300 ease-in-out
+        relative overflow-hidden bg-ifb-surface backdrop-blur-xl border border-white/10 shadow-glass rounded-2xl transition-all duration-300 ease-in-out
         ${padding} ${className}
       `}
     >

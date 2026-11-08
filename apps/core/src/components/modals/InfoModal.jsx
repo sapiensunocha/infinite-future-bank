@@ -48,7 +48,7 @@ export default function InfoModal({ activeModal, onClose }) {
               placeholder="Search for answers..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-sm font-bold outline-none focus:border-blue-400 focus:bg-white transition-all shadow-inner"
+              className="ui-input pl-12 pr-4"
             />
           </div>
 
@@ -60,7 +60,7 @@ export default function InfoModal({ activeModal, onClose }) {
             <div className="space-y-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
               {filteredFaqs.map((faq) => (
                 <div key={faq.id} className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-blue-100 transition-colors">
-                  <p className="font-black text-slate-800 text-lg mb-2">{faq.question}</p>
+                  <p className="font-bold text-slate-800 text-lg mb-2">{faq.question}</p>
                   <p className="leading-relaxed text-sm">{faq.answer}</p>
                 </div>
               ))}
@@ -73,9 +73,9 @@ export default function InfoModal({ activeModal, onClose }) {
           )}
 
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-3xl border border-blue-100 text-center mt-8 shadow-inner">
-            <h4 className="font-black text-blue-900 text-lg mb-2">Can't find what you're looking for?</h4>
+            <h4 className="font-bold text-blue-900 text-lg mb-2">Can't find what you're looking for?</h4>
             <p className="text-xs mb-6 text-blue-700/80 font-medium">Submit a secure request to our advisory and technical team.</p>
-            <Link to="/FeedbackForm" className="inline-block px-8 py-4 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors shadow-lg hover:shadow-blue-500/30">
+            <Link to="/FeedbackForm" className="inline-block px-8 py-4 bg-blue-600 text-white font-semibold text-xs rounded-xl hover:bg-blue-700 transition-colors shadow-lg">
               Submit Direct Request
             </Link>
           </div>
@@ -87,40 +87,40 @@ export default function InfoModal({ activeModal, onClose }) {
       icon: <Globe2 className="text-emerald-500" size={24}/>,
       body: (
         <div className="space-y-12 text-slate-600 text-sm leading-relaxed">
-          <div className="bg-slate-900 text-white p-10 rounded-3xl shadow-xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
-            <h3 className="text-2xl font-black mb-4 text-emerald-400 tracking-tight">PHASE 1: THE DIGITAL CORE</h3>
+            <h3 className="text-2xl font-bold mb-4 text-emerald-400 tracking-tight">PHASE 1: THE DIGITAL CORE</h3>
             <p className="opacity-90 text-lg font-medium leading-relaxed">
               IFB is a synthetic financial ecosystem built on AFR (Advanced Future Reserve) with a USD-equivalent simulation. It mimics a traditional bank without holding physical fiat deposits in the traditional sense.
             </p>
           </div>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Network className="text-blue-500" size={24}/> PART 1: The Core IFB Concept
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 mb-2">1. User Deposits = AFR Credits</p>
+                <p className="font-bold text-slate-800 mb-2">1. User Deposits = AFR Credits</p>
                 <p>When a user deposits, they are not sending real money to IFB to hold in a vault. The system credits them with AFR tokens, representing a stable USD-equivalent balance.</p>
               </div>
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 mb-2">2. Withdrawals = AFR Sales</p>
+                <p className="font-bold text-slate-800 mb-2">2. Withdrawals = AFR Sales</p>
                 <p>When users withdraw, they sell their AFR back to IFB. IFB then pays out USD from cash points, partner accounts, or liquidity pools.</p>
               </div>
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 mb-2">3. Transfers & Internal Growth</p>
+                <p className="font-bold text-slate-800 mb-2">3. Transfers & Internal Growth</p>
                 <p>Internal transfers, loans, or wealth growth happen entirely within the synthetic AFR system instantly.</p>
               </div>
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 mb-2">4. Legal Classification</p>
+                <p className="font-bold text-slate-800 mb-2">4. Legal Classification</p>
                 <p>Deposits are legally treated as buying AFR tokens. Withdrawals are processed as service payments redeeming these tokens.</p>
               </div>
             </div>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <ShieldAlert className="text-amber-500" size={24}/> PART 2: Risk Mitigation & Liquidity
             </h4>
             <ul className="space-y-4">
@@ -131,17 +131,17 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Globe2 className="text-indigo-500" size={24}/> PART 3: Global Scaling (Partner Model)
             </h4>
             <p className="mb-6">IFB scales globally by acting as the logic layer, while physical money movement is handled by local partners and legally represented by Local Directors.</p>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-100 text-slate-800 text-[10px] uppercase tracking-widest">
-                    <th className="p-4 rounded-tl-xl font-black">Partner Type</th>
-                    <th className="p-4 font-black">Daily Capacity</th>
-                    <th className="p-4 rounded-tr-xl font-black">Role</th>
+                  <tr className="bg-slate-100 text-slate-800 text-xs">
+                    <th className="p-4 rounded-tl-xl font-bold">Partner Type</th>
+                    <th className="p-4 font-bold">Daily Capacity</th>
+                    <th className="p-4 rounded-tr-xl font-bold">Role</th>
                   </tr>
                 </thead>
                 <tbody className="text-xs">
@@ -155,7 +155,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">PART 4 & 5: Help Blocks & The Bukavu Model</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">PART 4 & 5: Help Blocks & The Bukavu Model</h4>
             <div className="bg-blue-50 p-6 rounded-2xl border-l-4 border-blue-500 mb-6">
               <p className="font-bold text-blue-900 mb-2">The Liquidity Bottleneck Protocol</p>
               <p className="text-blue-800/80">When a massive withdrawal is requested and local partners lack immediate cash, IFB utilizes <strong>Help Blocks</strong>. The network creates a pending obligation, and UHNW individuals/miners contribute liquidity toward fulfilling the block, earning AFR rewards in return.</p>
@@ -164,7 +164,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Gem className="text-emerald-500" size={24}/> PART 6 & 7: Wealth Management & Insurance
             </h4>
             <p className="mb-4"><strong>The Wealth Floor:</strong> Every IFB member is guaranteed a minimum wealth floor in AFR. If a user suffers extreme losses, the Hedge Fund Safety Pool automatically tops up their account to prevent absolute poverty within the ecosystem.</p>
@@ -176,7 +176,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6 flex items-center gap-3">
               <Cpu className="text-purple-500" size={24}/> PART 8 & 9: 10X Safer Fraud Detection & Social Impact
             </h4>
             <p className="mb-4">IFB shifts from reactive human compliance to proactive algorithmic security. AI monitoring analyzes patterns to flag unusual behavior (e.g., rapid loan requests), while network nodes validate liquidity contributions to prevent unilateral theft.</p>
@@ -187,26 +187,26 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">PART 11: Institutional Economics</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">PART 11: Institutional Economics</h4>
             <p className="mb-6 font-medium text-slate-700">Official Monthly Revenue Allocation (Based on 1,000 Users / $41,750 Rev)</p>
             <div className="overflow-x-auto shadow-sm rounded-2xl border border-slate-200">
               <table className="w-full text-left border-collapse bg-white">
                 <thead>
-                  <tr className="bg-slate-800 text-white text-[10px] uppercase tracking-widest">
-                    <th className="p-4 font-black">Ecosystem Stream</th>
-                    <th className="p-4 font-black">%</th>
-                    <th className="p-4 font-black">Designation</th>
+                  <tr className="bg-slate-800 text-white text-xs">
+                    <th className="p-4 font-bold">Ecosystem Stream</th>
+                    <th className="p-4 font-bold">%</th>
+                    <th className="p-4 font-bold">Designation</th>
                   </tr>
                 </thead>
                 <tbody className="text-xs">
-                  <tr className="border-b border-slate-100"><td className="p-4 font-bold text-emerald-600">Permanent Reserve</td><td className="p-4 font-black">25%</td><td className="p-4">Locked for 5 years for strategic global mega-projects.</td></tr>
-                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">AFR Loans / Advances</td><td className="p-4 font-black">30%</td><td className="p-4">Reinvested directly into the lending pool for users.</td></tr>
-                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Social Projects</td><td className="p-4 font-black">10%</td><td className="p-4">Funding infrastructure, earning management fees.</td></tr>
-                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Referral Rewards</td><td className="p-4 font-black">10%</td><td className="p-4">Bonuses driving network acquisition.</td></tr>
-                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Hedge Fund Growth</td><td className="p-4 font-black">10%</td><td className="p-4">System stability and wealth floor funding.</td></tr>
-                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Insurance Coverage</td><td className="p-4 font-black">5%</td><td className="p-4">Funds free base-level coverage for active users.</td></tr>
-                  <tr className="border-b border-slate-100"><td className="p-4 font-bold text-red-500">Emergency SOS Fund</td><td className="p-4 font-black">2%</td><td className="p-4">Immediate liquidity for users facing severe crises.</td></tr>
-                  <tr><td className="p-4 font-bold text-slate-400">Operations / Admin</td><td className="p-4 font-black text-slate-400">8%</td><td className="p-4 text-slate-400">Staff, platform fees, tech maintenance.</td></tr>
+                  <tr className="border-b border-slate-100"><td className="p-4 font-bold text-emerald-600">Permanent Reserve</td><td className="p-4 font-bold">25%</td><td className="p-4">Locked for 5 years for strategic global mega-projects.</td></tr>
+                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">AFR Loans / Advances</td><td className="p-4 font-bold">30%</td><td className="p-4">Reinvested directly into the lending pool for users.</td></tr>
+                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Social Projects</td><td className="p-4 font-bold">10%</td><td className="p-4">Funding infrastructure, earning management fees.</td></tr>
+                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Referral Rewards</td><td className="p-4 font-bold">10%</td><td className="p-4">Bonuses driving network acquisition.</td></tr>
+                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Hedge Fund Growth</td><td className="p-4 font-bold">10%</td><td className="p-4">System stability and wealth floor funding.</td></tr>
+                  <tr className="border-b border-slate-100"><td className="p-4 font-bold">Insurance Coverage</td><td className="p-4 font-bold">5%</td><td className="p-4">Funds free base-level coverage for active users.</td></tr>
+                  <tr className="border-b border-slate-100"><td className="p-4 font-bold text-red-500">Emergency SOS Fund</td><td className="p-4 font-bold">2%</td><td className="p-4">Immediate liquidity for users facing severe crises.</td></tr>
+                  <tr><td className="p-4 font-bold text-slate-400">Operations / Admin</td><td className="p-4 font-bold text-slate-400">8%</td><td className="p-4 text-slate-400">Staff, platform fees, tech maintenance.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -219,9 +219,9 @@ export default function InfoModal({ activeModal, onClose }) {
       icon: <ShieldCheck className="text-emerald-500" size={24}/>,
       body: (
         <div className="space-y-12 text-slate-600 text-sm leading-relaxed">
-          <div className="bg-slate-900 text-white p-10 rounded-3xl shadow-xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
-            <h3 className="text-2xl font-black mb-4 text-emerald-400 tracking-tight">Institutional-Grade Sovereign Protection</h3>
+            <h3 className="text-2xl font-bold mb-4 text-emerald-400 tracking-tight">Institutional-Grade Sovereign Protection</h3>
             <p className="opacity-90 text-lg font-medium leading-relaxed">
               Traditional consumer insurance models extract significant capital from individuals—often costing the average adult $500 to $1,000+ per month across health, auto, property, and life policies. The Infinite Future Bank (IFB) disrupts this legacy extraction model by transforming insurance from a monthly financial burden into a reward-based algorithmic safety net.
             </p>
@@ -231,63 +231,63 @@ export default function InfoModal({ activeModal, onClose }) {
           </div>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">1. The Economic Funding Engine</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">1. The Economic Funding Engine</h4>
             <p className="mb-4">The IFB Insurance system does not rely on third-party legacy insurance underwriters. It is a self-sustaining, mathematically backed pool integrated directly into the IFB economic model.</p>
             <div className="space-y-4">
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 mb-2">The 5% Macro-Allocation</p>
+                <p className="font-bold text-slate-800 mb-2">The 5% Macro-Allocation</p>
                 <p>Exactly 5% of total global ecosystem revenue (generated from transaction fees, social project management fees, and AFR loan interest) is permanently diverted to fully fund the base-level insurance coverage for all active users.</p>
               </div>
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 mb-2">Hedge Fund Backing</p>
+                <p className="font-bold text-slate-800 mb-2">Hedge Fund Backing</p>
                 <p>The IFB Hedge Fund Growth Pool continuously invests aggregated network reserves into low-risk global assets. The yields from these investments act as the ultimate liquidity backstop for any massive insurance payout events.</p>
               </div>
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <p className="font-black text-slate-800 mb-2">The Liquidity Network</p>
+                <p className="font-bold text-slate-800 mb-2">The Liquidity Network</p>
                 <p>In the event of a catastrophic regional claim that exceeds local hedge fund liquidity, IFB deploys Help Blocks, allowing the broader network (UHNW individuals, miners, and investors) to temporarily inject liquidity in exchange for high-yield AFR rewards.</p>
               </div>
             </div>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">2. The Coverage Matrix (Underwritten Assets)</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">2. The Coverage Matrix (Underwritten Assets)</h4>
             <p className="mb-6">Once a user is activated on the network, their profile is cryptographically underwritten for the following baseline protections (values reflect standard entry-tier limits):</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Comprehensive Health</p>
-                 <p className="text-xl font-black text-slate-800 mb-2">$500,000</p>
+                 <p className="text-xs font-semibold text-emerald-500 mb-1">Comprehensive Health</p>
+                 <p className="text-xl font-bold text-slate-800 mb-2">$500,000</p>
                  <p className="text-xs text-slate-500"><strong>Coverage:</strong> Major medical emergencies, critical care, and catastrophic health events.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Auto & Transit</p>
-                 <p className="text-xl font-black text-slate-800 mb-2">$100,000</p>
+                 <p className="text-xs font-semibold text-emerald-500 mb-1">Auto & Transit</p>
+                 <p className="text-xl font-bold text-slate-800 mb-2">$100,000</p>
                  <p className="text-xs text-slate-500"><strong>Coverage:</strong> Liability and collision equivalent for personal transit.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Property & Contents</p>
-                 <p className="text-xl font-black text-slate-800 mb-2">$250,000</p>
+                 <p className="text-xs font-semibold text-emerald-500 mb-1">Property & Contents</p>
+                 <p className="text-xl font-bold text-slate-800 mb-2">$250,000</p>
                  <p className="text-xs text-slate-500"><strong>Coverage:</strong> Structural damage, loss of primary residence, or critical physical assets.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Term Life Coverage</p>
-                 <p className="text-xl font-black text-slate-800 mb-2">$250,000</p>
+                 <p className="text-xs font-semibold text-emerald-500 mb-1">Term Life Coverage</p>
+                 <p className="text-xl font-bold text-slate-800 mb-2">$250,000</p>
                  <p className="text-xs text-slate-500"><strong>Coverage:</strong> Immediate liquidity injected into the designated beneficiaries' Vaults upon verified loss of life.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Global Travel</p>
-                 <p className="text-xl font-black text-slate-800 mb-2">$50,000</p>
+                 <p className="text-xs font-semibold text-emerald-500 mb-1">Global Travel</p>
+                 <p className="text-xl font-bold text-slate-800 mb-2">$50,000</p>
                  <p className="text-xs text-slate-500"><strong>Coverage:</strong> Trip interruption, emergency repatriation, and cross-border medical.</p>
                </div>
                <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
-                 <p className="text-xs font-black uppercase tracking-widest text-emerald-500 mb-1">Income Protection</p>
-                 <p className="text-xl font-black text-slate-800 mb-2">$5,000 / month</p>
+                 <p className="text-xs font-semibold text-emerald-500 mb-1">Income Protection</p>
+                 <p className="text-xl font-bold text-slate-800 mb-2">$5,000 / month</p>
                  <p className="text-xs text-slate-500"><strong>Coverage:</strong> Temporary fractional income replacement if the user is incapacitated and unable to generate active cash flow.</p>
                </div>
             </div>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">3. Operational Mechanics: How It Works</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">3. Operational Mechanics: How It Works</h4>
             <div className="space-y-8">
               <div>
                 <p className="font-bold text-slate-800 mb-2 text-lg">Phase A: Application & Smart Contract Activation</p>
@@ -323,7 +323,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">4. Scalability & Optional Upgrades</h4>
+             <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">4. Scalability & Optional Upgrades</h4>
              <p className="mb-4">While the baseline coverage is mathematically subsidized for all active users, the IFB Insurance System offers highly lucrative expansion capabilities:</p>
              <ul className="list-disc pl-5 space-y-2">
                <li><strong>Paid Premium Upgrades:</strong> Users who require $5M in life insurance or $2M in property coverage can voluntarily pay monthly premiums in AFR.</li>
@@ -332,7 +332,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">5. Conclusion</h4>
+             <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">5. Conclusion</h4>
              <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
                <p className="text-emerald-800/80 font-medium">The IFB Insurance Ecosystem is not a standalone product; it is the ultimate expression of the Infinite Banking Concept digitized on the blockchain. By transforming a $10,000/year real-world expense into a free, algorithmically guaranteed network benefit, IFB mathematically eliminates user churn. Users will secure their capital within IFB not just for the yields or the payment routing, but because leaving the ecosystem means losing their total sovereign life protection.</p>
              </div>
@@ -345,9 +345,9 @@ export default function InfoModal({ activeModal, onClose }) {
       icon: <ShieldCheck className="text-blue-500" size={24}/>,
       body: (
         <div className="space-y-12 text-slate-600 text-sm leading-relaxed">
-          <div className="bg-slate-900 text-white p-10 rounded-3xl shadow-xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
-            <h3 className="text-2xl font-black mb-4 text-blue-400 tracking-tight">Building the Future of Client Confidence</h3>
+            <h3 className="text-2xl font-bold mb-4 text-blue-400 tracking-tight">Building the Future of Client Confidence</h3>
             <p className="opacity-90 text-lg font-medium leading-relaxed">
               Trust is the foundation of any financial institution. For IFB, trust is not just a policy; it is our operational DNA, integrated into every service, process, and interaction. Unlike traditional banks, which rely on centralized branches and slow communication, IFB leverages global partnerships, local agents, blockchain transparency, and community engagement to build trust across regions, including underserved or high-risk areas.
             </p>
@@ -357,7 +357,7 @@ export default function InfoModal({ activeModal, onClose }) {
              <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-1/4 translate-y-1/4">
                <HeartHandshake size={160} />
              </div>
-             <h4 className="text-xl font-black text-blue-900 mb-3 relative z-10">Revenue Sharing & Constant Evolution</h4>
+             <h4 className="text-xl font-bold text-blue-900 mb-3 relative z-10">Revenue Sharing & Constant Evolution</h4>
              <p className="text-blue-800/90 font-medium leading-relaxed relative z-10 mb-4">
                At IFB, we believe the wealth generated by the network belongs to the network. <strong>We give back the vast majority of our generated revenue</strong> to our users through subsidized insurance, community loans, and direct yields. 
              </p>
@@ -367,7 +367,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </div>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">1. Operational Trust: Being Present Everywhere</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">1. Operational Trust: Being Present Everywhere</h4>
             <p className="mb-4">Traditional banks establish trust through physical branches, regular hours, and direct staff interaction—a high-cost infrastructure unable to operate in conflict zones or high-risk regions. <strong>The IFB approach:</strong></p>
             <ul className="list-disc pl-5 space-y-2 mb-4">
               <li><strong>Local Agent Network:</strong> IFB partners with trusted local agents and NGOs globally. Each agent acts as an on-the-ground representative, extending IFB’s presence without the overhead of a physical branch.</li>
@@ -378,7 +378,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">2. Transparency & Technological Trust</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">2. Transparency & Technological Trust</h4>
             <ul className="list-disc pl-5 space-y-2 mb-4">
               <li><strong>AFR Blockchain:</strong> All transactions, loans, and fund movements are recorded in immutable, transparent ledgers. Users can verify funds in real time.</li>
               <li><strong>Open Reporting:</strong> Monthly dashboards provide clients and partners a clear overview of their funds, investments, and loans.</li>
@@ -387,41 +387,41 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">3. Ethical & Financial Trust</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">3. Ethical & Financial Trust</h4>
             <p className="mb-4">IFB offers community-driven financial products such as microloans to underserved entrepreneurs, AFR emergency funds for disaster response, and low-interest loans designed for sustainability.</p>
             <p className="mb-4">Ethical practices reinforce client confidence through clear repayment terms, fair interest rates, and assistance programs for struggling clients.</p>
             <p className="italic text-xs text-slate-500">Example: Users affected by regional crises can access emergency microfinance instantly, with transparent rules and no hidden penalties.</p>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">4. Community Engagement: Building Social Trust</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">4. Community Engagement: Building Social Trust</h4>
             <p className="mb-4">IFB organizes local events (financial literacy workshops), global hackathons, and volunteer partnerships. Community engagement translates to peer validation. Users see IFB actively supporting people like them, and trust spreads organically.</p>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">5. Communication & Support: Operational Excellence</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">5. Communication & Support: Operational Excellence</h4>
             <p className="mb-4">IFB emphasizes proactive, real-time communication through alerts for transactions, advisory services for clients, and 24/7 multilingual support. Clients trust IFB because they never feel abandoned.</p>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">6. Risk Management & Geopolitical Trust</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">6. Risk Management & Geopolitical Trust</h4>
             <p className="mb-4">IFB thrives where traditional banks cannot operate: conflict zones, natural disaster areas, and politically unstable regions. A digital-first, agent-supported approach ensures continuity of financial services through distributed vaults and real-time monitoring.</p>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">7. Partner Trust: B2B Relationships</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">7. Partner Trust: B2B Relationships</h4>
             <p className="mb-4">IFB’s partnerships are built on transparent agreements, shared values (community development, ethical finance, innovation), and revenue-sharing for co-funded projects. Partners see IFB as a reliable, globally consistent institution.</p>
           </section>
 
           <section>
-            <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">8. Competitive Differentiation</h4>
+            <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">8. Competitive Differentiation</h4>
             <div className="overflow-x-auto shadow-sm rounded-2xl border border-slate-200">
               <table className="w-full text-left border-collapse bg-white">
                 <thead>
-                  <tr className="bg-slate-100 text-slate-800 text-[10px] uppercase tracking-widest">
-                    <th className="p-4 font-black border-b border-slate-200">Dimension</th>
-                    <th className="p-4 font-black border-b border-slate-200">Traditional Banks</th>
-                    <th className="p-4 font-black border-b border-slate-200">IFB Advantage</th>
+                  <tr className="bg-slate-100 text-slate-800 text-xs">
+                    <th className="p-4 font-bold border-b border-slate-200">Dimension</th>
+                    <th className="p-4 font-bold border-b border-slate-200">Traditional Banks</th>
+                    <th className="p-4 font-bold border-b border-slate-200">IFB Advantage</th>
                   </tr>
                 </thead>
                 <tbody className="text-xs">
@@ -438,7 +438,7 @@ export default function InfoModal({ activeModal, onClose }) {
           </section>
 
           <section>
-             <h4 className="font-black text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">Conclusion</h4>
+             <h4 className="font-bold text-slate-800 text-xl tracking-tight border-b-2 border-slate-100 pb-3 mb-6">Conclusion</h4>
              <p className="mb-4">Trust at IFB is not just a feature, it’s a system. By combining technology, partnerships, ethical finance, community engagement, and operational excellence, IFB establishes unmatched confidence with clients and partners.</p>
              <ul className="list-disc pl-5 space-y-2 mb-4">
                <li>Clients feel secure in every transaction.</li>
@@ -480,10 +480,10 @@ export default function InfoModal({ activeModal, onClose }) {
           {/* Certificate header */}
           <div className="bg-slate-900 rounded-3xl p-8 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-400 to-blue-600" />
-            <p className="text-[10px] font-black tracking-[0.25em] uppercase text-slate-400 mb-1">State of Delaware · Secretary of State</p>
-            <p className="text-[10px] text-slate-500 mb-4">Division of Corporations · Delivered 09:07 AM 06/04/2026</p>
-            <h4 className="text-xl font-black text-white mb-1">INFINITE FUTURE BANK LLC</h4>
-            <p className="text-[11px] font-bold tracking-widest uppercase text-blue-400">Certificate of Formation · Limited Liability Company</p>
+            <p className="text-xs font-semibold text-slate-500 mb-1">State of Delaware · Secretary of State</p>
+            <p className="text-xs text-slate-500 mb-4">Division of Corporations · Delivered 09:07 AM 06/04/2026</p>
+            <h4 className="text-xl font-bold text-white mb-1">INFINITE FUTURE BANK LLC</h4>
+            <p className="text-[11px] font-bold text-blue-400">Certificate of Formation · Limited Liability Company</p>
           </div>
           {/* Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -500,19 +500,19 @@ export default function InfoModal({ activeModal, onClose }) {
               ['US Headquarters', '1717 Pennsylvania Ave NW, Suite 1025, Washington, DC 20006'],
             ].map(([label, value]) => (
               <div key={label} className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+                <p className="text-xs font-semibold text-slate-500 mb-1">{label}</p>
                 <p className="text-sm font-bold text-slate-800 leading-tight">{value}</p>
               </div>
             ))}
           </div>
           {/* Purpose */}
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">Corporate Purpose · Article Fourth</p>
+            <p className="text-xs font-semibold text-blue-600 mb-2">Corporate Purpose · Article Fourth</p>
             <p className="text-xs text-slate-600 leading-relaxed italic">"The purpose for which the company is organized is to conduct any and all lawful business for which Limited Liability Companies can be organized pursuant to Delaware statute."</p>
           </div>
           {/* Verify */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Verify Independently</p>
+            <p className="text-xs font-semibold text-slate-500 mb-2">Verify Independently</p>
             <p className="text-xs text-slate-600">Delaware Division of Corporations: <span className="font-mono text-blue-600">corp.delaware.gov</span></p>
             <p className="text-xs text-slate-500 mt-1">Search File No. <strong className="text-slate-700">10649108</strong></p>
           </div>
@@ -529,7 +529,7 @@ export default function InfoModal({ activeModal, onClose }) {
         <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-3">
             {current.icon}
-            <h3 className="text-lg font-black text-slate-800 uppercase tracking-widest">{current.title}</h3>
+            <h3 className="text-lg font-semibold text-slate-800">{current.title}</h3>
           </div>
           <button onClick={onClose} className="p-2 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-600 transition-colors">
             <X size={20} />

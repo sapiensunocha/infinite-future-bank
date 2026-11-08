@@ -103,7 +103,7 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
         <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <ShieldCheck size={40} className="text-amber-500" />
         </div>
-        <h2 className="text-3xl font-black text-slate-800 tracking-tight">Corporate Access Required</h2>
+        <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Business account required</h2>
         <p className="text-slate-500 mt-4 leading-relaxed">
           The IFB Payroll Engine is an institutional tool. To activate, your entity must complete the 
           <strong> Pascaline Underwriting</strong> process found in the Commercial Hub.
@@ -122,35 +122,35 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
       {/* PAYROLL CONFIRMATION MODAL */}
       {payrollConfirm && (
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl p-10 space-y-6 animate-in zoom-in-95">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-10 space-y-6 animate-in zoom-in-95">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Send size={28} className="text-blue-600" />
               </div>
-              <h4 className="font-black text-slate-800 text-xl">Payroll Execution</h4>
+              <h4 className="font-bold text-slate-800 text-xl">Payroll Execution</h4>
               <p className="text-sm text-slate-400 font-bold mt-1">Review before authorizing the run</p>
             </div>
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-3">
               <div className="flex justify-between text-sm font-bold text-slate-600">
                 <span>Personnel</span>
-                <span className="font-black text-slate-800">{payrollConfirm.activeEmps.length} Active</span>
+                <span className="font-bold text-slate-800">{payrollConfirm.activeEmps.length} Active</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-600">
                 <span>Gross Salaries</span>
-                <span className="font-black text-slate-800">{formatCurrency(payrollConfirm.totalGross)}</span>
+                <span className="font-bold text-slate-800">{formatCurrency(payrollConfirm.totalGross)}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-600">
                 <span>IFB Service Fee ({INSTITUTIONAL_FEE_PCT}%)</span>
-                <span className="font-black text-slate-800">{formatCurrency(payrollConfirm.calculatedFee)}</span>
+                <span className="font-bold text-slate-800">{formatCurrency(payrollConfirm.calculatedFee)}</span>
               </div>
-              <div className="pt-3 border-t border-slate-200 flex justify-between font-black text-blue-900">
+              <div className="pt-3 border-t border-slate-200 flex justify-between font-bold text-blue-900">
                 <span>Total Deduction</span>
                 <span className="text-xl">{formatCurrency(payrollConfirm.totalInstitutionalLiability)}</span>
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setPayrollConfirm(null)} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors">Cancel</button>
-              <button onClick={executePayroll} disabled={isLoading} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-colors shadow-xl disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={() => setPayrollConfirm(null)} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-semibold text-sm hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={executePayroll} disabled={isLoading} className="ui-btn ui-btn-primary flex-1">
                 {isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Authorize Run'}
               </button>
             </div>
@@ -159,30 +159,30 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
       )}
 
       {/* HEADER SECTION */}
-      <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden shadow-2xl border border-slate-800">
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 md:p-8 text-white flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden shadow-sm border">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black tracking-tight">PEO Payroll Engine</h2>
-          <p className="text-sm text-indigo-300 font-bold uppercase tracking-widest mt-1">Automated Salary & Tax Compliance</p>
+          <h2 className="text-3xl font-bold tracking-tight">Payroll</h2>
+          <p className="text-sm text-indigo-300 font-bold mt-1">Pay your team in one step</p>
         </div>
         
         <div className="flex gap-4 relative z-10 w-full md:w-auto">
           <div className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 flex-1 md:flex-none">
-             <p className="text-[10px] uppercase font-black text-slate-400">Run Total (Incl. Fees)</p>
-             <p className="text-xl font-black">{formatCurrency(currentTotalSalaries + currentFeePreview)}</p>
+             <p className="text-xs font-semibold text-blue-100">Total incl. fees</p>
+             <p className="text-xl font-bold">{formatCurrency(currentTotalSalaries + currentFeePreview)}</p>
           </div>
           <button 
             onClick={handleRunPayroll} 
             disabled={isLoading || employees.length === 0}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+            className="ui-btn ui-btn-primary w-auto"
           >
-            {isLoading ? <Loader2 className="animate-spin" size={18}/> : <><Send size={18}/> Execute Run</>}
+            {isLoading ? <Loader2 className="animate-spin" size={18}/> : <><Send size={18}/> Run payroll</>}
           </button>
         </div>
         <Receipt size={180} className="absolute right-[-40px] bottom-[-40px] text-white/5 rotate-12" />
       </div>
 
       {notification && (
-        <div className={`p-5 rounded-2xl font-black text-xs uppercase tracking-[0.1em] flex items-center gap-4 shadow-xl border animate-in slide-in-from-top-4 ${notification.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
+        <div className={`p-5 rounded-2xl font-semibold text-xs flex items-center gap-4 shadow-xl border animate-in slide-in-from-top-4 ${notification.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'}`}>
           {notification.type === 'error' ? <AlertCircle size={20}/> : <CheckCircle2 size={20}/>}
           {notification.msg}
         </div>
@@ -192,66 +192,66 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
         
         <div className="lg:col-span-1 space-y-6">
           {/* COMPLIANCE WIDGET */}
-          <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-[2rem] space-y-4">
-             <h4 className="font-black text-[10px] uppercase text-blue-600 tracking-widest flex items-center gap-2"><Info size={14}/> Compliance Summary</h4>
+          <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-2xl space-y-4">
+             <h4 className="font-semibold text-xs text-blue-600 flex items-center gap-2"><Info size={14}/> Summary</h4>
              <div className="space-y-2">
                 <div className="flex justify-between text-sm font-bold text-slate-600"><span>Gross Salaries:</span> <span>{formatCurrency(currentTotalSalaries)}</span></div>
                 <div className="flex justify-between text-sm font-bold text-slate-600"><span>Platform Fee ({INSTITUTIONAL_FEE_PCT}%):</span> <span>{formatCurrency(currentFeePreview)}</span></div>
-                <div className="pt-2 border-t border-blue-100 flex justify-between text-sm font-black text-blue-900"><span>Total Liability:</span> <span>{formatCurrency(currentTotalSalaries + currentFeePreview)}</span></div>
+                <div className="pt-2 border-t border-blue-100 flex justify-between text-sm font-bold text-blue-900"><span>Total:</span> <span>{formatCurrency(currentTotalSalaries + currentFeePreview)}</span></div>
              </div>
           </div>
 
-          <form onSubmit={handleAddEmployee} className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl space-y-5">
+          <form onSubmit={handleAddEmployee} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><Plus size={20}/></div>
-              <h3 className="font-black text-sm uppercase tracking-widest text-slate-800">Add New Payee</h3>
+              <h3 className="font-semibold text-sm text-slate-800">Add employee</h3>
             </div>
             
             <div className="space-y-4">
-              <input required type="text" value={name} onChange={e=>setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" placeholder="Full Name" />
-              <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-bold text-sm outline-none focus:border-blue-500" placeholder="Email Address" />
-              <input required type="number" min="1" value={salary} onChange={e=>setSalary(e.target.value)} className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl font-black text-lg outline-none focus:border-blue-500" placeholder="Salary ($)" />
+              <input required type="text" value={name} onChange={e=>setName(e.target.value)} className="ui-input" placeholder="Full Name" />
+              <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="ui-input" placeholder="Email Address" />
+              <input required type="number" min="1" value={salary} onChange={e=>setSalary(e.target.value)} className="ui-input text-lg" placeholder="Salary ($)" />
             </div>
 
-            <button type="submit" disabled={isLoading} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 shadow-lg transition-all">
-              Add to Registry
+            <button type="submit" disabled={isLoading} className="ui-btn ui-btn-primary">
+              Add employee
             </button>
           </form>
         </div>
 
-        <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl flex flex-col h-full min-h-[600px]">
+        <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl flex flex-col h-full min-h-[600px]">
           <div className="flex justify-between items-center mb-8 px-2">
-            <h3 className="font-black text-lg text-slate-800 flex items-center gap-3"><Users size={24} className="text-blue-600"/> Team Registry</h3>
-            <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">{employees.length} Personnel</span>
+            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-3"><Users size={24} className="text-blue-600"/> Team Registry</h3>
+            <span className="bg-slate-100 text-slate-500 text-xs font-semibold px-4 py-1.5 rounded-full">{employees.length} Personnel</span>
           </div>
 
           <div className="flex-1 overflow-y-auto no-scrollbar">
             {employees.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-300 py-20">
                 <Users size={48} className="mb-4 opacity-20" />
-                <p className="font-black uppercase text-xs tracking-widest">No active personnel registry</p>
+                <p className="font-semibold text-xs">No active personnel registry</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {employees.map(emp => (
-                  <div key={emp.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-slate-50 rounded-[2rem] border border-slate-100 hover:border-blue-200 transition-all group">
+                  <div key={emp.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all group">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 font-black shadow-sm group-hover:text-blue-600 transition-colors">
+                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 font-bold shadow-sm group-hover:text-blue-600 transition-colors">
                         {emp.employee_name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-black text-slate-800 leading-tight">{emp.employee_name}</p>
+                        <p className="font-bold text-slate-800 leading-tight">{emp.employee_name}</p>
                         <p className="text-xs font-bold text-slate-400">{emp.employee_email}</p>
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between w-full md:w-auto md:gap-10 mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-slate-200">
                       <div className="text-left md:text-right">
-                        <p className="font-black text-emerald-600 text-lg">{formatCurrency(emp.salary_amount)}</p>
-                        <p className="text-[9px] font-black text-slate-400 uppercase">Monthly Salary</p>
+                        <p className="font-bold text-emerald-600 text-lg">{formatCurrency(emp.salary_amount)}</p>
+                        <p className="text-xs font-semibold text-slate-500">Monthly Salary</p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-emerald-200"><CheckCircle2 size={10}/> Active</span>
+                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-emerald-200"><CheckCircle2 size={10}/> Active</span>
                         <Landmark size={14} className="text-slate-300" />
                       </div>
                     </div>

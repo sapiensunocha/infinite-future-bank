@@ -63,7 +63,7 @@ const PasswordInput = ({ value, onChange, placeholder, autoFocus = false, minLen
       value={value} 
       onChange={onChange} 
       placeholder={placeholder} 
-      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-11 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all" 
+      className="ui-input pl-11 pr-11" 
     />
     <button 
       type="button"
@@ -98,7 +98,7 @@ const PasswordStrength = ({ value }) => {
         {PW_RULES.map(r => {
           const ok = r.test(value);
           return (
-            <li key={r.label} className={`flex items-center gap-1.5 text-[10px] font-bold transition-colors ${ok ? 'text-emerald-600' : 'text-slate-400'}`}>
+            <li key={r.label} className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${ok ? 'text-emerald-600' : 'text-slate-400'}`}>
               <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 ${ok ? 'bg-emerald-500' : 'bg-slate-200'}`}>
                 {ok ? <svg viewBox="0 0 10 10" className="w-2 h-2"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
                     : <span className="w-1 h-1 rounded-full bg-slate-400 block"/>}
@@ -606,7 +606,7 @@ function MainApp() {
       const { error } = await supabase.auth.updateUser({ password: passwordValue });
       if (error) throw error;
       setCurrentView('dashboard'); 
-      showMessage('Vault Key secured. Access granted.', 'success');
+      showMessage('Vault unlocked.', 'success');
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
@@ -633,14 +633,14 @@ function MainApp() {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-black leading-none">Better on the Android app</p>
-            <p className="text-slate-400 text-[10px] leading-none mt-0.5">Free on Google Play</p>
+            <p className="text-white text-xs font-bold leading-none">Better on the Android app</p>
+            <p className="text-slate-400 text-xs leading-none mt-0.5">Free on Google Play</p>
           </div>
           <a
             href="https://play.google.com/store/apps/details?id=org.infinitefuturebank.deus"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 bg-[#4285F4] text-white text-[11px] font-black px-4 py-1.5 rounded-full hover:bg-[#5a95f5] transition-colors"
+            className="flex-shrink-0 bg-[#4285F4] text-white text-[11px] font-bold px-4 py-1.5 rounded-full hover:bg-[#5a95f5] transition-colors"
           >
             Install
           </a>
@@ -655,15 +655,11 @@ function MainApp() {
       <div className="relative z-10 w-full max-w-[440px]">
         {/* INSTITUTIONAL BRAND HEADER & SPOTLIGHT */}
         <div className="flex flex-col items-center mb-6 cursor-pointer select-none" onClick={() => setCurrentView('enter_email')}>
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-900 text-white mb-3 shadow-sm border border-slate-800">
-            <Building2 size={22} className="text-blue-400" />
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 text-white mb-3 shadow-sm">
+            <Building2 size={22} />
           </div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">DEUS</h1>
-            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-blue-50 text-blue-700 border border-blue-200">Institutional</span>
-          </div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500 mt-1">Infinite Future Bank</p>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">Sovereign Treasury & Impact Operating System</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Infinite Future Bank</h1>
+          <p className="text-sm text-slate-500 mt-0.5">The DEUS app</p>
         </div>
 
         <div className="w-full bg-white border border-slate-200/90 shadow-sm rounded-2xl p-6 sm:p-8 relative">
@@ -676,13 +672,13 @@ function MainApp() {
 
           {currentView === 'enter_email' && (
             <div className="animate-in fade-in duration-200 text-center">
-              <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-900">Access Portal</h2>
+              <h2 className="text-xl font-semibold tracking-tight mb-1 text-slate-900">Sign in</h2>
               {sessionChecking ? (
                 <p className="text-xs text-blue-600 font-medium flex items-center justify-center gap-1.5 mb-5">
-                  <RefreshCw size={12} className="animate-spin" /> Verifying secure session...
+                  <RefreshCw size={12} className="animate-spin" /> Checking your session…
                 </p>
               ) : (
-                <p className="text-xs text-slate-500 mb-5">Sign in to manage your treasury, cards, and capital</p>
+                <p className="text-sm text-slate-500 mb-5">Welcome back. Use your email or phone number.</p>
               )}
 
               {/* Login method toggle */}
@@ -713,14 +709,14 @@ function MainApp() {
                       autoFocus
                       value={emailValue}
                       onChange={(e) => setEmailValue(e.target.value)}
-                      placeholder="banker@deus.com"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all"
+                      placeholder="you@example.com"
+                      className="ui-input pl-11 pr-4"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isLoading || !emailValue}
-                    className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                    className="ui-btn ui-btn-primary"
                   >
                     {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Continue'}
                     {!isLoading && <ChevronRight size={16} />}
@@ -748,7 +744,7 @@ function MainApp() {
                   <button
                     type="submit"
                     disabled={isLoading || !phoneValue}
-                    className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                    className="ui-btn ui-btn-primary"
                   >
                     {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Send Verification Code'}
                     {!isLoading && <ChevronRight size={16} />}
@@ -784,7 +780,7 @@ function MainApp() {
                 <button
                   type="submit"
                   disabled={isLoading || !passwordValue}
-                  className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="ui-btn ui-btn-primary"
                 >
                   {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Authenticating...</> : 'Sign In'}
                 </button>
@@ -821,14 +817,14 @@ function MainApp() {
                     autoFocus
                     value={emailValue}
                     onChange={(e) => setEmailValue(e.target.value)}
-                    placeholder="banker@deus.com"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all"
+                    placeholder="you@example.com"
+                    className="ui-input pl-11 pr-4"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isLoading || !emailValue}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="ui-btn ui-btn-primary"
                 >
                   {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Send Reset Link'}
                 </button>
@@ -859,7 +855,7 @@ function MainApp() {
                     value={nameValue}
                     onChange={(e) => setNameValue(e.target.value)}
                     placeholder="Full Legal Name"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/15 transition-all"
+                    className="ui-input pl-11 pr-4"
                   />
                 </div>
                 <PhoneField value={phoneValue} onChange={setPhoneValue} focusColor="blue" />
@@ -891,7 +887,7 @@ function MainApp() {
                 <button
                   type="submit"
                   disabled={isLoading || !nameValue || !phoneValue || !PW_RULES.every(r => r.test(passwordValue))}
-                  className="w-full mt-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="ui-btn ui-btn-primary mt-2"
                 >
                   {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Creating Account...</> : 'Create Identity'}
                 </button>
@@ -943,7 +939,7 @@ function MainApp() {
                 <button
                   type="submit"
                   disabled={isLoading || !phoneValue}
-                  className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="ui-btn ui-btn-primary"
                 >
                   {isLoading ? <RefreshCw size={16} className="animate-spin" /> : 'Send Code'}
                   {!isLoading && <ChevronRight size={16} />}
@@ -973,12 +969,12 @@ function MainApp() {
                   value={otpValue}
                   onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-2xl font-black text-center tracking-[0.4em] font-mono outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/15 transition-all text-slate-900"
+                  className="ui-input text-2xl text-center tracking-[0.4em] font-mono h-16"
                 />
                 <button
                   type="submit"
                   disabled={isLoading || otpValue.length !== 6}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className="ui-btn ui-btn-primary"
                 >
                   {isLoading ? <><RefreshCw size={16} className="animate-spin" /> Verifying...</> : 'Verify & Access'}
                   {!isLoading && <ChevronRight size={16} />}
@@ -1018,7 +1014,7 @@ function MainApp() {
               <button
                 onClick={handleResend}
                 disabled={isLoading}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-all mb-3 cursor-pointer shadow-xs"
+                className="ui-btn ui-btn-primary mb-3"
               >
                 {isLoading ? <RefreshCw size={16} className="animate-spin"/> : <Mail size={16}/>}
                 {isLoading ? 'Sending…' : 'Resend Confirmation Email'}
@@ -1049,7 +1045,7 @@ function MainApp() {
                 <button
                   type="submit"
                   disabled={isLoading || !passwordValue}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all disabled:opacity-50"
+                  className="ui-btn ui-btn-primary"
                 >
                   Save New Password
                 </button>
@@ -1060,14 +1056,14 @@ function MainApp() {
 
         {/* CLEAN, UNIFIED FOOTER WITH NEW TRUST LINK */}
         <div className="mt-8 text-center text-[11px] font-medium text-slate-500 px-4 animate-in fade-in duration-700 delay-100 leading-relaxed">
-          Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers and <span className="font-bold text-slate-700">{formatCount(networkStats.orgs)}</span> organizations in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries. <span onClick={() => setActiveModal('registration')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Infinite Future Bank LLC</span> is incorporated in the State of Delaware, United States (File No. 10649108), headquartered at 1717 Pennsylvania Ave NW, Washington DC. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR in its brain</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Insurance Protocol</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Trust Framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>. Explore our <span onClick={() => setShowGuideHub(true)} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Guides</span>.
+          {Number(networkStats.users) > 0 && (<>Trusted by <span className="font-bold text-slate-700">{formatCount(networkStats.users)}</span> customers{Number(networkStats.countries) > 0 && <> in <span className="font-bold text-slate-700">{formatCount(networkStats.countries)}</span> countries</>}. </>)}<span onClick={() => setActiveModal('registration')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Infinite Future Bank LLC</span> is incorporated in the State of Delaware, United States (File No. 10649108), headquartered at 1717 Pennsylvania Ave NW, Washington DC. Discover how <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">IFB works</span>, the <span onClick={() => setActiveModal('about')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">AFR token</span>, our <span onClick={() => setActiveModal('insurance')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">insurance</span>, and explore our core <span onClick={() => setActiveModal('trust')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">trust framework</span>. Read our <span onClick={() => setActiveModal('policies')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Policies</span> & <span onClick={() => setActiveModal('terms')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Terms of Service</span>. Need assistance or want to share feedback so we can serve you better? <span onClick={() => setActiveModal('help')} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Get Help & FAQ</span>. Explore our <span onClick={() => setShowGuideHub(true)} className="font-bold underline cursor-pointer hover:text-blue-600 transition-colors">Guides</span>.
         </div>
 
         {/* DEUS ACADEMY LINK */}
         <div className="mt-5 flex justify-center animate-in fade-in duration-700 delay-200">
           <button
             onClick={() => setShowAcademy(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors text-indigo-700 font-bold text-[11px] uppercase tracking-widest shadow-sm hover:shadow-indigo-100"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 transition-colors text-indigo-700 font-bold text-[11px] shadow-sm"
           >
             <GraduationCap size={14} />
             Explore DEUS — Interactive Learning
@@ -1085,7 +1081,7 @@ function MainApp() {
               href="https://play.google.com/store/apps/details?id=org.infinitefuturebank.deus"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
+              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center shadow-inner border border-slate-700/50 p-2.5">
@@ -1097,8 +1093,8 @@ function MainApp() {
                   </svg>
                 </div>
                 <div className="text-left">
-                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Get the Android App</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Google Play · v{__APP_VERSION__} · Free</p>
+                  <p className="text-white font-bold text-sm tracking-wide leading-none mb-1">Get the Android App</p>
+                  <p className="text-slate-500 text-xs font-semibold leading-none">Google Play · v{__APP_VERSION__} · Free</p>
                 </div>
               </div>
               <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all border border-emerald-500/30">
@@ -1114,15 +1110,15 @@ function MainApp() {
             <a
               href="/DEUS-mac-arm64.dmg"
               download="DEUS-mac-arm64.dmg"
-              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
+              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-blue-400 group-hover:text-blue-300 transition-colors shadow-inner border border-slate-700/50">
                   <Monitor size={24} />
                 </div>
                 <div className="text-left">
-                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Download for Mac (Apple Silicon)</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">macOS · v{__APP_VERSION__} · DMG · M1/M2/M3/M4</p>
+                  <p className="text-white font-bold text-sm tracking-wide leading-none mb-1">Download for Mac (Apple Silicon)</p>
+                  <p className="text-slate-500 text-xs font-semibold leading-none">macOS · v{__APP_VERSION__} · DMG · M1/M2/M3/M4</p>
                 </div>
               </div>
               <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all border border-blue-500/30">
@@ -1132,22 +1128,22 @@ function MainApp() {
             <a
               href="/DEUS-mac-x64.dmg"
               download="DEUS-mac-x64.dmg"
-              className="flex items-center justify-between bg-slate-900/60 backdrop-blur-2xl border border-slate-700/30 p-4 rounded-[2rem] hover:scale-[1.02] transition-transform group"
+              className="flex items-center justify-between bg-slate-900/60 backdrop-blur-2xl border border-slate-700/30 p-4 rounded-2xl hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-800/60 rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-blue-300 transition-colors border border-slate-700/30">
                   <Monitor size={24} />
                 </div>
                 <div className="text-left">
-                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Download for Mac (Intel)</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">macOS · v{__APP_VERSION__} · DMG · x64</p>
+                  <p className="text-white font-bold text-sm tracking-wide leading-none mb-1">Download for Mac (Intel)</p>
+                  <p className="text-slate-500 text-xs font-semibold leading-none">macOS · v{__APP_VERSION__} · DMG · x64</p>
                 </div>
               </div>
               <div className="w-10 h-10 bg-slate-700/50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all border border-slate-600/30">
                 <DownloadCloud size={18} />
               </div>
             </a>
-            <p className="text-center text-[10px] text-slate-400 font-medium">Open the DMG and drag DEUS to Applications. Right-click → Open on first launch if macOS warns about the developer.</p>
+            <p className="text-center text-xs text-slate-400 font-medium">Open the DMG and drag DEUS to Applications. Right-click → Open on first launch if macOS warns about the developer.</p>
           </div>
         )}
 
@@ -1157,55 +1153,55 @@ function MainApp() {
             <a
               href="/DEUS-win-x64.exe"
               download="DEUS-win-x64.exe"
-              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
+              className="flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] transition-transform group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-800/80 rounded-2xl flex items-center justify-center text-sky-400 group-hover:text-sky-300 transition-colors shadow-inner border border-slate-700/50">
                   <Monitor size={24} />
                 </div>
                 <div className="text-left">
-                  <p className="text-white font-black text-sm tracking-wide leading-none mb-1">Download for Windows</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">Windows 10/11 · v{__APP_VERSION__} · Installer · 64-bit</p>
+                  <p className="text-white font-bold text-sm tracking-wide leading-none mb-1">Download for Windows</p>
+                  <p className="text-slate-500 text-xs font-semibold leading-none">Windows 10/11 · v{__APP_VERSION__} · Installer · 64-bit</p>
                 </div>
               </div>
               <div className="w-10 h-10 bg-sky-500/20 rounded-full flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-all border border-sky-500/30">
                 <DownloadCloud size={18} />
               </div>
             </a>
-            <p className="text-center text-[10px] text-slate-400 font-medium">Run the installer. If Windows SmartScreen appears, click <span className="font-bold text-slate-300">"More info" → "Run anyway"</span>.</p>
+            <p className="text-center text-xs text-slate-400 font-medium">Run the installer. If Windows SmartScreen appears, click <span className="font-bold text-slate-300">"More info" → "Run anyway"</span>.</p>
           </div>
         )}
 
         {/* ── iOS: Add to Home Screen guide ── */}
         {mobileOS === 'ios' && (
           <div className="mt-6 animate-in slide-in-from-bottom-8 duration-500 delay-200">
-            <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-5 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+            <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-700/50 p-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-blue-500/20 rounded-2xl flex items-center justify-center border border-blue-500/30">
                   <Smartphone size={20} className="text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-white font-black text-sm leading-none mb-1">Add DEUS to Home Screen</p>
-                  <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">iOS · App-like experience</p>
+                  <p className="text-white font-bold text-sm leading-none mb-1">Add DEUS to Home Screen</p>
+                  <p className="text-slate-500 text-xs font-semibold">iOS · App-like experience</p>
                 </div>
               </div>
               <ol className="space-y-2.5">
                 <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
                   <p className="text-slate-300 text-xs font-semibold leading-snug">
-                    Tap the <Share2 size={12} className="inline text-blue-400 mx-0.5" /> <span className="text-white font-black">Share</span> button at the bottom of Safari
+                    Tap the <Share2 size={12} className="inline text-blue-400 mx-0.5" /> <span className="text-white font-bold">Share</span> button at the bottom of Safari
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
                   <p className="text-slate-300 text-xs font-semibold leading-snug">
-                    Scroll down and tap <span className="text-white font-black">"Add to Home Screen"</span> <Plus size={12} className="inline text-blue-400 mx-0.5" />
+                    Scroll down and tap <span className="text-white font-bold">"Add to Home Screen"</span> <Plus size={12} className="inline text-blue-400 mx-0.5" />
                   </p>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
                   <p className="text-slate-300 text-xs font-semibold leading-snug">
-                    Tap <span className="text-white font-black">"Add"</span> — DEUS opens fullscreen like a native app
+                    Tap <span className="text-white font-bold">"Add"</span> — DEUS opens fullscreen like a native app
                   </p>
                 </li>
               </ol>
@@ -1246,7 +1242,7 @@ function AdminGateway() {
     return (
       <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center text-white">
         <ShieldAlert size={64} className="text-red-500 mb-4" />
-        <h2 className="text-2xl font-black uppercase tracking-widest">Access Denied</h2>
+        <h2 className="text-2xl font-semibold">Access Denied</h2>
         <p className="text-slate-400 mt-2">You lack the necessary clearance for the Command Center.</p>
         <Link to="/" className="mt-8 px-6 py-3 bg-blue-600 rounded-xl font-bold text-sm">Return to Dashboard</Link>
       </div>
@@ -1285,7 +1281,7 @@ function HqGateway() {
     return (
       <div className="min-h-screen bg-[#0B0F19] flex flex-col items-center justify-center text-white">
         <ShieldAlert size={64} className="text-red-500 mb-4" />
-        <h2 className="text-2xl font-black uppercase tracking-widest">Clearance Level Insufficient</h2>
+        <h2 className="text-2xl font-semibold">Clearance Level Insufficient</h2>
         <p className="text-slate-400 mt-2">This sector is restricted to Level 3 Command Executives.</p>
         <Link to="/" className="mt-8 px-6 py-3 bg-blue-600 rounded-xl font-bold text-sm hover:bg-blue-500 transition-colors">Eject</Link>
       </div>
@@ -1388,7 +1384,7 @@ export default function App() {
         />
         <Route path="*" element={
           <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', fontFamily: 'Inter, system-ui, sans-serif', textAlign: 'center', padding: 32 }}>
-            <p style={{ fontSize: 48, marginBottom: 12 }}>⬡</p>
+            <p style={{ fontSize: 48, marginBottom: 12 }}></p>
             <p style={{ fontWeight: 900, fontSize: 18, color: '#0f172a', marginBottom: 8 }}>Page not found</p>
             <p style={{ fontSize: 13, color: '#64748b', marginBottom: 24 }}>This URL doesn't exist in DEUS.</p>
             <button onClick={() => window.location.href = '/'} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 28px', fontWeight: 900, fontSize: 13, cursor: 'pointer' }}>

@@ -61,9 +61,9 @@ export default function NigeriaBankPayout({ amount, onBack, onDone }) {
     return (
       <div className="text-center space-y-3 py-6 animate-in fade-in">
         <CheckCircle size={40} className="mx-auto text-emerald-600" />
-        <h3 className="text-lg font-black text-slate-900">{naira(done.amount_ngn)} is on its way</h3>
+        <h3 className="text-lg font-bold text-slate-900">{naira(done.amount_ngn)} is on its way</h3>
         <p className="text-xs font-bold text-slate-500">To {done.account_name}. Most Nigerian bank transfers arrive within minutes. You will get a notification, and if the bank rejects it the money comes straight back to your wallet.</p>
-        <p className="text-[10px] font-mono text-slate-400 break-all">Ref: {done.reference}</p>
+        <p className="text-xs font-mono text-slate-400 break-all">Ref: {done.reference}</p>
       </div>
     );
   }
@@ -72,31 +72,31 @@ export default function NigeriaBankPayout({ amount, onBack, onDone }) {
 
   return (
     <div className="space-y-4 animate-in slide-in-from-right-4">
-      <button type="button" onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 flex items-center gap-2">
-        <ArrowLeft size={14}/> Back to Methods
+      <button type="button" onClick={onBack} className="text-sm font-semibold text-slate-500 hover:text-slate-600 flex items-center gap-2">
+        <ArrowLeft size={14}/> Back
       </button>
 
       <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
         <Landmark size={20} className="text-emerald-700 shrink-0" />
         <div>
-          <p className="text-sm font-black text-emerald-900">Nigerian bank account</p>
+          <p className="text-sm font-bold text-emerald-900">Nigerian bank account</p>
           <p className="text-[11px] font-bold text-emerald-700">Direct transfer via Flutterwave · no agent · 0.5% fee</p>
         </div>
       </div>
 
       <div>
-        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Bank</label>
+        <label className="ui-label">Bank</label>
         {bank ? (
           <button type="button" onClick={() => { setBank(null); setBankQuery(''); }} className="w-full flex items-center justify-between p-4 rounded-xl border-2 border-blue-500 bg-blue-50 text-left">
-            <span className="font-black text-slate-800 text-sm">{bank.name}</span>
-            <span className="text-[10px] font-black uppercase text-blue-600">Change</span>
+            <span className="font-bold text-slate-800 text-sm">{bank.name}</span>
+            <span className="text-xs font-semibold text-blue-600">Change</span>
           </button>
         ) : (
           <div className="rounded-xl border border-slate-200 bg-slate-50">
             <div className="relative">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input value={bankQuery} onChange={e => setBankQuery(e.target.value)} placeholder={busy === 'banks' ? 'Loading banks…' : 'Search your bank (e.g. GTBank, Opay)'}
-                className="w-full bg-transparent p-4 pl-11 outline-none font-bold text-slate-800" />
+                className="ui-input pl-11" />
             </div>
             {bankQuery.trim().length > 0 && (
               <div className="max-h-56 overflow-y-auto border-t border-slate-200">
@@ -113,25 +113,25 @@ export default function NigeriaBankPayout({ amount, onBack, onDone }) {
       </div>
 
       <div>
-        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Account number (NUBAN)</label>
+        <label className="ui-label">Account number (NUBAN)</label>
         <input inputMode="numeric" maxLength={10} value={acct} onChange={e => setAcct(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10 digits"
-          className="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 outline-none font-bold text-slate-800 tracking-widest focus:border-blue-500" />
+          className="ui-input tracking-widest" />
         {busy === 'resolve' && <p className="mt-2 text-xs font-bold text-slate-500 flex items-center gap-2"><Loader2 size={12} className="animate-spin"/> Checking account…</p>}
-        {accountName && <p className="mt-2 text-sm font-black text-emerald-700 flex items-center gap-2"><BadgeCheck size={16}/> {accountName}</p>}
+        {accountName && <p className="mt-2 text-sm font-bold text-emerald-700 flex items-center gap-2"><BadgeCheck size={16}/> {accountName}</p>}
       </div>
 
       {quote && (
         <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 text-xs">
-          <div className="flex justify-between"><span className="font-bold text-slate-500">You withdraw</span><span className="font-black text-slate-900">${Number(amount).toFixed(2)} + ${quote.fee_usd.toFixed(2)} fee</span></div>
+          <div className="flex justify-between"><span className="font-bold text-slate-500">You withdraw</span><span className="font-bold text-slate-900">${Number(amount).toFixed(2)} + ${quote.fee_usd.toFixed(2)} fee</span></div>
           <div className="flex justify-between"><span className="font-bold text-slate-500">Rate</span><span className="font-bold text-slate-700">{naira(quote.rate)} per $1 (live)</span></div>
-          <div className="flex justify-between border-t border-slate-200 pt-2"><span className="font-bold text-slate-500">They receive about</span><span className="font-black text-emerald-700 text-base">{naira(quote.amount_ngn)}</span></div>
+          <div className="flex justify-between border-t border-slate-200 pt-2"><span className="font-bold text-slate-500">They receive about</span><span className="font-bold text-emerald-700 text-base">{naira(quote.amount_ngn)}</span></div>
         </div>
       )}
 
       {err && <p className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600">{err}</p>}
 
       <button type="button" onClick={send} disabled={!accountName || busy !== ''}
-        className="w-full bg-blue-600 text-white p-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 flex justify-center items-center gap-2 shadow-lg disabled:opacity-40">
+        className="ui-btn ui-btn-primary">
         {busy === 'send' ? <Loader2 size={16} className="animate-spin"/> : accountName ? `Send to ${accountName.split(' ')[0]}` : 'Enter account details'}
       </button>
     </div>

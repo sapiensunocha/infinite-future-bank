@@ -61,7 +61,7 @@ export default function CommercialUnderwriting({
             <button
               key={tab.id}
               onClick={() => setBizView(tab.id)}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
                 bizView === tab.id ? TAB_ACTIVE[tab.id] : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
               }`}>
               <Icon size={13}/> {tab.label}{tab.gate && <FeatureBadge id={tab.gate} compact />}
@@ -115,9 +115,9 @@ export default function CommercialUnderwriting({
       {/* Corporate Underwriting (existing) */}
       {bizView === 'underwriting' && (
       <div>
-      <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-xl text-slate-900 mb-8 relative overflow-hidden">
+      <div className="bg-white border border-slate-200 p-10 rounded-3xl shadow-xl text-slate-900 mb-8 relative overflow-hidden">
         <div className="relative z-10">
-          <h2 className="text-3xl font-black tracking-tight mb-2 flex items-center gap-3">
+          <h2 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
             <Building className="text-blue-600"/> Corporate Underwriting
           </h2>
           <p className="text-sm text-slate-500 max-w-xl leading-relaxed">
@@ -127,106 +127,106 @@ export default function CommercialUnderwriting({
       </div>
 
       {commercialProfile?.pascaline_status === 'eligible_for_funding' ? (
-        <div className="bg-white border border-emerald-200 p-10 rounded-[3rem] shadow-sm text-center">
+        <div className="bg-white border border-emerald-200 p-10 rounded-3xl shadow-sm text-center">
           <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <ShieldCheck size={40}/>
           </div>
-          <h3 className="text-2xl font-black text-slate-800 mb-2">Approved for Capital Deployment</h3>
+          <h3 className="text-2xl font-bold text-slate-800 mb-2">Approved for Capital Deployment</h3>
           <p className="text-sm text-slate-500 mb-8">
             Pascaline has audited your telemetry and underwritten your Dual-Insurance policy. You are now live in the Private Equity Vault.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => setActiveTab('INVEST')}
-              className="px-8 py-4 bg-emerald-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg"
+              className="ui-btn ui-btn-primary w-auto"
             >
               Manage Syndicate Parameters
             </button>
             <button
               onClick={() => setActiveTab('CAPITAL')}
-              className="px-8 py-4 bg-blue-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg flex items-center gap-2 justify-center"
+              className="ui-btn ui-btn-primary w-auto"
             >
               <TrendingUp size={16} /> Capital Platform
             </button>
           </div>
         </div>
       ) : commercialProfile?.pascaline_status === 'pending_review' ? (
-        <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm text-center">
+        <div className="bg-white border border-slate-200 p-10 rounded-3xl shadow-sm text-center">
           <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <Loader2 size={40} className="animate-spin"/>
           </div>
-          <h3 className="text-2xl font-black text-slate-800 mb-2">Pascaline Audit in Progress</h3>
+          <h3 className="text-2xl font-bold text-slate-800 mb-2">Pascaline Audit in Progress</h3>
           <p className="text-sm text-slate-500">
             The AI engine is currently validating your revenue models and calculating your risk parameters.
           </p>
         </div>
       ) : (
-        <form onSubmit={handleCommercialSubmit} className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm space-y-6">
+        <form onSubmit={handleCommercialSubmit} className="bg-white border border-slate-200 p-10 rounded-3xl shadow-sm space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Legal Corporate Name</label>
+              <label className="ui-label">Legal Corporate Name</label>
               <input 
                 required 
                 type="text" 
                 value={commercialForm.company_name} 
                 onChange={e => setCommercialForm({...commercialForm, company_name: e.target.value})} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" 
+                className="ui-input" 
                 placeholder="e.g. SpaceX" 
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Industry Sector</label>
+              <label className="ui-label">Industry Sector</label>
               <input 
                 required 
                 type="text" 
                 value={commercialForm.sector} 
                 onChange={e => setCommercialForm({...commercialForm, sector: e.target.value})} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" 
+                className="ui-input" 
                 placeholder="e.g. Aerospace" 
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Registration Country</label>
+              <label className="ui-label">Registration Country</label>
               <input 
                 required 
                 type="text" 
                 value={commercialForm.registration_country} 
                 onChange={e => setCommercialForm({...commercialForm, registration_country: e.target.value})} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" 
+                className="ui-input" 
                 placeholder="e.g. United States" 
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Annual Revenue (USD)</label>
+              <label className="ui-label">Annual Revenue (USD)</label>
               <input 
                 required 
                 type="number" 
                 value={commercialForm.annual_revenue} 
                 onChange={e => setCommercialForm({...commercialForm, annual_revenue: e.target.value})} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" 
+                className="ui-input" 
                 placeholder="e.g. 5000000" 
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Monthly Burn Rate (USD)</label>
+              <label className="ui-label">Monthly Burn Rate (USD)</label>
               <input 
                 required 
                 type="number" 
                 value={commercialForm.monthly_burn_rate} 
                 onChange={e => setCommercialForm({...commercialForm, monthly_burn_rate: e.target.value})} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" 
+                className="ui-input" 
                 placeholder="e.g. 150000" 
               />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Debt-to-Equity Ratio</label>
+              <label className="ui-label">Debt-to-Equity Ratio</label>
               <input 
                 required 
                 type="number" 
                 step="0.01" 
                 value={commercialForm.debt_to_equity_ratio} 
                 onChange={e => setCommercialForm({...commercialForm, debt_to_equity_ratio: e.target.value})} 
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-blue-500" 
+                className="ui-input" 
                 placeholder="e.g. 1.2" 
               />
             </div>
@@ -234,7 +234,7 @@ export default function CommercialUnderwriting({
           <button 
             type="submit" 
             disabled={isSubmittingCommercial} 
-            className="w-full py-5 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl disabled:opacity-50"
+            className="ui-btn ui-btn-primary"
           >
             {isSubmittingCommercial ? 'Submitting to Pascaline...' : 'Submit Financial Telemetry for Audit'}
           </button>
@@ -243,7 +243,7 @@ export default function CommercialUnderwriting({
 
       {/* Capital Platform teaser — visible to all non-eligible users */}
       {commercialProfile?.pascaline_status !== 'eligible_for_funding' && (
-        <div className="mt-8 bg-white border border-slate-200 p-8 rounded-[3rem] relative overflow-hidden">
+        <div className="mt-8 bg-white border border-slate-200 p-8 rounded-3xl relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 pointer-events-none" />
           <div className="relative z-10 flex items-start gap-6">
             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0">
@@ -251,8 +251,8 @@ export default function CommercialUnderwriting({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-black text-slate-900">Capital Platform</h3>
-                <span className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <h3 className="text-lg font-bold text-slate-900">Capital Platform</h3>
+                <span className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-semibold">
                   <Lock size={10} /> Locked
                 </span>
               </div>
@@ -262,7 +262,7 @@ export default function CommercialUnderwriting({
               <div className="grid grid-cols-3 gap-4">
                 {['AI Deal Structuring', 'Milestone Governance', 'Blockchain Signing'].map(f => (
                   <div key={f} className="bg-slate-50 rounded-xl p-3 text-center">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{f}</p>
+                    <p className="text-xs font-semibold text-slate-500">{f}</p>
                   </div>
                 ))}
               </div>

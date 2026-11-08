@@ -238,13 +238,13 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
             <Wifi size={18} className="text-violet-600"/>
           </div>
           <div>
-            <h2 className="text-lg font-black text-slate-900">NFC Tap & Pay</h2>
-            <p className="text-[10px] text-slate-500">Tap phones · Send money instantly</p>
+            <h2 className="text-lg font-bold text-slate-900">NFC Tap & Pay</h2>
+            <p className="text-xs text-slate-500">Tap phones · Send money instantly</p>
           </div>
         </div>
         {(isNative || nfcSupported)
-          ? <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-[9px] font-black text-emerald-600 uppercase tracking-widest"><Signal size={9}/>{isNative ? 'NFC Active' : 'NFC Ready'}</span>
-          : <span className="flex items-center gap-1 px-2 py-1 bg-amber-50 border border-amber-200 rounded-full text-[9px] font-black text-amber-600 uppercase tracking-widest">Code Mode</span>
+          ? <span className="flex items-center gap-1 px-2 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-semibold text-emerald-600"><Signal size={9}/>{isNative ? 'NFC Active' : 'NFC Ready'}</span>
+          : <span className="flex items-center gap-1 px-2 py-1 bg-amber-50 border border-amber-200 rounded-full text-xs font-semibold text-amber-600">Code Mode</span>
         }
       </div>
 
@@ -258,7 +258,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
               <Send size={20} className="text-violet-600"/>
             </div>
             <div>
-              <p className="font-black text-slate-900">Send Money</p>
+              <p className="font-bold text-slate-900">Send Money</p>
               <p className="text-xs text-slate-500 mt-0.5">IFB-to-IFB · tap phones · share code</p>
             </div>
           </button>
@@ -268,7 +268,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
               <Wifi size={20} className="text-emerald-600"/>
             </div>
             <div>
-              <p className="font-black text-slate-900">Receive from IFB</p>
+              <p className="font-bold text-slate-900">Receive from IFB</p>
               <p className="text-xs text-slate-500 mt-0.5">Tap phones · scan QR · enter code</p>
             </div>
           </button>
@@ -278,7 +278,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
               <CreditCard size={20} className="text-blue-600"/>
             </div>
             <div>
-              <p className="font-black text-slate-900">Get Paid by Card</p>
+              <p className="font-bold text-slate-900">Get Paid by Card</p>
               <p className="text-xs text-slate-500 mt-0.5">Visa · Mastercard · Apple Pay · Google Pay</p>
             </div>
           </button>
@@ -290,35 +290,35 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 animate-in fade-in">
           <AlertTriangle size={16} className="text-red-600 shrink-0"/>
           <p className="text-sm text-red-600 font-bold flex-1">{err}</p>
-          <button onClick={() => setErr(null)} className="text-slate-500 hover:text-slate-600 text-xs">✕</button>
+          <button onClick={() => setErr(null)} className="text-slate-500 hover:text-slate-600 text-xs"></button>
         </div>
       )}
 
       {/* ── SEND: STEP 2 — Amount ───────────────────────────────────────────────── */}
       {mode === 'send' && step === 2 && (
         <div className="space-y-5 animate-in fade-in">
-          <h3 className="font-black text-slate-900 text-base">How much to send?</h3>
+          <h3 className="font-bold text-slate-900 text-base">How much to send?</h3>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black text-xl">$</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xl">$</span>
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
               placeholder="0.00" min="0.01" step="0.01"
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-4 text-2xl font-black text-slate-900 outline-none focus:border-violet-500 transition-colors text-center"/>
+              className="ui-input pl-10 pr-4 text-2xl text-center h-16"/>
           </div>
-          <p className="text-[10px] text-slate-500 text-center">Available: {fmtUSD(liquid)}</p>
+          <p className="text-xs text-slate-500 text-center">Available: {fmtUSD(liquid)}</p>
           <div className="flex gap-2">
             {[10, 20, 50, 100].map(v => (
               <button key={v} onClick={() => setAmount(String(v))}
-                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 text-[10px] font-black rounded-xl transition-all">
+                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 text-xs font-bold rounded-xl transition-all">
                 ${v}
               </button>
             ))}
           </div>
           <input value={note} onChange={e => setNote(e.target.value)}
             placeholder="Add a note (optional)"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 outline-none focus:border-violet-500 transition-colors placeholder-slate-600"/>
+            className="ui-input font-medium"/>
           <button onClick={handleCreateTransfer}
             disabled={loading || !amount || parseFloat(amount) <= 0 || parseFloat(amount) > liquid}
-            className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-900/30">
+            className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 text-white font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg">
             {loading
               ? <><Loader2 size={16} className="animate-spin"/>Creating...</>
               : <><Zap size={16}/>Generate Transfer Code</>}
@@ -330,18 +330,18 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
       {mode === 'send' && step === 3 && token && (
         <div className="space-y-5 animate-in fade-in">
           <div className="text-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-2">Transfer Code Ready</p>
+            <p className="text-xs font-semibold text-violet-600 mb-2">Transfer Code Ready</p>
             <p className="text-slate-500 text-xs">Share this with the recipient — 3 ways to do it</p>
           </div>
 
           {/* The token display */}
           <div className="bg-white border-2 border-violet-200 rounded-2xl p-6 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-violet-50 to-indigo-50 pointer-events-none"/>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">6-digit code</p>
+            <p className="text-xs font-semibold text-slate-500 mb-3">6-digit code</p>
             <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-5xl font-black text-slate-900 tracking-[0.3em] font-mono">{token}</span>
+              <span className="text-5xl font-bold text-slate-900 tracking-[0.3em] font-mono">{token}</span>
             </div>
-            <p className="text-violet-600 font-black text-sm">{fmtUSD(parseFloat(amount))}</p>
+            <p className="text-violet-600 font-bold text-sm">{fmtUSD(parseFloat(amount))}</p>
             {note && <p className="text-slate-500 text-xs mt-1">"{note}"</p>}
           </div>
 
@@ -359,18 +359,18 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
               }`}
               disabled={!nfcSupported}>
               {nfcWriting ? <Loader2 size={20} className="animate-spin"/> : <Smartphone size={20}/>}
-              <span className="text-[9px] font-black uppercase tracking-widest">Tap NFC</span>
+              <span className="text-xs font-semibold">Tap NFC</span>
             </button>
             {/* Copy code */}
             <button onClick={copyToken}
               className="p-4 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 flex flex-col items-center gap-2 transition-all">
               {copied ? <Check size={20} className="text-emerald-600"/> : <Copy size={20}/>}
-              <span className="text-[9px] font-black uppercase tracking-widest">{copied ? 'Copied!' : 'Copy Code'}</span>
+              <span className="text-xs font-semibold">{copied ? 'Copied!' : 'Copy Code'}</span>
             </button>
             {/* QR placeholder */}
             <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col items-center gap-2 text-slate-500">
               <QrCode size={20}/>
-              <span className="text-[9px] font-black uppercase tracking-widest">QR Code</span>
+              <span className="text-xs font-semibold">QR Code</span>
             </div>
           </div>
 
@@ -380,7 +380,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
           </div>
 
           <button onClick={reset}
-            className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+            className="ui-btn ui-btn-secondary">
             <RefreshCw size={12}/> Cancel & Create New
           </button>
         </div>
@@ -389,7 +389,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
       {/* ── RECEIVE: STEP 2 — Scan or Enter ─────────────────────────────────────── */}
       {mode === 'receive' && step === 2 && (
         <div className="space-y-5 animate-in fade-in">
-          <h3 className="font-black text-slate-900 text-base">Claim a Transfer</h3>
+          <h3 className="font-bold text-slate-900 text-base">Claim a Transfer</h3>
 
           {/* Method tabs */}
           <div className="flex gap-2 bg-white p-1 rounded-2xl">
@@ -399,7 +399,7 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
             ].map(({ id, label, disabled }) => (
               <button key={id} onClick={() => !disabled && setInputMethod(id)}
                 disabled={disabled}
-                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   inputMethod === id ? 'bg-emerald-600 text-white' : disabled ? 'text-slate-600 cursor-not-allowed' : 'text-slate-500 hover:text-slate-900'
                 }`}>
                 {label}
@@ -415,17 +415,17 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
                   <CreditCard size={36} className="text-violet-600"/>
                 </div>
                 <div className="text-center">
-                  <p className="font-black text-slate-900">Receive Card Payment</p>
+                  <p className="font-bold text-slate-900">Receive Card Payment</p>
                   <p className="text-xs text-slate-500 mt-1">Your Android phone's NFC chip acts as a card reader — accept Visa, Mastercard, Amex, Apple Pay & Google Pay by having the payer tap their card to the back of your phone.</p>
                 </div>
               </div>
               <button
                 onClick={onOpenTapToPay}
                 disabled={!onOpenTapToPay}
-                className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-900/30">
+                className="ui-btn ui-btn-primary">
                 <CreditCard size={16}/> Open Tap to Pay
               </button>
-              <p className="text-[10px] text-slate-600 text-center">For IFB-to-IFB transfers, use Enter Code below</p>
+              <p className="text-xs text-slate-600 text-center">For IFB-to-IFB transfers, use Enter Code below</p>
             </div>
           )}
 
@@ -441,15 +441,15 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
                   <Wifi size={36} className={nfcScanning ? 'text-emerald-600 animate-pulse' : 'text-slate-500'}/>
                 </div>
                 <div className="text-center">
-                  <p className="font-black text-slate-900">{nfcScanning ? 'Hold phones back-to-back…' : 'Ready to scan'}</p>
+                  <p className="font-bold text-slate-900">{nfcScanning ? 'Hold phones back-to-back…' : 'Ready to scan'}</p>
                   <p className="text-xs text-slate-500 mt-1">{nfcScanning ? 'Keep phones close until transfer completes' : 'Tap the button below, then touch phones'}</p>
                 </div>
               </div>
               <button onClick={nfcScanning ? () => { setNfcScanning(false); } : startScan}
-                className={`w-full py-4 font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                className={`w-full py-4 font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all ${
                   nfcScanning
                     ? 'bg-red-50 border border-red-200 text-red-600 hover:bg-red-50'
-                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-900/30'
+                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg'
                 }`}>
                 {nfcScanning ? <><Loader2 size={16} className="animate-spin"/>Scanning — tap to cancel</> : <><Wifi size={16}/>Start NFC Scan</>}
               </button>
@@ -460,18 +460,18 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
           {inputMethod === 'code' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Enter 6-digit Code</label>
+                <label className="ui-label">Enter 6-digit Code</label>
                 <input
                   value={manualToken}
                   onChange={e => setManualToken(e.target.value.toUpperCase().slice(0, 6))}
                   placeholder="ABC123"
                   maxLength={6}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-3xl font-black text-slate-900 outline-none focus:border-emerald-500 transition-colors text-center tracking-[0.4em] font-mono uppercase"
+                  className="ui-input text-3xl text-center font-mono h-16"
                 />
               </div>
               <button onClick={() => handleClaim(manualToken)}
                 disabled={loading || manualToken.length < 4}
-                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/30">
+                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg">
                 {loading ? <><Loader2 size={16} className="animate-spin"/>Claiming...</> : <><CheckCircle2 size={16}/>Claim Transfer</>}
               </button>
             </div>
@@ -483,29 +483,29 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
       {mode === 'card' && step === 2 && (
         <div className="space-y-5 animate-in fade-in">
           <div>
-            <h3 className="font-black text-slate-900 text-base">How much to collect?</h3>
+            <h3 className="font-bold text-slate-900 text-base">How much to collect?</h3>
             <p className="text-xs text-slate-500 mt-1">A Stripe payment link will be created. The payer pays with any card — money goes straight into your IFB balance.</p>
           </div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-black text-xl">$</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xl">$</span>
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
               placeholder="0.00" min="1" step="0.01"
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-4 text-2xl font-black text-slate-900 outline-none focus:border-blue-500 transition-colors text-center"/>
+              className="ui-input pl-10 pr-4 text-2xl text-center h-16"/>
           </div>
           <div className="flex gap-2">
             {[10, 25, 50, 100].map(v => (
               <button key={v} onClick={() => setAmount(String(v))}
-                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 text-[10px] font-black rounded-xl transition-all">
+                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 text-xs font-bold rounded-xl transition-all">
                 ${v}
               </button>
             ))}
           </div>
           <input value={note} onChange={e => setNote(e.target.value)}
             placeholder="What's this for? (optional)"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 transition-colors placeholder-slate-600"/>
+            className="ui-input font-medium"/>
           <button onClick={handleCreateCheckout}
             disabled={checkoutLoading || !amount || parseFloat(amount) < 1}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/30">
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 text-white font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 transition-all shadow-lg">
             {checkoutLoading
               ? <><Loader2 size={16} className="animate-spin"/>Generating link…</>
               : <><CreditCard size={16}/>Generate Payment QR</>}
@@ -513,10 +513,10 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
           <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
             <div className="flex gap-1 shrink-0">
               {['VISA','MC','AMEX'].map(b => (
-                <span key={b} className="text-[8px] font-black px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{b}</span>
+                <span key={b} className="text-xs font-bold px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">{b}</span>
               ))}
             </div>
-            <p className="text-[10px] text-slate-500">Apple Pay & Google Pay also accepted</p>
+            <p className="text-xs text-slate-500">Apple Pay & Google Pay also accepted</p>
           </div>
         </div>
       )}
@@ -525,15 +525,15 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
       {mode === 'card' && step === 3 && checkoutUrl && (
         <div className="space-y-5 animate-in fade-in">
           <div className="text-center">
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-1">Payment Link Ready</p>
-            <p className="text-slate-900 font-black text-lg">{fmtUSD(parseFloat(amount))}</p>
+            <p className="text-xs font-semibold text-blue-600 mb-1">Payment Link Ready</p>
+            <p className="text-slate-900 font-bold text-lg">{fmtUSD(parseFloat(amount))}</p>
             {note && <p className="text-slate-500 text-xs">"{note}"</p>}
           </div>
 
           {/* QR Code */}
           <div className="bg-white rounded-2xl p-5 flex flex-col items-center gap-3">
             <QRCode value={checkoutUrl} size={180} level="M"/>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 text-center">Payer scans with any camera app</p>
+            <p className="text-xs font-semibold text-slate-600 text-center">Payer scans with any camera app</p>
           </div>
 
           {/* NFC write + open link buttons */}
@@ -550,23 +550,23 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
               }`}
               disabled={!nfcSupported}>
               {nfcWriting ? <Loader2 size={20} className="animate-spin"/> : <Smartphone size={20}/>}
-              <span className="text-[9px] font-black uppercase tracking-widest">{nfcWriting ? 'Writing…' : 'Write to NFC'}</span>
+              <span className="text-xs font-semibold">{nfcWriting ? 'Writing…' : 'Write to NFC'}</span>
             </button>
             <a href={checkoutUrl} target="_blank" rel="noopener noreferrer"
               className="p-4 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 flex flex-col items-center gap-2 transition-all">
               <ExternalLink size={20}/>
-              <span className="text-[9px] font-black uppercase tracking-widest">Open Link</span>
+              <span className="text-xs font-semibold">Open Link</span>
             </a>
           </div>
 
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-            <p className="text-[10px] text-blue-600 font-bold text-center">
+            <p className="text-xs text-blue-600 font-bold text-center">
               Once the payer completes checkout, the amount will appear in your IFB balance automatically — no action needed.
             </p>
           </div>
 
           <button onClick={reset}
-            className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+            className="ui-btn ui-btn-secondary">
             <RefreshCw size={12}/> Generate New Link
           </button>
         </div>
@@ -579,8 +579,8 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
             <CheckCircle2 size={40} className="text-emerald-600"/>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Transfer Complete</p>
-            <p className="text-3xl font-black text-slate-900">{fmtUSD(result.amount)}</p>
+            <p className="text-xs font-semibold text-emerald-600 mb-2">Transfer Complete</p>
+            <p className="text-3xl font-bold text-slate-900">{fmtUSD(result.amount)}</p>
             <p className="text-slate-500 text-sm mt-1">
               {mode === 'receive'
                 ? `Received from ${result.sender_name || 'IFB Member'}`
@@ -592,18 +592,18 @@ export default function NFCTransfer({ session, balances, profile, onClose, onSuc
           {/* Add recipient */}
           {(result.sender_id || result.receiver_id) && !contactAdded && (
             <button onClick={handleAddContact}
-              className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+              className="ui-btn ui-btn-secondary">
               <UserPlus size={14}/> Add {result.sender_name || 'Recipient'} to Contacts
             </button>
           )}
           {contactAdded && (
-            <p className="text-emerald-600 text-xs font-black flex items-center justify-center gap-1">
+            <p className="text-emerald-600 text-xs font-bold flex items-center justify-center gap-1">
               <Check size={12}/> Added to your contacts
             </p>
           )}
 
           <button onClick={reset}
-            className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+            className="ui-btn ui-btn-primary">
             <RefreshCw size={12}/> New Transfer
           </button>
           {onClose && (

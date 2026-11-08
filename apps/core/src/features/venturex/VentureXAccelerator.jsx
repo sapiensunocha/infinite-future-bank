@@ -316,7 +316,7 @@ function MiniChat({ context, placeholder }) {
     <div className="mt-3">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-blue-600 hover:text-blue-600 transition-colors"
+        className="flex items-center gap-2 text-[11px] font-bold text-blue-600 hover:text-blue-600 transition-colors"
       >
         <MessageSquare size={13} />
         {open ? 'Close AI Advisor' : 'Ask AI Advisor'}
@@ -355,7 +355,7 @@ function MiniChat({ context, placeholder }) {
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && send()}
               placeholder="Ask a question…"
-              className="flex-1 bg-transparent px-3 py-2 text-xs text-slate-900 placeholder-slate-600 outline-none"
+              className="ui-input flex-1"
             />
             <button
               onClick={send}
@@ -390,7 +390,7 @@ function ScoreRing({ score }) {
           style={{ transition: 'stroke-dasharray 1s ease' }}
         />
       </svg>
-      <span className="absolute text-xl font-black text-slate-900">{score}</span>
+      <span className="absolute text-xl font-bold text-slate-900">{score}</span>
     </div>
   );
 }
@@ -421,10 +421,10 @@ function OverviewTab({ onApply }) {
     <div className="space-y-12">
       {/* Hero */}
       <div className="text-center space-y-4 pt-6">
-        <p className="font-black uppercase tracking-widest text-[10px] text-blue-600">
+        <p className="font-semibold text-xs text-blue-600">
           IFB Accelerator — Selective Cohort Program
         </p>
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">
           From Idea to Revenue.<br />
           <span className="text-blue-600">No Shortcuts.</span>
         </h1>
@@ -434,7 +434,7 @@ function OverviewTab({ onApply }) {
         </p>
         <button
           onClick={onApply}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-xl transition-colors mt-2"
+          className="ui-btn ui-btn-primary mt-2 w-auto"
         >
           Apply Now <ArrowRight size={16} />
         </button>
@@ -445,15 +445,15 @@ function OverviewTab({ onApply }) {
         {TRUST_METRICS.map(({ value, label, icon: Icon }) => (
           <div key={label} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center">
             <Icon size={20} className="text-blue-600 mx-auto mb-2" />
-            <div className="text-2xl font-black text-slate-900">{value}</div>
-            <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wide">{label}</div>
+            <div className="text-2xl font-bold text-slate-900">{value}</div>
+            <div className="text-[11px] text-slate-500 mt-1">{label}</div>
           </div>
         ))}
       </div>
 
       {/* How it works */}
       <div>
-        <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-6">How It Works</p>
+        <p className="font-semibold text-xs text-slate-500 mb-6">How It Works</p>
         <div className="grid sm:grid-cols-3 gap-4">
           {[
             {
@@ -476,7 +476,7 @@ function OverviewTab({ onApply }) {
             },
           ].map(({ step, title, desc, icon: Icon }) => (
             <div key={step} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative">
-              <span className="font-black text-4xl text-slate-700 absolute top-4 right-5 select-none">{step}</span>
+              <span className="font-bold text-4xl text-slate-700 absolute top-4 right-5 select-none">{step}</span>
               <Icon size={22} className="text-blue-600 mb-3" />
               <h3 className="font-bold text-slate-900 mb-2">{title}</h3>
               <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
@@ -487,18 +487,18 @@ function OverviewTab({ onApply }) {
 
       {/* Case studies */}
       <div>
-        <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-6">Founder Results</p>
+        <p className="font-semibold text-xs text-slate-500 mb-6">Founder Results</p>
         <div className="grid sm:grid-cols-2 gap-4">
           {CASE_STUDIES.map(cs => (
             <div key={cs.name} className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
               <div className={`bg-gradient-to-r ${cs.color} p-5`}>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-black text-slate-900 text-lg">{cs.name}</p>
+                    <p className="font-bold text-slate-900 text-lg">{cs.name}</p>
                     <p className="text-slate-500 text-xs mt-0.5">{cs.sector} · {cs.country}</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl px-3 py-1.5 text-center">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-wide">Joined at</div>
+                    <div className="text-xs text-slate-500">Joined at</div>
                     <div className="font-bold text-slate-900 text-sm">{cs.stage}</div>
                   </div>
                 </div>
@@ -520,11 +520,11 @@ function OverviewTab({ onApply }) {
 
       {/* Bottom CTA */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 text-center">
-        <p className="text-slate-900 font-black text-xl mb-2">Ready to build something real?</p>
+        <p className="text-slate-900 font-bold text-xl mb-2">Ready to build something real?</p>
         <p className="text-slate-500 text-sm mb-5">Applications reviewed within minutes. Cohort spots are limited.</p>
         <button
           onClick={onApply}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-xl transition-colors"
+          className="ui-btn ui-btn-primary w-auto"
         >
           Apply Now <ArrowRight size={16} />
         </button>
@@ -597,7 +597,7 @@ Application:
     return (
       <div className="max-w-xl mx-auto space-y-6 pt-4">
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center space-y-4">
-          <p className="font-black uppercase tracking-widest text-[10px] text-slate-500">Application Review</p>
+          <p className="font-semibold text-xs text-slate-500">Application Review</p>
           <ScoreRing score={score} />
           <div>
             <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold border ${decisionColor}`}>
@@ -611,7 +611,7 @@ Application:
 
         {strengths?.length > 0 && (
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-2">
-            <p className="font-black uppercase tracking-widest text-[10px] text-emerald-500 mb-3">Strengths</p>
+            <p className="font-semibold text-xs text-emerald-500 mb-3">Strengths</p>
             {strengths.map((s, i) => (
               <div key={i} className="flex items-start gap-2">
                 <CheckCircle2 size={14} className="text-emerald-600 mt-0.5 shrink-0" />
@@ -623,7 +623,7 @@ Application:
 
         {concerns?.length > 0 && (
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-2">
-            <p className="font-black uppercase tracking-widest text-[10px] text-yellow-500 mb-3">Areas to Strengthen</p>
+            <p className="font-semibold text-xs text-yellow-500 mb-3">Areas to Strengthen</p>
             {concerns.map((c, i) => (
               <div key={i} className="flex items-start gap-2">
                 <AlertTriangle size={14} className="text-yellow-600 mt-0.5 shrink-0" />
@@ -634,13 +634,13 @@ Application:
         )}
 
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
-          <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-2">From IFB Admissions AI</p>
+          <p className="font-semibold text-xs text-slate-500 mb-2">From IFB Admissions AI</p>
           <p className="text-slate-600 text-sm leading-relaxed italic">"{personalized_message}"</p>
         </div>
 
         {decision === 'accepted' && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-3">
-            <p className="text-emerald-600 font-black text-lg">Welcome to the IFB Accelerator</p>
+            <p className="text-emerald-600 font-bold text-lg">Welcome to the IFB Accelerator</p>
             <p className="text-slate-500 text-sm">Your personalized program is ready. Let's build.</p>
             <button
               onClick={onAccepted}
@@ -667,8 +667,8 @@ Application:
   return (
     <div className="max-w-xl mx-auto pt-4">
       <div className="mb-6">
-        <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-1">Selective Application</p>
-        <h2 className="text-xl font-black text-slate-900">Apply to IFB Accelerator</h2>
+        <p className="font-semibold text-xs text-slate-500 mb-1">Selective Application</p>
+        <h2 className="text-xl font-bold text-slate-900">Apply to IFB Accelerator</h2>
         <p className="text-slate-500 text-sm mt-1">
           Our AI admission officer reviews every application instantly. Be honest — it helps us match you to the right program.
         </p>
@@ -677,20 +677,20 @@ Application:
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Startup Name *</label>
+            <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Startup Name *</label>
             <input
               required value={form.name}
               onChange={e => setField('name', e.target.value)}
               placeholder="e.g. AgriConnect"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors"
+              className="ui-input"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Current Stage *</label>
+            <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Current Stage *</label>
             <select
               required value={form.stage}
               onChange={e => setField('stage', e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
+              className="ui-select"
             >
               {['Idea', 'Side Project', 'MVP', 'Revenue', 'Scaling'].map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -700,38 +700,38 @@ Application:
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">One-Line Pitch *</label>
+          <label className="block text-[11px] font-bold text-slate-500 mb-1.5">One-Line Pitch *</label>
           <input
             required value={form.pitch}
             onChange={e => setField('pitch', e.target.value)}
             placeholder="e.g. We connect smallholder farmers to B2B buyers, eliminating the middleman."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors"
+            className="ui-input"
           />
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Monthly Revenue (USD)</label>
+            <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Monthly Revenue (USD)</label>
             <input
               type="number" min="0" value={form.revenue}
               onChange={e => setField('revenue', e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
+              className="ui-input"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Team Size</label>
+            <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Team Size</label>
             <input
               type="number" min="1" value={form.teamSize}
               onChange={e => setField('teamSize', e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
+              className="ui-input"
             />
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Time / Week *</label>
+            <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Time / Week *</label>
             <select
               required value={form.timeCommitment}
               onChange={e => setField('timeCommitment', e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm outline-none focus:border-blue-500 transition-colors"
+              className="ui-select"
             >
               {['<5h', '5–10h', '10–20h', '20h+'].map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -741,31 +741,31 @@ Application:
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Biggest Challenge Right Now *</label>
+          <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Biggest Challenge Right Now *</label>
           <textarea
             required value={form.challenge}
             onChange={e => setField('challenge', e.target.value)}
             rows={3}
             placeholder="Be specific. What's the one thing keeping you from moving faster?"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
+            className="ui-textarea resize-none"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">Why IFB Accelerator? *</label>
+          <label className="block text-[11px] font-bold text-slate-500 mb-1.5">Why IFB Accelerator? *</label>
           <textarea
             required value={form.why}
             onChange={e => setField('why', e.target.value)}
             rows={3}
             placeholder="What specifically do you want to get out of this program? What does success look like for you in 12 months?"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 text-sm placeholder-slate-600 outline-none focus:border-blue-500 transition-colors resize-none"
+            className="ui-textarea resize-none"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-colors mt-2"
+          className="ui-btn ui-btn-primary mt-2"
         >
           {loading ? (
             <>
@@ -845,7 +845,7 @@ function ProgramTab({ uid, onGoApply }) {
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 max-w-md space-y-4">
           <Lock size={32} className="text-slate-500 mx-auto" />
-          <h3 className="text-slate-900 font-black text-lg">Program Locked</h3>
+          <h3 className="text-slate-900 font-bold text-lg">Program Locked</h3>
           <p className="text-slate-500 text-sm">
             Complete your application first. Accepted founders get immediate access to their personalized 7-stage roadmap.
           </p>
@@ -866,8 +866,8 @@ function ProgramTab({ uid, onGoApply }) {
     <div className="space-y-8 pt-2">
       {/* Header */}
       <div>
-        <p className="font-black uppercase tracking-widest text-[10px] text-blue-600 mb-1">Your IFB Accelerator Program</p>
-        <h2 className="text-2xl font-black text-slate-900">{app?.form?.name || 'Your Startup'}</h2>
+        <p className="font-semibold text-xs text-blue-600 mb-1">Your IFB Accelerator Program</p>
+        <h2 className="text-2xl font-bold text-slate-900">{app?.form?.name || 'Your Startup'}</h2>
         <div className="mt-3">
           <div className="flex justify-between text-xs text-slate-500 mb-1.5">
             <span>Stage {progress.currentStage} of {ROADMAP_STAGES.length}</span>
@@ -890,15 +890,15 @@ function ProgramTab({ uid, onGoApply }) {
           { label: 'Current Stage', value: currentStageName },
         ].map(({ label, value }) => (
           <div key={label} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
-            <div className="text-slate-900 font-black text-lg">{value}</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wide mt-0.5">{label}</div>
+            <div className="text-slate-900 font-bold text-lg">{value}</div>
+            <div className="text-xs text-slate-500 mt-0.5">{label}</div>
           </div>
         ))}
       </div>
 
       {/* Roadmap timeline */}
       <div>
-        <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-5">7-Stage Roadmap</p>
+        <p className="font-semibold text-xs text-slate-500 mb-5">7-Stage Roadmap</p>
         <div className="relative">
           {/* Vertical line */}
           <div className="absolute left-5 top-0 bottom-0 w-px bg-slate-100" />
@@ -924,7 +924,7 @@ function ProgramTab({ uid, onGoApply }) {
                         ? <Check size={16} className="text-slate-900" />
                         : isLocked
                         ? <Lock size={13} className="text-slate-500" />
-                        : <span className="text-slate-900 font-black text-xs">{stage.id}</span>
+                        : <span className="text-slate-900 font-bold text-xs">{stage.id}</span>
                       }
                     </div>
                   </div>
@@ -938,12 +938,12 @@ function ProgramTab({ uid, onGoApply }) {
                       : 'bg-slate-50 border-slate-200 opacity-60'
                   }`}>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className={`font-black text-base ${
+                      <h3 className={`font-bold text-base ${
                         isCompleted ? 'text-emerald-600' : isCurrent ? 'text-slate-900' : 'text-slate-500'
                       }`}>
                         {stage.title}
                       </h3>
-                      <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                         isCompleted
                           ? 'bg-emerald-50 text-emerald-600'
                           : isCurrent
@@ -998,7 +998,7 @@ function ProgramTab({ uid, onGoApply }) {
 
       {/* Weekly Execution Engine */}
       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
-        <p className="font-black uppercase tracking-widest text-[10px] text-blue-600 mb-1">Weekly Execution Engine</p>
+        <p className="font-semibold text-xs text-blue-600 mb-1">Weekly Execution Engine</p>
         <h3 className="text-slate-900 font-bold text-lg mb-4">This Week's Focus — {currentStageName}</h3>
         <div className="space-y-3">
           {weeklyTasks.map((task, idx) => {
@@ -1049,8 +1049,8 @@ function ModulesTab({ uid }) {
   return (
     <div className="space-y-4 pt-2">
       <div className="mb-4">
-        <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-1">Service Modules</p>
-        <h2 className="text-xl font-black text-slate-900">Deep-Dive Execution Modules</h2>
+        <p className="font-semibold text-xs text-slate-500 mb-1">Service Modules</p>
+        <h2 className="text-xl font-bold text-slate-900">Deep-Dive Execution Modules</h2>
         <p className="text-slate-500 text-sm mt-1">Each module is a focused sprint with deliverables, expert guidance, and an AI advisor.</p>
       </div>
 
@@ -1075,7 +1075,7 @@ function ModulesTab({ uid }) {
                     </div>
                   </div>
                   {isEnrolled && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-400/10 border border-emerald-200 px-2 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-400/10 border border-emerald-200 px-2 py-1 rounded-full">
                       <CheckCircle2 size={10} /> Enrolled
                     </span>
                   )}
@@ -1106,7 +1106,7 @@ function ModulesTab({ uid }) {
                   {!isEnrolled ? (
                     <button
                       onClick={() => enroll(mod.id)}
-                      className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl transition-colors"
+                      className="ui-btn ui-btn-primary flex-1"
                     >
                       Enroll in Module
                     </button>
@@ -1203,8 +1203,8 @@ function PricingTab({ uid, userEmail }) {
   return (
     <div className="space-y-8 pt-2">
       <div>
-        <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-1">Accelerator Pricing</p>
-        <h2 className="text-xl font-black text-slate-900">Choose Your Program Tier</h2>
+        <p className="font-semibold text-xs text-slate-500 mb-1">Accelerator Pricing</p>
+        <h2 className="text-xl font-bold text-slate-900">Choose Your Program Tier</h2>
         <p className="text-slate-500 text-sm mt-1">All tiers include AI advisors, community access, and the IFB execution framework.</p>
       </div>
 
@@ -1221,19 +1221,19 @@ function PricingTab({ uid, userEmail }) {
           >
             {tier.popular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                <span className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   Most Popular
                 </span>
               </div>
             )}
 
             <div className="mb-4">
-              <h3 className="text-slate-900 font-black text-lg">{tier.name}</h3>
+              <h3 className="text-slate-900 font-bold text-lg">{tier.name}</h3>
               <p className="text-slate-500 text-xs mt-0.5">{tier.target}</p>
             </div>
 
             <div className="mb-5">
-              <span className="text-3xl font-black text-slate-900">${tier.price.toLocaleString()}</span>
+              <span className="text-3xl font-bold text-slate-900">${tier.price.toLocaleString()}</span>
               <span className="text-slate-500 text-sm">/month</span>
             </div>
 
@@ -1265,7 +1265,7 @@ function PricingTab({ uid, userEmail }) {
         <div className="flex items-start gap-3">
           <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-black uppercase tracking-widest text-[10px] text-blue-600 mb-1.5">Performance Alignment</p>
+            <p className="font-semibold text-xs text-blue-600 mb-1.5">Performance Alignment</p>
             <p className="text-slate-600 text-sm leading-relaxed">
               Founders in the <span className="text-slate-900 font-semibold">Growth</span> and <span className="text-slate-900 font-semibold">Venture</span> tiers
               who reach $100K+ ARR with IFB support offer an optional <span className="text-slate-900 font-semibold">1% equity pledge</span> or
@@ -1277,7 +1277,7 @@ function PricingTab({ uid, userEmail }) {
 
       {/* Add-ons */}
       <div>
-        <p className="font-black uppercase tracking-widest text-[10px] text-slate-500 mb-4">Add-Ons — Available Separately</p>
+        <p className="font-semibold text-xs text-slate-500 mb-4">Add-Ons — Available Separately</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {ADDONS.map(addon => {
             const Icon = addon.icon;
@@ -1286,7 +1286,7 @@ function PricingTab({ uid, userEmail }) {
                 <Icon size={18} className="text-slate-500 mb-2" />
                 <p className="text-slate-900 font-bold text-sm">{addon.title}</p>
                 <p className="text-slate-500 text-xs mt-1 leading-relaxed">{addon.desc}</p>
-                <p className="text-blue-600 font-black text-base mt-2">${addon.price}</p>
+                <p className="text-blue-600 font-bold text-base mt-2">${addon.price}</p>
               </div>
             );
           })}
@@ -1299,7 +1299,7 @@ function PricingTab({ uid, userEmail }) {
           <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto">
             <CheckCircle2 size={28} className="text-blue-600" />
           </div>
-          <h3 className="text-slate-900 font-black text-lg">{selectedPlan} Plan Selected</h3>
+          <h3 className="text-slate-900 font-bold text-lg">{selectedPlan} Plan Selected</h3>
           <p className="text-slate-500 text-sm leading-relaxed">
             Your IFB advisor will contact you at{' '}
             <span className="text-blue-600 font-semibold">{userEmail || 'your email address'}</span>{' '}
@@ -1315,7 +1315,7 @@ function PricingTab({ uid, userEmail }) {
               ].map((step, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs text-slate-600">
                   <div className="w-4 h-4 rounded-full bg-blue-600/30 flex items-center justify-center shrink-0">
-                    <span className="text-blue-600 font-bold text-[9px]">{i + 1}</span>
+                    <span className="text-blue-600 font-bold text-xs">{i + 1}</span>
                   </div>
                   {step}
                 </div>
@@ -1324,7 +1324,7 @@ function PricingTab({ uid, userEmail }) {
           </div>
           <button
             onClick={() => setModalOpen(false)}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition-colors"
+            className="ui-btn ui-btn-primary"
           >
             Got it
           </button>
@@ -1354,8 +1354,8 @@ export default function VentureXAccelerator({ session, myCompany }) {
               <Rocket size={16} className="text-slate-900" />
             </div>
             <div>
-              <h1 className="text-slate-900 font-black text-sm leading-none">IFB Accelerator</h1>
-              <p className="text-slate-500 text-[10px] uppercase tracking-widest">Startup Execution Platform</p>
+              <h1 className="text-slate-900 font-bold text-sm leading-none">IFB Accelerator</h1>
+              <p className="text-slate-500 text-xs">Startup Execution Platform</p>
             </div>
           </div>
 
@@ -1365,7 +1365,7 @@ export default function VentureXAccelerator({ session, myCompany }) {
               <button
                 key={tab}
                 onClick={() => setInnerTab(tab)}
-                className={`shrink-0 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest transition-colors ${
+                className={`shrink-0 px-4 py-1.5 rounded-full text-[11px] font-semibold transition-colors ${
                   innerTab === tab
                     ? 'bg-blue-600 text-white'
                     : 'bg-slate-50 text-slate-500 hover:text-slate-900 hover:bg-slate-100'

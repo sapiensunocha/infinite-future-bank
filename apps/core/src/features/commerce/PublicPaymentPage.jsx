@@ -178,7 +178,7 @@ function OrderStatusView({ slug, orderId }) {
   if (state.phase === 'paid') {
     return (
       <StateCard tone="emerald" Icon={CheckCircle2} title="Payment received">
-        {total && <p className="text-3xl font-black text-emerald-700 mb-3">{total}</p>}
+        {total && <p className="text-3xl font-bold text-emerald-700 mb-3">{total}</p>}
         <p className="whitespace-pre-line">{state.data?.success_message || 'Thank you! A receipt has been sent to your email.'}</p>
         <p className="text-xs text-slate-400 mt-6 break-all">Order reference: {orderId}</p>
       </StateCard>
@@ -463,7 +463,7 @@ function PaymentPageForm({ slug, session }) {
   if (walletPaid) {
     return (
       <StateCard tone="emerald" Icon={CheckCircle2} title="Payment complete">
-        {quote && <p className="text-3xl font-black text-emerald-700 mb-3">{formatCents(quote.total_cents, quote.currency)}</p>}
+        {quote && <p className="text-3xl font-bold text-emerald-700 mb-3">{formatCents(quote.total_cents, quote.currency)}</p>}
         <p className="whitespace-pre-line">{page.success_message || 'Thank you! Your payment was sent from your IFB wallet.'}</p>
         <p className="text-xs text-slate-400 mt-6 break-all">Order reference: {walletPaid.orderId}</p>
       </StateCard>

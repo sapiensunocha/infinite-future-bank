@@ -20,8 +20,8 @@ export default function ProfileDropdown({
         className="flex items-center gap-3 w-full text-left group px-3 py-2 rounded-2xl hover:bg-white/40 active:bg-slate-200 transition-colors border border-transparent hover:border-white/60 cursor-pointer focus:outline-none z-50 relative"
       >
         <div className="text-right hidden sm:block pointer-events-none">
-          <p className="font-black text-sm text-slate-800 leading-none">{userName}</p>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
+          <p className="font-bold text-sm text-slate-800 leading-none">{userName}</p>
+          <p className="text-xs font-semibold text-slate-500 mt-1">
             {profile?.active_tier || 'Personal'}
           </p>
         </div>
@@ -29,7 +29,7 @@ export default function ProfileDropdown({
           {profile?.avatar_url ? (
             <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
           ) : (
-            <span className="font-black text-slate-400 text-lg">
+            <span className="font-bold text-slate-400 text-lg">
               {profile?.full_name?.charAt(0).toUpperCase() || <User size={20} />}
             </span>
           )}
@@ -60,7 +60,7 @@ export default function ProfileDropdown({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm text-slate-900 truncate">{userName}</p>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <p className="text-xs font-semibold text-slate-500">
                   {profile?.active_tier || 'Personal'}
                 </p>
               </div>

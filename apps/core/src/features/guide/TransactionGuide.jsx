@@ -255,7 +255,7 @@ function Phone({ children, dark = false }) {
   return (
     <div className="relative w-[252px] h-[496px] rounded-[40px] bg-slate-900 shadow-2xl border-2 border-slate-700 overflow-hidden flex flex-col">
       <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-black rounded-full z-20" />
-      <div className={`flex-shrink-0 h-8 ${dark ? 'bg-white' : 'bg-slate-100'} flex items-center justify-between px-4 pt-2 text-[8px] font-black ${dark ? 'text-slate-900' : 'text-slate-700'}`}>
+      <div className={`flex-shrink-0 h-8 ${dark ? 'bg-white' : 'bg-slate-100'} flex items-center justify-between px-4 pt-2 text-xs font-bold ${dark ? 'text-slate-900' : 'text-slate-700'}`}>
         <span>9:41</span><span>●●●</span>
       </div>
       <div className="flex-1 overflow-hidden relative">{children}</div>
@@ -271,7 +271,7 @@ function HL({ children, onTap, done, radius = 'rounded-xl', labelPos = 'top' }) 
         <>
           <span className={`absolute inset-0 ${radius} border-2 border-yellow-400 animate-ping opacity-75`} />
           <span className={`absolute inset-0 ${radius} border-2 border-yellow-400`} />
-          <span className={`absolute ${labelPos === 'top' ? '-top-5' : '-bottom-5'} left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded-full whitespace-nowrap z-30`}>TAP!</span>
+          <span className={`absolute ${labelPos === 'top' ? '-top-5' : '-bottom-5'} left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-xs font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap z-30`}>TAP!</span>
         </>
       )}
       {done && (
@@ -298,19 +298,19 @@ function DashboardScreen() {
   return (
     <div className="h-full bg-white flex flex-col px-3 py-2 overflow-hidden">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-black"><span className="text-blue-600">D</span><span className="text-red-600">E</span><span className="text-yellow-600">U</span><span className="text-green-600">S</span></span>
+        <span className="text-xs font-bold"><span className="text-blue-600">D</span><span className="text-red-600">E</span><span className="text-yellow-600">U</span><span className="text-green-600">S</span></span>
         <Bell size={10} className="text-slate-500" />
       </div>
       <div className="bg-gradient-to-br from-blue-600 to-blue-50 rounded-2xl p-3 mb-3">
-        <p className="text-[7px] text-blue-600 font-black uppercase tracking-widest">Total Balance</p>
-        <p className="text-xl font-black text-slate-900">$12,480.50</p>
-        <p className="text-[7px] text-blue-600">IFB Account · **** 4821</p>
+        <p className="text-xs text-blue-600 font-semibold">Total Balance</p>
+        <p className="text-xl font-bold text-slate-900">$12,480.50</p>
+        <p className="text-xs text-blue-600">IFB Account · **** 4821</p>
       </div>
       <div className="grid grid-cols-3 gap-1.5 mb-3">
         {actions.map((a) => (
           <div key={a.label} className="bg-slate-50 rounded-xl flex flex-col items-center justify-center py-2 gap-1">
             <a.icon size={12} className={a.color} />
-            <span className="text-[7px] text-slate-600 font-black">{a.label}</span>
+            <span className="text-xs text-slate-600 font-bold">{a.label}</span>
           </div>
         ))}
       </div>
@@ -331,28 +331,28 @@ function DepositScreen({ variant, done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center"><Plus size={10} className="text-slate-900" /></div>
-        <span className="text-[10px] font-black text-slate-900">Add Funds</span>
+        <span className="text-xs font-bold text-slate-900">Add Funds</span>
       </div>
-      <p className="text-[7px] text-slate-500 mb-3">Choose deposit method:</p>
+      <p className="text-xs text-slate-500 mb-3">Choose deposit method:</p>
       <div className="flex flex-col gap-2">
         <HL done={done && variant === 'cot'} onTap={variant === 'cot' ? onTap : undefined} radius="rounded-2xl">
           <div className={`bg-slate-50 rounded-2xl p-3 border ${variant === 'cot' ? 'border-yellow-200' : 'border-slate-200'}`}>
             <div className="flex items-center gap-2 mb-1">
               <Users size={10} className="text-blue-600" />
-              <span className="text-[9px] font-black text-slate-900">Community of Trust</span>
+              <span className="text-xs font-bold text-slate-900">Community of Trust</span>
             </div>
-            <p className="text-[7px] text-slate-500">1% IFB Fee + 2% Processor</p>
-            <span className="text-[7px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-black">LOWEST COST</span>
+            <p className="text-xs text-slate-500">1% IFB Fee + 2% Processor</p>
+            <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">LOWEST COST</span>
           </div>
         </HL>
         <HL done={done && variant === 'stripe'} onTap={variant === 'stripe' ? onTap : undefined} radius="rounded-2xl">
           <div className={`bg-slate-50 rounded-2xl p-3 border ${variant === 'stripe' ? 'border-yellow-200' : 'border-slate-200'}`}>
             <div className="flex items-center gap-2 mb-1">
               <CreditCard size={10} className="text-purple-600" />
-              <span className="text-[9px] font-black text-slate-900">Global Card Network</span>
+              <span className="text-xs font-bold text-slate-900">Debit or credit card</span>
             </div>
-            <p className="text-[7px] text-slate-500">2.9% + $0.30 · Visa · Mastercard</p>
-            <span className="text-[7px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full font-black">INSTANT</span>
+            <p className="text-xs text-slate-500">2.9% + $0.30 · Visa · Mastercard</p>
+            <span className="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded-full font-bold">INSTANT</span>
           </div>
         </HL>
       </div>
@@ -365,23 +365,23 @@ function SendScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <Send size={10} className="text-emerald-600" />
-        <span className="text-[10px] font-black text-slate-900">Send Money</span>
+        <span className="text-xs font-bold text-slate-900">Send Money</span>
       </div>
       <div className="bg-slate-50 rounded-xl p-2 mb-2 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[7px] font-black text-white">JD</div>
-        <div><p className="text-[8px] font-black text-slate-900">Jane Doe</p><p className="text-[6px] text-slate-500">@janedoe · IFB</p></div>
+        <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">JD</div>
+        <div><p className="text-xs font-bold text-slate-900">Jane Doe</p><p className="text-[6px] text-slate-500">@janedoe · IFB</p></div>
       </div>
       <div className="bg-slate-50 rounded-xl p-2 mb-2">
         <p className="text-[6px] text-slate-500 mb-0.5">Amount</p>
-        <p className="text-lg font-black text-slate-900">$250.00</p>
+        <p className="text-lg font-bold text-slate-900">$250.00</p>
         <p className="text-[6px] text-slate-500">USD · IFB Network</p>
       </div>
       <div className="bg-slate-50 rounded-xl p-2 mb-3">
         <p className="text-[6px] text-slate-500 mb-0.5">Note</p>
-        <p className="text-[8px] text-slate-900">Dinner split 🍕</p>
+        <p className="text-xs text-slate-900">Dinner split 🍕</p>
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl" labelPos="top">
-        <div className="w-full bg-emerald-600 rounded-xl py-2 text-center text-[9px] font-black text-white">Send Now</div>
+        <div className="w-full bg-emerald-600 rounded-xl py-2 text-center text-xs font-bold text-white">Send Now</div>
       </HL>
     </div>
   );
@@ -392,23 +392,23 @@ function ReceiveScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <Download size={10} className="text-blue-600" />
-        <span className="text-[10px] font-black text-slate-800">Receive Money</span>
+        <span className="text-xs font-bold text-slate-800">Receive Money</span>
       </div>
       <div className="bg-blue-50 rounded-2xl p-3 mb-3 text-center">
-        <p className="text-[7px] text-slate-500 mb-1">Your Payment Link</p>
-        <p className="text-[8px] font-black text-blue-600 break-all">pay.ifb.com/u/janedoe</p>
+        <p className="text-xs text-slate-500 mb-1">Your Payment Link</p>
+        <p className="text-xs font-bold text-blue-600 break-all">pay.ifb.com/u/janedoe</p>
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
         <div className="bg-blue-600 rounded-xl p-2 flex items-center justify-center gap-1.5">
           <Copy size={10} className="text-white" />
-          <span className="text-[9px] font-black text-white">Copy Link</span>
+          <span className="text-xs font-bold text-white">Copy Link</span>
         </div>
       </HL>
       <div className="mt-3 bg-slate-50 rounded-xl p-2">
-        <p className="text-[7px] text-slate-500 text-center">Share via</p>
+        <p className="text-xs text-slate-500 text-center">Share via</p>
         <div className="flex justify-around mt-1">
           {['SMS', 'Email', 'App'].map((m) => (
-            <span key={m} className="text-[7px] bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-600 font-black">{m}</span>
+            <span key={m} className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-600 font-bold">{m}</span>
           ))}
         </div>
       </div>
@@ -421,17 +421,17 @@ function InvoiceScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-2">
         <Receipt size={10} className="text-orange-500" />
-        <span className="text-[10px] font-black text-slate-800">New Invoice</span>
+        <span className="text-xs font-bold text-slate-800">New Invoice</span>
       </div>
       <div className="flex flex-col gap-1.5 mb-3">
-        <div className="bg-slate-50 rounded-lg p-2"><p className="text-[7px] text-slate-400">To</p><p className="text-[8px] font-black text-slate-800">Acme Corp · acme@corp.com</p></div>
-        <div className="bg-slate-50 rounded-lg p-2"><p className="text-[7px] text-slate-400">Item</p><p className="text-[8px] font-black text-slate-800">Web Design · $1,200.00</p></div>
-        <div className="bg-slate-50 rounded-lg p-2"><p className="text-[7px] text-slate-400">Due Date</p><p className="text-[8px] font-black text-slate-800">Jul 15, 2026</p></div>
+        <div className="bg-slate-50 rounded-lg p-2"><p className="text-xs text-slate-400">To</p><p className="text-xs font-bold text-slate-800">Acme Corp · acme@corp.com</p></div>
+        <div className="bg-slate-50 rounded-lg p-2"><p className="text-xs text-slate-400">Item</p><p className="text-xs font-bold text-slate-800">Web Design · $1,200.00</p></div>
+        <div className="bg-slate-50 rounded-lg p-2"><p className="text-xs text-slate-400">Due Date</p><p className="text-xs font-bold text-slate-800">Jul 15, 2026</p></div>
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
         <div className="bg-orange-500 rounded-xl p-2 flex items-center justify-center gap-1.5">
           <Send size={10} className="text-white" />
-          <span className="text-[9px] font-black text-white">Send Invoice</span>
+          <span className="text-xs font-bold text-white">Send Invoice</span>
         </div>
       </HL>
     </div>
@@ -441,15 +441,15 @@ function InvoiceScreen({ done, onTap }) {
 function QRScreen({ done, onTap }) {
   return (
     <div className="h-full bg-white flex flex-col items-center p-3">
-      <span className="text-[10px] font-black text-slate-900 mb-3">My QR Code</span>
+      <span className="text-xs font-bold text-slate-900 mb-3">My QR Code</span>
       <HL done={done} onTap={onTap} radius="rounded-2xl">
         <div className="w-28 h-28 bg-white rounded-2xl flex items-center justify-center">
           <QrCode size={80} className="text-slate-900" />
         </div>
       </HL>
-      <p className="text-[7px] text-slate-500 mt-3 text-center">Scan to pay @janedoe</p>
+      <p className="text-xs text-slate-500 mt-3 text-center">Scan to pay @janedoe</p>
       <div className="mt-2 bg-slate-50 rounded-xl px-3 py-1.5">
-        <p className="text-[7px] text-slate-600 font-black">Fixed: $50.00 USD</p>
+        <p className="text-xs text-slate-600 font-bold">Fixed: $50.00 USD</p>
       </div>
     </div>
   );
@@ -458,21 +458,21 @@ function QRScreen({ done, onTap }) {
 function PaymentLinkScreen({ done, onTap }) {
   return (
     <div className="h-full bg-white flex flex-col p-3">
-      <span className="text-[10px] font-black text-slate-800 mb-3">Share Payment Link</span>
+      <span className="text-xs font-bold text-slate-800 mb-3">Share Payment Link</span>
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 mb-3">
-        <p className="text-[7px] text-slate-500">Link</p>
-        <p className="text-[8px] font-black text-blue-600">pay.ifb.com/u/janedoe?amt=50</p>
+        <p className="text-xs text-slate-500">Link</p>
+        <p className="text-xs font-bold text-blue-600">pay.ifb.com/u/janedoe?amt=50</p>
       </div>
       <div className="flex flex-col gap-2">
         <HL done={done} onTap={onTap} radius="rounded-xl">
           <div className="bg-blue-600 rounded-xl p-2 flex items-center justify-center gap-1.5">
             <Send size={10} className="text-white" />
-            <span className="text-[9px] font-black text-white">Share Link</span>
+            <span className="text-xs font-bold text-white">Share Link</span>
           </div>
         </HL>
         <div className="bg-slate-50 rounded-xl p-2 flex items-center justify-center gap-1.5">
           <Copy size={10} className="text-slate-500" />
-          <span className="text-[9px] text-slate-500">Copy to Clipboard</span>
+          <span className="text-xs text-slate-500">Copy to Clipboard</span>
         </div>
       </div>
     </div>
@@ -482,19 +482,19 @@ function PaymentLinkScreen({ done, onTap }) {
 function PayMeScreen({ variant, done, onTap }) {
   return (
     <div className="h-full bg-white flex flex-col p-3">
-      <span className="text-[10px] font-black text-slate-800 mb-3">Pay Me Card</span>
+      <span className="text-xs font-bold text-slate-800 mb-3">Pay Me Card</span>
       <HL done={done && variant === 'view'} onTap={variant === 'view' ? onTap : undefined} radius="rounded-2xl">
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-4 mb-3">
-          <p className="text-[7px] text-slate-400 mb-1">IFB PAY ME</p>
-          <p className="text-[11px] font-black text-white">Jane Doe</p>
-          <p className="text-[7px] text-blue-300 mb-2">**** **** **** 4821</p>
-          <p className="text-[9px] font-black text-emerald-400">$12,480.50</p>
+          <p className="text-xs text-slate-400 mb-1">IFB PAY ME</p>
+          <p className="text-[11px] font-bold text-white">Jane Doe</p>
+          <p className="text-xs text-blue-300 mb-2">**** **** **** 4821</p>
+          <p className="text-xs font-bold text-emerald-400">$12,480.50</p>
         </div>
       </HL>
       {variant === 'freeze' && (
         <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3">
           <div>
-            <p className="text-[8px] font-black text-slate-800">Freeze Card</p>
+            <p className="text-xs font-bold text-slate-800">Freeze Card</p>
             <p className="text-[6px] text-slate-500">Block all incoming payments</p>
           </div>
           <HL done={done} onTap={onTap} radius="rounded-full">
@@ -513,25 +513,25 @@ function WithdrawScreen({ variant, done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <Download size={10} className="text-purple-600" />
-        <span className="text-[10px] font-black text-slate-900">Withdraw</span>
+        <span className="text-xs font-bold text-slate-900">Withdraw</span>
       </div>
       <div className="flex flex-col gap-2">
         <HL done={done && variant === 'global'} onTap={variant === 'global' ? onTap : undefined} radius="rounded-2xl">
           <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200">
             <div className="flex items-center gap-2 mb-1">
               <Globe size={10} className="text-purple-600" />
-              <span className="text-[9px] font-black text-slate-900">Global Bank / Card</span>
+              <span className="text-xs font-bold text-slate-900">Global Bank / Card</span>
             </div>
-            <p className="text-[7px] text-slate-500">1.5% + $1.00 · 1-3 business days</p>
+            <p className="text-xs text-slate-500">1.5% + $1.00 · 1-3 business days</p>
           </div>
         </HL>
         <HL done={done && variant === 'cot'} onTap={variant === 'cot' ? onTap : undefined} radius="rounded-2xl">
           <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200">
             <div className="flex items-center gap-2 mb-1">
               <Users size={10} className="text-emerald-600" />
-              <span className="text-[9px] font-black text-slate-900">Community of Trust</span>
+              <span className="text-xs font-bold text-slate-900">Community of Trust</span>
             </div>
-            <p className="text-[7px] text-slate-500">Lowest fees · Minutes · Local cash</p>
+            <p className="text-xs text-slate-500">Lowest fees · Minutes · Local cash</p>
           </div>
         </HL>
       </div>
@@ -543,17 +543,17 @@ function NFCScreen({ variant, done, onTap }) {
   const modes = ['Send', 'Receive', 'Card'];
   return (
     <div className="h-full bg-white flex flex-col items-center p-3">
-      <span className="text-[10px] font-black text-slate-900 mb-2">Tap to Pay</span>
+      <span className="text-xs font-bold text-slate-900 mb-2">Tap to Pay</span>
       <div className="flex gap-1 bg-slate-50 rounded-xl p-0.5 mb-4">
         {modes.map((m) => {
           const isActive = (variant === 'send' && m === 'Send') || (variant === 'receive' && m === 'Receive') || (variant === 'card' && m === 'Card');
           const isTarget = (variant === 'receive' && m === 'Receive') || (variant === 'card' && m === 'Card');
           if (isTarget) return (
             <HL key={m} done={done} onTap={onTap} radius="rounded-lg">
-              <span className="bg-blue-600 text-white text-[7px] font-black px-2 py-1 rounded-lg">{m}</span>
+              <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-lg">{m}</span>
             </HL>
           );
-          return <span key={m} className={`text-[7px] font-black px-2 py-1 rounded-lg ${isActive ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>{m}</span>;
+          return <span key={m} className={`text-xs font-bold px-2 py-1 rounded-lg ${isActive ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>{m}</span>;
         })}
       </div>
       <div className="relative flex items-center justify-center">
@@ -573,7 +573,7 @@ function NFCScreen({ variant, done, onTap }) {
           </div>
         </div>
       </div>
-      <p className="text-[7px] text-slate-500 mt-3 text-center">
+      <p className="text-xs text-slate-500 mt-3 text-center">
         {variant === 'send' ? 'Hold near reader' : variant === 'receive' ? 'Accepting payments' : 'Emulating card'}
       </p>
     </div>
@@ -585,18 +585,18 @@ function SwiftScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <Landmark size={10} className="text-blue-600" />
-        <span className="text-[10px] font-black text-slate-900">SWIFT Transfer</span>
+        <span className="text-xs font-bold text-slate-900">SWIFT Transfer</span>
       </div>
       <div className="flex flex-col gap-1.5 mb-3">
         {[['Recipient', 'Klaus Müller'], ['IBAN', 'DE89 3704 0044 0532 0130 00'], ['BIC', 'COBADEFFXXX'], ['Amount', '$5,000 USD']].map(([l, v]) => (
           <div key={l} className="bg-slate-50 rounded-lg p-2">
             <p className="text-[6px] text-slate-500">{l}</p>
-            <p className="text-[8px] font-black text-slate-900">{v}</p>
+            <p className="text-xs font-bold text-slate-900">{v}</p>
           </div>
         ))}
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-blue-600 rounded-xl py-2 text-center text-[9px] font-black text-white">SWIFT Transfer</div>
+        <div className="bg-blue-600 rounded-xl py-2 text-center text-xs font-bold text-white">SWIFT Transfer</div>
       </HL>
     </div>
   );
@@ -607,18 +607,18 @@ function ACHScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <Landmark size={10} className="text-blue-600" />
-        <span className="text-[10px] font-black text-slate-800">ACH Transfer</span>
+        <span className="text-xs font-bold text-slate-800">ACH Transfer</span>
       </div>
       <div className="flex flex-col gap-1.5 mb-3">
         {[['Account Name', 'John Smith'], ['Routing #', '021000021'], ['Account #', '****7890'], ['Amount', '$1,500.00']].map(([l, v]) => (
           <div key={l} className="bg-slate-50 rounded-lg p-2 border border-slate-100">
             <p className="text-[6px] text-slate-400">{l}</p>
-            <p className="text-[8px] font-black text-slate-800">{v}</p>
+            <p className="text-xs font-bold text-slate-800">{v}</p>
           </div>
         ))}
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-blue-600 rounded-xl py-2 text-center text-[9px] font-black text-white">ACH Transfer</div>
+        <div className="bg-blue-600 rounded-xl py-2 text-center text-xs font-bold text-white">ACH Transfer</div>
       </HL>
     </div>
   );
@@ -629,18 +629,18 @@ function ExchangeScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <ArrowRightLeft size={10} className="text-yellow-600" />
-        <span className="text-[10px] font-black text-slate-900">AFR Exchange</span>
+        <span className="text-xs font-bold text-slate-900">AFR Exchange</span>
       </div>
       <div className="bg-slate-50 rounded-2xl p-3 mb-3">
         <div className="flex items-center justify-between mb-2">
-          <div><p className="text-[6px] text-slate-500">From</p><p className="text-[11px] font-black text-slate-900">$500 USD</p></div>
+          <div><p className="text-[6px] text-slate-500">From</p><p className="text-[11px] font-bold text-slate-900">$500 USD</p></div>
           <ArrowRightLeft size={12} className="text-yellow-600" />
-          <div><p className="text-[6px] text-slate-500">To</p><p className="text-[11px] font-black text-yellow-600">₳ 1,250 AFR</p></div>
+          <div><p className="text-[6px] text-slate-500">To</p><p className="text-[11px] font-bold text-yellow-600">₳ 1,250 AFR</p></div>
         </div>
-        <p className="text-[7px] text-slate-500">Rate: 1 USD = 2.50 AFR</p>
+        <p className="text-xs text-slate-500">Rate: 1 USD = 2.50 AFR</p>
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-yellow-400 rounded-xl py-2 text-center text-[9px] font-black text-slate-900">Exchange Now</div>
+        <div className="bg-yellow-400 rounded-xl py-2 text-center text-xs font-bold text-slate-900">Exchange Now</div>
       </HL>
     </div>
   );
@@ -649,18 +649,18 @@ function ExchangeScreen({ done, onTap }) {
 function RecurringScreen({ done, onTap }) {
   return (
     <div className="h-full bg-white flex flex-col p-3">
-      <span className="text-[10px] font-black text-slate-800 mb-3">Recurring Payment</span>
+      <span className="text-xs font-bold text-slate-800 mb-3">Recurring Payment</span>
       <div className="bg-slate-50 rounded-xl p-2 mb-2">
-        <p className="text-[7px] text-slate-500">Sending to</p>
-        <p className="text-[9px] font-black text-slate-800">@landlord · $800/mo</p>
+        <p className="text-xs text-slate-500">Sending to</p>
+        <p className="text-xs font-bold text-slate-800">@landlord · $800/mo</p>
       </div>
       <div className="flex gap-1 mb-3">
         {['Daily', 'Weekly', 'Monthly'].map((f) => (
-          <span key={f} className={`text-[7px] font-black px-2 py-1 rounded-lg ${f === 'Monthly' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{f}</span>
+          <span key={f} className={`text-xs font-bold px-2 py-1 rounded-lg ${f === 'Monthly' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{f}</span>
         ))}
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-blue-600 rounded-xl py-2 text-center text-[9px] font-black text-white">Enable Recurring</div>
+        <div className="bg-blue-600 rounded-xl py-2 text-center text-xs font-bold text-white">Enable Recurring</div>
       </HL>
     </div>
   );
@@ -670,19 +670,19 @@ function BillPayScreen({ done, onTap }) {
   const bills = [{ name: 'Electricity', due: 'Jul 5', amount: '$87.40', color: 'text-yellow-500' }, { name: 'Internet', due: 'Jul 8', amount: '$59.99', color: 'text-blue-500' }, { name: 'Netflix', due: 'Jul 12', amount: '$15.99', color: 'text-red-500' }];
   return (
     <div className="h-full bg-white flex flex-col p-3">
-      <span className="text-[10px] font-black text-slate-800 mb-3">Bill Pay</span>
+      <span className="text-xs font-bold text-slate-800 mb-3">Bill Pay</span>
       <div className="flex flex-col gap-2">
         {bills.map((b, i) => (
           <div key={b.name} className="flex items-center justify-between bg-slate-50 rounded-xl p-2">
-            <div><p className="text-[8px] font-black text-slate-800">{b.name}</p><p className="text-[6px] text-slate-400">Due {b.due}</p></div>
+            <div><p className="text-xs font-bold text-slate-800">{b.name}</p><p className="text-[6px] text-slate-400">Due {b.due}</p></div>
             <div className="flex items-center gap-2">
-              <span className={`text-[8px] font-black ${b.color}`}>{b.amount}</span>
+              <span className={`text-xs font-bold ${b.color}`}>{b.amount}</span>
               {i === 0 ? (
                 <HL done={done} onTap={onTap} radius="rounded-lg" labelPos="top">
-                  <div className="bg-blue-600 rounded-lg px-2 py-1 text-[7px] font-black text-white">Pay</div>
+                  <div className="bg-blue-600 rounded-lg px-2 py-1 text-xs font-bold text-white">Pay</div>
                 </HL>
               ) : (
-                <div className="bg-slate-200 rounded-lg px-2 py-1 text-[7px] font-black text-slate-500">Pay</div>
+                <div className="bg-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-500">Pay</div>
               )}
             </div>
           </div>
@@ -696,19 +696,19 @@ function SplitScreen({ done, onTap }) {
   const people = [{ init: 'JD', name: 'Jane', amount: '$25.00' }, { init: 'MK', name: 'Mike', amount: '$25.00' }, { init: 'SA', name: 'Sara', amount: '$25.00' }];
   return (
     <div className="h-full bg-white flex flex-col p-3">
-      <span className="text-[10px] font-black text-slate-800 mb-1">Split Bill</span>
-      <p className="text-[7px] text-slate-400 mb-3">Total: $75.00 · 3 people</p>
+      <span className="text-xs font-bold text-slate-800 mb-1">Split Bill</span>
+      <p className="text-xs text-slate-400 mb-3">Total: $75.00 · 3 people</p>
       <div className="flex flex-col gap-2 mb-3">
         {people.map((p) => (
           <div key={p.name} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
-            <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[7px] font-black text-white">{p.init}</div>
-            <span className="text-[8px] font-black text-slate-800 flex-1">{p.name}</span>
-            <span className="text-[8px] font-black text-slate-600">{p.amount}</span>
+            <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">{p.init}</div>
+            <span className="text-xs font-bold text-slate-800 flex-1">{p.name}</span>
+            <span className="text-xs font-bold text-slate-600">{p.amount}</span>
           </div>
         ))}
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-blue-600 rounded-xl py-2 text-center text-[9px] font-black text-white">Split Equally</div>
+        <div className="bg-blue-600 rounded-xl py-2 text-center text-xs font-bold text-white">Split Equally</div>
       </HL>
     </div>
   );
@@ -719,23 +719,23 @@ function DisputeScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle size={10} className="text-red-500" />
-        <span className="text-[10px] font-black text-slate-800">Transaction Detail</span>
+        <span className="text-xs font-bold text-slate-800">Transaction Detail</span>
       </div>
       <div className="bg-red-50 rounded-2xl p-3 mb-3">
-        <p className="text-[7px] text-slate-500">Unknown charge</p>
-        <p className="text-[13px] font-black text-slate-900">-$149.99</p>
-        <p className="text-[7px] text-slate-400">Jun 25, 2026 · *Online Merchant*</p>
+        <p className="text-xs text-slate-500">Unknown charge</p>
+        <p className="text-[13px] font-bold text-slate-900">-$149.99</p>
+        <p className="text-xs text-slate-400">Jun 25, 2026 · *Online Merchant*</p>
       </div>
       <div className="flex flex-col gap-1.5 mb-3">
         {['Wrong amount', 'Not received', 'Fraud / Unauthorized'].map((r) => (
           <div key={r} className="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
             <div className="w-3 h-3 rounded-full border-2 border-slate-300 flex-shrink-0" />
-            <span className="text-[7px] text-slate-600">{r}</span>
+            <span className="text-xs text-slate-600">{r}</span>
           </div>
         ))}
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-red-500 rounded-xl py-2 text-center text-[9px] font-black text-white">Dispute Transaction</div>
+        <div className="bg-red-500 rounded-xl py-2 text-center text-xs font-bold text-white">Dispute Transaction</div>
       </HL>
     </div>
   );
@@ -744,7 +744,7 @@ function DisputeScreen({ done, onTap }) {
 function MerchantScanScreen({ done, onTap }) {
   return (
     <div className="h-full bg-white flex flex-col p-3">
-      <span className="text-[10px] font-black text-slate-800 mb-3">Scan to Pay</span>
+      <span className="text-xs font-bold text-slate-800 mb-3">Scan to Pay</span>
       <div className="flex-1 bg-slate-900 rounded-2xl flex items-center justify-center relative mb-3">
         <div className="w-24 h-24 border-2 border-white/50 rounded-xl flex items-center justify-center">
           <QrCode size={40} className="text-white/30" />
@@ -754,7 +754,7 @@ function MerchantScanScreen({ done, onTap }) {
       <HL done={done} onTap={onTap} radius="rounded-xl">
         <div className="bg-blue-600 rounded-xl py-2 flex items-center justify-center gap-1.5">
           <Scan size={10} className="text-white" />
-          <span className="text-[9px] font-black text-white">Scan to Pay</span>
+          <span className="text-xs font-bold text-white">Scan to Pay</span>
         </div>
       </HL>
     </div>
@@ -767,21 +767,21 @@ function WalletScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <Wallet size={10} className="text-teal-600" />
-        <span className="text-[10px] font-black text-slate-900">Multi-currency Wallet</span>
+        <span className="text-xs font-bold text-slate-900">Multi-currency Wallet</span>
       </div>
       <div className="flex flex-col gap-2">
         {currencies.map((c, i) => (
           i === 0 ? (
             <HL key={c.code} done={done} onTap={onTap} radius="rounded-xl">
               <div className="bg-slate-50 rounded-xl p-2.5 flex items-center justify-between border border-yellow-200">
-                <div><p className="text-[9px] font-black text-slate-900">{c.code}</p><p className="text-[6px] text-slate-500">{c.name}</p></div>
-                <span className={`text-[8px] font-black ${c.color}`}>{c.bal}</span>
+                <div><p className="text-xs font-bold text-slate-900">{c.code}</p><p className="text-[6px] text-slate-500">{c.name}</p></div>
+                <span className={`text-xs font-bold ${c.color}`}>{c.bal}</span>
               </div>
             </HL>
           ) : (
             <div key={c.code} className="bg-slate-50 rounded-xl p-2.5 flex items-center justify-between">
-              <div><p className="text-[9px] font-black text-slate-900">{c.code}</p><p className="text-[6px] text-slate-500">{c.name}</p></div>
-              <span className={`text-[8px] font-black ${c.color}`}>{c.bal}</span>
+              <div><p className="text-xs font-bold text-slate-900">{c.code}</p><p className="text-[6px] text-slate-500">{c.name}</p></div>
+              <span className={`text-xs font-bold ${c.color}`}>{c.bal}</span>
             </div>
           )
         ))}
@@ -796,20 +796,20 @@ function BulkTransferScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-2">
         <Users size={10} className="text-blue-600" />
-        <span className="text-[10px] font-black text-slate-900">Bulk Transfer</span>
+        <span className="text-xs font-bold text-slate-900">Bulk Transfer</span>
       </div>
-      <p className="text-[7px] text-slate-500 mb-2">3 recipients · Total: $1,500</p>
+      <p className="text-xs text-slate-500 mb-2">3 recipients · Total: $1,500</p>
       <div className="flex flex-col gap-1.5 mb-3">
         {recipients.map((r) => (
           <div key={r.name} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
-            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[6px] font-black text-white">{r.init}</div>
-            <span className="text-[7px] text-slate-900 flex-1">{r.name}</span>
-            <span className="text-[7px] font-black text-emerald-600">{r.amount}</span>
+            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[6px] font-bold text-white">{r.init}</div>
+            <span className="text-xs text-slate-900 flex-1">{r.name}</span>
+            <span className="text-xs font-bold text-emerald-600">{r.amount}</span>
           </div>
         ))}
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-blue-600 rounded-xl py-2 text-center text-[9px] font-black text-white">Send to All</div>
+        <div className="bg-blue-600 rounded-xl py-2 text-center text-xs font-bold text-white">Send to All</div>
       </HL>
     </div>
   );
@@ -820,18 +820,18 @@ function TaxScreen({ done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <FileText size={10} className="text-blue-600" />
-        <span className="text-[10px] font-black text-slate-800">Tax Statement</span>
+        <span className="text-xs font-bold text-slate-800">Tax Statement</span>
       </div>
       <div className="bg-slate-50 rounded-2xl p-3 mb-3">
-        <p className="text-[7px] text-slate-400 mb-1">Fiscal Year 2025</p>
+        <p className="text-xs text-slate-400 mb-1">Fiscal Year 2025</p>
         <div className="grid grid-cols-2 gap-2">
           {[['Total Income', '$48,200'], ['Total Paid', '$31,400'], ['Fees Paid', '$820'], ['Net', '$16,800']].map(([l, v]) => (
-            <div key={l}><p className="text-[6px] text-slate-400">{l}</p><p className="text-[9px] font-black text-slate-800">{v}</p></div>
+            <div key={l}><p className="text-[6px] text-slate-400">{l}</p><p className="text-xs font-bold text-slate-800">{v}</p></div>
           ))}
         </div>
       </div>
       <HL done={done} onTap={onTap} radius="rounded-xl">
-        <div className="bg-blue-600 rounded-xl py-2 text-center text-[9px] font-black text-white">Generate Tax Report</div>
+        <div className="bg-blue-600 rounded-xl py-2 text-center text-xs font-bold text-white">Generate Tax Report</div>
       </HL>
     </div>
   );
@@ -841,19 +841,19 @@ function FilterScreen({ done, onTap }) {
   return (
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] font-black text-slate-800">Transactions</span>
+        <span className="text-xs font-bold text-slate-800">Transactions</span>
         <HL done={done} onTap={onTap} radius="rounded-lg">
           <div className="flex items-center gap-1 bg-blue-600 rounded-lg px-2 py-1">
             <Filter size={8} className="text-white" />
-            <span className="text-[7px] font-black text-white">Filter</span>
+            <span className="text-xs font-bold text-white">Filter</span>
           </div>
         </HL>
       </div>
       <div className="flex flex-col gap-2">
         {[{ label: 'Sent to Jane', amount: '-$250', date: 'Jun 28', type: 'out' }, { label: 'Received - Bob', amount: '+$500', date: 'Jun 25', type: 'in' }, { label: 'CoT Deposit', amount: '+$1,000', date: 'Jun 20', type: 'in' }, { label: 'SWIFT - Klaus', amount: '-$5,000', date: 'Jun 15', type: 'out' }].map((t) => (
           <div key={t.label} className="flex items-center justify-between bg-slate-50 rounded-xl p-2">
-            <div><p className="text-[8px] font-black text-slate-800">{t.label}</p><p className="text-[6px] text-slate-400">{t.date}</p></div>
-            <span className={`text-[8px] font-black ${t.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>{t.amount}</span>
+            <div><p className="text-xs font-bold text-slate-800">{t.label}</p><p className="text-[6px] text-slate-400">{t.date}</p></div>
+            <span className={`text-xs font-bold ${t.type === 'in' ? 'text-emerald-600' : 'text-red-500'}`}>{t.amount}</span>
           </div>
         ))}
       </div>
@@ -866,24 +866,24 @@ function ExportScreen({ variant, done, onTap }) {
     <div className="h-full bg-white flex flex-col p-3">
       <div className="flex items-center gap-2 mb-3">
         <Download size={10} className="text-blue-600" />
-        <span className="text-[10px] font-black text-slate-800">Export Statement</span>
+        <span className="text-xs font-bold text-slate-800">Export Statement</span>
       </div>
       <div className="bg-slate-50 rounded-2xl p-3 mb-3">
-        <p className="text-[7px] text-slate-400 mb-1">Date Range</p>
-        <p className="text-[9px] font-black text-slate-800">Jan 1, 2026 – Jun 28, 2026</p>
-        <p className="text-[7px] text-slate-400 mt-1">184 transactions</p>
+        <p className="text-xs text-slate-400 mb-1">Date Range</p>
+        <p className="text-xs font-bold text-slate-800">Jan 1, 2026 – Jun 28, 2026</p>
+        <p className="text-xs text-slate-400 mt-1">184 transactions</p>
       </div>
       <div className="flex flex-col gap-2">
         <HL done={done && variant === 'pdf'} onTap={variant === 'pdf' ? onTap : undefined} radius="rounded-xl">
           <div className={`rounded-xl py-2 flex items-center justify-center gap-1.5 ${variant === 'pdf' ? 'bg-red-500' : 'bg-slate-100'}`}>
             <FileText size={10} className={variant === 'pdf' ? 'text-white' : 'text-slate-400'} />
-            <span className={`text-[9px] font-black ${variant === 'pdf' ? 'text-white' : 'text-slate-400'}`}>Export PDF</span>
+            <span className={`text-xs font-bold ${variant === 'pdf' ? 'text-white' : 'text-slate-400'}`}>Export PDF</span>
           </div>
         </HL>
         <HL done={done && variant === 'csv'} onTap={variant === 'csv' ? onTap : undefined} radius="rounded-xl">
           <div className={`rounded-xl py-2 flex items-center justify-center gap-1.5 ${variant === 'csv' ? 'bg-emerald-500' : 'bg-slate-100'}`}>
             <TrendingUp size={10} className={variant === 'csv' ? 'text-white' : 'text-slate-400'} />
-            <span className={`text-[9px] font-black ${variant === 'csv' ? 'text-white' : 'text-slate-400'}`}>Export CSV</span>
+            <span className={`text-xs font-bold ${variant === 'csv' ? 'text-white' : 'text-slate-400'}`}>Export CSV</span>
           </div>
         </HL>
       </div>
@@ -897,8 +897,8 @@ function SummaryScreen() {
       <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-500 flex items-center justify-center mb-4">
         <CheckCircle2 size={28} className="text-emerald-600" />
       </div>
-      <p className="text-slate-900 font-black text-base mb-1">Transaction Pro!</p>
-      <p className="text-slate-500 text-[8px] mb-4">30 modules completed</p>
+      <p className="text-slate-900 font-bold text-base mb-1">Transaction Pro!</p>
+      <p className="text-slate-500 text-xs mb-4">30 modules completed</p>
       <div className="flex gap-1 flex-wrap justify-center">
         {['CoT', 'Stripe', 'Send', 'SWIFT', 'ACH', 'AFR', 'NFC', 'QR', 'Split', 'Bulk'].map((t) => (
           <span key={t} className="text-[6px] bg-slate-50 text-slate-600 px-1.5 py-0.5 rounded-full">{t}</span>
@@ -1011,13 +1011,13 @@ export default function TransactionGuide({ onClose }) {
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
         <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-black"><span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span></span>
-            <span className="text-slate-500 text-xs font-black uppercase tracking-widest">Assessment</span>
+            <span className="text-xl font-bold"><span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span></span>
+            <span className="text-slate-500 text-xs font-semibold">Assessment</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
               {['en', 'fr', 'es'].map((l) => (
-                <button key={l} onClick={() => setLang(l)} className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>{l.toUpperCase()}</button>
+                <button key={l} onClick={() => setLang(l)} className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>{l.toUpperCase()}</button>
               ))}
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500"><X size={16} /></button>
@@ -1026,15 +1026,15 @@ export default function TransactionGuide({ onClose }) {
         <div className="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full">
           {!submitted ? (
             <>
-              <p className="text-slate-900 font-black text-lg mb-1">Transaction Assessment</p>
+              <p className="text-slate-900 font-bold text-lg mb-1">Transaction Assessment</p>
               <p className="text-slate-500 text-xs mb-6">12 questions · Pass: 9/12</p>
               {QUESTIONS.map((q, qi) => (
                 <div key={qi} className="mb-5">
-                  <p className="text-slate-900 text-sm font-black mb-2">{qi + 1}. {q.q[lang]}</p>
+                  <p className="text-slate-900 text-sm font-bold mb-2">{qi + 1}. {q.q[lang]}</p>
                   <div className="grid grid-cols-1 gap-2">
                     {q.opts[lang].map((opt, oi) => (
                       <button key={oi} onClick={() => setAnswers((p) => ({ ...p, [qi]: oi }))}
-                        className={`text-left px-4 py-2 rounded-xl text-sm font-black transition-colors ${answers[qi] === oi ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                        className={`text-left px-4 py-2 rounded-xl text-sm font-bold transition-colors ${answers[qi] === oi ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
                         {opt}
                       </button>
                     ))}
@@ -1042,7 +1042,7 @@ export default function TransactionGuide({ onClose }) {
                 </div>
               ))}
               <button onClick={handleSubmit} disabled={Object.keys(answers).length < QUESTIONS.length}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-500 text-white font-black py-3 rounded-2xl transition-colors">
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-100 disabled:text-slate-500 text-white font-bold py-3 rounded-2xl transition-colors">
                 {labels.submit[lang]}
               </button>
             </>
@@ -1051,14 +1051,14 @@ export default function TransactionGuide({ onClose }) {
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${score >= 9 ? 'bg-emerald-50 border-2 border-emerald-500' : 'bg-red-50 border-2 border-red-500'}`}>
                 {score >= 9 ? <CheckCircle2 size={36} className="text-emerald-600" /> : <X size={36} className="text-red-600" />}
               </div>
-              <p className="text-slate-900 font-black text-2xl mb-1">{score}/12</p>
+              <p className="text-slate-900 font-bold text-2xl mb-1">{score}/12</p>
               <p className="text-slate-500 text-sm mb-4">{score >= 9 ? labels.pass[lang] : labels.fail[lang]}</p>
               {score < 9 && (
                 <button onClick={() => { setAnswers({}); setSubmitted(false); }}
-                  className="bg-slate-100 text-slate-900 font-black px-6 py-2 rounded-xl">{labels.retry[lang]}</button>
+                  className="bg-slate-100 text-slate-900 font-bold px-6 py-2 rounded-xl">{labels.retry[lang]}</button>
               )}
               {score >= 9 && (
-                <button onClick={() => setMode('cert')} className="bg-emerald-600 text-white font-black px-6 py-2 rounded-xl">{labels.cert[lang]}</button>
+                <button onClick={() => setMode('cert')} className="bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl">{labels.cert[lang]}</button>
               )}
             </div>
           )}
@@ -1074,18 +1074,18 @@ export default function TransactionGuide({ onClose }) {
           <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Award size={32} className="text-slate-900" />
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-blue-600 mb-2">{labels.certTitle[lang]}</p>
+          <p className="text-xs font-semibold text-blue-600 mb-2">{labels.certTitle[lang]}</p>
           <input value={certName} onChange={(e) => setCertName(e.target.value)} placeholder={labels.yourName[lang]}
-            className="w-full border-b-2 border-blue-600 text-center text-xl font-black text-slate-900 outline-none mb-3 pb-1" />
+            className="ui-input text-center text-xl mb-3" />
           <p className="text-slate-500 text-xs leading-relaxed mb-4">{labels.certBody[lang]}</p>
           <div className="bg-blue-50 rounded-2xl px-4 py-2 mb-4">
-            <p className="text-blue-600 font-black text-2xl">{score}/12</p>
+            <p className="text-blue-600 font-bold text-2xl">{score}/12</p>
             <p className="text-slate-500 text-xs">Transaction Expert</p>
           </div>
-          <p className="text-slate-500 text-[10px] mb-4">{labels.certFooter[lang]}</p>
-          <button className="w-full bg-blue-600 text-white font-black py-3 rounded-2xl">{labels.download[lang]}</button>
+          <p className="text-slate-500 text-xs mb-4">{labels.certFooter[lang]}</p>
+          <button className="ui-btn ui-btn-primary">{labels.download[lang]}</button>
         </div>
-        <button onClick={onClose} className="mt-6 text-slate-500 font-black text-sm"><X size={14} className="inline mr-1" />Close</button>
+        <button onClick={onClose} className="mt-6 text-slate-500 font-bold text-sm"><X size={14} className="inline mr-1" />Close</button>
       </div>
     );
   }
@@ -1094,13 +1094,13 @@ export default function TransactionGuide({ onClose }) {
     <div className="fixed inset-0 z-[9999] bg-white flex flex-col">
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-black"><span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span></span>
-          <span className="text-slate-500 text-xs font-black uppercase tracking-widest">Transactions</span>
+          <span className="text-xl font-bold"><span className="text-[#4285F4]">D</span><span className="text-[#EA4335]">E</span><span className="text-[#FBBC04]">U</span><span className="text-[#34A853]">S</span></span>
+          <span className="text-slate-500 text-xs font-semibold">Transactions</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
             {['en', 'fr', 'es'].map((l) => (
-              <button key={l} onClick={() => setLang(l)} className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>{l.toUpperCase()}</button>
+              <button key={l} onClick={() => setLang(l)} className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>{l.toUpperCase()}</button>
             ))}
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"><X size={16} /></button>
@@ -1116,7 +1116,7 @@ export default function TransactionGuide({ onClose }) {
               </Phone>
             </div>
             {!s.noTap && !tapped[slide] && (
-              <p className="text-yellow-600 text-[10px] font-black animate-pulse mt-1 md:mt-0 text-center px-4 md:px-0">
+              <p className="text-yellow-600 text-xs font-bold animate-pulse mt-1 md:mt-0 text-center px-4 md:px-0">
                 {s.prompt[lang]}
               </p>
             )}
@@ -1124,8 +1124,8 @@ export default function TransactionGuide({ onClose }) {
 
           <div className="flex-1 w-full flex flex-col gap-4">
             <div>
-              <p className="text-slate-500 text-xs font-black uppercase tracking-widest mb-1">{s.path[lang]}</p>
-              <h2 className="text-slate-900 font-black text-xl leading-tight">{s.title[lang]}</h2>
+              <p className="text-slate-500 text-xs font-semibold mb-1">{s.path[lang]}</p>
+              <h2 className="text-slate-900 font-bold text-xl leading-tight">{s.title[lang]}</h2>
               <p className="text-xs text-slate-500 mt-1">{slide + 1} / {SLIDES.length}</p>
             </div>
 
@@ -1136,9 +1136,9 @@ export default function TransactionGuide({ onClose }) {
             ) : (
               <div className="bg-yellow-400/10 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center flex-shrink-0">
-                  <span className="text-black font-black text-xs">!</span>
+                  <span className="text-black font-bold text-xs">!</span>
                 </div>
-                <p className="text-yellow-600 text-sm font-black">{labels.tapFirst[lang]}</p>
+                <p className="text-yellow-600 text-sm font-bold">{labels.tapFirst[lang]}</p>
               </div>
             )}
 
@@ -1146,14 +1146,14 @@ export default function TransactionGuide({ onClose }) {
               <div className="bg-blue-50 border border-blue-600/20 rounded-2xl p-3 flex gap-2">
                 <Zap size={14} className="text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-blue-600 text-[10px] font-black uppercase tracking-wide mb-0.5">{labels.tip[lang]}</p>
+                  <p className="text-blue-600 text-xs font-semibold mb-0.5">{labels.tip[lang]}</p>
                   <p className="text-slate-600 text-xs">{s.tip[lang]}</p>
                 </div>
               </div>
             )}
 
             {slide === SLIDES.length - 1 && showExplain && (
-              <button onClick={() => setMode('assessment')} className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-2xl transition-colors text-sm">
+              <button onClick={() => setMode('assessment')} className="ui-btn ui-btn-primary w-auto">
                 {labels.assessment[lang]}
               </button>
             )}
@@ -1163,7 +1163,7 @@ export default function TransactionGuide({ onClose }) {
 
       <div className="bg-white border-t border-slate-200 px-3 md:px-4 py-2 md:py-3 flex items-center justify-between gap-2 flex-shrink-0">
         <button onClick={goPrev} disabled={slide === 0}
-          className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-slate-50 text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
           <ChevronLeft size={14} />{labels.back[lang]}
         </button>
 
@@ -1175,7 +1175,7 @@ export default function TransactionGuide({ onClose }) {
         </div>
 
         <button onClick={goNext} disabled={!canNext}
-          className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
           {labels.next[lang]}<ChevronRight size={14} />
         </button>
       </div>

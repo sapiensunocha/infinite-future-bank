@@ -176,7 +176,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
       )}
 
       {/* HERO */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900 rounded-[2rem] p-8 text-white shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900 rounded-2xl p-8 text-white shadow-2xl">
         <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full" />
         <div className="absolute -bottom-8 -left-8 w-36 h-36 bg-white/5 rounded-full" />
         <div className="relative">
@@ -185,24 +185,24 @@ export default function AgriShield({ session, balances, fetchAllData }) {
               <Leaf size={22} className="text-emerald-200" />
             </div>
             <div>
-              <p className="text-emerald-200 text-[10px] font-black uppercase tracking-widest">AgriShield</p>
-              <p className="text-emerald-300 text-[9px]">Parametric Agricultural Insurance</p>
+              <p className="text-emerald-200 text-xs font-semibold">AgriShield</p>
+              <p className="text-emerald-300 text-xs">Parametric Agricultural Insurance</p>
             </div>
           </div>
-          <h2 className="text-2xl font-black mt-2 leading-tight">Protect your harvest.<br />Secure your income.</h2>
+          <h2 className="text-2xl font-bold mt-2 leading-tight">Protect your harvest.<br />Secure your income.</h2>
           <p className="text-emerald-300 text-sm mt-3 leading-relaxed">
             Automatic payouts triggered by satellite weather data — no claims process, no paperwork, no delays.
           </p>
           {activeCount > 0 && (
             <div className="flex gap-4 mt-5 pt-5 border-t border-white/10">
               <div>
-                <p className="text-emerald-300 text-[10px]">Active Policies</p>
-                <p className="text-xl font-black">{activeCount}</p>
+                <p className="text-emerald-300 text-xs">Active Policies</p>
+                <p className="text-xl font-bold">{activeCount}</p>
               </div>
               <div className="w-px bg-white/10" />
               <div>
-                <p className="text-emerald-300 text-[10px]">Total Coverage</p>
-                <p className="text-xl font-black">{fmt(totalCoverage)}</p>
+                <p className="text-emerald-300 text-xs">Total Coverage</p>
+                <p className="text-xl font-bold">{fmt(totalCoverage)}</p>
               </div>
             </div>
           )}
@@ -220,7 +220,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           <button
             key={t.id}
             onClick={() => setView(t.id)}
-            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               view === t.id ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'
             }`}
           >
@@ -241,14 +241,14 @@ export default function AgriShield({ session, balances, fetchAllData }) {
             ].map(({ icon: Icon, title, body }) => (
               <div key={title} className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5">
                 <Icon size={20} className="text-emerald-600 mb-2" />
-                <p className="text-xs font-black text-slate-800">{title}</p>
-                <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{body}</p>
+                <p className="text-xs font-bold text-slate-800">{title}</p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
 
           <div className="bg-emerald-50 border border-emerald-100 rounded-[1.5rem] p-5">
-            <h4 className="text-sm font-black text-emerald-900 mb-2">How it works</h4>
+            <h4 className="text-sm font-bold text-emerald-900 mb-2">How it works</h4>
             {[
               { n: '1', t: 'Choose your crop, region, and coverage amount' },
               { n: '2', t: 'Set your trigger type and threshold (e.g. rainfall < 80mm/month)' },
@@ -256,7 +256,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
               { n: '4', t: 'If the trigger fires, payout credited to your account instantly' },
             ].map(({ n, t }) => (
               <div key={n} className="flex items-start gap-3 mb-2 last:mb-0">
-                <span className="w-5 h-5 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
+                <span className="w-5 h-5 bg-emerald-600 text-white text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
                 <p className="text-xs text-emerald-800">{t}</p>
               </div>
             ))}
@@ -264,7 +264,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
 
           <button
             onClick={() => setView('NEW')}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl transition-colors flex items-center justify-center gap-2"
+            className="ui-btn ui-btn-primary"
           >
             <Plus size={18} />
             Get Covered Now
@@ -274,16 +274,16 @@ export default function AgriShield({ session, balances, fetchAllData }) {
 
       {/* ── NEW POLICY ── */}
       {view === 'NEW' && (
-        <form onSubmit={handleNewPolicy} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-5">
-          <h3 className="text-lg font-black text-slate-800">New AgriShield Policy</h3>
+        <form onSubmit={handleNewPolicy} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
+          <h3 className="text-lg font-bold text-slate-800">New AgriShield Policy</h3>
 
           {/* Crop */}
           <div>
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Crop Type *</label>
+            <label className="ui-label">Crop Type *</label>
             <select
               required value={form.crop_type}
               onChange={e => setForm(p => ({ ...p, crop_type: e.target.value }))}
-              className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-medium focus:outline-none focus:border-emerald-400 bg-white"
+              className="ui-select"
             >
               <option value="">Select crop…</option>
               {CROPS.map(c => <option key={c} value={c}>{c}</option>)}
@@ -293,23 +293,23 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           {/* Location */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Country *</label>
+              <label className="ui-label">Country *</label>
               <select
                 required value={form.farm_country}
                 onChange={e => setForm(p => ({ ...p, farm_country: e.target.value }))}
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-medium focus:outline-none focus:border-emerald-400 bg-white"
+                className="ui-select"
               >
                 <option value="">Country…</option>
                 {AFRICAN_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Region / State *</label>
+              <label className="ui-label">Region / State *</label>
               <input
                 required value={form.farm_region}
                 onChange={e => setForm(p => ({ ...p, farm_region: e.target.value }))}
                 placeholder="e.g. Ogun State"
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-medium focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50"
+                className="ui-input font-medium"
               />
             </div>
           </div>
@@ -317,28 +317,28 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           {/* Farm size + coverage */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Farm Size (ha) *</label>
+              <label className="ui-label">Farm Size (ha) *</label>
               <input
                 required type="number" min="0.1" step="0.1" value={form.farm_size_ha}
                 onChange={e => setForm(p => ({ ...p, farm_size_ha: e.target.value }))}
                 placeholder="2.5"
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-medium focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50"
+                className="ui-input font-medium"
               />
             </div>
             <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Coverage Amount ($) *</label>
+              <label className="ui-label">Coverage Amount ($) *</label>
               <input
                 required type="number" min="100" step="100" value={form.coverage_amount_usd}
                 onChange={e => setForm(p => ({ ...p, coverage_amount_usd: e.target.value }))}
                 placeholder="1000"
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-medium focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50"
+                className="ui-input font-medium"
               />
             </div>
           </div>
 
           {/* Trigger type */}
           <div>
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Trigger Type *</label>
+            <label className="ui-label">Trigger Type *</label>
             <div className="grid grid-cols-1 gap-2">
               {TRIGGER_TYPES.map(({ id, Icon, label, desc }) => (
                 <button
@@ -352,8 +352,8 @@ export default function AgriShield({ session, balances, fetchAllData }) {
                 >
                   <Icon size={18} className={form.trigger_type === id ? 'text-emerald-600' : 'text-slate-400'} />
                   <div>
-                    <p className="text-xs font-black">{label}</p>
-                    <p className="text-[10px] text-slate-500">{desc}</p>
+                    <p className="text-xs font-bold">{label}</p>
+                    <p className="text-xs text-slate-500">{desc}</p>
                   </div>
                 </button>
               ))}
@@ -362,7 +362,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
 
           {/* Trigger threshold */}
           <div>
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Trigger Threshold *</label>
+            <label className="ui-label">Trigger Threshold *</label>
             <input
               required value={form.trigger_threshold}
               onChange={e => setForm(p => ({ ...p, trigger_threshold: e.target.value }))}
@@ -380,21 +380,21 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           {/* Coverage period */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Coverage Start *</label>
+              <label className="ui-label">Coverage Start *</label>
               <input
                 required type="date" value={form.coverage_start}
                 min={new Date().toISOString().split('T')[0]}
                 onChange={e => setForm(p => ({ ...p, coverage_start: e.target.value }))}
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-medium focus:outline-none focus:border-emerald-400"
+                className="ui-input font-medium"
               />
             </div>
             <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Coverage End *</label>
+              <label className="ui-label">Coverage End *</label>
               <input
                 required type="date" value={form.coverage_end}
                 min={form.coverage_start || new Date().toISOString().split('T')[0]}
                 onChange={e => setForm(p => ({ ...p, coverage_end: e.target.value }))}
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-medium focus:outline-none focus:border-emerald-400"
+                className="ui-input font-medium"
               />
             </div>
           </div>
@@ -405,20 +405,20 @@ export default function AgriShield({ session, balances, fetchAllData }) {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-xs text-emerald-600 font-medium">Monthly Premium</p>
-                  <p className="text-3xl font-black text-emerald-700">{fmt(premium)}<span className="text-base text-emerald-500">/mo</span></p>
+                  <p className="text-3xl font-bold text-emerald-700">{fmt(premium)}<span className="text-base text-emerald-500">/mo</span></p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-emerald-600 font-medium">Coverage</p>
-                  <p className="text-xl font-black text-emerald-700">{fmt(parseFloat(form.coverage_amount_usd))}</p>
+                  <p className="text-xl font-bold text-emerald-700">{fmt(parseFloat(form.coverage_amount_usd))}</p>
                 </div>
               </div>
-              <p className="text-[10px] text-emerald-600 mt-3">First premium charged on activation. Rate: ~1.8% of coverage/year + risk adjustment.</p>
+              <p className="text-xs text-emerald-600 mt-3">First premium charged on activation. Rate: ~1.8% of coverage/year + risk adjustment.</p>
             </div>
           )}
 
           <button
             type="submit" disabled={submitting || !premium}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl transition-colors disabled:opacity-50"
+            className="ui-btn ui-btn-primary"
           >
             {submitting ? 'Activating Policy…' : `Activate Policy — ${premium ? fmt(premium) + '/mo' : ''}`}
           </button>
@@ -429,16 +429,16 @@ export default function AgriShield({ session, balances, fetchAllData }) {
       {view === 'POLICIES' && (
         <div className="space-y-4">
           {policies.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
               <Leaf size={40} className="text-slate-200 mx-auto mb-4" />
               <p className="text-slate-500 font-medium">No policies yet</p>
-              <button onClick={() => setView('NEW')} className="mt-4 text-emerald-600 font-black text-sm">Get covered →</button>
+              <button onClick={() => setView('NEW')} className="mt-4 text-emerald-600 font-bold text-sm">Get covered →</button>
             </div>
           ) : policies.map(policy => {
             const sc = STATUS_CONFIG[policy.status] || STATUS_CONFIG.active;
             const isOpen = expanded === policy.id;
             return (
-              <div key={policy.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+              <div key={policy.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 <button
                   onClick={() => setExpanded(isOpen ? null : policy.id)}
                   className="w-full p-6 text-left flex items-start justify-between"
@@ -448,15 +448,15 @@ export default function AgriShield({ session, balances, fetchAllData }) {
                       <Leaf size={22} className="text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-black text-slate-800 text-sm">{policy.crop_type}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
+                      <p className="font-bold text-slate-800 text-sm">{policy.crop_type}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
                         <MapPin size={10} />{policy.farm_region}, {policy.farm_country}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">{policy.policy_number}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{policy.policy_number}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${sc.color}`}>{sc.label}</span>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${sc.color}`}>{sc.label}</span>
                     {isOpen ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
                   </div>
                 </button>
@@ -473,25 +473,25 @@ export default function AgriShield({ session, balances, fetchAllData }) {
                         { label: 'End', value: new Date(policy.coverage_end).toLocaleDateString() },
                       ].map(({ label, value }) => (
                         <div key={label}>
-                          <p className="text-[9px] text-slate-400 uppercase font-black">{label}</p>
+                          <p className="text-xs text-slate-500 font-semibold">{label}</p>
                           <p className="text-xs font-bold text-slate-700 capitalize">{value}</p>
                         </div>
                       ))}
                     </div>
                     <div className="bg-slate-50 rounded-2xl p-3">
-                      <p className="text-[9px] text-slate-400 uppercase font-black mb-1">Trigger Threshold</p>
+                      <p className="text-xs text-slate-500 font-semibold mb-1">Trigger Threshold</p>
                       <p className="text-xs text-slate-700">{policy.trigger_threshold}</p>
                     </div>
                     {policy.status === 'pending_payment' && (
                       <button
                         onClick={() => payPremium(policy)} disabled={submitting}
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3 rounded-2xl text-sm transition-colors disabled:opacity-50"
+                        className="ui-btn ui-btn-primary"
                       >
                         Pay Premium {fmt(policy.premium_monthly_usd)}
                       </button>
                     )}
                     {policy.next_premium_due && policy.status === 'active' && (
-                      <p className="text-[10px] text-slate-400 text-center">
+                      <p className="text-xs text-slate-400 text-center">
                         Next premium due: {new Date(policy.next_premium_due).toLocaleDateString()}
                       </p>
                     )}
@@ -510,7 +510,7 @@ export default function AgriShield({ session, balances, fetchAllData }) {
             <strong>Parametric claims are automatic.</strong> When satellite or weather data confirms a trigger event in your region, your payout is processed within 48 hours — no action required from you.
           </div>
           {claims.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
               <ShieldCheck size={40} className="text-slate-200 mx-auto mb-4" />
               <p className="text-slate-500 font-medium">No claims on record</p>
               <p className="text-slate-400 text-xs mt-1">Claims appear here when a trigger event is detected</p>
@@ -518,13 +518,13 @@ export default function AgriShield({ session, balances, fetchAllData }) {
           ) : claims.map(claim => {
             const isPaid = claim.status === 'paid';
             return (
-              <div key={claim.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
+              <div key={claim.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="font-black text-slate-800 text-sm capitalize">{claim.trigger_type.replace('_', ' ')} Event</p>
-                    <p className="text-[10px] text-slate-400">{new Date(claim.filed_at).toLocaleDateString()}</p>
+                    <p className="font-bold text-slate-800 text-sm capitalize">{claim.trigger_type.replace('_', ' ')} Event</p>
+                    <p className="text-xs text-slate-400">{new Date(claim.filed_at).toLocaleDateString()}</p>
                   </div>
-                  <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                     isPaid ? 'bg-emerald-100 text-emerald-700' :
                     claim.status === 'rejected' ? 'bg-red-100 text-red-700' :
                     'bg-amber-100 text-amber-700'
@@ -533,14 +533,14 @@ export default function AgriShield({ session, balances, fetchAllData }) {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] text-slate-500">Payout Amount</p>
-                  <p className={`text-lg font-black ${isPaid ? 'text-emerald-600' : 'text-slate-600'}`}>{fmt(claim.payout_amount)}</p>
+                  <p className="text-xs text-slate-500">Payout Amount</p>
+                  <p className={`text-lg font-bold ${isPaid ? 'text-emerald-600' : 'text-slate-600'}`}>{fmt(claim.payout_amount)}</p>
                 </div>
                 {claim.admin_notes && (
-                  <p className="text-[10px] text-slate-500 mt-3 bg-slate-50 rounded-xl p-3">{claim.admin_notes}</p>
+                  <p className="text-xs text-slate-500 mt-3 bg-slate-50 rounded-xl p-3">{claim.admin_notes}</p>
                 )}
                 {isPaid && claim.paid_at && (
-                  <p className="text-[10px] text-emerald-600 mt-2">Paid on {new Date(claim.paid_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-emerald-600 mt-2">Paid on {new Date(claim.paid_at).toLocaleDateString()}</p>
                 )}
               </div>
             );

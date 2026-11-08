@@ -50,17 +50,17 @@ function MatchCard({ match }) {
         <ScoreRing score={match.score}/>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
-            <span className={`text-[9px] font-black uppercase tracking-widest ${meta.color}`}>
+            <span className={`text-xs font-semibold ${meta.color}`}>
               <Icon size={9} className="inline mr-1"/>{meta.label}
             </span>
-            <span className={`text-[9px] font-black uppercase tracking-widest ${TIER_COLOR[match.tier]}`}>
+            <span className={`text-xs font-semibold ${TIER_COLOR[match.tier]}`}>
               {match.tier}
             </span>
           </div>
-          <p className="text-sm font-black text-slate-900 leading-tight truncate">{name}</p>
+          <p className="text-sm font-bold text-slate-900 leading-tight truncate">{name}</p>
           <p className="text-[11px] text-slate-500">{match.provider_name}</p>
           {(amMin || amMax) && (
-            <p className="text-[10px] text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               {fmt(amMin)}{amMin && amMax ? ' – ' : ''}{fmt(amMax)}
             </p>
           )}
@@ -75,7 +75,7 @@ function MatchCard({ match }) {
         <div className="space-y-2 border-t border-slate-200 pt-3">
           {match.reasons?.length > 0 && (
             <div>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Why it matches</p>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Why it matches</p>
               {match.reasons.map((r, i) => (
                 <p key={i} className="text-[11px] text-emerald-600 flex items-start gap-1"><CheckCircle2 size={10} className="mt-0.5 shrink-0"/>{r}</p>
               ))}
@@ -83,7 +83,7 @@ function MatchCard({ match }) {
           )}
           {match.disqualifiers?.length > 0 && (
             <div>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Caveats</p>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Caveats</p>
               {match.disqualifiers.map((d, i) => (
                 <p key={i} className="text-[11px] text-yellow-600 flex items-start gap-1"><AlertCircle size={10} className="mt-0.5 shrink-0"/>{d}</p>
               ))}
@@ -91,12 +91,12 @@ function MatchCard({ match }) {
           )}
           {match.pathway && (
             <div className="bg-white rounded-xl p-3">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Your Pathway</p>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Your Pathway</p>
               <p className="text-[11px] text-slate-900">{match.pathway}</p>
             </div>
           )}
           {match.amount_recommended_usd > 0 && (
-            <p className="text-[10px] text-blue-600 font-bold">
+            <p className="text-xs text-blue-600 font-bold">
               Recommended amount: {fmt(match.amount_recommended_usd)}
             </p>
           )}
@@ -162,14 +162,14 @@ function CapitalMatchPanel({ session, myCompany }) {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="bg-white border border-slate-200 rounded-[2rem] p-6 text-slate-900 relative overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 text-slate-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-transparent pointer-events-none"/>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <Zap size={14} className="text-blue-600"/>
-            <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">AFR Capital Engine</span>
+            <span className="text-xs font-semibold text-blue-600">AFR Capital Engine</span>
           </div>
-          <h3 className="text-xl font-black">Your Capital Matches</h3>
+          <h3 className="text-xl font-bold">Your Capital Matches</h3>
           <p className="text-sm text-slate-500 mt-1">
             AI-scored against {summary?.total_scored || '—'} global instruments across grants, loans, bonds & equities.
           </p>
@@ -182,8 +182,8 @@ function CapitalMatchPanel({ session, myCompany }) {
                 { label: 'Top Score',      value: `${summary.top_match_score}/100`, color: 'text-purple-600' },
               ].map(s => (
                 <div key={s.label} className="bg-slate-50 rounded-xl p-3">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{s.label}</p>
-                  <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
+                  <p className="text-xs font-semibold text-slate-500">{s.label}</p>
+                  <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
                 </div>
               ))}
             </div>
@@ -202,19 +202,19 @@ function CapitalMatchPanel({ session, myCompany }) {
         ].map(f => (
           <button key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               typeFilter === f.id ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:text-slate-900'
             }`}>
             <f.Icon size={11}/>{f.label}
             {summary && f.id !== 'all' && (
-              <span className="ml-1 bg-slate-50 px-1.5 py-0.5 rounded-full text-[8px]">
+              <span className="ml-1 bg-slate-50 px-1.5 py-0.5 rounded-full text-xs">
                 {summary.by_type?.[f.id] || 0}
               </span>
             )}
           </button>
         ))}
         <button onClick={load} disabled={loading}
-          className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-50 text-slate-500 border border-slate-200 hover:text-slate-900 ml-auto">
+          className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-50 text-slate-500 border border-slate-200 hover:text-slate-900 ml-auto">
           <RefreshCw size={11} className={loading ? 'animate-spin' : ''}/>Refresh
         </button>
       </div>
@@ -231,7 +231,7 @@ function CapitalMatchPanel({ session, myCompany }) {
       {loading && (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <Zap size={28} className="text-blue-600 animate-pulse"/>
-          <p className="text-sm font-black text-slate-500 uppercase tracking-widest">AFR Engine Scoring...</p>
+          <p className="text-sm font-semibold text-slate-500">AFR Engine Scoring...</p>
         </div>
       )}
 
@@ -240,7 +240,7 @@ function CapitalMatchPanel({ session, myCompany }) {
         <div className="space-y-5">
           {strong.length > 0 && (
             <section>
-              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-2 flex items-center gap-1">
+              <p className="text-xs font-semibold text-emerald-600 mb-2 flex items-center gap-1">
                 <CheckCircle2 size={10}/>Strong Matches ({strong.length})
               </p>
               <div className="space-y-3">{strong.map(m => <MatchCard key={`${m.type}-${m.id}`} match={m}/>)}</div>
@@ -248,7 +248,7 @@ function CapitalMatchPanel({ session, myCompany }) {
           )}
           {good.length > 0 && (
             <section>
-              <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1">
+              <p className="text-xs font-semibold text-blue-600 mb-2 flex items-center gap-1">
                 <Star size={10}/>Good Matches ({good.length})
               </p>
               <div className="space-y-3">{good.map(m => <MatchCard key={`${m.type}-${m.id}`} match={m}/>)}</div>
@@ -256,7 +256,7 @@ function CapitalMatchPanel({ session, myCompany }) {
           )}
           {partial.length > 0 && (
             <section>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1">
+              <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1">
                 <Target size={10}/>Partial Matches ({partial.length})
               </p>
               <div className="space-y-3">{partial.map(m => <MatchCard key={`${m.type}-${m.id}`} match={m}/>)}</div>
@@ -268,7 +268,7 @@ function CapitalMatchPanel({ session, myCompany }) {
       {!loading && !error && filtered.length === 0 && refreshed && (
         <div className="text-center py-16">
           <Zap size={32} className="text-slate-700 mx-auto mb-3"/>
-          <p className="text-sm font-black text-slate-500">No matches found</p>
+          <p className="text-sm font-bold text-slate-500">No matches found</p>
           <p className="text-xs text-slate-600 mt-1">Complete your business profile to unlock matches</p>
         </div>
       )}
@@ -300,17 +300,17 @@ const pct = (a, b) => (b > 0 ? ((a / b) * 100).toFixed(1) : '0') + '%';
 // ── sub-components ────────────────────────────────────────────────
 function TierBadge({ tier }) {
   const m = TIER_META[tier] || TIER_META.node_operator;
-  return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${m.color}`}><m.icon size={9}/>{m.label}</span>;
+  return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${m.color}`}><m.icon size={9}/>{m.label}</span>;
 }
 
 function KpiCard({ icon: Icon, label, value, sub, accent = 'border-slate-200', dark }) {
   return (
     <div className={`${dark ? 'bg-slate-50' : 'bg-white'} border ${accent} rounded-2xl p-5`}>
       <div className="flex items-center gap-2 mb-1">
-        <Icon size={14} className="text-slate-500" /><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+        <Icon size={14} className="text-slate-500" /><p className="text-xs font-semibold text-slate-500">{label}</p>
       </div>
-      <p className={`text-xl font-black ${dark ? 'text-slate-900' : 'text-slate-900'}`}>{value}</p>
-      {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
+      <p className={`text-xl font-bold ${dark ? 'text-slate-900' : 'text-slate-900'}`}>{value}</p>
+      {sub && <p className="text-xs text-slate-500 mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -357,27 +357,27 @@ function Directory({ onApply, userFranchise, setView }) {
   return (
     <div className="space-y-8">
       {/* Hero */}
-      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 text-slate-900 relative overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-3xl p-8 text-slate-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-transparent to-blue-50 pointer-events-none" />
         <div className="relative z-10">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Network size={18} className="text-indigo-600" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">IFB Franchise Network</span>
+                <span className="text-xs font-semibold text-indigo-600">IFB Franchise Network</span>
               </div>
-              <h2 className="text-2xl font-black tracking-tight mb-2">VentureX Node Operators</h2>
+              <h2 className="text-2xl font-bold tracking-tight mb-2">VentureX Node Operators</h2>
               <p className="text-sm text-slate-500 max-w-2xl leading-relaxed">
                 Licensed operators who run their own deal pipeline — connected to IFB's master exchange. Every franchise company is cross-listed globally. Operators compete for capital deployment leadership.
               </p>
             </div>
             {!userFranchise && (
-              <button onClick={onApply} className="shrink-0 flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-900/30">
+              <button onClick={onApply} className="ui-btn ui-btn-primary shrink-0 w-auto">
                 <Rocket size={14} /> Apply for Franchise
               </button>
             )}
             {userFranchise && (
-              <button onClick={() => setView('dashboard')} className="shrink-0 flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all">
+              <button onClick={() => setView('dashboard')} className="ui-btn ui-btn-primary shrink-0 w-auto">
                 <BarChart3 size={14} /> My Franchise
               </button>
             )}
@@ -388,7 +388,7 @@ function Directory({ onApply, userFranchise, setView }) {
       {/* Top 3 podium */}
       {top3.length > 0 && (
         <div>
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Award size={12}/> Leaderboard — Top Franchises</h3>
+          <h3 className="text-xs font-semibold text-slate-500 mb-4 flex items-center gap-2"><Award size={12}/> Leaderboard — Top Franchises</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {top3.map((f, idx) => (
               <div key={f.franchise_id} className={`rounded-[1.5rem] p-6 border relative overflow-hidden ${
@@ -397,16 +397,16 @@ function Directory({ onApply, userFranchise, setView }) {
                             'bg-orange-50 border-orange-200'
               }`}>
                 <div className="flex items-start justify-between mb-3">
-                  <span className={`text-3xl font-black ${idx===0?'text-yellow-600':idx===1?'text-slate-600':'text-orange-600'}`}>#{f.rank}</span>
+                  <span className={`text-3xl font-bold ${idx===0?'text-yellow-600':idx===1?'text-slate-600':'text-orange-600'}`}>#{f.rank}</span>
                   <TierBadge tier={f.tier} />
                 </div>
-                <p className="font-black text-slate-900 text-sm mb-1">{f.franchise_name}</p>
-                <p className="text-[10px] text-slate-500 mb-3">{SECTOR_EMOJI[f.primary_sector]||'📊'} {f.primary_sector}</p>
-                <div className="grid grid-cols-2 gap-2 text-[10px]">
-                  <div><p className="text-slate-500">Capital</p><p className="font-black text-emerald-600">{fmt(f.total_capital)}</p></div>
-                  <div><p className="text-slate-500">Deals</p><p className="font-black text-slate-900">{f.total_deals}</p></div>
-                  <div><p className="text-slate-500">Conversion</p><p className="font-black text-blue-600">{f.conversion_rate}%</p></div>
-                  <div><p className="text-slate-500">Companies</p><p className="font-black text-slate-900">{f.total_companies}</p></div>
+                <p className="font-bold text-slate-900 text-sm mb-1">{f.franchise_name}</p>
+                <p className="text-xs text-slate-500 mb-3">{SECTOR_EMOJI[f.primary_sector]||'📊'} {f.primary_sector}</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div><p className="text-slate-500">Capital</p><p className="font-bold text-emerald-600">{fmt(f.total_capital)}</p></div>
+                  <div><p className="text-slate-500">Deals</p><p className="font-bold text-slate-900">{f.total_deals}</p></div>
+                  <div><p className="text-slate-500">Conversion</p><p className="font-bold text-blue-600">{f.conversion_rate}%</p></div>
+                  <div><p className="text-slate-500">Companies</p><p className="font-bold text-slate-900">{f.total_companies}</p></div>
                 </div>
               </div>
             ))}
@@ -417,11 +417,11 @@ function Directory({ onApply, userFranchise, setView }) {
       {/* Directory grid */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><Layers size={12}/> All Franchise Nodes ({data.length})</h3>
+          <h3 className="text-xs font-semibold text-slate-500 flex items-center gap-2"><Layers size={12}/> All Franchise Nodes ({data.length})</h3>
           <select
             value={sectorFilter || ''}
             onChange={e => setSector(e.target.value || null)}
-            className="text-xs font-bold bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-3 py-2 outline-none"
+            className="ui-select"
           >
             <option value="">All Sectors</option>
             {Object.keys(SECTOR_EMOJI).map(s => <option key={s} value={s}>{SECTOR_EMOJI[s]} {s}</option>)}
@@ -436,31 +436,31 @@ function Directory({ onApply, userFranchise, setView }) {
               <div key={f.franchise_id} className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-slate-200 transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="font-black text-slate-900 text-sm leading-tight">{f.franchise_name}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{SECTOR_EMOJI[f.primary_sector]||'📊'} {f.primary_sector}</p>
+                    <p className="font-bold text-slate-900 text-sm leading-tight">{f.franchise_name}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{SECTOR_EMOJI[f.primary_sector]||'📊'} {f.primary_sector}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <TierBadge tier={f.tier} />
                     {f.ifb_listed && (
-                      <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-0.5">
+                      <span className="text-xs font-semibold text-emerald-600 flex items-center gap-0.5">
                         <Link2 size={8}/> IFB Listed
                       </span>
                     )}
                   </div>
                 </div>
-                {f.tagline && <p className="text-[10px] text-slate-500 mb-3 leading-relaxed line-clamp-2">{f.tagline}</p>}
+                {f.tagline && <p className="text-xs text-slate-500 mb-3 leading-relaxed line-clamp-2">{f.tagline}</p>}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-slate-50 rounded-xl py-2">
-                    <p className="text-xs font-black text-slate-900">{f.total_companies}</p>
-                    <p className="text-[9px] text-slate-500">Companies</p>
+                    <p className="text-xs font-bold text-slate-900">{f.total_companies}</p>
+                    <p className="text-xs text-slate-500">Companies</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl py-2">
-                    <p className="text-xs font-black text-emerald-600">{fmt(f.total_capital)}</p>
-                    <p className="text-[9px] text-slate-500">Deployed</p>
+                    <p className="text-xs font-bold text-emerald-600">{fmt(f.total_capital)}</p>
+                    <p className="text-xs text-slate-500">Deployed</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl py-2">
-                    <p className="text-xs font-black text-blue-600">#{f.rank}</p>
-                    <p className="text-[9px] text-slate-500">Rank</p>
+                    <p className="text-xs font-bold text-blue-600">#{f.rank}</p>
+                    <p className="text-xs text-slate-500">Rank</p>
                   </div>
                 </div>
               </div>
@@ -509,10 +509,10 @@ function ApplicationForm({ session, myCompany, onSuccess }) {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Eligibility status */}
-      <div className={`rounded-[2rem] p-8 border ${eligible ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+      <div className={`rounded-2xl p-8 border ${eligible ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
         <div className="flex items-center gap-3 mb-4">
           {eligible ? <CheckCircle2 size={20} className="text-emerald-600"/> : <AlertCircle size={20} className="text-red-600"/>}
-          <h3 className="font-black text-slate-900">{eligible ? 'You meet franchise eligibility' : 'Eligibility requirements not yet met'}</h3>
+          <h3 className="font-bold text-slate-900">{eligible ? 'You meet franchise eligibility' : 'Eligibility requirements not yet met'}</h3>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -533,7 +533,7 @@ function ApplicationForm({ session, myCompany, onSuccess }) {
         <>
           {/* Tier selector */}
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Select Franchise Tier</p>
+            <p className="text-xs font-semibold text-slate-500 mb-3">Select Franchise Tier</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {TIERS.map(t => (
                 <button
@@ -547,40 +547,40 @@ function ApplicationForm({ session, myCompany, onSuccess }) {
                   }`}
                 >
                   <t.icon size={18} className="text-slate-500 mb-2" />
-                  <p className="font-black text-slate-900 text-sm mb-1">{t.label}</p>
-                  <p className="text-[10px] text-slate-500">{t.limit}</p>
-                  <p className="text-[10px] text-indigo-600 font-bold mt-1">{t.fee}</p>
-                  <p className="text-[9px] text-slate-500 mt-1">+ 0.5% revenue share on deals</p>
+                  <p className="font-bold text-slate-900 text-sm mb-1">{t.label}</p>
+                  <p className="text-xs text-slate-500">{t.limit}</p>
+                  <p className="text-xs text-indigo-600 font-bold mt-1">{t.fee}</p>
+                  <p className="text-xs text-slate-500 mt-1">+ 0.5% revenue share on deals</p>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-[2rem] p-8 space-y-5">
-            <h3 className="font-black text-slate-900 mb-2">Franchise Details</h3>
+          <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-2xl p-8 space-y-5">
+            <h3 className="font-bold text-slate-900 mb-2">Franchise Details</h3>
             {[
               { key: 'franchise_name', label: 'Franchise Name', placeholder: 'e.g. AfriTech Ventures', required: true },
               { key: 'tagline',        label: 'Tagline',         placeholder: 'e.g. Powering the next wave of FinTech innovation' },
               { key: 'website',        label: 'Website',         placeholder: 'https://...' },
             ].map(f => (
               <div key={f.key}>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{f.label}</label>
+                <label className="ui-label">{f.label}</label>
                 <input
                   required={f.required}
                   value={form[f.key]}
                   onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
                   placeholder={f.placeholder}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 placeholder-slate-600 outline-none focus:border-indigo-500 transition-colors"
+                  className="ui-input"
                 />
               </div>
             ))}
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Primary Sector</label>
+              <label className="ui-label">Primary Sector</label>
               <select
                 value={form.primary_sector}
                 onChange={e => setForm(p => ({ ...p, primary_sector: e.target.value }))}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-indigo-500"
+                className="ui-select"
               >
                 {Object.keys(SECTOR_EMOJI).map(s => <option key={s} value={s}>{SECTOR_EMOJI[s]} {s}</option>)}
               </select>
@@ -595,7 +595,7 @@ function ApplicationForm({ session, myCompany, onSuccess }) {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="ui-btn ui-btn-primary"
             >
               {submitting ? <><Loader2 size={14} className="animate-spin"/>Submitting...</> : <><Rocket size={14}/>Submit Franchise Application</>}
             </button>
@@ -643,22 +643,22 @@ function OperatorDashboard({ franchise, session }) {
   return (
     <div className="space-y-6">
       {/* Franchise identity header */}
-      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 text-slate-900 relative overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-3xl p-8 text-slate-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-transparent pointer-events-none"/>
         <div className="relative z-10 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <TierBadge tier={franchise.tier} />
               {franchise.ifb_listed && (
-                <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-emerald-600">
+                <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
                   <BadgeCheck size={10}/> Cross-listed on IFB Master Exchange
                 </span>
               )}
             </div>
-            <h2 className="text-2xl font-black">{franchise.franchise_name}</h2>
+            <h2 className="text-2xl font-bold">{franchise.franchise_name}</h2>
             {franchise.tagline && <p className="text-sm text-slate-500 mt-1">{franchise.tagline}</p>}
           </div>
-          <div className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 ${
+          <div className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 ${
             franchise.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
           }`}>
             {franchise.status === 'approved' ? <CheckCircle2 size={12}/> : <Loader2 size={12} className="animate-spin"/>}
@@ -681,7 +681,7 @@ function OperatorDashboard({ franchise, session }) {
       <div className="flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-200 pb-0">
         {DASH_TABS.map(t => (
           <button key={t.id} onClick={() => setDashTab(t.id)}
-            className={`flex items-center gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-all ${
               dashTab === t.id ? 'border-indigo-500 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-600'
             }`}
           >
@@ -698,7 +698,7 @@ function OperatorDashboard({ franchise, session }) {
           {dashTab === 'overview' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-5 flex items-center gap-2"><Target size={11}/>Deal Funnel</h4>
+                <h4 className="text-xs font-semibold text-slate-500 mb-5 flex items-center gap-2"><Target size={11}/>Deal Funnel</h4>
                 {['proposed','negotiating','signed','closed'].map((s, i) => (
                   <FunnelBar
                     key={s} label={s.charAt(0).toUpperCase()+s.slice(1)}
@@ -706,13 +706,13 @@ function OperatorDashboard({ franchise, session }) {
                     color={['bg-slate-500','bg-blue-500','bg-emerald-500','bg-yellow-500'][i]}
                   />
                 ))}
-                <div className="mt-3 text-[10px] text-slate-500 font-bold border-t border-slate-200 pt-3">
+                <div className="mt-3 text-xs text-slate-500 font-bold border-t border-slate-200 pt-3">
                   Conversion rate: <span className="text-emerald-600">{pct(Number(funnel.closed||0), totalFunnelDeals)}</span>
                 </div>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-5 flex items-center gap-2"><PieChart size={11}/>Sector Mix</h4>
+                <h4 className="text-xs font-semibold text-slate-500 mb-5 flex items-center gap-2"><PieChart size={11}/>Sector Mix</h4>
                 <div className="space-y-3">
                   {(metrics?.sectors || []).slice(0,6).map((s, i) => {
                     const totalCap = (metrics?.sectors||[]).reduce((a,x)=>a+Number(x.capital),0);
@@ -720,7 +720,7 @@ function OperatorDashboard({ franchise, session }) {
                       <div key={s.sector} className="flex items-center gap-3">
                         <span className="text-sm w-5 shrink-0">{SECTOR_EMOJI[s.sector]||'📊'}</span>
                         <div className="flex-1">
-                          <div className="flex justify-between text-[10px] font-bold mb-1">
+                          <div className="flex justify-between text-xs font-bold mb-1">
                             <span className="text-slate-500">{s.sector}</span>
                             <span className="text-slate-900">{s.deals} deals · {fmt(s.capital)}</span>
                           </div>
@@ -743,7 +743,7 @@ function OperatorDashboard({ franchise, session }) {
           {dashTab === 'analytics' && (
             <div className="space-y-6">
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-5 flex items-center gap-2"><Activity size={11}/>Monthly Deal Velocity</h4>
+                <h4 className="text-xs font-semibold text-slate-500 mb-5 flex items-center gap-2"><Activity size={11}/>Monthly Deal Velocity</h4>
                 {(metrics?.velocity || []).length === 0 ? (
                   <p className="text-slate-500 text-sm">No velocity data yet.</p>
                 ) : (
@@ -754,7 +754,7 @@ function OperatorDashboard({ franchise, session }) {
                       return (
                         <div key={i} className="flex-1 flex flex-col items-center gap-1">
                           <div className="w-full bg-indigo-500/70 rounded-t transition-all" style={{height:`${h}%`}} title={fmt(v.capital)} />
-                          <span className="text-[8px] text-slate-600 font-bold">{v.month?.slice(5,7)}/{v.month?.slice(2,4)}</span>
+                          <span className="text-xs text-slate-600 font-bold">{v.month?.slice(5,7)}/{v.month?.slice(2,4)}</span>
                         </div>
                       );
                     })}
@@ -763,15 +763,15 @@ function OperatorDashboard({ franchise, session }) {
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-5 flex items-center gap-2"><Users size={11}/>Top Investors in Your Franchise</h4>
+                <h4 className="text-xs font-semibold text-slate-500 mb-5 flex items-center gap-2"><Users size={11}/>Top Investors in Your Franchise</h4>
                 <div className="space-y-3">
                   {(metrics?.investors||[]).slice(0,8).map((inv,i) => (
                     <div key={i} className="flex items-center justify-between py-2 border-b border-slate-200">
                       <div>
-                        <p className="text-sm font-black text-slate-900">{inv.fund_name || 'Anonymous Investor'}</p>
-                        <p className="text-[10px] text-slate-500 capitalize">{inv.investor_type} · {inv.deal_count} deals</p>
+                        <p className="text-sm font-bold text-slate-900">{inv.fund_name || 'Anonymous Investor'}</p>
+                        <p className="text-xs text-slate-500 capitalize">{inv.investor_type} · {inv.deal_count} deals</p>
                       </div>
-                      <p className="font-black text-emerald-600 text-sm">{fmt(inv.total_invested)}</p>
+                      <p className="font-bold text-emerald-600 text-sm">{fmt(inv.total_invested)}</p>
                     </div>
                   ))}
                 </div>
@@ -782,20 +782,20 @@ function OperatorDashboard({ franchise, session }) {
           {/* ── COMPANIES ── */}
           {dashTab === 'companies' && (
             <div className="bg-white border border-slate-200 rounded-2xl p-6">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-5 flex items-center gap-2"><Building2 size={11}/>Franchise Company Roster</h4>
+              <h4 className="text-xs font-semibold text-slate-500 mb-5 flex items-center gap-2"><Building2 size={11}/>Franchise Company Roster</h4>
               <div className="space-y-3">
                 {(metrics?.companies||[]).map((c, i) => (
                   <div key={i} className="flex items-center gap-4 py-3 border-b border-slate-200">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 text-sm font-black">{i+1}</div>
+                    <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 text-sm font-bold">{i+1}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-slate-900 text-sm truncate">{c.legal_name}</p>
-                      <p className="text-[10px] text-slate-500">{SECTOR_EMOJI[c.sector]||'📊'} {c.sector} · {c.country}</p>
+                      <p className="font-bold text-slate-900 text-sm truncate">{c.legal_name}</p>
+                      <p className="text-xs text-slate-500">{SECTOR_EMOJI[c.sector]||'📊'} {c.sector} · {c.country}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-black text-slate-900">{fmt(c.valuation)}</p>
-                      <p className="text-[9px] text-slate-500">val · {c.deal_count} deals</p>
+                      <p className="text-xs font-bold text-slate-900">{fmt(c.valuation)}</p>
+                      <p className="text-xs text-slate-500">val · {c.deal_count} deals</p>
                     </div>
-                    <div className="bg-emerald-50 text-emerald-600 text-[9px] font-black px-2 py-1 rounded-lg shrink-0">
+                    <div className="bg-emerald-50 text-emerald-600 text-xs font-bold px-2 py-1 rounded-lg shrink-0">
                       Score {Math.round(c.investment_readiness_score)}
                     </div>
                   </div>
@@ -809,20 +809,20 @@ function OperatorDashboard({ franchise, session }) {
           {dashTab === 'leaderboard' && (
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
               <div className="p-6 border-b border-slate-200">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><Award size={11}/>Global Franchise Rankings</h4>
+                <h4 className="text-xs font-semibold text-slate-500 flex items-center gap-2"><Award size={11}/>Global Franchise Rankings</h4>
               </div>
               <div className="divide-y divide-slate-200">
                 {leaderboard.map(f => (
                   <div key={f.franchise_id} className={`flex items-center gap-4 px-6 py-4 transition-colors ${f.franchise_id === franchise.id ? 'bg-indigo-50' : 'hover:bg-slate-100'}`}>
-                    <span className={`text-lg font-black w-8 shrink-0 ${f.rank<=3?'text-yellow-600':f.franchise_id===franchise.id?'text-indigo-600':'text-slate-600'}`}>#{f.rank}</span>
+                    <span className={`text-lg font-bold w-8 shrink-0 ${f.rank<=3?'text-yellow-600':f.franchise_id===franchise.id?'text-indigo-600':'text-slate-600'}`}>#{f.rank}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-black text-sm truncate ${f.franchise_id===franchise.id?'text-indigo-600':'text-slate-900'}`}>{f.franchise_name}</p>
-                      <p className="text-[10px] text-slate-500">{SECTOR_EMOJI[f.primary_sector]||'📊'} {f.primary_sector}</p>
+                      <p className={`font-bold text-sm truncate ${f.franchise_id===franchise.id?'text-indigo-600':'text-slate-900'}`}>{f.franchise_name}</p>
+                      <p className="text-xs text-slate-500">{SECTOR_EMOJI[f.primary_sector]||'📊'} {f.primary_sector}</p>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-right text-[10px] shrink-0">
-                      <div><p className="text-emerald-600 font-black">{fmt(f.total_capital)}</p><p className="text-slate-600">capital</p></div>
-                      <div><p className="text-blue-600 font-black">{f.conversion_rate}%</p><p className="text-slate-600">conv.</p></div>
-                      <div><p className="text-slate-900 font-black">{f.total_deals}</p><p className="text-slate-600">deals</p></div>
+                    <div className="grid grid-cols-3 gap-4 text-right text-xs shrink-0">
+                      <div><p className="text-emerald-600 font-bold">{fmt(f.total_capital)}</p><p className="text-slate-600">capital</p></div>
+                      <div><p className="text-blue-600 font-bold">{f.conversion_rate}%</p><p className="text-slate-600">conv.</p></div>
+                      <div><p className="text-slate-900 font-bold">{f.total_deals}</p><p className="text-slate-600">deals</p></div>
                     </div>
                     <TierBadge tier={f.tier} />
                   </div>
@@ -834,11 +834,11 @@ function OperatorDashboard({ franchise, session }) {
           {/* ── IFB LINK ── */}
           {dashTab === 'ifb_link' && (
             <div className="space-y-6 max-w-2xl">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-[2rem] p-8">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8">
                 <div className="flex items-center gap-3 mb-4">
                   <BadgeCheck size={24} className="text-emerald-600"/>
                   <div>
-                    <h3 className="font-black text-slate-900">Active IFB Cross-Listing</h3>
+                    <h3 className="font-bold text-slate-900">Active IFB Cross-Listing</h3>
                     <p className="text-sm text-emerald-400/70">Since {franchise.ifb_listed_at?.slice(0,10)}</p>
                   </div>
                 </div>
@@ -847,28 +847,28 @@ function OperatorDashboard({ franchise, session }) {
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">IFB Commission Rate</p>
-                    <p className="text-2xl font-black text-slate-900">{franchise.ifb_commission_pct}%</p>
-                    <p className="text-[10px] text-slate-500">per closed deal</p>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">IFB Commission Rate</p>
+                    <p className="text-2xl font-bold text-slate-900">{franchise.ifb_commission_pct}%</p>
+                    <p className="text-xs text-slate-500">per closed deal</p>
                   </div>
                   <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Your Revenue Share</p>
-                    <p className="text-2xl font-black text-indigo-600">{franchise.revenue_share_pct}%</p>
-                    <p className="text-[10px] text-slate-500">per closed deal</p>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">Your Revenue Share</p>
+                    <p className="text-2xl font-bold text-indigo-600">{franchise.revenue_share_pct}%</p>
+                    <p className="text-xs text-slate-500">per closed deal</p>
                   </div>
                   <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Total IFB Fees Generated</p>
-                    <p className="text-xl font-black text-slate-900">{fmt(franchise.ifb_earnings_usd)}</p>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">Total IFB Fees Generated</p>
+                    <p className="text-xl font-bold text-slate-900">{fmt(franchise.ifb_earnings_usd)}</p>
                   </div>
                   <div className="bg-white border border-slate-200 rounded-xl p-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Your Earnings</p>
-                    <p className="text-xl font-black text-emerald-600">{fmt(franchise.operator_earnings_usd)}</p>
+                    <p className="text-xs font-semibold text-slate-500 mb-1">Your Earnings</p>
+                    <p className="text-xl font-bold text-emerald-600">{fmt(franchise.operator_earnings_usd)}</p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-6 text-sm text-slate-500 leading-relaxed space-y-2">
-                <p className="font-black text-slate-900 text-base mb-3">How it works</p>
+                <p className="font-bold text-slate-900 text-base mb-3">How it works</p>
                 <p>① Your franchise companies are listed on IFB's master VentureX exchange with a <span className="text-indigo-600 font-bold">Franchise Node</span> badge.</p>
                 <p>② IFB investors browsing the exchange can discover and invest in your franchise's companies directly.</p>
                 <p>③ When a deal closes, IFB automatically calculates {franchise.ifb_commission_pct}% platform fee. Your share ({franchise.revenue_share_pct}%) is credited monthly.</p>
@@ -921,9 +921,9 @@ export default function VentureXFranchise({ session, profile, balances }) {
       <div className="flex gap-2 overflow-x-auto no-scrollbar">
         {NAV.map(n => (
           <button key={n.id} onClick={() => setView(n.id)}
-            className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               view === n.id
-                ? 'bg-indigo-600 text-white shadow-lg'
+                ? 'bg-blue-600 text-white shadow-lg'
                 : 'bg-slate-50 text-slate-500 border border-slate-200 hover:text-slate-900'
             }`}
           >

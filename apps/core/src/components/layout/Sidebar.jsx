@@ -16,13 +16,13 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
     { id: 'ACCOUNTS',        icon: <Landmark size={18} />,    label: t('nav.accounts') },
     { id: 'ORGANIZE',        icon: <Folder size={18} />,      label: t('nav.organize') },
     { id: 'INVEST',          icon: <Briefcase size={18} />,   label: t('nav.wealth') },
-    { id: 'LISTINGS',        icon: <Building2 size={18} />,  label: '🌍 Company Listings' },
+    { id: 'LISTINGS',        icon: <Building2 size={18} />,  label: 'Company Listings' },
     { id: 'COMMERCIAL_HUB', icon: <Building size={18} />,    label: t('nav.commercial') },
     { id: 'LIFESTYLE',       icon: <Globe size={18} />,       label: t('nav.lifestyle') },
     { id: 'TRAINING',        icon: <BookOpen size={18} />,    label: t('nav.training') },
     { id: 'AGENTS',          icon: <Users size={18} />,       label: t('nav.team') },
     { id: 'INSURANCE',       icon: <ShieldCheck size={18} />, label: t('nav.insurance') },
-    { id: 'NETWORK',         icon: <Share2 size={18} />,      label: '⬡ AFR Node' },
+    { id: 'NETWORK',         icon: <Share2 size={18} />,      label: 'AFR Node' },
     { id: 'SETTINGS',        icon: <Settings size={18} />,    label: t('nav.settings') },
   ];
 
@@ -38,18 +38,14 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
       )}
 
       <aside className={`
-        fixed md:static inset-y-0 left-0 z-[150] w-64
-        bg-slate-100/90 backdrop-blur-xl border-r border-slate-200/60
-        transform transition-transform duration-300 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-        flex flex-col
-        pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]
+        fixed md:static inset-y-0 left-0 z-[150] w-64 bg-slate-100/90 backdrop-blur-xl border-r border-slate-200/60 transform transition-transform duration-300 ease-in-out
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]
       `}>
         {/* Brand header */}
         <div className="p-6 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-3xl font-black text-slate-900 tracking-tight">DEUS</span>
-            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-blue-100 text-blue-700">OS</span>
+            <span className="text-3xl font-bold text-slate-900 tracking-tight">DEUS</span>
+            <span className="px-1.5 py-0.5 text-xs font-bold rounded bg-blue-100 text-blue-700">OS</span>
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}

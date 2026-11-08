@@ -53,12 +53,12 @@ const CheckoutForm = ({ amount, onBack, onComplete }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-      <button type="button" onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 mb-2 transition-colors">
-        <ArrowLeft size={14}/> Back to Network Selection
+      <button type="button" onClick={onBack} className="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-2 mb-2 transition-colors">
+        <ArrowLeft size={14}/> Back
       </button>
       <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl shadow-inner"><PaymentElement /></div>
       {errorMessage && <div className="p-4 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl text-center shadow-inner">{errorMessage}</div>}
-      <button disabled={isProcessing || !stripe || !elements} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 border border-blue-200">
+      <button disabled={isProcessing || !stripe || !elements} className="ui-btn ui-btn-primary">
         {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `AUTHORIZE $${amount} DEPOSIT`}
       </button>
     </form>
@@ -427,10 +427,9 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden relative border border-slate-200 p-6 flex flex-col max-h-[90vh]">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[60px] pointer-events-none"></div>
-        <button onClick={(e) => { e.preventDefault(); onClose(); }} className="absolute top-6 right-6 text-slate-500 hover:text-slate-900 transition-colors bg-slate-50 p-2 rounded-xl border border-slate-200 z-50 cursor-pointer">
+    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center md:p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full md:max-w-lg bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden relative p-5 md:p-6 flex flex-col max-h-[92vh]">
+        <button onClick={(e) => { e.preventDefault(); onClose(); }} aria-label="Close" className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors z-50">
           <X size={20} />
         </button>
 
@@ -439,14 +438,14 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
           {/* Header & Tabs */}
           <div className="flex flex-col items-start gap-4 mb-8">
             <div>
-              <h2 className="text-2xl font-black text-slate-900 mb-1">Add money</h2>
-              <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
-                <ShieldCheck size={14} /> Secure Routing Gateway
+              <h2 className="ui-sheet-title">Add money</h2>
+              <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-0.5">
+                <ShieldCheck size={14} className="text-emerald-600" /> Payments are encrypted and protected
               </p>
             </div>
-            <div className="flex bg-slate-50 p-1.5 rounded-xl w-full border border-slate-200">
-              <button onClick={() => setActiveTab('NEW')} className={`flex-1 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'NEW' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>New Deposit</button>
-              <button onClick={() => setActiveTab('HISTORY')} className={`flex-1 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'HISTORY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Records</button>
+            <div className="ui-segment w-full">
+              <button onClick={() => setActiveTab('NEW')} className={activeTab === 'NEW' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}>Add money</button>
+              <button onClick={() => setActiveTab('HISTORY')} className={activeTab === 'HISTORY' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}>History</button>
             </div>
           </div>
 
@@ -471,16 +470,16 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                       <div className="flex justify-between items-start border-b border-slate-200 pb-4">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">#{order.id.substring(0,8)}</span>
-                            <span className="flex items-center gap-1 text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-1 rounded-md">
+                            <span className="text-xs font-semibold text-slate-500">#{order.id.substring(0,8)}</span>
+                            <span className="flex items-center gap-1 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
                               <Clock size={10}/> {getTimeElapsed(order.created_at, order.updated_at, order.status)}
                             </span>
                           </div>
-                          <h3 className="text-2xl font-black text-slate-900">${order.amount_usd.toFixed(2)}</h3>
+                          <h3 className="text-2xl font-bold text-slate-900">${order.amount_usd.toFixed(2)}</h3>
                           <p className="text-xs font-bold text-slate-500 mt-1">{order.payment_method}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Processor</p>
+                          <p className="text-xs font-semibold text-slate-500 mb-1">Processor</p>
                           <p className="text-sm font-bold text-slate-600">{order.processor?.full_name || 'Network Matching...'}</p>
                         </div>
                       </div>
@@ -490,7 +489,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                          {order.status === 'disputed' ? (
                            <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-center">
                              <AlertTriangle size={24} className="mx-auto text-red-500 mb-2"/>
-                             <h4 className="font-black text-red-600 uppercase tracking-widest text-[10px]">Verification Failed</h4>
+                             <h4 className="font-semibold text-red-600 text-xs">Verification Failed</h4>
                              <p className="text-xs text-red-300/80 font-bold mt-1">Processor rejected the receipt. Support has been notified.</p>
                            </div>
                          ) : (
@@ -506,7 +505,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                                  <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 bg-emerald-500 border-emerald-500 text-white">
                                    <FileText size={12}/>
                                  </div>
-                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 text-center">Proof<br/>Sent</span>
+                                 <span className="text-xs font-semibold text-slate-500 text-center">Proof<br/>Sent</span>
                                </div>
 
                                {/* Step 2 */}
@@ -514,7 +513,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${order.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-blue-500 border-blue-500 text-white animate-pulse'}`}>
                                    <Activity size={12}/>
                                  </div>
-                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 text-center">Processor<br/>Verifying</span>
+                                 <span className="text-xs font-semibold text-slate-500 text-center">Processor<br/>Verifying</span>
                                </div>
 
                                {/* Step 3 */}
@@ -522,7 +521,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${order.status === 'completed' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-200 text-slate-500'}`}>
                                    <CheckCircle2 size={12}/>
                                  </div>
-                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 text-center">AFR<br/>Minted</span>
+                                 <span className="text-xs font-semibold text-slate-500 text-center">AFR<br/>Minted</span>
                                </div>
                              </div>
                            </div>
@@ -540,16 +539,16 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
           ========================================= */}
           {instantSuccess && (
             <div className="text-center space-y-6 py-8 animate-in fade-in zoom-in-95">
-              <div className="w-20 h-20 mx-auto rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+              <div className="w-20 h-20 mx-auto rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center">
                 <CheckCircle2 size={42} />
               </div>
               <div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">Deposit Completed!</h3>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Deposit Completed!</h3>
                 <p className="text-sm font-bold text-emerald-600 mb-1">
                   +${parseFloat(instantSuccess.amount).toFixed(2)} USD Added
                 </p>
                 {instantSuccess.newBalance && (
-                  <p className="text-xs font-black text-slate-500 bg-slate-50 py-1 px-3 rounded-full inline-block mt-1">
+                  <p className="text-xs font-bold text-slate-500 bg-slate-50 py-1 px-3 rounded-full inline-block mt-1">
                     New Balance: ${parseFloat(instantSuccess.newBalance).toFixed(2)} USD
                   </p>
                 )}
@@ -565,7 +564,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   onSuccess?.();
                   onClose();
                 }}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest py-4 px-6 rounded-2xl shadow-lg transition-all"
+                className="ui-btn ui-btn-primary"
               >
                 Return to Wallet
               </button>
@@ -578,10 +577,10 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
           {!instantSuccess && activeTab === 'NEW' && !routingMethod && (
             <div className="space-y-8 animate-in fade-in zoom-in-95">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 text-center">Amount to Deposit (USD Equivalent)</label>
+                <label className="ui-label text-center">Amount (USD)</label>
                 <div className="relative max-w-xs mx-auto">
-                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 font-black text-xl">$</span>
-                  <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-6 py-6 text-3xl font-black outline-none focus:border-blue-500 focus:bg-slate-50 transition-all text-slate-900 placeholder:text-slate-700 text-center shadow-inner" autoFocus />
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xl">$</span>
+                  <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="ui-input pl-12 pr-6 text-3xl text-center h-16" autoFocus />
                 </div>
                 {/* Fast Preset Buttons */}
                 <div className="flex justify-center gap-2 mt-4 flex-wrap">
@@ -590,7 +589,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                       key={v}
                       type="button"
                       onClick={() => setAmount(String(v))}
-                      className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 hover:text-slate-900 transition-all"
+                      className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition-all"
                     >
                       +${v}
                     </button>
@@ -599,51 +598,51 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               </div>
 
               <div className="pt-4 border-t border-slate-200">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 text-center">Select Liquidity Network</label>
+                <label className="ui-label text-center">Choose how to pay</label>
                 <div className="space-y-3">
                   {/* Recommended: Instant Direct Banking Rails (100% In-App) */}
                   <button 
                     disabled={!amount || parseFloat(amount) <= 0} 
                     onClick={() => setRoutingMethod('instant')} 
-                    className="w-full bg-gradient-to-r from-blue-600/30 via-indigo-600/20 to-emerald-600/20 hover:from-blue-600/40 hover:via-indigo-600/30 hover:to-emerald-600/30 border border-blue-200 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left relative overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.25)]"
+                    className="w-full border border-blue-200 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left relative overflow-hidden bg-blue-50"
                   >
-                    <div className="absolute top-0 right-0 bg-blue-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest flex items-center gap-1">
+                    <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg flex items-center gap-1">
                       <Zap size={10} fill="currentColor" /> Recommended
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-blue-500/30 text-blue-300 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors shadow-inner">
                       <Landmark size={24}/>
                     </div>
                     <div>
-                      <h4 className="font-black text-slate-900 text-base">Instant Direct Deposit</h4>
-                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Card · Bank transfer · USSD • 0% IFB fee</p>
-                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">Pay in USD or Naira — credited as soon as payment clears</p>
+                      <h4 className="font-bold text-slate-900 text-base">Instant Direct Deposit</h4>
+                      <p className="text-xs font-bold text-blue-600 mt-1">Card · Bank transfer · USSD • 0% IFB fee</p>
+                      <p className="text-xs font-bold text-slate-500 mt-0.5">Pay in USD or Naira — credited as soon as payment clears</p>
                     </div>
                   </button>
 
                   <button disabled={!amount || parseFloat(amount) <= 0} onClick={() => { setRoutingMethod('card'); handleInitializeCard(); }} className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left">
                     <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-400 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors"><CreditCard size={24}/></div>
                     <div>
-                      <h4 className="font-black text-slate-900">Global Card Network</h4>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Stripe Gateway • 2.9% Fee</p>
+                      <h4 className="font-bold text-slate-900">Debit or credit card</h4>
+                      <p className="text-xs font-bold text-slate-500 mt-1">Visa, Mastercard • 2.9% card fee</p>
                     </div>
                   </button>
 
                   {/* Flutterwave Mobile Money — instant, no card needed */}
                   <button disabled={!amount || parseFloat(amount) <= 0} onClick={() => { setRoutingMethod('flw'); }} className="w-full bg-amber-50 hover:bg-amber-50 border border-amber-200 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left relative overflow-hidden">
-                    <div className="absolute top-0 right-0 bg-amber-500 text-black text-[9px] font-black px-3 py-1 rounded-bl-lg uppercase tracking-widest">Instant</div>
-                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors shadow-[0_0_15px_rgba(245,158,11,0.2)]"><Zap size={24}/></div>
+                    <div className="absolute top-0 right-0 bg-amber-500 text-black text-xs font-semibold px-3 py-1 rounded-bl-lg">Instant</div>
+                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors"><Zap size={24}/></div>
                     <div>
-                      <h4 className="font-black text-slate-900">Mobile Money (Flutterwave)</h4>
-                      <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest mt-1">MTN · M-Pesa · Orange · Wave · Airtel</p>
-                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">No card needed · Pan-Africa</p>
+                      <h4 className="font-bold text-slate-900">Mobile Money (Flutterwave)</h4>
+                      <p className="text-xs font-bold text-amber-600 mt-1">MTN · M-Pesa · Orange · Wave · Airtel</p>
+                      <p className="text-xs font-bold text-slate-500 mt-0.5">No card needed · Pan-Africa</p>
                     </div>
                   </button>
 
                   <button disabled={!amount || parseFloat(amount) <= 0} onClick={() => setRoutingMethod('p2p')} className="w-full bg-emerald-50 hover:bg-emerald-50 border border-emerald-200 p-5 rounded-2xl transition-all disabled:opacity-30 group flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors shadow-[0_0_15px_rgba(16,185,129,0.2)]"><Users size={24}/></div>
+                    <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors"><Users size={24}/></div>
                     <div>
-                      <h4 className="font-black text-slate-900">Community of Trust (P2P)</h4>
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1 flex flex-wrap gap-2">
+                      <h4 className="font-bold text-slate-900">Local agent</h4>
+                      <p className="text-xs font-bold text-emerald-600 mt-1 flex flex-wrap gap-2">
                         <span>1% IFB Fee</span> <span className="text-slate-500">|</span> <span>2% Processor Reward</span>
                       </p>
                     </div>
@@ -658,15 +657,15 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
           ========================================= */}
           {!instantSuccess && activeTab === 'NEW' && routingMethod === 'instant' && (
             <div className="space-y-6 animate-in fade-in zoom-in-95">
-              <button onClick={() => { clearInterval(instantPollRef.current); setInstantPending(null); setInstantError(null); setRoutingMethod(null); }} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                <ArrowLeft size={14}/> Back to Networks
+              <button onClick={() => { clearInterval(instantPollRef.current); setInstantPending(null); setInstantError(null); setRoutingMethod(null); }} className="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                <ArrowLeft size={14}/> Back
               </button>
 
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(37,99,235,0.25)]">
+                <div className="w-16 h-16 mx-auto rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
                   <Landmark size={32}/>
                 </div>
-                <h3 className="text-xl font-black text-slate-900 mb-1">Instant Direct Deposit</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-1">Instant Direct Deposit</h3>
                 <p className="text-xs font-bold text-slate-500">Secure checkout by Flutterwave • credited automatically</p>
               </div>
 
@@ -674,8 +673,8 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                 {[['USD', 'Pay in USD', 'Card · Apple / Google Pay'], ['NGN', 'Pay in Naira', 'Card · Bank transfer · USSD']].map(([c, t, d]) => (
                   <button key={c} type="button" disabled={!!instantPending} onClick={() => setInstantCurrency(c)}
                     className={`flex-1 py-2.5 px-2 rounded-lg text-left transition-all ${instantCurrency === c ? 'bg-white shadow-sm text-blue-700' : 'text-slate-500'}`}>
-                    <span className="block text-xs font-black">{t}</span>
-                    <span className="block text-[10px] font-bold opacity-70">{d}</span>
+                    <span className="block text-xs font-bold">{t}</span>
+                    <span className="block text-xs font-bold opacity-70">{d}</span>
                   </button>
                 ))}
               </div>
@@ -683,7 +682,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-bold">Deposit Amount:</span>
-                  <span className="text-slate-900 font-black text-base">${parseFloat(amount || 0).toFixed(2)} USD</span>
+                  <span className="text-slate-900 font-bold text-base">${parseFloat(amount || 0).toFixed(2)} USD</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500 font-bold">Routing Network:</span>
@@ -707,12 +706,12 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
 
               {instantPending && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-center space-y-2">
-                  <p className="text-xs font-black text-blue-800 flex items-center justify-center gap-2"><Loader2 className="animate-spin" size={14}/> Waiting for your payment…</p>
+                  <p className="text-xs font-bold text-blue-800 flex items-center justify-center gap-2"><Loader2 className="animate-spin" size={14}/> Waiting for your payment…</p>
                   <p className="text-[11px] font-bold text-blue-700">
                     Pay {instantPending.charge_currency === 'NGN' ? '₦' : '$'}{Number(instantPending.charge_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} on the Flutterwave page.
                     {instantPending.fx_rate ? ` Rate: ₦${Number(instantPending.fx_rate).toLocaleString()} per $1.` : ''} Your wallet updates here automatically.
                   </p>
-                  <a href={instantPending.checkout_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] font-black text-blue-700 underline">
+                  <a href={instantPending.checkout_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 underline">
                     <ExternalLink size={12}/> Open the payment page again
                   </a>
                 </div>
@@ -727,7 +726,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               <button
                 disabled={isInstantLoading || !!instantPending || !amount || parseFloat(amount) <= 0}
                 onClick={() => handleInstantDeposit()}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 border border-blue-200 disabled:opacity-40"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm p-5 rounded-2xl transition-all flex items-center justify-center gap-2 border border-blue-200 disabled:opacity-40"
               >
                 {isInstantLoading ? (
                   <>
@@ -744,15 +743,15 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
 
           {activeTab === 'NEW' && routingMethod === 'flw' && (
             <div className="space-y-6 animate-in fade-in zoom-in-95">
-              <button onClick={() => { setRoutingMethod(null); setFlwSuccess(false); setFlwPhone(''); setFlwCountry(''); }} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
+              <button onClick={() => { setRoutingMethod(null); setFlwSuccess(false); setFlwPhone(''); setFlwCountry(''); }} className="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors">
                 <ArrowLeft size={14}/> Back
               </button>
 
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                <div className="w-16 h-16 mx-auto rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
                   <Smartphone size={32}/>
                 </div>
-                <h3 className="text-xl font-black text-slate-900 mb-1">Mobile Money Deposit</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-1">Mobile Money Deposit</h3>
                 <p className="text-xs font-bold text-slate-500">Powered by Flutterwave · Pan-Africa</p>
               </div>
 
@@ -761,9 +760,9 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   <div className="w-16 h-16 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <ShieldCheck size={32}/>
                   </div>
-                  <h4 className="text-lg font-black text-slate-900">Payment Received!</h4>
+                  <h4 className="text-lg font-bold text-slate-900">Payment Received!</h4>
                   <p className="text-xs font-bold text-slate-500">Your balance will update automatically within seconds.</p>
-                  <button onClick={() => { setFlwSuccess(false); setRoutingMethod(null); }} className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-slate-900 transition-colors">
+                  <button onClick={() => { setFlwSuccess(false); setRoutingMethod(null); }} className="text-sm font-semibold text-amber-600 hover:text-slate-900 transition-colors">
                     Done
                   </button>
                 </div>
@@ -772,7 +771,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               {!flwSuccess && isFlwLoading && (
                 <div className="py-10 text-center flex flex-col items-center gap-4">
                   <Loader2 className="animate-spin text-amber-500" size={36}/>
-                  <p className="text-xs font-black uppercase tracking-widest text-slate-500">Generating Payment Link...</p>
+                  <p className="text-xs font-semibold text-slate-500">Generating Payment Link...</p>
                 </div>
               )}
 
@@ -790,23 +789,23 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   {/* Phone number input */}
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                     <div>
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Mobile Money Number</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-2">Mobile Money Number</p>
                       <input
                         type="tel"
                         value={flwPhone}
                         onChange={e => setFlwPhone(e.target.value)}
                         placeholder={`${DIAL_CODES[flwCountry] || '+'} phone number`}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-bold p-3 outline-none focus:border-amber-500 transition-all placeholder:text-slate-400"
+                        className="ui-input"
                       />
                     </div>
 
                     {/* Country selector */}
                     <div>
-                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Your Country</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-2">Your Country</p>
                       <select
                         value={flwCountry}
                         onChange={e => setFlwCountry(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs font-bold p-3"
+                        className="ui-select"
                       >
                         <option value="">— Select your country —</option>
                         {Object.entries(FLW_CURRENCY_MAP).map(([code, cfg]) => (
@@ -814,7 +813,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                         ))}
                       </select>
                       {flwCountry && amount && parseFloat(amount) > 0 && (
-                        <p className="text-[9px] font-bold text-amber-600 mt-2 text-center">
+                        <p className="text-xs font-bold text-amber-600 mt-2 text-center">
                           About {Math.round(parseFloat(amount) * FLW_CURRENCY_MAP[flwCountry].rate).toLocaleString()} {FLW_CURRENCY_MAP[flwCountry].currency}. The exact amount at the live rate is shown before you pay.
                         </p>
                       )}
@@ -828,14 +827,14 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                         onChange={e => setFlwSavePhone(e.target.checked)}
                         className="accent-amber-500"
                       />
-                      <span className="text-[10px] font-bold text-slate-500">Save this number for next time</span>
+                      <span className="text-xs font-bold text-slate-500">Save this number for next time</span>
                     </label>
                   </div>
 
                   <button
                     onClick={handleFlwInlinePayment}
                     disabled={!flwCountry || !flwPhone}
-                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black text-sm uppercase tracking-widest p-5 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="ui-btn ui-btn-primary"
                   >
                     <Zap size={18}/> Pay Now
                   </button>
@@ -849,7 +848,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               {!clientSecret ? (
                 <div className="py-20 text-center flex flex-col items-center justify-center">
                    <Loader2 className="animate-spin text-blue-500 mb-4" size={40}/>
-                   <p className="text-xs font-black uppercase tracking-widest text-slate-500">Securing Global Connection...</p>
+                   <p className="text-xs font-semibold text-slate-500">Securing Global Connection...</p>
                 </div>
               ) : (
                 <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#2563EB', colorBackground: '#0B0F19', colorText: '#F8FAFC', borderRadius: '16px' } } }}>
@@ -871,12 +870,11 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               
               {p2pStep === 1 && (
                 <div className="space-y-6">
-                  <button onClick={() => setRoutingMethod(null)} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors"><ArrowLeft size={14}/> {t('common.back')}</button>
-                  <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
-                    <h3 className="font-black text-emerald-600 text-2xl">${amount} {t('deposit.title')}</h3>
-                    <p className="text-[10px] font-bold text-emerald-500/70 uppercase tracking-widest mt-1 flex justify-center gap-3">
-                      <span>Network: 1%</span> <span>Escrow: 2%</span>
-                    </p>
+                  <button onClick={() => setRoutingMethod(null)} className="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors"><ArrowLeft size={14}/> {t('common.back')}</button>
+                  <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl text-center">
+                    <p className="text-sm text-slate-500">You are adding</p>
+                    <h3 className="font-bold text-slate-900 text-2xl ui-amount">${amount}</h3>
+                    <p className="text-xs text-slate-500 mt-1">Fees: 1% IFB · 2% agent</p>
                   </div>
 
                   {/* Location request */}
@@ -887,8 +885,8 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                     >
                       <MapPin size={18} className="text-blue-600 flex-shrink-0" />
                       <div className="text-left">
-                        <p className="text-xs font-black text-blue-600">{t('deposit.enableLocation')}</p>
-                        <p className="text-[10px] text-blue-500">{t('deposit.locationNeeded')}</p>
+                        <p className="text-xs font-bold text-blue-600">{t('deposit.enableLocation')}</p>
+                        <p className="text-xs text-blue-500">{t('deposit.locationNeeded')}</p>
                       </div>
                     </button>
                   )}
@@ -901,7 +899,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   {locationStatus === 'granted' && (
                     <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
                       <Navigation size={16} className="text-emerald-600" />
-                      <span className="text-xs text-emerald-600 font-bold">Location active — nearest processors first</span>
+                      <span className="text-xs text-emerald-600 font-bold">Location on — nearest agents first</span>
                     </div>
                   )}
                   {locationStatus === 'denied' && (
@@ -912,18 +910,18 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   )}
 
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">{t('deposit.selectMethod') || 'Select Transfer Method'}</label>
-                    <select value={fiatMethod} onChange={(e) => setFiatMethod(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-emerald-500 mb-4">
+                    <label className="ui-label">{t('deposit.selectMethod') || 'Select Transfer Method'}</label>
+                    <select value={fiatMethod} onChange={(e) => setFiatMethod(e.target.value)} className="ui-select mb-4">
                       {fiatOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
                     </select>
                     {fiatMethod === 'Physical Cash Drop' && (
                       <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl animate-in zoom-in-95">
-                        <h4 className="text-amber-600 text-xs font-black uppercase tracking-widest flex items-center gap-2 mb-2"><AlertTriangle size={14}/> High Risk Method</h4>
+                        <h4 className="text-amber-600 text-xs font-semibold flex items-center gap-2 mb-2"><AlertTriangle size={14}/> High Risk Method</h4>
                         <p className="text-xs text-amber-500/80 leading-relaxed font-medium">{t('deposit.safetyTip')}</p>
                       </div>
                     )}
                   </div>
-                  <button onClick={handleFindProcessors} disabled={isInitializing} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex justify-center gap-2">
+                  <button onClick={handleFindProcessors} disabled={isInitializing} className="ui-btn ui-btn-primary">
                     {isInitializing ? <><Loader2 className="animate-spin" size={16}/> {t('deposit.locating')}</> : <><Map size={16}/> {t('deposit.findNearby')}</>}
                   </button>
                 </div>
@@ -931,12 +929,12 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
 
               {p2pStep === 2 && (
                 <div className="space-y-4">
-                  <button onClick={() => setP2pStep(1)} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 mb-2 transition-colors"><ArrowLeft size={14}/> {t('common.back')}</button>
+                  <button onClick={() => setP2pStep(1)} className="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-2 mb-2 transition-colors"><ArrowLeft size={14}/> {t('common.back')}</button>
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">{t('deposit.mapTitle')}</p>
+                    <p className="text-xs font-semibold text-emerald-600">{t('deposit.mapTitle')}</p>
                     <button
                       onClick={() => setShowMap(v => !v)}
-                      className="text-[10px] font-black text-slate-500 hover:text-slate-900 flex items-center gap-1"
+                      className="text-xs font-bold text-slate-500 hover:text-slate-900 flex items-center gap-1"
                     >
                       <Map size={12} /> {showMap ? 'List' : 'Map'}
                     </button>
@@ -954,7 +952,7 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                     </Suspense>
                   )}
 
-                  <p className="text-[10px] text-slate-500 text-center">{t('deposit.mapDesc')}</p>
+                  <p className="text-xs text-slate-500 text-center">{t('deposit.mapDesc')}</p>
 
                   {/* LIST VIEW */}
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-2 no-scrollbar">
@@ -973,12 +971,12 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                             {proc.avatar_url ? <img src={proc.avatar_url} className="w-full h-full rounded-full object-cover" alt="" /> : <Users size={16} className="text-slate-500"/>}
                           </div>
                           <div>
-                            <p className="font-black text-slate-900 text-sm leading-tight">{proc.full_name}</p>
+                            <p className="font-bold text-slate-900 text-sm leading-tight">{proc.full_name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="flex items-center gap-1 text-[9px] font-bold text-amber-600"><Star size={10}/> {proc.cot_rating}% {t('deposit.rating')}</span>
-                              <span className="text-[9px] text-slate-500">· {proc.cot_completed_tx} {t('deposit.trades')}</span>
+                              <span className="flex items-center gap-1 text-xs font-bold text-amber-600"><Star size={10}/> {proc.cot_rating}% {t('deposit.rating')}</span>
+                              <span className="text-xs text-slate-500">· {proc.cot_completed_tx} {t('deposit.trades')}</span>
                               {proc.distanceKm !== undefined && proc.distanceKm < 9000 && (
-                                <span className="text-[9px] text-blue-600 flex items-center gap-0.5">
+                                <span className="text-xs text-blue-600 flex items-center gap-0.5">
                                   <MapPin size={8}/>
                                   {proc.distanceKm < 1 ? `${Math.round(proc.distanceKm * 1000)}m` : `${proc.distanceKm.toFixed(1)}km`}
                                 </span>
@@ -995,20 +993,20 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
 
               {p2pStep === 3 && (
                 <div className="space-y-6">
-                  <button onClick={() => {setP2pStep(2); setReceiptFile(null); setScanResult(null);}} className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors"><ArrowLeft size={14}/> Back</button>
+                  <button onClick={() => {setP2pStep(2); setReceiptFile(null); setScanResult(null);}} className="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-2 transition-colors"><ArrowLeft size={14}/> Back</button>
 
                   <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 text-center">Transfer Instructions</p>
+                    <p className="text-xs font-semibold text-slate-500 mb-3 text-center">Transfer Instructions</p>
                     <p className="text-sm font-medium text-slate-600 text-center mb-4 leading-relaxed">
                       Send exactly <strong className="text-slate-900">${amount} USD equivalent</strong> via {fiatMethod} to:
                     </p>
                     <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center mb-4">
-                      <p className="font-black text-slate-900 text-lg">{selectedProcessor.full_name}</p>
+                      <p className="font-bold text-slate-900 text-lg">{selectedProcessor.full_name}</p>
                       <p className="text-xs text-emerald-600 font-bold mt-1">{fiatMethod === 'Physical Cash Drop' ? 'Meet at verified location.' : 'Details provided in live chat.'}</p>
                     </div>
                     
                     <div className="border-t border-slate-200 pt-5">
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 text-center">
+                      <label className="ui-label text-center">
                         Upload {fiatMethod === 'Physical Cash Drop' ? 'Signed Cash Receipt' : 'Transfer Screenshot'}
                       </label>
                       <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all ${receiptFile ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-white/40 bg-slate-50'}`}>
@@ -1032,27 +1030,27 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
                   {!scanResult ? (
                     <button 
                       onClick={handleAiScan} disabled={!receiptFile || isScanning}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="ui-btn ui-btn-primary"
                     >
-                      {isScanning ? <><ScanLine className="animate-pulse" size={16}/> Extracting Data...</> : <><ScanLine size={16}/> Scan Proof with IFB AI</>}
+                      {isScanning ? <><ScanLine className="animate-pulse" size={16}/> Extracting Data...</> : <><ScanLine size={16}/> Check receipt</>}
                     </button>
                   ) : (
                     <div className="space-y-4 animate-in slide-in-from-bottom-2">
                       <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest flex items-center gap-1"><CheckCircle2 size={12}/> AI Extracted</span>
-                          <span className="text-[10px] text-emerald-600 font-bold">{scanResult.date}</span>
+                          <span className="text-xs font-semibold text-emerald-500 flex items-center gap-1"><CheckCircle2 size={12}/> AI Extracted</span>
+                          <span className="text-xs text-emerald-600 font-bold">{scanResult.date}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-slate-600">Ref: {scanResult.refId}</span>
-                          <span className="text-lg font-black text-slate-900">${scanResult.detectedAmount}</span>
+                          <span className="text-lg font-bold text-slate-900">${scanResult.detectedAmount}</span>
                         </div>
                       </div>
                       <button 
                         onClick={handleSubmitP2pProof} disabled={isP2pProcessing}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest p-5 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="ui-btn ui-btn-primary"
                       >
-                        {isP2pProcessing ? <Loader2 className="animate-spin" size={16}/> : 'Confirm & Request AFR Mint'}
+                        {isP2pProcessing ? <Loader2 className="animate-spin" size={16}/> : 'Confirm deposit'}
                       </button>
                     </div>
                   )}
@@ -1062,10 +1060,10 @@ export default function DepositInterface({ session, onClose, onSuccess }) {
               {p2pStep === 4 && (
                 <div className="py-10 text-center space-y-4 animate-in zoom-in-95">
                   <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6"><ShieldCheck size={40}/></div>
-                  <h3 className="text-2xl font-black text-slate-900">Proof Sent to Processor</h3>
+                  <h3 className="text-2xl font-bold text-slate-900">Proof Sent to Processor</h3>
                   <p className="text-sm text-slate-500 leading-relaxed px-4">Your receipt has been scanned by the IFB AI and sent to the routing node.</p>
                   <p className="text-xs text-emerald-600 font-bold mt-4">AFR will be minted to your balance upon final processor confirmation.</p>
-                  <div className="pt-8"><button onClick={() => { setActiveTab('HISTORY'); setRoutingMethod(null); setAmount(''); setP2pStep(1); setReceiptFile(null); setScanResult(null); }} className="bg-slate-50 hover:bg-slate-100 text-slate-900 px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors">Track Status</button></div>
+                  <div className="pt-8"><button onClick={() => { setActiveTab('HISTORY'); setRoutingMethod(null); setAmount(''); setP2pStep(1); setReceiptFile(null); setScanResult(null); }} className="bg-slate-50 hover:bg-slate-100 text-slate-900 px-8 py-3 rounded-xl font-semibold text-sm transition-colors">Track Status</button></div>
                 </div>
               )}
             </div>

@@ -56,10 +56,10 @@ export default function DeleteAccountPage({ session }) {
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between p-6">
       <header className="max-w-2xl mx-auto w-full pt-6 pb-4 flex items-center justify-between border-b border-slate-200">
-        <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-xs font-bold uppercase tracking-wider">
+        <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors text-xs font-bold">
           <ArrowLeft size={16} /> Back to DEUS
         </Link>
-        <div className="flex items-center gap-1 font-black text-lg">
+        <div className="flex items-center gap-1 font-bold text-lg">
           <span className="text-blue-500">D</span>
           <span className="text-blue-600">E</span>
           <span className="text-teal-500">U</span>
@@ -73,7 +73,7 @@ export default function DeleteAccountPage({ session }) {
             <Trash2 size={28} />
           </div>
 
-          <h1 className="text-2xl font-black mb-2">Delete Your Account</h1>
+          <h1 className="text-2xl font-bold mb-2">Delete Your Account</h1>
           <p className="text-slate-500 text-sm mb-6 leading-relaxed">
             In compliance with Apple App Store and Google Play Store data safety standards, you can permanently delete your account and personal data at any time.
           </p>
@@ -87,7 +87,7 @@ export default function DeleteAccountPage({ session }) {
               </p>
               <Link
                 to="/"
-                className="inline-block mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-black text-xs uppercase tracking-widest text-white transition-colors"
+                className="inline-block mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold text-xs text-white transition-colors"
               >
                 Return to Login
               </Link>
@@ -115,7 +115,7 @@ export default function DeleteAccountPage({ session }) {
               {!session && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">Registered Email</label>
+                    <label className="ui-label">Registered Email</label>
                     <div className="relative">
                       <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input
@@ -124,13 +124,13 @@ export default function DeleteAccountPage({ session }) {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="your@email.com"
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500"
+                        className="ui-input pl-12 pr-4"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">Account Password</label>
+                    <label className="ui-label">Account Password</label>
                     <div className="relative">
                       <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input
@@ -139,7 +139,7 @@ export default function DeleteAccountPage({ session }) {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm text-slate-900 outline-none focus:border-red-500"
+                        className="ui-input pl-12 pr-4"
                       />
                     </div>
                   </div>
@@ -147,8 +147,8 @@ export default function DeleteAccountPage({ session }) {
               )}
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                  Type <span className="text-red-600 font-black">DELETE</span> to confirm
+                <label className="ui-label">
+                  Type <span className="text-red-600 font-bold">DELETE</span> to confirm
                 </label>
                 <input
                   type="text"
@@ -156,14 +156,14 @@ export default function DeleteAccountPage({ session }) {
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder="DELETE"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-black text-red-600 outline-none focus:border-red-500 uppercase tracking-widest"
+                  className="ui-input"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading || confirmText !== 'DELETE'}
-                className="w-full py-4 bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-red-900/20 flex items-center justify-center gap-2"
+                className="ui-btn ui-btn-danger w-full"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                 Permanently Delete My Account

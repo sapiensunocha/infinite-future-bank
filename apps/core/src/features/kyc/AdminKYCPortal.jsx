@@ -140,10 +140,10 @@ function LoginView({ onLogin }) {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-1 mb-6">
             {['D','E','U','S'].map((l,i) => (
-              <span key={l} className="text-5xl font-black" style={{ color: ['#4285F4','#EA4335','#FBBC04','#34A853'][i] }}>{l}</span>
+              <span key={l} className="text-5xl font-bold" style={{ color: ['#4285F4','#EA4335','#FBBC04','#34A853'][i] }}>{l}</span>
             ))}
           </div>
-          <h1 className="text-2xl font-black text-slate-900">KYC Admin Portal</h1>
+          <h1 className="text-2xl font-bold text-slate-900">KYC Admin Portal</h1>
           <p className="text-slate-500 text-sm mt-2">Restricted access — authorized personnel only</p>
         </div>
 
@@ -203,7 +203,7 @@ function LoginView({ onLogin }) {
             </div>
 
             <button type="submit" disabled={loading || !accepted}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl transition-all flex items-center justify-center gap-2">
+              className="ui-btn ui-btn-primary">
               {loading ? <><RefreshCw size={16} className="animate-spin" /> Authenticating...</> : <><Shield size={16} /> Secure Access</>}
             </button>
           </form>
@@ -262,7 +262,7 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
         ].map(s => (
           <div key={s.label} className={card}>
             <s.icon size={20} className={s.color + ' mb-3'} />
-            <p className="text-2xl font-black text-slate-900">{s.value}</p>
+            <p className="text-2xl font-bold text-slate-900">{s.value}</p>
             <p className="text-xs text-slate-500 mt-1">{s.label}</p>
           </div>
         ))}
@@ -281,7 +281,7 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
           {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
         <button onClick={onNewProject}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-5 py-3 rounded-xl transition-all">
+          className="ui-btn ui-btn-primary w-auto">
           <Plus size={16} /> New Project
         </button>
       </div>
@@ -309,12 +309,12 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <p className="font-black text-slate-900">{p.founder_name}</p>
-                      <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${sc.color} bg-opacity-20 ${sc.text}`}>
+                      <p className="font-bold text-slate-900">{p.founder_name}</p>
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${sc.color} bg-opacity-20 ${sc.text}`}>
                         {sc.label}
                       </span>
                       {p.venturex_stage && (
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
                           {p.venturex_stage}
                         </span>
                       )}
@@ -327,7 +327,7 @@ function ProjectsView({ adminSession, onNewProject, onSelectProject }) {
                       {p.funding_amount_needed && <><span>·</span><span>{p.funding_currency} {Number(p.funding_amount_needed).toLocaleString()}</span></>}
                       <span>·</span>
                       <span>{docs} doc{docs !== 1 ? 's' : ''}</span>
-                      {paid && <><span>·</span><span className="text-emerald-600">✓ Paid</span></>}
+                      {paid && <><span>·</span><span className="text-emerald-600">Paid</span></>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-slate-500 group-hover:text-slate-600 transition-colors">
@@ -524,7 +524,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
       )}
 
       <div className={card}>
-        <h2 className="text-lg font-black text-slate-900 mb-6">{steps[step].title}</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-6">{steps[step].title}</h2>
 
         {/* STEP 0: Founder */}
         {step === 0 && (
@@ -679,7 +679,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                         <p className="text-slate-900 text-sm font-bold">{t.label}</p>
                         <p className="text-slate-500 text-xs">{t.description}</p>
                       </div>
-                      <p className="text-slate-600 text-sm font-black">
+                      <p className="text-slate-600 text-sm font-bold">
                         {t.max ? `${t.min.toLocaleString()} – ${t.max.toLocaleString()}` : `${t.min.toLocaleString()}+`}
                       </p>
                     </div>
@@ -750,7 +750,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                         <p className="text-slate-500 text-xs">{t.description}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-slate-900 font-black text-sm">
+                        <p className="text-slate-900 font-bold text-sm">
                           {form.funding_currency} {t.min.toLocaleString()}{t.max ? ` – ${t.max.toLocaleString()}` : '+'}
                         </p>
                         {form.payment_tier === t.id && <Check size={14} className="text-blue-600 ml-auto" />}
@@ -827,7 +827,7 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
                 ['Create Account', form.create_user_account ? 'Yes — invite will be sent' : 'No'],
               ].map(([k, v]) => (
                 <div key={k} className="bg-slate-50 rounded-xl p-4">
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider mb-1">{k}</p>
+                  <p className="text-slate-500 text-xs font-semibold mb-1">{k}</p>
                   <p className="text-slate-900 text-sm font-semibold">{v}</p>
                 </div>
               ))}
@@ -855,12 +855,12 @@ function NewProjectForm({ adminSession, onSuccess, onCancel }) {
 
         {step < steps.length - 1 ? (
           <button onClick={next}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-black text-sm px-6 py-3 rounded-xl transition-all">
+            className="ui-btn ui-btn-primary w-auto">
             Continue <ChevronRight size={16} />
           </button>
         ) : (
           <button onClick={submit} disabled={saving}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-sm px-6 py-3 rounded-xl transition-all">
+            className="ui-btn ui-btn-primary w-auto">
             {saving ? <><RefreshCw size={16} className="animate-spin" /> Submitting...</> : <><CheckCircle2 size={16} /> Register Project</>}
           </button>
         )}
@@ -937,15 +937,15 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
           <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-bold mb-3 transition-colors">
             <ArrowLeft size={16} /> All Projects
           </button>
-          <h2 className="text-2xl font-black text-slate-900">{project.founder_name}</h2>
+          <h2 className="text-2xl font-bold text-slate-900">{project.founder_name}</h2>
           <p className="text-slate-500 text-sm">{project.founder_email}</p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <span className={`text-xs font-black uppercase tracking-wide px-3 py-1.5 rounded-full ${sc.color} bg-opacity-20 ${sc.text}`}>
+          <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${sc.color} bg-opacity-20 ${sc.text}`}>
             {sc.label}
           </span>
           {project.venturex_stage && (
-            <span className="text-xs font-black uppercase tracking-wide px-3 py-1.5 rounded-full bg-blue-50 text-blue-600">
+            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-blue-50 text-blue-600">
               {project.venturex_stage}
             </span>
           )}
@@ -979,7 +979,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
               ['Registered By', project.registered_by],
             ].map(([k,v]) => (
               <div key={k} className="bg-white rounded-xl p-4">
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider mb-1">{k}</p>
+                <p className="text-slate-500 text-xs font-semibold mb-1">{k}</p>
                 <p className="text-slate-900 text-sm font-semibold">{v}</p>
               </div>
             ))}
@@ -1043,10 +1043,10 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
               return (
                 <div key={s.id} className={`flex items-center gap-4 p-5 rounded-2xl border-2 transition-all ${isCurrent ? 'border-blue-500 bg-blue-50' : isPast ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isCurrent ? s.color : isPast ? 'bg-emerald-500' : 'bg-slate-50'}`}>
-                    {isPast ? <Check size={18} className="text-slate-900" /> : <span className="text-slate-900 font-black">{i + 1}</span>}
+                    {isPast ? <Check size={18} className="text-slate-900" /> : <span className="text-slate-900 font-bold">{i + 1}</span>}
                   </div>
                   <div className="flex-1">
-                    <p className={`font-black text-sm ${isCurrent ? 'text-slate-900' : isPast ? 'text-emerald-600' : 'text-slate-500'}`}>{s.label}</p>
+                    <p className={`font-bold text-sm ${isCurrent ? 'text-slate-900' : isPast ? 'text-emerald-600' : 'text-slate-500'}`}>{s.label}</p>
                     <p className="text-slate-500 text-xs mt-0.5">{s.desc}</p>
                   </div>
                   {!isCurrent && project.status === 'in_pipeline' && (
@@ -1056,7 +1056,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
                       Set
                     </button>
                   )}
-                  {isCurrent && <span className="text-blue-600 text-xs font-black">CURRENT</span>}
+                  {isCurrent && <span className="text-blue-600 text-xs font-bold">CURRENT</span>}
                 </div>
               );
             })}
@@ -1119,9 +1119,9 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
                 <div key={p.id} className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-3">
                     <CheckCircle2 size={20} className="text-emerald-600" />
-                    <span className="text-emerald-600 text-xs font-black uppercase">Completed</span>
+                    <span className="text-emerald-600 text-xs font-semibold">Completed</span>
                   </div>
-                  <p className="text-2xl font-black text-slate-900">{p.currency} {Number(p.amount).toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-slate-900">{p.currency} {Number(p.amount).toLocaleString()}</p>
                   <p className="text-slate-500 text-sm mt-1 capitalize">{p.payment_method} · {p.tier} tier</p>
                   {p.paid_at && <p className="text-slate-500 text-xs mt-2">{new Date(p.paid_at).toLocaleString()}</p>}
                 </div>
@@ -1140,7 +1140,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
 
           {showPayForm && (
             <div className={card}>
-              <h3 className="text-slate-900 font-black mb-5">Record Payment</h3>
+              <h3 className="text-slate-900 font-bold mb-5">Record Payment</h3>
               <div className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <Field label="Tier" required>
@@ -1168,7 +1168,7 @@ function ProjectDetail({ project: initialProject, adminSession, onBack, onUpdate
                 <div className="flex gap-3">
                   <button onClick={() => setShowPayForm(false)} className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:border-slate-500 transition-all">Cancel</button>
                   <button onClick={recordPayment} disabled={saving}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-sm py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                    className="ui-btn ui-btn-primary flex-1">
                     {saving ? <RefreshCw size={16} className="animate-spin" /> : <><CheckCircle2 size={16} /> Confirm Payment</>}
                   </button>
                 </div>
@@ -1210,7 +1210,7 @@ export default function AdminKYCPortal() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             {['D','E','U','S'].map((l,i) => (
-              <span key={l} className="text-xl font-black" style={{ color: ['#4285F4','#EA4335','#FBBC04','#34A853'][i] }}>{l}</span>
+              <span key={l} className="text-xl font-bold" style={{ color: ['#4285F4','#EA4335','#FBBC04','#34A853'][i] }}>{l}</span>
             ))}
           </div>
           <div className="w-px h-5 bg-slate-100" />

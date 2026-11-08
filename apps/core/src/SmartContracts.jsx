@@ -109,12 +109,12 @@ export default function SmartContracts({ session, balances, fetchAllData }) {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Smart Contracts</h2>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Trustless Escrow Agreements · 0.5% Platform Fee</p>
+          <h2 className="text-2xl font-bold text-slate-800">Smart Contracts</h2>
+          <p className="text-xs font-bold text-slate-500 mt-1">Trustless Escrow Agreements · 0.5% Platform Fee</p>
         </div>
         <button
           onClick={() => setShowNew(!showNew)}
-          className="bg-blue-600 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-500 shadow-md"
+          className="ui-btn ui-btn-primary w-auto"
         >
           <Plus size={16}/> New Agreement
         </button>
@@ -122,30 +122,30 @@ export default function SmartContracts({ session, balances, fetchAllData }) {
 
       {showNew && (
         <form onSubmit={handleCreate} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-slate-900 space-y-4 animate-in slide-in-from-top-4">
-          <h3 className="font-black mb-2 flex items-center gap-2">
+          <h3 className="font-bold mb-2 flex items-center gap-2">
             <Lock size={18} className="text-amber-600"/> Initialize & Lock Funds
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               required type="text" placeholder="Service / Milestone Title"
               value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-              className="bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-bold text-sm"
+              className="ui-input"
             />
             <input
               required type="email" placeholder="Provider's Email Address"
               value={form.providerEmail} onChange={e => setForm({ ...form, providerEmail: e.target.value })}
-              className="bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-bold text-sm"
+              className="ui-input"
             />
           </div>
           <textarea
             required placeholder="Condition of Release (What must be delivered?)"
             value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-bold text-sm h-24"
+            className="ui-textarea h-24"
           />
           <input
             required type="number" min="1" step="0.01" placeholder="Amount to Lock in USD"
             value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none font-black text-2xl text-center"
+            className="ui-input text-2xl text-center h-16"
           />
 
           {previewFee > 0 && (
@@ -159,15 +159,15 @@ export default function SmartContracts({ session, balances, fetchAllData }) {
                 <span className="font-bold text-amber-600">${previewFee.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm border-t border-slate-200 pt-2">
-                <span className="font-black text-slate-900">Total Deducted</span>
-                <span className="font-black text-slate-900">${previewTotal.toFixed(2)}</span>
+                <span className="font-bold text-slate-900">Total taken from your balance</span>
+                <span className="font-bold text-slate-900">${previewTotal.toFixed(2)}</span>
               </div>
             </div>
           )}
 
           <button
             type="submit" disabled={isLoading}
-            className="w-full bg-emerald-600 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            className="ui-btn ui-btn-primary"
           >
             {isLoading
               ? <><Loader2 size={16} className="animate-spin"/> Processing…</>
@@ -183,31 +183,31 @@ export default function SmartContracts({ session, balances, fetchAllData }) {
             <div key={c.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-black text-slate-800">{c.title}</h4>
+                  <h4 className="font-bold text-slate-800">{c.title}</h4>
                   {c.status === 'active_locked'
-                    ? <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded">Locked</span>
-                    : <span className="bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded">Completed</span>}
+                    ? <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-1 rounded">Locked</span>
+                    : <span className="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded">Completed</span>}
                 </div>
                 <p className="text-xs font-bold text-slate-400">
                   Role: {isCreator ? 'Requestor (Payer)' : 'Provider (Payee)'} · Counterparty: {isCreator ? c.provider_email : 'Verified Requestor'}
                 </p>
                 {c.platform_fee > 0 && (
-                  <p className="text-[10px] text-slate-400 mt-0.5">Escrow fee: ${c.platform_fee?.toFixed(2)}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Escrow fee: ${c.platform_fee?.toFixed(2)}</p>
                 )}
                 <p className="text-sm text-slate-600 mt-2 font-medium bg-slate-50 p-2 rounded border border-slate-100">{c.description}</p>
               </div>
               <div className="text-right w-full md:w-auto shrink-0">
-                <p className="text-2xl font-black text-slate-800 mb-2">${c.amount}</p>
+                <p className="text-2xl font-bold text-slate-800 mb-2">${c.amount}</p>
                 {c.status === 'active_locked' && isCreator && (
                   <button
                     onClick={() => handleRelease(c.id)} disabled={isLoading}
-                    className="w-full md:w-auto bg-emerald-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 flex items-center justify-center gap-1 disabled:opacity-60"
+                    className="ui-btn ui-btn-primary md:w-auto"
                   >
                     <Unlock size={14}/> Accept & Release
                   </button>
                 )}
                 {c.status === 'active_locked' && !isCreator && (
-                  <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1">
+                  <p className="text-xs font-bold text-amber-500 flex items-center gap-1">
                     <Lock size={12}/> Awaiting Requestor
                   </p>
                 )}

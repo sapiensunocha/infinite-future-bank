@@ -1050,14 +1050,14 @@ function StepBar({ step }) {
       {steps.map((s, i) => (
         <div key={s} className="flex items-center gap-1">
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all ${
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
               i < step ? 'bg-emerald-500 text-white' :
               i === step ? 'bg-indigo-600 text-white ring-2 ring-indigo-400/40' :
               'bg-slate-800 text-slate-500'
             }`}>
               {i < step ? <Check size={10}/> : i + 1}
             </div>
-            <span className={`text-[9px] font-black uppercase tracking-widest hidden sm:block ${i === step ? 'text-white' : i < step ? 'text-slate-400' : 'text-slate-600'}`}>{s}</span>
+            <span className={`text-xs font-semibold hidden sm:block ${i === step ? 'text-white' : i < step ? 'text-slate-400' : 'text-slate-600'}`}>{s}</span>
           </div>
           {i < steps.length - 1 && (
             <div className={`w-6 md:w-10 h-px mx-1 ${i < step ? 'bg-emerald-500' : 'bg-slate-700'}`}/>
@@ -1075,15 +1075,15 @@ function LandingPage({ onStart }) {
     <div className="space-y-10 animate-in fade-in duration-500">
 
       {/* Hero */}
-      <div className="relative bg-white border border-slate-200 rounded-[3rem] overflow-hidden p-10 md:p-16 text-slate-900">
+      <div className="relative bg-white border border-slate-200 rounded-3xl overflow-hidden p-10 md:p-16 text-slate-900">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-violet-50 pointer-events-none"/>
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-indigo-50 rounded-full blur-3xl"/>
         <div className="absolute -left-10 -bottom-10 w-60 h-60 bg-violet-50 rounded-full blur-3xl"/>
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-full text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-full text-indigo-600 text-xs font-semibold mb-6">
             <Globe size={12}/> IFB Global Company Formation
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
             Register Your Company in<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">Any Country. We Handle Everything.</span>
           </h1>
@@ -1092,7 +1092,7 @@ function LandingPage({ onStart }) {
           </p>
           <div className="flex flex-wrap items-center gap-4">
             <button onClick={onStart}
-              className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black rounded-2xl text-sm uppercase tracking-widest flex items-center gap-2 transition-all shadow-xl shadow-indigo-900/40 hover:scale-105 active:scale-95">
+              className="ui-btn ui-btn-primary w-auto">
               <Rocket size={18}/> Start Incorporating
             </button>
             <div className="flex items-center gap-2 text-slate-500 text-sm font-bold">
@@ -1112,19 +1112,19 @@ function LandingPage({ onStart }) {
         ].map(stat => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="bg-white border border-slate-200 p-6 rounded-[2rem] text-center shadow-sm">
+            <div key={stat.label} className="bg-white border border-slate-200 p-6 rounded-2xl text-center shadow-sm">
               <Icon size={22} className="mx-auto mb-2 text-indigo-500"/>
-              <div className="text-3xl font-black text-slate-900">{stat.value}</div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">{stat.label}</div>
-              <div className="text-[9px] text-slate-400">{stat.sub}</div>
+              <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
+              <div className="text-xs font-semibold text-slate-500 mt-1">{stat.label}</div>
+              <div className="text-xs text-slate-400">{stat.sub}</div>
             </div>
           );
         })}
       </div>
 
       {/* Why IFB */}
-      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10">
-        <h2 className="text-2xl font-black text-slate-900 mb-2">Why form through IFB?</h2>
+      <div className="bg-white border border-slate-200 rounded-3xl p-10">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Why form through IFB?</h2>
         <p className="text-slate-500 text-sm mb-8 max-w-2xl">Doing it yourself means navigating foreign government portals, hiring local lawyers, and managing ongoing compliance in a country you may never have visited. IFB compresses months of work into days.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
@@ -1142,7 +1142,7 @@ function LandingPage({ onStart }) {
                   <Icon size={18} className="text-indigo-500"/>
                 </div>
                 <div>
-                  <h3 className="font-black text-slate-900 text-sm mb-1">{item.title}</h3>
+                  <h3 className="font-bold text-slate-900 text-sm mb-1">{item.title}</h3>
                   <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
                 </div>
               </div>
@@ -1155,10 +1155,10 @@ function LandingPage({ onStart }) {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-black text-slate-900">Available Jurisdictions</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Available Jurisdictions</h2>
             <p className="text-slate-500 text-sm mt-1">55+ countries · 75+ company structures · Starting from $599</p>
           </div>
-          <button onClick={onStart} className="text-xs font-black text-indigo-600 hover:text-indigo-500 flex items-center gap-1 uppercase tracking-widest transition-colors">
+          <button onClick={onStart} className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 flex items-center gap-1 transition-colors">
             Explore all <ChevronRight size={14}/>
           </button>
         </div>
@@ -1166,11 +1166,11 @@ function LandingPage({ onStart }) {
           {COUNTRIES.filter(c => c.popular).map(c => (
             <button key={c.code} onClick={onStart}
               className={`bg-white border rounded-2xl p-4 text-left hover:border-indigo-400 hover:shadow-md hover:scale-105 transition-all active:scale-95 ${c.popular ? 'border-indigo-200 shadow-sm' : 'border-slate-200'}`}>
-              {c.popular && <div className="text-[8px] font-black uppercase tracking-widest text-indigo-500 mb-1">Popular</div>}
+              {c.popular && <div className="text-xs font-semibold text-indigo-500 mb-1">Popular</div>}
               <div className="text-3xl mb-2">{c.flag}</div>
-              <div className="font-black text-slate-900 text-sm leading-tight">{c.name}</div>
-              <div className="text-[10px] text-emerald-600 font-black mt-1.5">From {fmtUSD(c.starting_from)}</div>
-              <div className="text-[9px] text-slate-400 font-bold mt-0.5">{c.formation_time}</div>
+              <div className="font-bold text-slate-900 text-sm leading-tight">{c.name}</div>
+              <div className="text-xs text-emerald-600 font-bold mt-1.5">From {fmtUSD(c.starting_from)}</div>
+              <div className="text-xs text-slate-400 font-bold mt-0.5">{c.formation_time}</div>
             </button>
           ))}
         </div>
@@ -1178,19 +1178,19 @@ function LandingPage({ onStart }) {
 
       {/* Package preview */}
       <div>
-        <h2 className="text-2xl font-black text-slate-900 mb-2">IFB Service Packages</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">IFB Service Packages</h2>
         <p className="text-slate-500 text-sm mb-6">All packages include the complete legal formation. Higher tiers add banking, compliance management, and a dedicated advisor.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {IFB_PACKAGES.map(pkg => {
             const Icon = pkg.icon;
             return (
-              <div key={pkg.id} className={`relative bg-white border rounded-[2rem] p-8 ${pkg.popular ? 'border-blue-400 shadow-lg shadow-blue-50' : 'border-slate-200'}`}>
-                {pkg.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full whitespace-nowrap">Most Popular</div>}
-                {pkg.badge && !pkg.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full whitespace-nowrap">{pkg.badge}</div>}
+              <div key={pkg.id} className={`relative bg-white border rounded-2xl p-8 ${pkg.popular ? 'border-blue-400 shadow-lg' : 'border-slate-200'}`}>
+                {pkg.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full whitespace-nowrap">Most Popular</div>}
+                {pkg.badge && !pkg.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-violet-600 text-white text-xs font-semibold rounded-full whitespace-nowrap">{pkg.badge}</div>}
                 <Icon size={28} className={`${pkg.textColor} mb-3`}/>
-                <div className={`text-[10px] font-black uppercase tracking-widest ${pkg.textColor} mb-1`}>{pkg.name}</div>
-                <div className="font-black text-slate-900 text-lg mb-1">{pkg.subtitle}</div>
-                <div className="text-sm font-black text-slate-500 mb-4">
+                <div className={`text-xs font-semibold ${pkg.textColor} mb-1`}>{pkg.name}</div>
+                <div className="font-bold text-slate-900 text-lg mb-1">{pkg.subtitle}</div>
+                <div className="text-sm font-bold text-slate-500 mb-4">
                   {pkg.price_addon === 0 ? 'Included in formation price' : `+ ${fmtUSD(pkg.price_addon)} service add-on`}
                 </div>
                 <ul className="space-y-2">
@@ -1200,7 +1200,7 @@ function LandingPage({ onStart }) {
                     </li>
                   ))}
                   {pkg.features.length > 4 && (
-                    <li className="text-[10px] text-slate-400 font-black">+ {pkg.features.length - 4} more included</li>
+                    <li className="text-xs text-slate-400 font-bold">+ {pkg.features.length - 4} more included</li>
                   )}
                 </ul>
               </div>
@@ -1210,12 +1210,12 @@ function LandingPage({ onStart }) {
       </div>
 
       {/* Final CTA */}
-      <div className="bg-gradient-to-r from-indigo-950 to-violet-950 border border-indigo-800/50 rounded-[2.5rem] p-10 md:p-16 text-center text-white">
+      <div className="bg-gradient-to-r from-indigo-950 to-violet-950 border border-indigo-800/50 rounded-3xl p-10 md:p-16 text-center text-white">
         <Building2 size={40} className="mx-auto text-indigo-400 mb-4"/>
-        <h2 className="text-3xl font-black mb-3">Ready to establish your global presence?</h2>
+        <h2 className="text-3xl font-bold mb-3">Ready to establish your global presence?</h2>
         <p className="text-slate-400 mb-8 max-w-md mx-auto">Your formation is 5 simple steps away. Average time to submit: under 10 minutes.</p>
         <button onClick={onStart}
-          className="px-12 py-5 bg-white text-indigo-900 font-black rounded-2xl text-sm uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-2xl hover:scale-105 active:scale-95">
+          className="px-12 py-5 bg-white text-indigo-900 font-semibold rounded-2xl text-sm hover:bg-indigo-50 transition-all shadow-2xl hover:scale-105 active:scale-95">
           Choose Your Country — Start Now
         </button>
       </div>
@@ -1237,7 +1237,7 @@ function CountryStep({ selected, onSelect, onNext, onBack }) {
   return (
     <div className="space-y-5 animate-in slide-in-from-right-4">
       <div>
-        <h2 className="text-2xl font-black text-white mb-1">Where will you incorporate?</h2>
+        <h2 className="text-2xl font-bold text-white mb-1">Where will you incorporate?</h2>
         <p className="text-sm text-slate-400">Choose the country that best fits your tax strategy, target market, and business model.</p>
       </div>
 
@@ -1245,15 +1245,15 @@ function CountryStep({ selected, onSelect, onNext, onBack }) {
       <input
         value={search} onChange={e => setSearch(e.target.value)}
         placeholder="Search country or keyword (e.g. 0% tax, fintech, manufacturing)…"
-        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-indigo-500 placeholder-slate-600 transition-colors"
+        className="ui-input"
       />
 
       {/* Region tabs */}
       <div className="flex flex-wrap gap-2">
         {REGIONS.map(r => (
           <button key={r} onClick={() => setRegion(r)}
-            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              region === r ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+            className={`px-3 py-1.5 rounded-xl text-sm font-semibold transition-all ${
+              region === r ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
             }`}>
             {r}
           </button>
@@ -1273,19 +1273,19 @@ function CountryStep({ selected, onSelect, onNext, onBack }) {
             <div className="text-3xl shrink-0">{country.flag}</div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-black text-white">{country.name}</span>
+                <span className="font-bold text-white">{country.name}</span>
                 {country.popular && (
-                  <span className="px-2 py-0.5 bg-indigo-900/60 text-indigo-300 text-[8px] font-black uppercase tracking-widest rounded-full border border-indigo-700/50">Popular</span>
+                  <span className="px-2 py-0.5 bg-indigo-900/60 text-indigo-300 text-xs font-semibold rounded-full border border-indigo-700/50">Popular</span>
                 )}
               </div>
               <p className="text-xs text-slate-400 mb-2">{country.headline}</p>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {country.tags.map(tag => (
-                  <span key={tag} className="px-2 py-0.5 bg-slate-700/60 text-slate-300 text-[9px] font-black rounded-md">{tag}</span>
+                  <span key={tag} className="px-2 py-0.5 bg-slate-700/60 text-slate-300 text-xs font-bold rounded-md">{tag}</span>
                 ))}
               </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px]">
-                <span className="text-emerald-400 font-black">From {fmtUSD(country.starting_from)}</span>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                <span className="text-emerald-400 font-bold">From {fmtUSD(country.starting_from)}</span>
                 <span className="text-slate-500 font-bold flex items-center gap-1"><Clock size={10}/>{country.formation_time}</span>
                 <span className="text-slate-500 font-bold">{country.tax_note}</span>
               </div>
@@ -1299,11 +1299,11 @@ function CountryStep({ selected, onSelect, onNext, onBack }) {
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-semibold rounded-2xl text-xs flex items-center gap-2 transition-all">
           <ArrowLeft size={14}/> Overview
         </button>
         <button onClick={onNext} disabled={!selected}
-          className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+          className="ui-btn ui-btn-primary flex-1">
           Select Company Type <ChevronRight size={14}/>
         </button>
       </div>
@@ -1321,9 +1321,9 @@ function EntityStep({ country, selected, onSelect, onNext, onBack }) {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <span className="text-2xl">{country.flag}</span>
-          <span className="text-slate-400 font-black text-sm">{country.name}</span>
+          <span className="text-slate-400 font-bold text-sm">{country.name}</span>
         </div>
-        <h2 className="text-2xl font-black text-white mb-1">Choose your company structure</h2>
+        <h2 className="text-2xl font-bold text-white mb-1">Choose your company structure</h2>
         <p className="text-sm text-slate-400">Each structure has different tax implications, liability protections, and investor appeal. Click to expand details.</p>
       </div>
       <div className="space-y-4">
@@ -1339,13 +1339,13 @@ function EntityStep({ country, selected, onSelect, onNext, onBack }) {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 flex-wrap mb-1">
-                      <span className="font-black text-white">{type.name}</span>
-                      {type.badge && <span className="text-[9px] font-black text-amber-400">{type.badge}</span>}
-                      {type.popular && <span className="px-2 py-0.5 bg-emerald-900/40 text-emerald-400 text-[8px] font-black uppercase tracking-widest rounded-full border border-emerald-700/40">Popular</span>}
+                      <span className="font-bold text-white">{type.name}</span>
+                      {type.badge && <span className="text-xs font-bold text-amber-400">{type.badge}</span>}
+                      {type.popular && <span className="px-2 py-0.5 bg-emerald-900/40 text-emerald-400 text-xs font-semibold rounded-full border border-emerald-700/40">Popular</span>}
                     </div>
                     <p className="text-xs text-slate-400 leading-relaxed mb-3">{type.description}</p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px]">
-                      <span className="text-emerald-400 font-black text-sm">{fmtUSD(type.price)}</span>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                      <span className="text-emerald-400 font-bold text-sm">{fmtUSD(type.price)}</span>
                       <span className="text-slate-500 font-bold">Annual: {type.annual_cost}</span>
                       <span className="text-slate-500 font-bold">Min. capital: {type.min_capital}</span>
                       <span className="text-slate-500 font-bold flex items-center gap-1"><Clock size={10}/>{type.formation_time}</span>
@@ -1361,7 +1361,7 @@ function EntityStep({ country, selected, onSelect, onNext, onBack }) {
                 <div className="px-5 pb-5 border-t border-slate-700/50 pt-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Included advantages</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-3">Included advantages</p>
                       <ul className="space-y-1.5">
                         {type.pros.map(pro => (
                           <li key={pro} className="flex items-start gap-2 text-xs text-slate-300">
@@ -1371,7 +1371,7 @@ function EntityStep({ country, selected, onSelect, onNext, onBack }) {
                       </ul>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Ideal for</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-3">Ideal for</p>
                       <p className="text-xs text-slate-400 leading-relaxed">{type.ideal_for}</p>
                     </div>
                   </div>
@@ -1382,11 +1382,11 @@ function EntityStep({ country, selected, onSelect, onNext, onBack }) {
         })}
       </div>
       <div className="flex gap-3">
-        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-semibold rounded-2xl text-xs flex items-center gap-2 transition-all">
           <ArrowLeft size={14}/> Back
         </button>
         <button onClick={onNext} disabled={!selected}
-          className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+          className="ui-btn ui-btn-primary flex-1">
           Choose Service Package <ChevronRight size={14}/>
         </button>
       </div>
@@ -1400,7 +1400,7 @@ function PackageStep({ basePrice, selected, onSelect, onNext, onBack }) {
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4">
       <div>
-        <h2 className="text-2xl font-black text-white mb-1">Choose your IFB service package</h2>
+        <h2 className="text-2xl font-bold text-white mb-1">Choose your IFB service package</h2>
         <p className="text-sm text-slate-400">All packages include the full legal formation. Higher tiers add banking setup, compliance management, and a dedicated advisor.</p>
       </div>
       <div className="space-y-4">
@@ -1413,8 +1413,8 @@ function PackageStep({ basePrice, selected, onSelect, onNext, onBack }) {
               className={`w-full p-6 rounded-2xl border text-left transition-all relative ${
                 isSelected ? `${pkg.borderColor} ${pkg.bgColor}` : 'border-slate-700 bg-slate-800/20 hover:border-slate-600'
               }`}>
-              {pkg.popular && <div className="absolute -top-2.5 left-6 px-3 py-0.5 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full">Most Popular</div>}
-              {pkg.badge && <div className="absolute -top-2.5 right-6 px-3 py-0.5 bg-violet-600 text-white text-[8px] font-black uppercase tracking-widest rounded-full">{pkg.badge}</div>}
+              {pkg.popular && <div className="absolute -top-2.5 left-6 px-3 py-0.5 bg-blue-600 text-white text-xs font-semibold rounded-full">Most Popular</div>}
+              {pkg.badge && <div className="absolute -top-2.5 right-6 px-3 py-0.5 bg-violet-600 text-white text-xs font-semibold rounded-full">{pkg.badge}</div>}
               <div className="flex items-start gap-4">
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${isSelected ? `${pkg.borderColor} bg-indigo-600` : 'border-slate-600'}`}>
                   {isSelected && <Check size={10} className="text-white"/>}
@@ -1424,20 +1424,20 @@ function PackageStep({ basePrice, selected, onSelect, onNext, onBack }) {
                     <div className="flex items-center gap-3">
                       <Icon size={20} className={pkg.textColor}/>
                       <div>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${pkg.textColor}`}>{pkg.name}</p>
-                        <p className="text-white font-black">{pkg.subtitle}</p>
+                        <p className={`text-xs font-semibold ${pkg.textColor}`}>{pkg.name}</p>
+                        <p className="text-white font-bold">{pkg.subtitle}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-2xl font-black text-white">{fmtUSD(totalPrice)}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
+                      <p className="text-2xl font-bold text-white">{fmtUSD(totalPrice)}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {pkg.price_addon === 0 ? 'No extra fee' : `+${fmtUSD(pkg.price_addon)} service`}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 mb-4">
                     <Clock size={12} className="text-slate-500"/>
-                    <span className="text-[10px] text-slate-400 font-bold">{pkg.processing}</span>
+                    <span className="text-xs text-slate-400 font-bold">{pkg.processing}</span>
                   </div>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                     {pkg.features.map(f => (
@@ -1446,7 +1446,7 @@ function PackageStep({ basePrice, selected, onSelect, onNext, onBack }) {
                       </li>
                     ))}
                   </ul>
-                  <p className={`mt-3 text-[10px] ${pkg.textColor} font-bold italic`}>{pkg.note}</p>
+                  <p className={`mt-3 text-xs ${pkg.textColor} font-bold italic`}>{pkg.note}</p>
                 </div>
               </div>
             </button>
@@ -1454,11 +1454,11 @@ function PackageStep({ basePrice, selected, onSelect, onNext, onBack }) {
         })}
       </div>
       <div className="flex gap-3">
-        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-semibold rounded-2xl text-xs flex items-center gap-2 transition-all">
           <ArrowLeft size={14}/> Back
         </button>
         <button onClick={onNext} disabled={!selected}
-          className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+          className="ui-btn ui-btn-primary flex-1">
           Enter Company Details <ChevronRight size={14}/>
         </button>
       </div>
@@ -1473,7 +1473,7 @@ function DetailsStep({ form, setForm, onNext, onBack }) {
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4">
       <div>
-        <h2 className="text-2xl font-black text-white mb-1">Company details</h2>
+        <h2 className="text-2xl font-bold text-white mb-1">Company details</h2>
         <p className="text-sm text-slate-400">This information is used for the official government registration. Use your full legal name as it appears on your passport or national ID.</p>
       </div>
       <div className="space-y-4">
@@ -1481,16 +1481,16 @@ function DetailsStep({ form, setForm, onNext, onBack }) {
           <div>
             <label className="label-xs">Your Full Legal Name *</label>
             <input value={form.founder_name} onChange={e => setForm(p => ({...p, founder_name: e.target.value}))}
-              placeholder="As on your passport / ID" className="input-dark" required/>
+              placeholder="As on your passport / ID" className="ui-input" required/>
           </div>
           <div>
             <label className="label-xs">Desired Company Name *</label>
             <input value={form.business_name} onChange={e => setForm(p => ({...p, business_name: e.target.value}))}
-              placeholder="e.g. Apex Global Solutions" className="input-dark" required/>
+              placeholder="e.g. Apex Global Solutions" className="ui-input" required/>
           </div>
           <div>
             <label className="label-xs">Industry / Business Type *</label>
-            <select value={form.industry} onChange={e => setForm(p => ({...p, industry: e.target.value}))} className="input-dark">
+            <select value={form.industry} onChange={e => setForm(p => ({...p, industry: e.target.value}))} className="ui-select">
               <option value="">— Select Industry —</option>
               {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
             </select>
@@ -1498,14 +1498,14 @@ function DetailsStep({ form, setForm, onNext, onBack }) {
           <div>
             <label className="label-xs">Contact Email *</label>
             <input type="email" value={form.contact_email} onChange={e => setForm(p => ({...p, contact_email: e.target.value}))}
-              placeholder="For formation updates and certificate delivery" className="input-dark" required/>
+              placeholder="For formation updates and certificate delivery" className="ui-input" required/>
           </div>
         </div>
         <div>
           <label className="label-xs">Additional Notes (optional)</label>
           <textarea value={form.additional_notes} onChange={e => setForm(p => ({...p, additional_notes: e.target.value}))}
             placeholder="Any specific requirements, intended business activities, or special instructions for our team..."
-            rows={3} className="input-dark resize-none"/>
+            rows={3} className="ui-textarea resize-none"/>
         </div>
       </div>
       <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 flex items-start gap-3">
@@ -1515,11 +1515,11 @@ function DetailsStep({ form, setForm, onNext, onBack }) {
         </p>
       </div>
       <div className="flex gap-3">
-        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-semibold rounded-2xl text-xs flex items-center gap-2 transition-all">
           <ArrowLeft size={14}/> Back
         </button>
         <button onClick={onNext} disabled={!valid}
-          className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+          className="ui-btn ui-btn-primary flex-1">
           Review & Pay <ChevronRight size={14}/>
         </button>
       </div>
@@ -1537,28 +1537,28 @@ function PayStep({ country, entityType, pkg, form, balance, onConfirm, onBack, p
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 max-w-xl mx-auto">
       <div>
-        <h2 className="text-2xl font-black text-white mb-1">Review your order</h2>
+        <h2 className="text-2xl font-bold text-white mb-1">Review your order</h2>
         <p className="text-sm text-slate-400">Confirm the details below. Payment is charged from your IFB liquid balance.</p>
       </div>
       <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Formation Order Summary</p>
+        <p className="text-xs font-semibold text-slate-500">Formation Order Summary</p>
         <div className="flex items-center gap-4 pb-4 border-b border-slate-200">
           <div className="text-3xl">{country.flag}</div>
           <div className="flex-1">
-            <p className="text-slate-900 font-black">{entityType.name}</p>
+            <p className="text-slate-900 font-bold">{entityType.name}</p>
             <p className="text-slate-500 text-xs">{country.name} · {entityType.formation_time}</p>
           </div>
-          <p className="text-slate-900 font-black">{fmtUSD(entityType.price)}</p>
+          <p className="text-slate-900 font-bold">{fmtUSD(entityType.price)}</p>
         </div>
         <div className="flex items-center justify-between pb-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Icon size={15} className={pkg.textColor}/>
             <span className="text-slate-600 text-sm font-bold">{pkg.name}</span>
-            <span className="text-[9px] text-slate-500">({pkg.processing})</span>
+            <span className="text-xs text-slate-500">({pkg.processing})</span>
           </div>
           {pkg.price_addon > 0
-            ? <span className={`${pkg.textColor} font-black`}>+{fmtUSD(pkg.price_addon)}</span>
-            : <span className="text-emerald-600 text-xs font-black">Included</span>}
+            ? <span className={`${pkg.textColor} font-bold`}>+{fmtUSD(pkg.price_addon)}</span>
+            : <span className="text-emerald-600 text-xs font-bold">Included</span>}
         </div>
         <div className="space-y-2 pb-4 border-b border-slate-200">
           {[
@@ -1574,21 +1574,21 @@ function PayStep({ country, entityType, pkg, form, balance, onConfirm, onBack, p
           ))}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-slate-900 font-black uppercase tracking-widest text-xs">Total Due</span>
-          <span className="text-3xl font-black text-slate-900">{fmtUSD(total)}</span>
+          <span className="text-slate-900 font-semibold text-xs">Total Due</span>
+          <span className="text-3xl font-bold text-slate-900">{fmtUSD(total)}</span>
         </div>
       </div>
       <div className={`rounded-2xl p-4 border flex items-center justify-between ${sufficient ? 'bg-slate-800/40 border-slate-700' : 'bg-red-950/30 border-red-800'}`}>
         <div className="flex items-center gap-3">
           <Wallet size={16} className={sufficient ? 'text-slate-400' : 'text-red-400'}/>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">IFB Liquid Balance</p>
-            <p className={`font-black ${sufficient ? 'text-white' : 'text-red-400'}`}>{fmtFull(balance)}</p>
+            <p className="text-xs font-semibold text-slate-500">IFB Liquid Balance</p>
+            <p className={`font-bold ${sufficient ? 'text-white' : 'text-red-400'}`}>{fmtFull(balance)}</p>
           </div>
         </div>
         {sufficient
-          ? <span className="text-[10px] text-emerald-400 font-black flex items-center gap-1"><CheckCircle2 size={10}/>Sufficient</span>
-          : <span className="text-[10px] text-red-400 font-black flex items-center gap-1"><AlertTriangle size={10}/>Insufficient</span>}
+          ? <span className="text-xs text-emerald-400 font-bold flex items-center gap-1"><CheckCircle2 size={10}/>Sufficient</span>
+          : <span className="text-xs text-red-400 font-bold flex items-center gap-1"><AlertTriangle size={10}/>Insufficient</span>}
       </div>
       {!sufficient && (
         <div className="bg-red-950/30 border border-red-800/40 rounded-2xl p-4 text-sm text-red-300 font-bold">
@@ -1607,11 +1607,11 @@ function PayStep({ country, entityType, pkg, form, balance, onConfirm, onBack, p
         </p>
       </div>
       <div className="flex gap-3">
-        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+        <button onClick={onBack} className="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-slate-400 font-semibold rounded-2xl text-xs flex items-center gap-2 transition-all">
           <ArrowLeft size={14}/> Back
         </button>
         <button onClick={onConfirm} disabled={!sufficient || paying}
-          className="flex-1 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/30">
+          className="ui-btn ui-btn-primary flex-1">
           {paying
             ? <><Loader2 size={14} className="animate-spin"/>Processing...</>
             : <><Rocket size={14}/>Pay {fmtUSD(total)} & Incorporate</>}
@@ -1637,15 +1637,15 @@ function SuccessStep({ orderRef, form, country, entityType, pkg, total, onReset 
         <CheckCircle2 size={44} className="text-emerald-400"/>
       </div>
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2">Formation Order Received</p>
-        <h2 className="text-3xl font-black text-white">{form.business_name}</h2>
+        <p className="text-xs font-semibold text-emerald-400 mb-2">Formation Order Received</p>
+        <h2 className="text-3xl font-bold text-white">{form.business_name}</h2>
         <p className="text-slate-400 text-sm mt-1">{entityType?.name} · {country?.flag} {country?.name}</p>
-        <p className={`text-sm font-black mt-1 ${pkg?.textColor}`}>{pkg?.name} · {pkg?.processing}</p>
+        <p className={`text-sm font-bold mt-1 ${pkg?.textColor}`}>{pkg?.name} · {pkg?.processing}</p>
       </div>
       <div className="bg-white border border-slate-200 rounded-2xl p-6 text-left space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-slate-500 text-sm font-bold">Reference Number</span>
-          <button onClick={copyRef} className="flex items-center gap-2 text-slate-900 font-black font-mono text-sm hover:text-indigo-600 transition-colors">
+          <button onClick={copyRef} className="flex items-center gap-2 text-slate-900 font-bold font-mono text-sm hover:text-indigo-600 transition-colors">
             {orderRef}
             {copied ? <Check size={14} className="text-emerald-600"/> : <Copy size={14} className="text-slate-500"/>}
           </button>
@@ -1658,7 +1658,7 @@ function SuccessStep({ orderRef, form, country, entityType, pkg, total, onReset 
         ].map(row => (
           <div key={row.label} className="flex justify-between items-center text-sm">
             <span className="text-slate-500 font-bold">{row.label}</span>
-            <span className={`font-black ${row.cls}`}>{row.value}</span>
+            <span className={`font-bold ${row.cls}`}>{row.value}</span>
           </div>
         ))}
       </div>
@@ -1670,13 +1670,13 @@ function SuccessStep({ orderRef, form, country, entityType, pkg, total, onReset 
         ].map(item => (
           <div key={item.label} className="bg-white border border-slate-200 rounded-2xl p-4 text-center">
             <item.icon size={18} className="mx-auto text-slate-500 mb-2"/>
-            <p className="text-[10px] font-black text-slate-900">{item.label}</p>
-            <p className="text-[9px] text-slate-500 mt-1">{item.sub}</p>
+            <p className="text-xs font-bold text-slate-900">{item.label}</p>
+            <p className="text-xs text-slate-500 mt-1">{item.sub}</p>
           </div>
         ))}
       </div>
       <div className="bg-indigo-950/30 border border-indigo-800/30 rounded-2xl p-5 text-left">
-        <p className="text-xs font-black text-indigo-300 uppercase tracking-widest mb-3">What happens next</p>
+        <p className="text-xs font-semibold text-indigo-300 mb-3">What happens next</p>
         <ul className="space-y-2">
           {[
             `Email confirmation sent to ${form.contact_email}`,
@@ -1696,7 +1696,7 @@ function SuccessStep({ orderRef, form, country, entityType, pkg, total, onReset 
         Questions? Contact <strong className="text-slate-300">sapiens@infinitefuturebank.org</strong> with reference <strong className="text-slate-300">{orderRef}</strong>
       </p>
       <button onClick={onReset}
-        className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+        className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all">
         <RefreshCw size={14}/> Form Another Company
       </button>
     </div>

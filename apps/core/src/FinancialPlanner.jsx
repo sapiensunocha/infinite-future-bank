@@ -64,10 +64,10 @@ export default function FinancialPlanner({ session, balances }) {
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800 relative">
       
       {/* 🏛️ Top Header & Navigation */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border border-slate-200 p-6 rounded-[2.5rem] shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Scenario Architect</h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">Autonomous Wealth Projection Engine</p>
+          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Scenario Architect</h2>
+          <p className="text-xs font-semibold text-blue-600 mt-1">Autonomous Wealth Projection Engine</p>
         </div>
         
         <div className="flex bg-slate-100 p-2 rounded-2xl border border-slate-200 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
@@ -79,7 +79,7 @@ export default function FinancialPlanner({ session, balances }) {
             <button 
               key={goal.id}
               onClick={() => setActiveGoal(goal.id)}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeGoal === goal.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}
+              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${activeGoal === goal.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}
             >
               {goal.label}
             </button>
@@ -92,8 +92,8 @@ export default function FinancialPlanner({ session, balances }) {
         
         {/* Left Column: Interactive Sliders */}
         <div className="lg:col-span-1 space-y-8">
-          <div className="bg-white border border-slate-200 p-8 rounded-[3rem] shadow-sm">
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-8 flex items-center gap-3">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-800 mb-8 flex items-center gap-3">
               <div className="p-2 bg-slate-100 rounded-lg text-blue-600 border border-slate-200"><SlidersHorizontal size={18}/></div>
               Parameters
             </h3>
@@ -102,8 +102,8 @@ export default function FinancialPlanner({ session, balances }) {
               {/* Horizon Slider */}
               <div>
                 <div className="flex justify-between items-end mb-4">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Time Horizon</label>
-                  <span className="text-xl font-black text-slate-800">{horizon} Years</span>
+                  <label className="ui-label">Time Horizon</label>
+                  <span className="text-xl font-bold text-slate-800">{horizon} Years</span>
                 </div>
                 <input 
                   type="range" min="1" max="40" value={horizon} 
@@ -115,8 +115,8 @@ export default function FinancialPlanner({ session, balances }) {
               {/* Contribution Slider */}
               <div>
                 <div className="flex justify-between items-end mb-4">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Inflow</label>
-                  <span className="text-xl font-black text-slate-800">{formatCurrency(contribution)}</span>
+                  <label className="ui-label">Monthly Inflow</label>
+                  <span className="text-xl font-bold text-slate-800">{formatCurrency(contribution)}</span>
                 </div>
                 <input 
                   type="range" min="0" max="50000" step="500" value={contribution} 
@@ -127,7 +127,7 @@ export default function FinancialPlanner({ session, balances }) {
             </div>
 
             <div className="mt-10 p-5 bg-blue-50 rounded-2xl border border-blue-100">
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-2"><Target size={14}/> Target Strategy</p>
+              <p className="text-xs font-semibold text-blue-600 mb-2 flex items-center gap-2"><Target size={14}/> Target Strategy</p>
               <p className="text-xs font-bold text-slate-600 leading-relaxed">
                 {activeGoal === 'INDEPENDENCE' && 'Optimized for aggressive compounding and global equity exposure.'}
                 {activeGoal === 'ACQUISITION' && 'Optimized for high liquidity events and structured credit leveraging.'}
@@ -141,17 +141,17 @@ export default function FinancialPlanner({ session, balances }) {
         <div className="lg:col-span-2 space-y-8">
           
           {/* Main Visualization */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 text-white p-10 md:p-12 rounded-[3rem] shadow-xl relative overflow-hidden group">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 text-white p-10 md:p-12 rounded-3xl shadow-xl relative overflow-hidden group">
             <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-blue-500/20 rounded-full blur-[80px] group-hover:bg-blue-500/30 transition-all pointer-events-none"></div>
             
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-8 mb-12">
               <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Projected Sovereign Wealth</p>
-                <h3 className="text-5xl md:text-6xl font-black tracking-tighter text-white">{formatCurrency(projectedTotal)}</h3>
+                <p className="text-[11px] font-semibold text-slate-500 mb-2">Projected Sovereign Wealth</p>
+                <h3 className="text-5xl md:text-6xl font-bold tracking-tighter text-white">{formatCurrency(projectedTotal)}</h3>
               </div>
               <div className="text-right">
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">Target Year</p>
-                <h3 className="text-3xl font-black tracking-tighter text-blue-400">{new Date().getFullYear() + horizon}</h3>
+                <p className="text-[11px] font-semibold text-slate-500 mb-2">Target Year</p>
+                <h3 className="text-3xl font-bold tracking-tighter text-blue-400">{new Date().getFullYear() + horizon}</h3>
               </div>
             </div>
 
@@ -170,20 +170,20 @@ export default function FinancialPlanner({ session, balances }) {
           </div>
 
           {/* AI Advisor Context Panel */}
-          <div className="bg-white border border-slate-200 p-8 rounded-[3rem] shadow-sm flex flex-col md:flex-row items-center gap-6">
+          <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm flex flex-col md:flex-row items-center gap-6">
             <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-500 flex-shrink-0 shadow-sm">
               <Sparkles size={28}/>
             </div>
             <div>
-              <h4 className="text-sm font-black text-slate-800 flex items-center gap-2 mb-2">DEUS Intelligence Insight</h4>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+              <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-2">DEUS Intelligence Insight</h4>
+              <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
                 To achieve your {horizon}-year target of <span className="text-slate-800">{formatCurrency(projectedTotal)}</span>, DEUS recommends routing {activeGoal === 'PRESERVATION' ? '80%' : '20%'} into Swiss Treasury Bonds (Vault) and {activeGoal === 'PRESERVATION' ? '20%' : '80%'} into the Alpha Equity pool to minimize jurisdictional tax friction.
               </p>
             </div>
             <button 
               onClick={handleApplyRouting}
               disabled={isApplying}
-              className="w-full md:w-auto mt-4 md:mt-0 px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:-translate-y-1 hover:bg-blue-700 transition-all whitespace-nowrap disabled:opacity-50 flex items-center gap-2"
+              className="ui-btn ui-btn-primary md:w-auto mt-4 md:mt-0"
             >
               {isApplying ? <Loader2 className="animate-spin" size={14}/> : null} Apply Routing
             </button>
@@ -196,8 +196,8 @@ export default function FinancialPlanner({ session, balances }) {
       {notification && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-top-10 duration-500">
            <div className={`px-8 py-5 rounded-3xl shadow-2xl border-2 backdrop-blur-2xl flex items-center gap-4 ${notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
-             <div className={`w-3 h-3 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-red-400 shadow-[0_0_10px_#f87171]'}`}></div>
-             <p className="font-black text-[11px] uppercase tracking-[0.2em]">{notification.text}</p>
+             <div className={`w-3 h-3 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+             <p className="font-semibold text-[11px]">{notification.text}</p>
            </div>
         </div>
       )}

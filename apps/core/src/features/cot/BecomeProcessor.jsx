@@ -162,14 +162,14 @@ export default function BecomeProcessor({ session, profile }) {
         <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
           <Clock size={36} className="text-amber-600" />
         </div>
-        <h2 className="text-2xl font-black text-slate-800">{t('cot.applicationPending')}</h2>
+        <h2 className="text-2xl font-bold text-slate-800">{t('cot.applicationPending')}</h2>
         <p className="text-slate-500 text-sm leading-relaxed">
           {t('lang') === 'fr'
             ? 'Votre candidature est en cours d\'examen par notre équipe. Vous serez notifié dans 24-48 heures.'
             : 'Your application is being reviewed. You\'ll be notified within 24–48 hours.'}
         </p>
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-left space-y-2">
-          <p className="text-xs font-black uppercase tracking-widest text-amber-700">{t('cot.requirements')}</p>
+          <p className="text-xs font-semibold text-amber-700">{t('cot.requirements')}</p>
           <p className="text-xs text-amber-600">{t('cot.requirementsDesc')}</p>
         </div>
       </div>
@@ -182,10 +182,10 @@ export default function BecomeProcessor({ session, profile }) {
         {/* Status badge */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-black text-slate-800">{t('cot.myProfile')}</h2>
+            <h2 className="text-xl font-bold text-slate-800">{t('cot.myProfile')}</h2>
             <p className="text-xs text-slate-500">{t('cot.earningRate')}</p>
           </div>
-          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
             {t('cot.active')}
           </span>
         </div>
@@ -194,18 +194,18 @@ export default function BecomeProcessor({ session, profile }) {
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-4 text-center">
             <DollarSign size={18} className="text-emerald-600 mx-auto mb-1" />
-            <p className="text-lg font-black text-emerald-700">${totalEarned.toFixed(2)}</p>
-            <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">{t('cot.totalEarned')}</p>
+            <p className="text-lg font-bold text-emerald-700">${totalEarned.toFixed(2)}</p>
+            <p className="text-xs font-bold text-emerald-600">{t('cot.totalEarned')}</p>
           </div>
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 text-center">
             <BarChart2 size={18} className="text-blue-600 mx-auto mb-1" />
-            <p className="text-lg font-black text-blue-700">{cotProfile?.cot_completed_tx || 0}</p>
-            <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{t('cot.totalTrades')}</p>
+            <p className="text-lg font-bold text-blue-700">{cotProfile?.cot_completed_tx || 0}</p>
+            <p className="text-xs font-bold text-blue-600">{t('cot.totalTrades')}</p>
           </div>
           <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-4 text-center">
             <Star size={18} className="text-amber-600 mx-auto mb-1" />
-            <p className="text-lg font-black text-amber-700">{cotProfile?.cot_rating || 100}%</p>
-            <p className="text-[9px] font-bold text-amber-600 uppercase tracking-widest">{t('cot.rating')}</p>
+            <p className="text-lg font-bold text-amber-700">{cotProfile?.cot_rating || 100}%</p>
+            <p className="text-xs font-bold text-amber-600">{t('cot.rating')}</p>
           </div>
         </div>
 
@@ -216,8 +216,8 @@ export default function BecomeProcessor({ session, profile }) {
         >
           <MapPin size={18} className="text-blue-600" />
           <div className="text-left">
-            <p className="text-xs font-black text-blue-700">Update My Location</p>
-            <p className="text-[10px] text-blue-500">
+            <p className="text-xs font-bold text-blue-700">Update My Location</p>
+            <p className="text-xs text-blue-500">
               {cotProfile?.latitude ? `${cotProfile.latitude.toFixed(4)}, ${cotProfile.longitude.toFixed(4)}` : 'No location set'}
             </p>
           </div>
@@ -225,7 +225,7 @@ export default function BecomeProcessor({ session, profile }) {
 
         {/* Recent earnings */}
         <div className="space-y-2">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-500">{t('cot.earnings')}</p>
+          <p className="text-xs font-semibold text-slate-500">{t('cot.earnings')}</p>
           {earnings.length === 0 ? (
             <div className="p-6 text-center text-slate-400 text-sm">{t('cot.noEarnings')}</div>
           ) : (
@@ -234,9 +234,9 @@ export default function BecomeProcessor({ session, profile }) {
                 <div key={e.id || e.created_at} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl">
                   <div>
                     <p className="text-xs font-bold text-slate-700 capitalize">{e.order_type} — ${e.amount_usd}</p>
-                    <p className="text-[10px] text-slate-400">{new Date(e.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-slate-400">{new Date(e.created_at).toLocaleDateString()}</p>
                   </div>
-                  <span className="text-sm font-black text-emerald-600">+${(e.cot_fee_earned || 0).toFixed(2)}</span>
+                  <span className="text-sm font-bold text-emerald-600">+${(e.cot_fee_earned || 0).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -260,7 +260,7 @@ export default function BecomeProcessor({ session, profile }) {
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center mx-auto shadow-lg">
           <Users size={28} className="text-white" />
         </div>
-        <h2 className="text-xl font-black text-slate-800">{t('cot.becomeTitle')}</h2>
+        <h2 className="text-xl font-bold text-slate-800">{t('cot.becomeTitle')}</h2>
         <p className="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">{t('cot.becomeDesc')}</p>
       </div>
 
@@ -273,7 +273,7 @@ export default function BecomeProcessor({ session, profile }) {
           />
         ))}
       </div>
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+      <p className="text-xs font-semibold text-slate-500">
         {t('common.of') ? `${step} ${t('common.of')} ${steps.length}` : `Step ${step}/${steps.length}`} — {steps[step - 1]}
       </p>
 
@@ -287,7 +287,7 @@ export default function BecomeProcessor({ session, profile }) {
       {step === 1 && (
         <div className="space-y-4">
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl space-y-3">
-            <p className="text-xs font-black uppercase tracking-widest text-blue-700">{t('cot.requirements')}</p>
+            <p className="text-xs font-semibold text-blue-700">{t('cot.requirements')}</p>
             {[
               { ok: profile?.kyc_status === 'approved', label: t('cot.requirementsDesc').split('·')[0].trim() },
               { ok: true, label: 'Compte actif' },
@@ -302,13 +302,13 @@ export default function BecomeProcessor({ session, profile }) {
             ))}
           </div>
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
-            <p className="text-xs font-black text-amber-700 flex items-center gap-2">
+            <p className="text-xs font-bold text-amber-700 flex items-center gap-2">
               <TrendingUp size={14} /> {t('cot.earningRate')}
             </p>
           </div>
           <button
             onClick={() => setStep(2)}
-            className="w-full bg-blue-600 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+            className="ui-btn ui-btn-primary"
           >
             {t('common.next')} <ChevronRight size={16} />
           </button>
@@ -334,16 +334,16 @@ export default function BecomeProcessor({ session, profile }) {
                   }`}
                 >
                   <Icon size={20} className="mb-2" />
-                  <p className="text-xs font-black">{opt.label}</p>
+                  <p className="text-xs font-bold">{opt.label}</p>
                 </button>
               );
             })}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setStep(1)} className="flex-1 py-4 rounded-2xl border border-slate-200 text-slate-600 text-sm font-black hover:bg-slate-50 transition-all">{t('common.previous')}</button>
+            <button onClick={() => setStep(1)} className="flex-1 py-4 rounded-2xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all">{t('common.previous')}</button>
             <button
               onClick={() => form.payment_methods.length > 0 ? setStep(3) : setError(t('cot.paymentMethods'))}
-              className="flex-2 flex-1 bg-blue-600 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl hover:bg-blue-700 transition-all"
+              className="ui-btn ui-btn-primary flex-1"
             >
               {t('common.next')}
             </button>
@@ -361,20 +361,20 @@ export default function BecomeProcessor({ session, profile }) {
               { key: 'service_radius_km', label: t('cot.serviceRadius'), placeholder: '10' },
             ].map(field => (
               <div key={field.key}>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5">{field.label}</label>
+                <label className="ui-label">{field.label}</label>
                 <input
                   type="number"
                   value={form[field.key]}
                   onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
                   placeholder={field.placeholder}
-                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:border-blue-400 transition-all"
+                  className="ui-input"
                 />
               </div>
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setStep(2)} className="flex-1 py-4 rounded-2xl border border-slate-200 text-slate-600 text-sm font-black hover:bg-slate-50 transition-all">{t('common.previous')}</button>
-            <button onClick={() => setStep(4)} className="flex-1 bg-blue-600 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl hover:bg-blue-700 transition-all">{t('common.next')}</button>
+            <button onClick={() => setStep(2)} className="flex-1 py-4 rounded-2xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all">{t('common.previous')}</button>
+            <button onClick={() => setStep(4)} className="ui-btn ui-btn-primary flex-1">{t('common.next')}</button>
           </div>
         </div>
       )}
@@ -383,7 +383,7 @@ export default function BecomeProcessor({ session, profile }) {
       {step === 4 && (
         <div className="space-y-4">
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-600 leading-relaxed space-y-3 max-h-48 overflow-y-auto">
-            <p className="font-black text-slate-800">COT Terms of Service</p>
+            <p className="font-bold text-slate-800">COT Terms of Service</p>
             <p>By becoming a COT Processor, you agree to: handle all transactions honestly and transparently; meet clients only in safe, public locations; never charge fees outside the IFB platform; maintain your availability status accurately; and comply with local financial regulations in your jurisdiction.</p>
             <p>IFB reserves the right to suspend or terminate your COT status for violations. Your 1% fee is credited automatically upon transaction confirmation by both parties.</p>
           </div>
@@ -399,11 +399,11 @@ export default function BecomeProcessor({ session, profile }) {
             <span className="text-xs text-slate-600">{t('cot.agreedTerms')}</span>
           </label>
           <div className="flex gap-2">
-            <button onClick={() => setStep(3)} className="flex-1 py-4 rounded-2xl border border-slate-200 text-slate-600 text-sm font-black hover:bg-slate-50 transition-all">{t('common.previous')}</button>
+            <button onClick={() => setStep(3)} className="flex-1 py-4 rounded-2xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-all">{t('common.previous')}</button>
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !form.agreed}
-              className="flex-1 bg-emerald-600 text-white font-black text-sm uppercase tracking-widest py-4 rounded-2xl hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="ui-btn ui-btn-primary flex-1"
             >
               {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Award size={16} />}
               {t('cot.submitApplication')}

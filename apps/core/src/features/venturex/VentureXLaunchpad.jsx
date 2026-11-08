@@ -254,13 +254,13 @@ const FUND_USES = [
 // ─── Helper components ────────────────────────────────────────────────────────
 const SubTab = ({ id, label, icon: Icon, active, onClick }) => (
   <button onClick={() => onClick(id)}
-    className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:border-blue-300 hover:text-blue-600'}`}>
+    className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[11px] font-semibold transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200 hover:border-blue-300 hover:text-blue-600'}`}>
     <Icon size={13} /> {label}
   </button>
 );
 
 const Pill = ({ children, color = 'bg-slate-100 text-slate-600' }) => (
-  <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${color}`}>{children}</span>
+  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${color}`}>{children}</span>
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -344,38 +344,38 @@ export default function VentureXLaunchpad({ session, myCompany }) {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-50 px-5 py-4 rounded-2xl shadow-2xl text-sm font-black max-w-xs border ${toast.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+        <div className={`fixed top-6 right-6 z-50 px-5 py-4 rounded-2xl shadow-2xl text-sm font-bold max-w-xs border ${toast.type === 'error' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
           {toast.msg}
         </div>
       )}
 
       {/* Header */}
-      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 rounded-[2rem] p-8 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 rounded-2xl p-8 text-white relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl" />
         <div className="relative">
           <Pill color="bg-blue-500/20 text-blue-300">IFB Entrepreneur Program</Pill>
-          <h1 className="text-2xl font-black mt-3 mb-1">VentureX Launchpad</h1>
+          <h1 className="text-2xl font-bold mt-3 mb-1">VentureX Launchpad</h1>
           <p className="text-sm text-slate-300 max-w-lg">From your first idea to your first dollar — structured support, real mentors, and capital access at every step.</p>
 
           {/* Progress bar */}
           <div className="mt-6 max-w-lg">
-            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+            <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
               <span>Your Progress</span>
               <span>{doneTasks}/{totalTasks} tasks · Stage: {currentStage?.label}</span>
             </div>
             <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-blue-400 to-emerald-400 rounded-full transition-all duration-700" style={{ width: `${overallPct}%` }} />
             </div>
-            <p className="text-[9px] text-slate-400 mt-1.5">{overallPct}% complete</p>
+            <p className="text-xs text-slate-400 mt-1.5">{overallPct}% complete</p>
           </div>
 
           {/* IFB Fund banner */}
           <div className="mt-5 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 max-w-lg">
             <BadgeDollarSign size={20} className="text-amber-400 shrink-0" />
             <div>
-              <p className="text-xs font-black text-white">IFB Entrepreneur Fund · <span className="text-amber-400">$1 Trillion Pool</span></p>
-              <p className="text-[10px] text-slate-400">Vetted entrepreneurs receive investment credits usable across IFB & partners.</p>
+              <p className="text-xs font-bold text-white">IFB Entrepreneur Fund · <span className="text-amber-400">$1 Trillion Pool</span></p>
+              <p className="text-xs text-slate-400">Vetted entrepreneurs receive investment credits usable across IFB & partners.</p>
             </div>
           </div>
         </div>
@@ -406,25 +406,25 @@ export default function VentureXLaunchpad({ session, myCompany }) {
             const isCompleted = stagePct === 100;
 
             return (
-              <div key={stage.id} className={`bg-white border-2 rounded-[2rem] overflow-hidden transition-all ${isCurrentStage ? 'border-blue-400 shadow-lg shadow-blue-100' : isCompleted ? 'border-emerald-300' : 'border-slate-200'}`}>
+              <div key={stage.id} className={`bg-white border-2 rounded-2xl overflow-hidden transition-all ${isCurrentStage ? 'border-blue-400 shadow-lg' : isCompleted ? 'border-emerald-300' : 'border-slate-200'}`}>
                 <button className="w-full flex items-center gap-4 p-6 text-left hover:bg-slate-50/50 transition-colors" onClick={() => setExpandedStage(isOpen ? null : stage.id)}>
                   <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stage.color} flex items-center justify-center shrink-0 shadow-md`}>
                     <Icon size={20} className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Stage {idx + 1}</span>
+                      <span className="text-xs font-semibold text-slate-500">Stage {idx + 1}</span>
                       {isCurrentStage && <Pill color="bg-blue-100 text-blue-700">Current Stage</Pill>}
                       {isCompleted && <Pill color="bg-emerald-100 text-emerald-700">Completed</Pill>}
                     </div>
-                    <p className="font-black text-slate-800 text-sm">{stage.label}</p>
+                    <p className="font-bold text-slate-800 text-sm">{stage.label}</p>
                     <p className="text-[11px] text-slate-500 mt-0.5">{stage.description}</p>
                     <div className="h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden max-w-[200px]">
                       <div className={`h-full bg-gradient-to-r ${stage.color} rounded-full transition-all`} style={{ width: `${stagePct}%` }} />
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-[11px] font-black text-slate-500">{stageDone}/{stage.tasks.length}</span>
+                    <span className="text-[11px] font-bold text-slate-500">{stageDone}/{stage.tasks.length}</span>
                     {isOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
                   </div>
                 </button>
@@ -432,7 +432,7 @@ export default function VentureXLaunchpad({ session, myCompany }) {
                 {isOpen && (
                   <div className="border-t border-slate-100 px-6 pb-6 pt-4 space-y-3">
                     {/* Tasks */}
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Tasks</p>
+                    <p className="text-xs font-semibold text-slate-500 mb-3">Tasks</p>
                     {stage.tasks.map(task => {
                       const done = completedTasks[task.id];
                       return (
@@ -445,7 +445,7 @@ export default function VentureXLaunchpad({ session, myCompany }) {
                           <div className="flex-1 min-w-0">
                             <p className={`text-xs font-bold ${done ? 'text-emerald-700 line-through' : 'text-slate-700'}`}>{task.label}</p>
                             {task.resource && (
-                              <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                              <span className="inline-flex items-center gap-1 mt-1 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                                 <Zap size={9} /> {task.resource}
                               </span>
                             )}
@@ -456,10 +456,10 @@ export default function VentureXLaunchpad({ session, myCompany }) {
 
                     {/* IFB Tools */}
                     <div className="mt-4 pt-4 border-t border-slate-100">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">IFB Tools & Partners at this stage</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-2">IFB Tools & Partners at this stage</p>
                       <div className="flex flex-wrap gap-2">
                         {stage.tools.map(tool => (
-                          <span key={tool} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-[10px] font-black border border-blue-100 flex items-center gap-1">
+                          <span key={tool} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold border border-blue-100 flex items-center gap-1">
                             <ChevronRight size={10} /> {tool}
                           </span>
                         ))}
@@ -477,12 +477,12 @@ export default function VentureXLaunchpad({ session, myCompany }) {
       {sub === 'fund' && (
         <div className="space-y-6">
           {/* Fund hero */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-[2rem] p-8 relative overflow-hidden">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-8 relative overflow-hidden">
             <div className="absolute -top-8 -right-8 w-48 h-48 bg-amber-200/40 rounded-full blur-2xl" />
             <div className="relative">
               <Pill color="bg-amber-200 text-amber-800">IFB Entrepreneur Fund</Pill>
-              <h2 className="text-xl font-black text-slate-900 mt-3">$1,000,000,000,000</h2>
-              <p className="text-[11px] font-black uppercase tracking-widest text-amber-700 mb-1">One Trillion Dollar Aspirational Pool</p>
+              <h2 className="text-xl font-bold text-slate-900 mt-3">$1,000,000,000,000</h2>
+              <p className="text-[11px] font-semibold text-amber-700 mb-1">One Trillion Dollar Aspirational Pool</p>
               <p className="text-sm text-slate-600 max-w-lg">IFB commits to building the world's largest entrepreneur support fund. Vetted entrepreneurs receive investment credits — not cash — usable across IFB features and certified partners.</p>
 
               <div className="grid grid-cols-3 gap-4 mt-6">
@@ -492,8 +492,8 @@ export default function VentureXLaunchpad({ session, myCompany }) {
                   { label: 'Max credits (Elite)', value: '$500,000' },
                 ].map(s => (
                   <div key={s.label} className="bg-white/70 border border-amber-200 rounded-2xl p-4 text-center">
-                    <p className="text-lg font-black text-slate-900">{s.value}</p>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">{s.label}</p>
+                    <p className="text-lg font-bold text-slate-900">{s.value}</p>
+                    <p className="text-xs font-semibold text-slate-500 mt-1">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -502,8 +502,8 @@ export default function VentureXLaunchpad({ session, myCompany }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Eligibility */}
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 mb-4 flex items-center gap-2"><ShieldCheck size={16} className="text-emerald-500" /> Eligibility Criteria</h3>
+            <div className="bg-white border border-slate-200 rounded-2xl p-6">
+              <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><ShieldCheck size={16} className="text-emerald-500" /> Eligibility Criteria</h3>
               <div className="space-y-3">
                 {FUND_CRITERIA.map(c => (
                   <div key={c.label} className="flex items-center gap-3">
@@ -517,8 +517,8 @@ export default function VentureXLaunchpad({ session, myCompany }) {
             </div>
 
             {/* What credits cover */}
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-6">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 mb-4 flex items-center gap-2"><Zap size={16} className="text-blue-500" /> What Credits Cover</h3>
+            <div className="bg-white border border-slate-200 rounded-2xl p-6">
+              <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2"><Zap size={16} className="text-blue-500" /> What Credits Cover</h3>
               <div className="space-y-3">
                 {FUND_USES.map(u => (
                   <div key={u.label} className="flex items-center gap-3">
@@ -540,47 +540,47 @@ export default function VentureXLaunchpad({ session, myCompany }) {
 
           {/* Application form */}
           {!fundSubmitted ? (
-            <div className="bg-white border border-slate-200 rounded-[2rem] p-8">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 mb-6 flex items-center gap-2"><Rocket size={16} className="text-blue-500" /> Apply for IFB Fund Credits</h3>
+            <div className="bg-white border border-slate-200 rounded-2xl p-8">
+              <h3 className="text-sm font-semibold text-slate-700 mb-6 flex items-center gap-2"><Rocket size={16} className="text-blue-500" /> Apply for IFB Fund Credits</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Amount Requested (USD)</label>
+                  <label className="ui-label">Amount Requested (USD)</label>
                   <input type="number" value={fundForm.amount} onChange={e => setFundForm(p => ({ ...p, amount: Number(e.target.value) }))}
                     min={500} max={500000} step={500}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-sm outline-none focus:border-blue-500 transition-colors" />
+                    className="ui-input" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Business Stage</label>
+                  <label className="ui-label">Business Stage</label>
                   <select value={fundForm.business_stage} onChange={e => setFundForm(p => ({ ...p, business_stage: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-sm outline-none focus:border-blue-500 transition-colors cursor-pointer">
+                    className="ui-select">
                     {['idea', 'validated', 'mvp_built', 'launched', 'revenue', 'scaling'].map(s => <option key={s} value={s}>{s.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>)}
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Primary Use Case</label>
+                  <label className="ui-label">Primary Use Case</label>
                   <select value={fundForm.use_case} onChange={e => setFundForm(p => ({ ...p, use_case: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-sm outline-none focus:border-blue-500 transition-colors cursor-pointer">
+                    className="ui-select">
                     <option value="">Select use case...</option>
                     {FUND_USES.map(u => <option key={u.label} value={u.label}>{u.label}</option>)}
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Describe Your Business & Why You Need Credits</label>
+                  <label className="ui-label">Describe Your Business & Why You Need Credits</label>
                   <textarea value={fundForm.description} onChange={e => setFundForm(p => ({ ...p, description: e.target.value }))}
                     rows={4} placeholder="What do you do, who do you serve, and how will these credits help you reach your next milestone?"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-bold text-sm outline-none focus:border-blue-500 transition-colors resize-none" />
+                    className="ui-textarea resize-none" />
                 </div>
               </div>
               <button onClick={handleFundSubmit} disabled={fundApplying || !fundForm.use_case || !fundForm.description}
-                className="mt-6 w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-sm rounded-2xl shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                className="ui-btn ui-btn-primary mt-6">
                 {fundApplying ? <Loader2 size={16} className="animate-spin" /> : <BadgeDollarSign size={16} />}
                 Submit IFB Fund Application
               </button>
             </div>
           ) : (
-            <div className="bg-emerald-50 border-2 border-emerald-300 rounded-[2rem] p-10 text-center">
+            <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-10 text-center">
               <CheckCircle2 size={48} className="text-emerald-500 mx-auto mb-4" />
-              <h3 className="text-lg font-black text-slate-800 mb-2">Application Submitted</h3>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">Application Submitted</h3>
               <p className="text-sm text-slate-600 mb-1">Our IFB team will review your application within <strong>48 hours</strong>.</p>
               <p className="text-xs text-slate-500">Track your application status in the VentureX Dashboard under <em>My Applications</em>.</p>
             </div>
@@ -600,7 +600,7 @@ export default function VentureXLaunchpad({ session, myCompany }) {
           <div className="flex gap-2 flex-wrap">
             {EXPERTISE_FILTERS.map(f => (
               <button key={f} onClick={() => setMentorFilter(f)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${mentorFilter === f ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'}`}>
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${mentorFilter === f ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'}`}>
                 {f}
               </button>
             ))}
@@ -609,31 +609,31 @@ export default function VentureXLaunchpad({ session, myCompany }) {
           {/* Mentor grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {MENTORS.filter(m => mentorFilter === 'All' || m.expertise === mentorFilter).map(mentor => (
-              <div key={mentor.id} className="bg-white border border-slate-200 rounded-[2rem] p-6 hover:border-blue-300 hover:shadow-md transition-all">
+              <div key={mentor.id} className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl shrink-0">{mentor.avatar}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-black text-slate-800 text-sm">{mentor.name}</h4>
+                      <h4 className="font-bold text-slate-800 text-sm">{mentor.name}</h4>
                       <Pill color="bg-purple-100 text-purple-700">{mentor.expertise}</Pill>
                     </div>
                     <p className="text-[11px] text-slate-500 font-bold mt-0.5">{mentor.title}</p>
                     <p className="text-xs text-slate-600 mt-2 leading-relaxed">{mentor.bio}</p>
                     <div className="flex items-center gap-4 mt-3">
-                      <span className="flex items-center gap-1 text-[10px] font-black text-amber-600">
+                      <span className="flex items-center gap-1 text-xs font-bold text-amber-600">
                         <Star size={11} fill="currentColor" /> {mentor.rating}
                       </span>
-                      <span className="flex items-center gap-1 text-[10px] font-black text-slate-500">
+                      <span className="flex items-center gap-1 text-xs font-bold text-slate-500">
                         <Users size={11} /> {mentor.sessions} sessions
                       </span>
-                      <span className="flex items-center gap-1 text-[10px] font-black text-slate-500">
+                      <span className="flex items-center gap-1 text-xs font-bold text-slate-500">
                         <Globe size={11} /> {mentor.region}
                       </span>
                     </div>
                   </div>
                 </div>
                 <button onClick={() => setBookingMentor(mentor)}
-                  className="mt-4 w-full py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                  className="ui-btn ui-btn-primary mt-4">
                   <HeartHandshake size={13} /> Book Free Session
                 </button>
               </div>
@@ -643,11 +643,11 @@ export default function VentureXLaunchpad({ session, myCompany }) {
           {/* Booking modal */}
           {bookingMentor && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setBookingMentor(null)}>
-              <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-3 mb-5">
                   <div className="text-3xl">{bookingMentor.avatar}</div>
                   <div>
-                    <h4 className="font-black text-slate-800">{bookingMentor.name}</h4>
+                    <h4 className="font-bold text-slate-800">{bookingMentor.name}</h4>
                     <p className="text-xs text-slate-500">{bookingMentor.title} · {bookingMentor.expertise}</p>
                   </div>
                 </div>
@@ -655,8 +655,8 @@ export default function VentureXLaunchpad({ session, myCompany }) {
                   <p className="text-xs font-bold text-blue-800">45-min video session, fully free. IFB coordinates scheduling. You'll receive a calendar link within 24–48 hours.</p>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setBookingMentor(null)} className="flex-1 py-3 border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
-                  <button onClick={() => handleBookMentor(bookingMentor)} className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                  <button onClick={() => setBookingMentor(null)} className="flex-1 py-3 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
+                  <button onClick={() => handleBookMentor(bookingMentor)} className="ui-btn ui-btn-primary flex-1">
                     <CheckCircle2 size={14} /> Confirm Booking
                   </button>
                 </div>
@@ -671,7 +671,7 @@ export default function VentureXLaunchpad({ session, myCompany }) {
         <div className="space-y-6">
           <div className="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4">
             <p className="text-xs font-bold text-slate-600">
-              <span className="font-black text-slate-800">The IFB Formula:</span> pay based on what you have, not what you hope to earn. Early-stage founders pay little or nothing. As you grow, you contribute back to the ecosystem — sustaining support for the next generation of entrepreneurs.
+              <span className="font-bold text-slate-800">The IFB Formula:</span> pay based on what you have, not what you hope to earn. Early-stage founders pay little or nothing. As you grow, you contribute back to the ecosystem — sustaining support for the next generation of entrepreneurs.
             </p>
           </div>
 
@@ -679,14 +679,14 @@ export default function VentureXLaunchpad({ session, myCompany }) {
             {TIERS.map(tier => {
               const Icon = tier.icon;
               return (
-                <div key={tier.id} className={`bg-white border-2 ${tier.color} rounded-[2rem] overflow-hidden`}>
+                <div key={tier.id} className={`bg-white border-2 ${tier.color} rounded-2xl overflow-hidden`}>
                   <div className={`${tier.headerColor} px-6 py-5 border-b border-slate-100`}>
                     <div className="flex items-center justify-between mb-3">
                       <Pill color={tier.badge}>{tier.name}</Pill>
                       <Icon size={20} className="text-slate-600" />
                     </div>
-                    <p className="text-2xl font-black text-slate-900">{tier.price}</p>
-                    <p className="text-[10px] font-bold text-slate-500 mt-0.5">{tier.priceNote}</p>
+                    <p className="text-2xl font-bold text-slate-900">{tier.price}</p>
+                    <p className="text-xs font-bold text-slate-500 mt-0.5">{tier.priceNote}</p>
                   </div>
                   <div className="px-6 py-5 space-y-2">
                     {tier.features.map(f => (
@@ -696,13 +696,13 @@ export default function VentureXLaunchpad({ session, myCompany }) {
                       </div>
                     ))}
                     <div className="mt-4 pt-4 border-t border-slate-100">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Qualification Formula</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-1.5">Qualification Formula</p>
                       <p className="text-[11px] text-slate-600 font-bold leading-relaxed">{tier.formula}</p>
                     </div>
                     <button
                       disabled={tier.disabled}
                       onClick={() => !tier.disabled && setMemberApplying(tier.id)}
-                      className={`mt-4 w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${tier.disabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'}`}>
+                      className={`mt-4 w-full py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${tier.disabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'}`}>
                       {tier.disabled ? <CheckCircle2 size={13} /> : <ArrowRight size={13} />}
                       {tier.disabled ? 'Current Plan' : tier.cta}
                     </button>
@@ -715,14 +715,14 @@ export default function VentureXLaunchpad({ session, myCompany }) {
           {/* Upgrade modal */}
           {memberApplying && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setMemberApplying(null)}>
-              <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
-                <h4 className="font-black text-slate-800 text-lg mb-3">{TIERS.find(t => t.id === memberApplying)?.name} Tier</h4>
+              <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+                <h4 className="font-bold text-slate-800 text-lg mb-3">{TIERS.find(t => t.id === memberApplying)?.name} Tier</h4>
                 <p className="text-sm text-slate-600 mb-5">Your upgrade request has been noted. An IFB advisor will contact you at <strong>{session?.user?.email}</strong> within 24 hours to complete verification and onboarding.</p>
                 <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-5">
                   <p className="text-xs font-bold text-blue-700">You can also complete your upgrade directly through your IFB Advisory package or by contacting <span className="underline">support@infinitefuturebank.org</span>.</p>
                 </div>
                 <button onClick={() => { setMemberApplying(null); notify('Request sent. An advisor will reach out within 24 hours.'); }}
-                  className="w-full py-3 bg-blue-600 text-white rounded-xl text-sm font-black hover:bg-blue-700 transition-colors">
+                  className="ui-btn ui-btn-primary">
                   Got it
                 </button>
               </div>

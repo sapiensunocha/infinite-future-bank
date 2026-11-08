@@ -72,14 +72,14 @@ export default function ProcessorMap({ userLocation, processors, selectedProcess
             >
               <Popup>
                 <div className="space-y-1 text-xs min-w-[140px]">
-                  <p className="font-black text-slate-800">{proc.full_name}</p>
+                  <p className="font-bold text-slate-800">{proc.full_name}</p>
                   <p className="text-emerald-600 font-bold">⭐ {proc.cot_rating}% · {proc.cot_completed_tx} {t('deposit.trades')}</p>
                   {proc.distanceKm !== undefined && (
                     <p className="text-slate-500">{proc.distanceKm < 1 ? `${Math.round(proc.distanceKm * 1000)}m` : `${proc.distanceKm.toFixed(1)} km`}</p>
                   )}
                   <button
                     onClick={() => onSelect(proc)}
-                    className="w-full mt-1 bg-emerald-600 text-white text-[10px] font-black uppercase py-1.5 rounded-lg"
+                    className="ui-btn ui-btn-primary mt-1"
                   >
                     {t('common.select')}
                   </button>

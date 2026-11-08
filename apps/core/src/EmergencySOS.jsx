@@ -182,10 +182,10 @@ export default function EmergencySOS({ session, balances }) {
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800">
       
       {/* 🏛️ Professional Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border border-slate-200 p-6 rounded-[2.5rem] shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Emergency Liquidity</h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">Access immediate capital during financial hardship</p>
+          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Emergency Liquidity</h2>
+          <p className="text-xs font-semibold text-slate-500 mt-1">Access immediate capital during financial hardship</p>
         </div>
         
         <div className="flex bg-slate-100 p-2 rounded-2xl border border-slate-200 shadow-inner">
@@ -193,7 +193,7 @@ export default function EmergencySOS({ session, balances }) {
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
             >
               {tab}
             </button>
@@ -205,14 +205,14 @@ export default function EmergencySOS({ session, balances }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-left-4">
           
           {/* Main Balance Info */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 p-10 md:p-12 rounded-[3rem] shadow-sm flex flex-col justify-between h-full relative overflow-hidden">
+          <div className="lg:col-span-2 bg-white border border-slate-200 p-10 md:p-12 rounded-3xl shadow-sm flex flex-col justify-between h-full relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
             
             <div className="relative z-10">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-slate-500 mb-8 flex items-center gap-2">
                 <Zap size={18} className="text-emerald-500"/> Available AFR Emergency Advance
               </h3>
-              <h2 className="text-6xl font-black text-slate-800 tracking-tighter mb-4">
+              <h2 className="text-6xl font-bold text-slate-800 tracking-tighter mb-4">
                 {maxAdvanceAFR.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-3xl text-emerald-600">AFR</span>
               </h2>
               <p className="text-sm font-medium text-slate-500 max-w-lg leading-relaxed mb-10">
@@ -224,14 +224,14 @@ export default function EmergencySOS({ session, balances }) {
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0"><CheckCircle2 size={20}/></div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-800">No Interest</p>
+                  <p className="text-xs font-semibold text-slate-800">No Interest</p>
                   <p className="text-xs text-slate-500 mt-1 font-medium">Institutional 0.0% APR for all eligible platform users.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0"><CheckCircle2 size={20}/></div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-800">Soft Recovery</p>
+                  <p className="text-xs font-semibold text-slate-800">Soft Recovery</p>
                   <p className="text-xs text-slate-500 mt-1 font-medium">Automatic repayment only when your income stabilizes.</p>
                 </div>
               </div>
@@ -240,10 +240,10 @@ export default function EmergencySOS({ session, balances }) {
 
           {/* Action Panel & Execution Tracker */}
           <div className="lg:col-span-1 flex flex-col gap-6">
-            <div className={`bg-slate-900 p-10 rounded-[3rem] shadow-xl text-white flex flex-col justify-between relative overflow-hidden transition-all duration-500 ${executionPlan.isActive ? 'h-auto' : 'h-full'}`}>
+            <div className={`bg-slate-900 p-10 rounded-3xl shadow-xl text-white flex flex-col justify-between relative overflow-hidden transition-all duration-500 ${executionPlan.isActive ? 'h-auto' : 'h-full'}`}>
               <div className="relative z-10">
                 <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-red-400 mb-8 border border-white/10"><AlertCircle size={32}/></div>
-                <h3 className="text-2xl font-black mb-4">Request Capital</h3>
+                <h3 className="text-2xl font-bold mb-4">Request Capital</h3>
                 <p className="text-xs text-slate-400 font-medium leading-relaxed mb-10">
                   By clicking below, you confirm you are in an emergency situation. AFR Funds will be deposited into your immutable blockchain wallet instantly.
                 </p>
@@ -253,7 +253,7 @@ export default function EmergencySOS({ session, balances }) {
                 <button 
                   onClick={handleRequestAdvance}
                   disabled={isProcessing}
-                  className="w-full py-5 bg-white text-slate-900 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg hover:bg-slate-100 transition-all flex items-center justify-center gap-2 relative z-10 disabled:opacity-50"
+                  className="ui-btn ui-btn-secondary relative z-10"
                 >
                   {isProcessing ? <Loader2 className="animate-spin" size={16}/> : 'Initiate Protocol'}
                 </button>
@@ -264,10 +264,10 @@ export default function EmergencySOS({ session, balances }) {
 
             {/* 🔥 TRANSPARENT EXECUTION TRACKER UI */}
             {executionPlan.isActive && (
-              <div className="w-full bg-[#111111] text-slate-200 rounded-[3rem] p-8 shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4">
+              <div className="w-full bg-[#111111] text-slate-200 rounded-3xl p-8 shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4">
                 <div className="flex justify-between items-center mb-8">
-                  <h4 className="text-[11px] font-black uppercase tracking-widest text-white">{executionPlan.title}</h4>
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_#10b981]"></div>
+                  <h4 className="text-[11px] font-semibold text-white">{executionPlan.title}</h4>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 </div>
                 
                 <div className="space-y-5 mb-8">
@@ -285,7 +285,7 @@ export default function EmergencySOS({ session, balances }) {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-slate-800/50">
-                  <p className="text-[10px] font-black tracking-widest uppercase text-slate-500 mb-4">{executionPlan.currentDetail}</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-4">{executionPlan.currentDetail}</p>
                   <div className="flex items-center gap-4">
                     <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div 
@@ -305,27 +305,27 @@ export default function EmergencySOS({ session, balances }) {
       )}
 
       {activeTab === 'TERMS' && (
-        <div className="bg-white border border-slate-200 p-10 rounded-[3rem] shadow-sm animate-in slide-in-from-left-4">
-          <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-8">Program Terms & Disclosure</h3>
+        <div className="bg-white border border-slate-200 p-10 rounded-3xl shadow-sm animate-in slide-in-from-left-4">
+          <h3 className="text-sm font-semibold text-slate-800 mb-8">Program Terms & Disclosure</h3>
           <div className="space-y-8 max-w-3xl">
             <div className="flex gap-5">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl h-fit"><Lock className="text-blue-600" size={20}/></div>
               <div>
-                <p className="font-black text-slate-800 text-sm">Collateral Requirement</p>
+                <p className="font-bold text-slate-800 text-sm">Collateral Requirement</p>
                 <p className="text-sm font-medium text-slate-500 mt-2 leading-relaxed">Emergency advances are partially collateralized by your existing Alpha Equity or future inbound transfers. No credit score check is required.</p>
               </div>
             </div>
             <div className="flex gap-5">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl h-fit"><Clock className="text-blue-600" size={20}/></div>
               <div>
-                <p className="font-black text-slate-800 text-sm">Repayment Period</p>
+                <p className="font-bold text-slate-800 text-sm">Repayment Period</p>
                 <p className="text-sm font-medium text-slate-500 mt-2 leading-relaxed">There is no fixed repayment schedule. Repayment is triggered automatically when your total account balance exceeds a pre-set stability threshold.</p>
               </div>
             </div>
             <div className="flex gap-5">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl h-fit"><Info className="text-blue-600" size={20}/></div>
               <div>
-                <p className="font-black text-slate-800 text-sm">Abuse Policy</p>
+                <p className="font-bold text-slate-800 text-sm">Abuse Policy</p>
                 <p className="text-sm font-medium text-slate-500 mt-2 leading-relaxed">The Emergency Liquidity program is a safety net for users in distress. Fraudulent use or deliberate system abuse may result in account termination and legal action.</p>
               </div>
             </div>
@@ -336,17 +336,17 @@ export default function EmergencySOS({ session, balances }) {
       {/* SUCCESS OVERLAY */}
       {requestStatus === 'SUCCESS' && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-sm bg-slate-900/40 animate-in fade-in duration-300">
-          <div className="bg-white border border-slate-200 shadow-2xl rounded-[3.5rem] max-w-md w-full p-12 text-center animate-in zoom-in-95 duration-300 relative overflow-hidden">
+          <div className="bg-white border border-slate-200 shadow-2xl rounded-3xl max-w-md w-full p-12 text-center animate-in zoom-in-95 duration-300 relative overflow-hidden">
             <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-emerald-50 blur-[60px] pointer-events-none"></div>
             <div className="relative z-10">
               <div className="w-24 h-24 bg-emerald-50 text-emerald-500 border border-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-sm">
                 <CheckCircle2 size={48}/>
               </div>
-              <h3 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Transfer Successful</h3>
+              <h3 className="text-3xl font-bold text-slate-800 mb-4 tracking-tight">Transfer Successful</h3>
               <p className="text-sm font-medium text-slate-500 mb-10 leading-relaxed">
                 {maxAdvanceAFR.toLocaleString()} AFR has been successfully minted and deposited into your secure blockchain wallet.
               </p>
-              <button onClick={() => { setRequestStatus('IDLE'); setActiveTab('REQUEST'); }} className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest hover:bg-slate-800 transition-colors shadow-lg">
+              <button onClick={() => { setRequestStatus('IDLE'); setActiveTab('REQUEST'); }} className="ui-btn ui-btn-primary">
                 Return to Hub
               </button>
             </div>
@@ -358,8 +358,8 @@ export default function EmergencySOS({ session, balances }) {
       {notification && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-top-10 duration-500">
            <div className={`px-8 py-5 rounded-3xl shadow-2xl border-2 backdrop-blur-2xl flex items-center gap-4 ${notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-             <div className={`w-3 h-3 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-red-400 shadow-[0_0_10px_#f87171]'}`}></div>
-             <p className="font-black text-[11px] uppercase tracking-[0.2em]">{notification.text}</p>
+             <div className={`w-3 h-3 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+             <p className="font-semibold text-[11px]">{notification.text}</p>
            </div>
         </div>
       )}

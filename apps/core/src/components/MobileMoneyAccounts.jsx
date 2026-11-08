@@ -92,7 +92,7 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
     return (
       <div className="flex items-center gap-2 py-3 text-slate-500">
         <Loader2 size={14} className="animate-spin" />
-        <span className="text-[10px] font-black uppercase tracking-widest">Loading saved accounts...</span>
+        <span className="text-xs font-semibold">Loading saved accounts...</span>
       </div>
     );
   }
@@ -100,12 +100,12 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+        <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
           <Smartphone size={12} /> Saved Accounts
         </p>
         <button
           onClick={() => setShowForm(v => !v)}
-          className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-600 flex items-center gap-1 transition-colors"
+          className="text-sm font-semibold text-emerald-600 hover:text-emerald-600 flex items-center gap-1 transition-colors"
         >
           {showForm ? <><X size={12}/> Cancel</> : <><Plus size={12}/> Add</>}
         </button>
@@ -116,13 +116,13 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
         <div className="space-y-1.5">
           {accounts.map(acc => (
             <div key={acc.id} className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl group">
-              <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${NETWORK_COLORS[acc.network] || 'bg-slate-50 text-slate-500 border-slate-500/30'}`}>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${NETWORK_COLORS[acc.network] || 'bg-slate-50 text-slate-500 border-slate-500/30'}`}>
                 {acc.network}
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-slate-900 truncate">{acc.phone}</p>
                 {(acc.alias || acc.country) && (
-                  <p className="text-[9px] font-bold text-slate-500 truncate">
+                  <p className="text-xs font-bold text-slate-500 truncate">
                     {acc.alias ? `${acc.alias} · ` : ''}{COUNTRY_LABELS[acc.country] || acc.country}
                   </p>
                 )}
@@ -131,7 +131,7 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
                 {acc.is_default && <Star size={11} className="text-amber-600 fill-amber-400" />}
                 <button
                   onClick={() => onSelectAccount({ network: acc.network, country: acc.country, phone: acc.phone, alias: acc.alias })}
-                  className="text-[9px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-600 px-2 py-0.5 bg-emerald-50 hover:bg-emerald-50 rounded-lg transition-colors"
+                  className="text-sm font-semibold text-emerald-600 hover:text-emerald-600 px-2 py-0.5 bg-emerald-50 hover:bg-emerald-50 rounded-lg transition-colors"
                 >
                   Use
                 </button>
@@ -154,21 +154,21 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
         <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Network</label>
+              <label className="ui-label">Network</label>
               <select
                 value={network}
                 onChange={e => { setNetwork(e.target.value); setCountry(FLW_NETWORKS[e.target.value]?.[0] || 'GH'); }}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors"
+                className="ui-select"
               >
                 {Object.keys(FLW_NETWORKS).map(n => <option key={n} value={n}>{n}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Country</label>
+              <label className="ui-label">Country</label>
               <select
                 value={country}
                 onChange={e => setCountry(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors"
+                className="ui-select"
               >
                 {availableCountries.map(c => <option key={c} value={c}>{COUNTRY_LABELS[c] || c}</option>)}
               </select>
@@ -179,19 +179,19 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
             value={phone}
             onChange={e => setPhone(e.target.value)}
             placeholder="+233XXXXXXXXX"
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-400"
+            className="ui-input"
           />
           <input
             type="text"
             value={alias}
             onChange={e => setAlias(e.target.value)}
             placeholder="Label (optional, e.g. My MTN)"
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-400"
+            className="ui-input"
           />
           <button
             onClick={handleSave}
             disabled={isSaving || !phone.trim()}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase tracking-widest py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+            className="ui-btn ui-btn-primary"
           >
             {isSaving ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
             Save Account
@@ -200,7 +200,7 @@ export default function MobileMoneyAccounts({ userId, onSelectAccount }) {
       )}
 
       {accounts.length === 0 && !showForm && (
-        <p className="text-[9px] font-bold text-slate-600 text-center py-1">No saved accounts yet. Add one above.</p>
+        <p className="text-xs font-bold text-slate-600 text-center py-1">No saved accounts yet. Add one above.</p>
       )}
     </div>
   );
