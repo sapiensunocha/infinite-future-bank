@@ -126,6 +126,11 @@ export default function ReceiptModal({ tx, holderName, onClose }) {
           ))}
         </dl>
 
+        <div className="px-5 -mt-1 mb-3 flex justify-center">
+          <button onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('ifb:open-help', { detail: { view: 'dispute', tx } })); }}
+            className="text-sm font-semibold text-amber-700 hover:underline">Report a problem with this payment</button>
+        </div>
+
         <div className="grid grid-cols-2 gap-3 px-5 pb-6">
           <button onClick={download} disabled={!!busy} className="ui-btn ui-btn-secondary">{busy === 'pdf' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Download PDF</button>
           <button onClick={share} disabled={!!busy} className="ui-btn ui-btn-primary">{busy === 'share' ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />} Share</button>

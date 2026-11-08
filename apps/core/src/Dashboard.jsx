@@ -46,6 +46,7 @@ const TOUR_CONTENT_LAZY     = () => import('./config/AppTourConfig').then(m => m
 
 // Screen-level features — lazy-loaded on first navigation
 const Chat              = lazyLoad(() => import('./Chat'));
+const HelpCenter        = lazyLoad(() => import('./features/support/HelpCenter'));
 const AccountHub        = lazyLoad(() => import('./AccountHub'));
 const OrganizationSuite = lazyLoad(() => import('./OrganizationSuite'));
 const WealthInvest      = lazyLoad(() => import('./WealthInvest'));
@@ -116,6 +117,12 @@ export default function Dashboard({ session, onSignOut }) {
   const [showDepositUI, setShowDepositUI] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [showPayMe, setShowPayMe] = useState(false);
+  const [helpState, setHelpState] = useState(null);   // null = closed; { view, tx, ref }
+  useEffect(() => {
+    const open = (e) => setHelpState({ view: 'home', ...(e.detail || {}) });
+    window.addEventListener('ifb:open-help', open);
+    return () => window.removeEventListener('ifb:open-help', open);
+  }, []);
   const [showStatementModal, setShowStatementModal] = useState(false);
   const [showVault, setShowVault] = useState(false);
   const [showNFC, setShowNFC] = useState(false);
@@ -432,9 +439,10 @@ export default function Dashboard({ session, onSignOut }) {
             </Suspense>
           </div>
 
-          {/* Chat FAB */}
+          {/* Help button: AI assistant, live chat with an agent, disputes, tracing */}
           <button
-            onClick={() => setActiveModal('ADVISOR')}
+            onClick={() => setHelpState({ view: 'home' })}
+            aria-label="Help and support"
             className="fixed z-[110] bg-blue-700 text-white shadow-2xl rounded-full flex items-center gap-3 transition-all active:scale-95 border-2 border-white/20"
             style={{
               bottom: 'calc(max(env(safe-area-inset-bottom), 6px) + 4.5rem)',
@@ -442,8 +450,8 @@ export default function Dashboard({ session, onSignOut }) {
               padding: '0.875rem',
             }}
           >
-            <MessageSquare size={22} className="animate-pulse" />
-            <span className="font-semibold text-xs pr-1 hidden md:block">Your Financial AI</span>
+            <MessageSquare size={22} />
+            <span className="font-semibold text-xs pr-1 hidden md:block">Help</span>
           </button>
         </main>
       </div>
@@ -524,6 +532,7 @@ export default function Dashboard({ session, onSignOut }) {
       <Suspense fallback={null}>
         {showPayMe && <PayMeCard profile={profile} onClose={() => setShowPayMe(false)} />}
         {activeModal === 'ADVISOR' && <Chat session={session} profile={profile} balances={balances} onClose={() => setActiveModal(null)} />}
+        {helpState && <HelpCenter session={session} initial={helpState} onClose={() => setHelpState(null)} onOpenAssistant={() => setActiveModal('ADVISOR')} />}
       </Suspense>
 
       {/* 🔒 VAULT MANAGER OVERLAY */}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Filter, FileDown, ArrowDownRight, ArrowUpRight, ArrowDownUp,
   CheckCircle2, Clock, XCircle, CreditCard, Building, Zap, Wallet,
-  Search, ChevronRight
+  Search, ChevronRight, Printer
 } from 'lucide-react';
 import ReceiptModal from './components/modals/ReceiptModal';
 
@@ -129,7 +129,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
               onClick={() => setShowStatementModal(true)}
               className="shrink-0 px-3.5 py-1.5 bg-blue-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5"
             >
-              <FileDown size={12} /> Export
+              <Printer size={14} /> Print / Statement
             </button>
           </div>
         </div>

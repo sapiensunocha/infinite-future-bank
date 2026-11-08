@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Sparkles, X, Compass, ArrowDownUp, Target, Landmark, Folder, Briefcase,
   Building, Globe, BookOpen, Users, ShieldCheck, Share2, Settings, LogOut, Shield,
-  Building2
+  Building2, LifeBuoy
 } from 'lucide-react';
 import AppSwitcher from '../AppSwitcher';
 import FeatureBadge from '../ui/FeatureBadge';
@@ -23,6 +23,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
     { id: 'AGENTS',          icon: <Users size={18} />,       label: t('nav.team') },
     { id: 'INSURANCE',       icon: <ShieldCheck size={18} />, label: t('nav.insurance') },
     { id: 'NETWORK',         icon: <Share2 size={18} />,      label: 'AFR Node' },
+    { id: 'HELP',            icon: <LifeBuoy size={18} />,    label: 'Help & support' },
     { id: 'SETTINGS',        icon: <Settings size={18} />,    label: t('nav.settings') },
   ];
 
@@ -60,7 +61,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, activeTab, se
           {tabs.map((item) => (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
+              onClick={() => { if (item.id === 'HELP') window.dispatchEvent(new CustomEvent('ifb:open-help')); else setActiveTab(item.id); setIsSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[15px] font-medium transition-colors ${
                 activeTab === item.id
                   ? 'bg-blue-50 text-blue-700'

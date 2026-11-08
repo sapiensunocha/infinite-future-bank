@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from './services/supabaseClient';
+import SupportCasePanel from './features/support/SupportCasePanel';
 import { Search, Send, CheckCircle2, AlertCircle, ShieldAlert, ShieldCheck, User, Landmark, Clock, Lock, Unlock, Zap } from 'lucide-react';
 
 export default function AdminSupportDesk({ session, adminProfile }) {
@@ -19,7 +20,8 @@ export default function AdminSupportDesk({ session, adminProfile }) {
       .from('support_tickets')
       .select('*, profiles!support_tickets_user_id_fkey(full_name, email, avatar_url, kyc_status)')
       .in('status', ['open', 'agent_assigned'])
-      .order('created_at', { ascending: false });
+      .order('priority', { ascending: false })
+      .order('last_message_at', { ascending: false, nullsFirst: false });
     
     if (data) setTickets(data);
   };
@@ -106,7 +108,10 @@ export default function AdminSupportDesk({ session, adminProfile }) {
   };
 
   const handleResolveTicket = async () => {
-    await supabase.from('support_tickets').update({ status: 'resolved' }).eq('id', activeTicket.id);
+    const note = window.prompt('Message to the customer (required):', 'Your request has been resolved. Reply here if you need anything else.');
+    if (!note || note.trim().length < 3) return;
+    const { error } = await supabase.rpc('resolve_support_ticket', { p_ticket_id: activeTicket.id, p_outcome: 'resolved', p_note: note.trim() });
+    if (error) { window.alert(error.message); return; }
     setActiveTicket(null);
     setTargetUser(null);
     setTargetBalances(null);
@@ -155,7 +160,7 @@ export default function AdminSupportDesk({ session, adminProfile }) {
               </div>
               <div className="overflow-hidden">
                 <p className="text-sm font-bold text-slate-900 truncate">{ticket.profiles?.full_name || 'Unknown Client'}</p>
-                <p className="text-xs text-slate-500 mt-1">Ticket #{ticket.id.split('-')[0]}</p>
+                <p className="text-xs text-slate-500 mt-1">{ticket.number || `Ticket #${ticket.id.split('-')[0]}`} · {ticket.category || 'general'}{ticket.priority && ticket.priority !== 'normal' ? ` · ${ticket.priority}` : ''}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${ticket.status === 'open' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
                     {ticket.status === 'open' ? 'New' : 'Assigned'}
@@ -181,7 +186,7 @@ export default function AdminSupportDesk({ session, adminProfile }) {
             {/* Chat Header */}
             <div className="h-20 border-b border-slate-200 bg-slate-50 flex items-center justify-between px-8 shrink-0 backdrop-blur-md relative z-10">
               <div>
-                <h3 className="text-slate-900 font-bold text-lg">Secure Session: {targetUser?.full_name}</h3>
+                <h3 className="text-slate-900 font-bold text-lg">{activeTicket.number || 'Case'} · {targetUser?.full_name}</h3>
                 <p className="text-xs text-slate-500">End-to-End Encrypted Advisory Link</p>
               </div>
               <button onClick={handleResolveTicket} className="px-5 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl text-sm font-semibold hover:bg-emerald-50 transition-all flex items-center gap-2">
@@ -239,6 +244,8 @@ export default function AdminSupportDesk({ session, adminProfile }) {
       {activeTicket && targetUser && (
         <div className="w-80 xl:w-96 bg-white border-l border-slate-200 h-screen overflow-y-auto custom-scrollbar flex flex-col">
           
+          <SupportCasePanel supabase={supabase} ticket={activeTicket} onSettled={fetchTickets} />
+
           {/* Profile Snapshot */}
           <div className="p-8 border-b border-slate-200 text-center flex flex-col items-center bg-slate-50">
             <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-slate-200 overflow-hidden mb-4 shadow-lg">
@@ -312,7 +319,7 @@ export default function AdminSupportDesk({ session, adminProfile }) {
               )}
 
               <p className="text-xs text-slate-600 text-center mt-6 leading-relaxed">
-                All actions are cryptographically logged and subject to Institutional Audit under IFB Operations Protocol.
+                Refunds and case outcomes are recorded with your agent account.
               </p>
             </div>
           </div>
