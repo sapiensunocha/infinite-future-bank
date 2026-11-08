@@ -112,14 +112,14 @@ function StepBar({ step }) {
     <div className="flex items-center gap-2 mb-8">
       {steps.map((s, i) => (
         <div key={s} className="flex items-center gap-2">
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-all ${
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
             i < step  ? 'bg-emerald-500 text-white' :
             i === step ? 'bg-indigo-600 text-white ring-2 ring-indigo-200' :
                          'bg-slate-50 text-slate-500'
           }`}>
             {i < step ? <CheckCircle2 size={12}/> : i + 1}
           </div>
-          <span className={`text-[10px] font-black uppercase tracking-widest hidden sm:block ${i === step ? 'text-slate-900' : 'text-slate-600'}`}>{s}</span>
+          <span className={`text-xs font-semibold hidden sm:block ${i === step ? 'text-slate-900' : 'text-slate-600'}`}>{s}</span>
           {i < steps.length - 1 && <div className={`w-8 h-px ${i < step ? 'bg-emerald-500' : 'bg-slate-100'}`}/>}
         </div>
       ))}
@@ -205,9 +205,9 @@ function SmartDocPanel({ session, setForm }) {
     <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 space-y-4">
       <div className="flex items-center gap-2">
         <Brain size={14} className="text-indigo-600"/>
-        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Smart Doc Upload — AI Auto-Fill</span>
+        <span className="text-xs font-semibold text-indigo-600">Smart Doc Upload — AI Auto-Fill</span>
       </div>
-      <p className="text-[10px] text-slate-500 leading-relaxed">
+      <p className="text-xs text-slate-500 leading-relaxed">
         Upload your business plan, pitch deck, registration document, or any company file — our AI will read it and automatically fill in the form below.
       </p>
 
@@ -215,8 +215,8 @@ function SmartDocPanel({ session, setForm }) {
         <button type="button" onClick={() => fileRef.current?.click()}
           className="w-full border-2 border-dashed border-indigo-200 hover:border-indigo-200 rounded-xl p-5 flex flex-col items-center gap-2 transition-all hover:bg-indigo-50 cursor-pointer">
           <Upload size={18} className="text-indigo-600"/>
-          <span className="text-[10px] font-black uppercase text-indigo-600">Upload Business Document</span>
-          <span className="text-[9px] text-slate-500">PDF · Images · Word · Any format</span>
+          <span className="text-xs font-semibold text-indigo-600">Upload Business Document</span>
+          <span className="text-xs text-slate-500">PDF · Images · Word · Any format</span>
         </button>
       ) : scanning ? (
         <div className="space-y-3 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
@@ -225,12 +225,12 @@ function SmartDocPanel({ session, setForm }) {
           </div>
           <div className="flex items-center gap-2">
             <Loader2 size={12} className="animate-spin text-indigo-600 shrink-0"/>
-            <span className="text-[10px] text-slate-500">AI reading document…</span>
+            <span className="text-xs text-slate-500">AI reading document…</span>
           </div>
           {['Company name','Sector','Country','Team size','Revenue','Capital ask','Problem','Solution'].map(f => (
             <div key={f} className="flex items-center gap-2 opacity-50">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0"/>
-              <span className="text-[9px] text-slate-500">{f}</span>
+              <span className="text-xs text-slate-500">{f}</span>
             </div>
           ))}
         </div>
@@ -238,33 +238,33 @@ function SmartDocPanel({ session, setForm }) {
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle2 size={12} className="text-emerald-600"/>
-            <span className="text-[9px] font-black text-emerald-600 uppercase">{fields.length} fields auto-filled</span>
+            <span className="text-xs font-semibold text-emerald-600">{fields.length} fields auto-filled</span>
             {confidence != null && (
-              <span className={`ml-auto text-[9px] font-black px-2 py-0.5 rounded ${confidence >= 0.8 ? 'bg-emerald-50 text-emerald-600' : confidence >= 0.6 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>
+              <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded ${confidence >= 0.8 ? 'bg-emerald-50 text-emerald-600' : confidence >= 0.6 ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'}`}>
                 {Math.round(confidence * 100)}% confident
               </span>
             )}
           </div>
           {fields.map(f => (
             <div key={f.label} className="flex items-center justify-between gap-2 py-1 border-b border-slate-200 last:border-0">
-              <span className="text-[9px] text-slate-500">{f.label}</span>
+              <span className="text-xs text-slate-500">{f.label}</span>
               <div className="flex items-center gap-1">
-                <span className="text-[9px] text-slate-900 font-bold truncate max-w-[100px]">{f.value}</span>
-                <span className={`text-[7px] font-black px-1 py-0.5 rounded ${(f.confidence||0)>=0.8?'bg-emerald-50 text-emerald-600':'bg-amber-50 text-amber-600'}`}>
+                <span className="text-xs text-slate-900 font-bold truncate max-w-[100px]">{f.value}</span>
+                <span className={`text-xs font-bold px-1 py-0.5 rounded ${(f.confidence||0)>=0.8?'bg-emerald-50 text-emerald-600':'bg-amber-50 text-amber-600'}`}>
                   {Math.round((f.confidence||0)*100)}%
                 </span>
               </div>
             </div>
           ))}
           <button type="button" onClick={() => { setDocFile(null); setFields([]); fileRef.current?.click(); }}
-            className="text-[9px] font-black text-indigo-600 hover:text-indigo-600 uppercase tracking-wider mt-2 flex items-center gap-1">
+            className="text-sm font-semibold text-indigo-600 hover:text-indigo-600 mt-2 flex items-center gap-1">
             <Upload size={9}/> Upload different document
           </button>
         </div>
       ) : error ? (
         <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
           <AlertTriangle size={12} className="text-red-600 mt-0.5 shrink-0"/>
-          <span className="text-[10px] text-red-600">{error}</span>
+          <span className="text-xs text-red-600">{error}</span>
         </div>
       ) : null}
 
@@ -281,7 +281,7 @@ function ProfileStep({ form, setForm, onNext, session }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-black text-slate-900 mb-1">Tell us about your business</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Tell us about your business</h2>
         <p className="text-sm text-slate-500">Upload a document and AI fills this in — or type manually below.</p>
       </div>
 
@@ -292,18 +292,18 @@ function ProfileStep({ form, setForm, onNext, session }) {
           <label className="label-xs">Company / Venture Name</label>
           <input value={form.company_name} onChange={e => setForm(p=>({...p, company_name: e.target.value}))}
             placeholder="e.g. AfriTech Solutions Ltd"
-            className="input-dark" required />
+            className="ui-input" required />
         </div>
         <div>
           <label className="label-xs">Sector</label>
-          <select value={form.sector} onChange={e => setForm(p=>({...p, sector: e.target.value, is_green_eligible: false}))} className="input-dark">
+          <select value={form.sector} onChange={e => setForm(p=>({...p, sector: e.target.value, is_green_eligible: false}))} className="ui-select">
             <option value="">— Select —</option>
             {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           {GREEN_SECTORS[form.sector] && (
             <button type="button" onClick={() => setForm(p=>({...p, is_green_eligible: !p.is_green_eligible}))}
-              className={`mt-2 w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${form.is_green_eligible ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-emerald-600 hover:text-emerald-600'}`}>
-              <span className="text-base">🌱</span>
+              className={`mt-2 w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all ${form.is_green_eligible ? 'bg-emerald-50 border-emerald-500 text-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-emerald-600 hover:text-emerald-600'}`}>
+              <span className="text-base"></span>
               {form.is_green_eligible ? 'IFC Green Eligible · ' : 'Tag as IFC Green Eligible · '}
               <span className="normal-case font-medium opacity-80">{GREEN_SECTORS[form.sector]}</span>
             </button>
@@ -312,27 +312,27 @@ function ProfileStep({ form, setForm, onNext, session }) {
         <div>
           <label className="label-xs">Country of Operation</label>
           <input value={form.country} onChange={e => setForm(p=>({...p, country: e.target.value}))}
-            placeholder="e.g. Kenya" className="input-dark" />
+            placeholder="e.g. Kenya" className="ui-input" />
         </div>
         <div>
           <label className="label-xs">Team Size</label>
           <input type="number" min={1} value={form.team_size} onChange={e => setForm(p=>({...p, team_size: parseInt(e.target.value)||1}))}
-            className="input-dark" />
+            className="ui-input" />
         </div>
         <div>
           <label className="label-xs">Annual Revenue (USD, 0 if pre-revenue)</label>
           <input type="number" min={0} value={form.annual_revenue_usd} onChange={e => setForm(p=>({...p, annual_revenue_usd: parseFloat(e.target.value)||0}))}
-            placeholder="0" className="input-dark" />
+            placeholder="0" className="ui-input" />
         </div>
         <div>
           <label className="label-xs">Capital You're Seeking (USD)</label>
           <input type="number" min={0} value={form.capital_ask_usd} onChange={e => setForm(p=>({...p, capital_ask_usd: parseFloat(e.target.value)||0}))}
-            placeholder="e.g. 250000" className="input-dark" />
+            placeholder="e.g. 250000" className="ui-input" />
         </div>
         <div>
           <label className="label-xs">Website (optional)</label>
           <input value={form.website} onChange={e => setForm(p=>({...p, website: e.target.value}))}
-            placeholder="https://" className="input-dark" />
+            placeholder="https://" className="ui-input" />
         </div>
       </div>
 
@@ -342,8 +342,8 @@ function ProfileStep({ form, setForm, onNext, session }) {
           {STAGES.map(s => (
             <button key={s.id} type="button" onClick={() => setForm(p=>({...p, stage: s.id}))}
               className={`p-3 rounded-xl border text-left transition-all ${form.stage === s.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-slate-50 hover:border-slate-200'}`}>
-              <p className="text-[11px] font-black text-slate-900">{s.label}</p>
-              <p className="text-[9px] text-slate-500 mt-0.5 leading-tight">{s.desc}</p>
+              <p className="text-[11px] font-bold text-slate-900">{s.label}</p>
+              <p className="text-xs text-slate-500 mt-0.5 leading-tight">{s.desc}</p>
             </button>
           ))}
         </div>
@@ -353,18 +353,18 @@ function ProfileStep({ form, setForm, onNext, session }) {
         <label className="label-xs">Problem You're Solving</label>
         <textarea value={form.problem_statement} onChange={e => setForm(p=>({...p, problem_statement: e.target.value}))}
           rows={3} placeholder="What specific problem does your business solve? Be direct."
-          className="input-dark resize-none" />
+          className="ui-textarea resize-none" />
       </div>
 
       <div>
         <label className="label-xs">Your Solution</label>
         <textarea value={form.solution_statement} onChange={e => setForm(p=>({...p, solution_statement: e.target.value}))}
           rows={3} placeholder="How does your business solve it? What makes it different?"
-          className="input-dark resize-none" />
+          className="ui-textarea resize-none" />
       </div>
 
       <button onClick={onNext} disabled={!valid}
-        className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+        className="ui-btn ui-btn-primary">
         Choose Your Package <ChevronRight size={14}/>
       </button>
     </div>
@@ -383,7 +383,7 @@ function PackageStep({ selected, setSelected, addons, setAddons, onNext, onBack 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-black text-slate-900 mb-1">Choose your IFB package</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Choose your IFB package</h2>
         <p className="text-sm text-slate-500">Every price maps to real hours of financial, strategic, and analytical work deployed behind your company.</p>
       </div>
 
@@ -400,7 +400,7 @@ function PackageStep({ selected, setSelected, addons, setAddons, onNext, onBack 
               }`}
             >
               {p.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 rounded-full text-[9px] font-black uppercase tracking-widest text-white whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 rounded-full text-xs font-semibold text-white whitespace-nowrap">
                   Most Popular
                 </div>
               )}
@@ -411,18 +411,18 @@ function PackageStep({ selected, setSelected, addons, setAddons, onNext, onBack 
                   {selected === p.id && <CheckCircle2 size={16} className="text-emerald-600"/>}
                 </div>
                 <div>
-                  <p className={`text-[10px] font-black uppercase tracking-widest ${p.accent}`}>{p.name}</p>
-                  <p className="text-slate-900 font-black text-lg">{fmtUSD(p.price)}</p>
-                  <p className="text-[10px] text-slate-500">Range: {p.range}</p>
+                  <p className={`text-xs font-semibold ${p.accent}`}>{p.name}</p>
+                  <p className="text-slate-900 font-bold text-lg">{fmtUSD(p.price)}</p>
+                  <p className="text-xs text-slate-500">Range: {p.range}</p>
                 </div>
-                <p className="text-[10px] text-slate-500 leading-relaxed">{p.target}</p>
-                <div className={`px-2 py-1 rounded-lg ${p.badge} text-[9px] font-black`}>{p.hours}</div>
+                <p className="text-xs text-slate-500 leading-relaxed">{p.target}</p>
+                <div className={`px-2 py-1 rounded-lg ${p.badge} text-xs font-bold`}>{p.hours}</div>
 
                 {/* Workstreams toggle */}
                 <button
                   type="button"
                   onClick={e => { e.stopPropagation(); setExpanded(isExp ? null : p.id); }}
-                  className="w-full text-[9px] text-slate-500 hover:text-slate-600 font-black uppercase tracking-widest transition-colors pt-1 flex items-center justify-center gap-1"
+                  className="w-full text-sm text-slate-500 hover:text-slate-600 font-semibold transition-colors pt-1 flex items-center justify-center gap-1"
                 >
                   {isExp ? 'Hide detail' : 'See what\'s included'} <ChevronRight size={10} className={`transition-transform ${isExp ? 'rotate-90' : ''}`}/>
                 </button>
@@ -432,21 +432,21 @@ function PackageStep({ selected, setSelected, addons, setAddons, onNext, onBack 
                     {p.workstreams.map(ws => (
                       <div key={ws.label}>
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-[10px] font-black text-slate-900">{ws.label}</p>
-                          <span className={`text-[9px] font-black ${p.accent}`}>{ws.cost}</span>
+                          <p className="text-xs font-bold text-slate-900">{ws.label}</p>
+                          <span className={`text-xs font-bold ${p.accent}`}>{ws.cost}</span>
                         </div>
                         <ul className="space-y-0.5">
                           {ws.items.map(it => (
-                            <li key={it} className="flex items-center gap-1.5 text-[9px] text-slate-500">
+                            <li key={it} className="flex items-center gap-1.5 text-xs text-slate-500">
                               <span className="w-1 h-1 rounded-full bg-slate-200 shrink-0"/>
                               {it}
                             </li>
                           ))}
                         </ul>
-                        {ws.hours && <p className="text-[9px] text-slate-600 mt-1">⏱ {ws.hours}</p>}
+                        {ws.hours && <p className="text-xs text-slate-600 mt-1">⏱ {ws.hours}</p>}
                       </div>
                     ))}
-                    <div className={`mt-2 pt-2 border-t border-slate-200 text-[9px] font-black ${p.accent}`}>
+                    <div className={`mt-2 pt-2 border-t border-slate-200 text-xs font-bold ${p.accent}`}>
                       Total work value: {p.value}
                     </div>
                   </div>
@@ -473,9 +473,9 @@ function PackageStep({ selected, setSelected, addons, setAddons, onNext, onBack 
                   <Icon size={14} className={active ? 'text-amber-600' : 'text-slate-500'}/>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-black text-slate-900">{a.name}</p>
-                  <p className="text-[9px] text-slate-500 mt-0.5">{a.desc}</p>
-                  <p className={`text-[10px] font-black mt-1 ${active ? 'text-amber-600' : 'text-slate-500'}`}>+{fmtUSD(a.price)}</p>
+                  <p className="text-[11px] font-bold text-slate-900">{a.name}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{a.desc}</p>
+                  <p className={`text-xs font-bold mt-1 ${active ? 'text-amber-600' : 'text-slate-500'}`}>+{fmtUSD(a.price)}</p>
                 </div>
                 {active && <CheckCircle2 size={14} className="text-amber-600 shrink-0 mt-0.5"/>}
               </button>
@@ -488,26 +488,26 @@ function PackageStep({ selected, setSelected, addons, setAddons, onNext, onBack 
       {selected && (
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Total Due</p>
-            <p className="text-2xl font-black text-slate-900">{fmtUSD(total)}</p>
-            <p className="text-[10px] text-slate-500 mt-0.5">Charged from your IFB liquid balance</p>
+            <p className="text-xs text-slate-500 font-semibold">Total Due</p>
+            <p className="text-2xl font-bold text-slate-900">{fmtUSD(total)}</p>
+            <p className="text-xs text-slate-500 mt-0.5">Charged from your IFB liquid balance</p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Package</p>
-            <p className={`text-sm font-black ${PACKAGES.find(p=>p.id===selected)?.accent}`}>
+            <p className="text-xs text-slate-500 font-semibold">Package</p>
+            <p className={`text-sm font-bold ${PACKAGES.find(p=>p.id===selected)?.accent}`}>
               {PACKAGES.find(p=>p.id===selected)?.name}
             </p>
-            {addonTotal > 0 && <p className="text-[10px] text-amber-600">+ {fmtUSD(addonTotal)} add-ons</p>}
+            {addonTotal > 0 && <p className="text-xs text-amber-600">+ {fmtUSD(addonTotal)} add-ons</p>}
           </div>
         </div>
       )}
 
       <div className="flex gap-3">
-        <button onClick={onBack} className="px-6 py-4 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+        <button onClick={onBack} className="px-6 py-4 bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold rounded-2xl text-xs flex items-center gap-2 transition-all">
           <ArrowLeft size={14}/> Back
         </button>
         <button onClick={onNext} disabled={!selected}
-          className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+          className="ui-btn ui-btn-primary flex-1">
           Confirm & Pay <ChevronRight size={14}/>
         </button>
       </div>
@@ -527,7 +527,7 @@ function PaymentStep({ form, selected, addons, balance, onConfirm, onBack, payin
   return (
     <div className="space-y-6 max-w-lg mx-auto">
       <div>
-        <h2 className="text-2xl font-black text-slate-900 mb-1">Confirm payment</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Confirm payment</h2>
         <p className="text-sm text-slate-500">Review your order before we charge your wallet.</p>
       </div>
 
@@ -538,10 +538,10 @@ function PaymentStep({ form, selected, addons, balance, onConfirm, onBack, payin
             <Icon size={20} className={pkg?.accent}/>
           </div>
           <div>
-            <p className={`text-[10px] font-black uppercase tracking-widest ${pkg?.accent}`}>{pkg?.name}</p>
-            <p className="text-slate-900 font-black">{pkg?.subtitle}</p>
+            <p className={`text-xs font-semibold ${pkg?.accent}`}>{pkg?.name}</p>
+            <p className="text-slate-900 font-bold">{pkg?.subtitle}</p>
           </div>
-          <p className="ml-auto text-slate-900 font-black">{fmtUSD(pkg?.price || 0)}</p>
+          <p className="ml-auto text-slate-900 font-bold">{fmtUSD(pkg?.price || 0)}</p>
         </div>
 
         {addonItems.map(a => (
@@ -549,13 +549,13 @@ function PaymentStep({ form, selected, addons, balance, onConfirm, onBack, payin
             <span className="text-slate-500 font-bold flex items-center gap-2">
               <Plus size={10} className="text-amber-600"/>{a.name}
             </span>
-            <span className="text-amber-600 font-black">+{fmtUSD(a.price)}</span>
+            <span className="text-amber-600 font-bold">+{fmtUSD(a.price)}</span>
           </div>
         ))}
 
         <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-          <span className="text-slate-900 font-black uppercase tracking-widest text-xs">Total</span>
-          <span className="text-2xl font-black text-slate-900">{fmtUSD(total)}</span>
+          <span className="text-slate-900 font-semibold text-xs">Total</span>
+          <span className="text-2xl font-bold text-slate-900">{fmtUSD(total)}</span>
         </div>
       </div>
 
@@ -564,13 +564,13 @@ function PaymentStep({ form, selected, addons, balance, onConfirm, onBack, payin
         <div className="flex items-center gap-3">
           <Wallet size={18} className={sufficient ? 'text-slate-500' : 'text-red-600'}/>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Your Balance</p>
-            <p className={`font-black text-lg ${sufficient ? 'text-slate-900' : 'text-red-600'}`}>{fmtBalance(balance)}</p>
+            <p className="text-xs font-semibold text-slate-500">Your Balance</p>
+            <p className={`font-bold text-lg ${sufficient ? 'text-slate-900' : 'text-red-600'}`}>{fmtBalance(balance)}</p>
           </div>
         </div>
         {sufficient
-          ? <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest flex items-center gap-1"><CheckCircle2 size={10}/>Sufficient</span>
-          : <span className="text-[10px] text-red-600 font-black uppercase tracking-widest flex items-center gap-1"><AlertTriangle size={10}/>Insufficient</span>
+          ? <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1"><CheckCircle2 size={10}/>Sufficient</span>
+          : <span className="text-xs text-red-600 font-semibold flex items-center gap-1"><AlertTriangle size={10}/>Insufficient</span>
         }
       </div>
 
@@ -589,11 +589,11 @@ function PaymentStep({ form, selected, addons, balance, onConfirm, onBack, payin
       </div>
 
       <div className="flex gap-3">
-        <button onClick={onBack} className="px-6 py-4 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black rounded-2xl text-xs uppercase tracking-widest flex items-center gap-2 transition-all">
+        <button onClick={onBack} className="px-6 py-4 bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold rounded-2xl text-xs flex items-center gap-2 transition-all">
           <ArrowLeft size={14}/> Back
         </button>
         <button onClick={onConfirm} disabled={!sufficient || paying}
-          className="flex-1 py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/30">
+          className="ui-btn ui-btn-primary flex-1">
           {paying ? <><Loader2 size={14} className="animate-spin"/>Processing...</> : <><Rocket size={14}/>Pay {fmtUSD(total)} & Submit</>}
         </button>
       </div>
@@ -610,27 +610,27 @@ function SuccessStep({ result, pkg, form }) {
         <Icon size={36} className={pkg?.accent}/>
       </div>
       <div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 tracking-[0.2em] mb-2">Application Received</p>
-        <h2 className="text-3xl font-black text-slate-900">{form.company_name}</h2>
-        <p className={`text-sm font-black mt-1 ${pkg?.accent}`}>{pkg?.name} — {pkg?.subtitle}</p>
+        <p className="text-xs font-semibold text-emerald-600 mb-2">Application Received</p>
+        <h2 className="text-3xl font-bold text-slate-900">{form.company_name}</h2>
+        <p className={`text-sm font-bold mt-1 ${pkg?.accent}`}>{pkg?.name} — {pkg?.subtitle}</p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-[1.5rem] p-6 text-left space-y-3">
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 font-bold">Amount Paid</span>
-          <span className="text-slate-900 font-black">{fmtUSD(result?.total_paid || 0)}</span>
+          <span className="text-slate-900 font-bold">{fmtUSD(result?.total_paid || 0)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 font-bold">New Balance</span>
-          <span className="text-emerald-600 font-black">{fmtBalance(result?.new_balance || 0)}</span>
+          <span className="text-emerald-600 font-bold">{fmtBalance(result?.new_balance || 0)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 font-bold">Application ID</span>
-          <span className="text-slate-600 font-black text-xs font-mono">{result?.app_id?.slice(0,8).toUpperCase()}</span>
+          <span className="text-slate-600 font-bold text-xs font-mono">{result?.app_id?.slice(0,8).toUpperCase()}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 font-bold">Status</span>
-          <span className="text-amber-600 font-black">Under Review</span>
+          <span className="text-amber-600 font-bold">Under Review</span>
         </div>
       </div>
 
@@ -642,8 +642,8 @@ function SuccessStep({ result, pkg, form }) {
         ].map(i => (
           <div key={i.label} className="bg-white border border-slate-200 rounded-2xl p-3 text-center">
             <i.icon size={16} className="mx-auto text-slate-500 mb-1.5"/>
-            <p className="text-[10px] font-black text-slate-900">{i.label}</p>
-            <p className="text-[9px] text-slate-500 mt-0.5">{i.sub}</p>
+            <p className="text-xs font-bold text-slate-900">{i.label}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{i.sub}</p>
           </div>
         ))}
       </div>

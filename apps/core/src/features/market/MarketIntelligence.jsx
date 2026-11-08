@@ -40,7 +40,7 @@ function ScoreBadge({ score }) {
                 score >= 50 ? 'text-amber-400 bg-amber-900/30 border-amber-700' :
                               'text-rose-400 bg-rose-900/30 border-rose-700';
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black border ${color}`}>
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${color}`}>
       {score}/100
     </span>
   );
@@ -266,10 +266,10 @@ export default function MarketIntelligence({ session, balances }) {
 
   if (!hasAccess) return (
     <div className="max-w-md mx-auto animate-in fade-in zoom-in-95 duration-500 text-center py-12">
-      <div className="w-20 h-20 bg-blue-600/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-blue-700/40">
+      <div className="w-20 h-20 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-700/40">
         <Brain size={36} className="text-blue-400" />
       </div>
-      <h2 className="text-2xl font-black text-white mb-2">Market Intelligence</h2>
+      <h2 className="text-2xl font-bold text-white mb-2">Market Intelligence</h2>
       <p className="text-slate-400 text-sm mb-6 leading-relaxed">
         AI-powered market sizing, competitor analysis, growth trends, and strategic entry reports — updated monthly for your sector and region.
       </p>
@@ -282,35 +282,35 @@ export default function MarketIntelligence({ session, balances }) {
         ))}
       </div>
       <div className="bg-blue-900/30 border border-blue-700/40 rounded-2xl p-4 mb-6">
-        <p className="text-3xl font-black text-white">$9<span className="text-base text-slate-400 font-bold">/month</span></p>
+        <p className="text-3xl font-bold text-white">$9<span className="text-base text-slate-400 font-bold">/month</span></p>
         <p className="text-xs text-slate-400 mt-1">Charged from your IFB Liquid balance · Renews monthly</p>
       </div>
       <button
         onClick={handleSubscribe}
         disabled={isSubscribing}
-        className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+        className="ui-btn ui-btn-primary"
       >
         {isSubscribing ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : <><Sparkles size={16} /> Activate — $9.00</>}
       </button>
-      <p className="text-[10px] text-slate-500 mt-3">Deducted from Liquid Balance · Cancel anytime by not renewing</p>
+      <p className="text-xs text-slate-500 mt-3">Deducted from Liquid Balance · Cancel anytime by not renewing</p>
     </div>
   );
 
   // ── Step 0: Setup ─────────────────────────────────────────────────────────────
   if (step === 0) return (
     <div className="max-w-2xl mx-auto animate-in fade-in zoom-in-95 duration-500">
-      <div className="bg-slate-900 border border-slate-800 p-8 rounded-[3rem] shadow-xl mb-6">
+      <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-xl mb-6">
         <div className="flex items-center gap-4 mb-3">
           <div className="w-12 h-12 bg-blue-600/20 rounded-2xl flex items-center justify-center">
             <Brain size={24} className="text-blue-400" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-white">Market Intelligence</h2>
+            <h2 className="text-2xl font-bold text-white">Market Intelligence</h2>
             <p className="text-xs text-slate-400">AI-powered research in seconds</p>
           </div>
           <div className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/40 border border-blue-700 rounded-full">
             <Sparkles size={11} className="text-blue-400" />
-            <span className="text-[10px] font-black text-blue-300 uppercase tracking-widest">AI Agent</span>
+            <span className="text-xs font-semibold text-blue-300">AI Agent</span>
           </div>
         </div>
         <p className="text-sm text-slate-400 leading-relaxed">
@@ -318,25 +318,25 @@ export default function MarketIntelligence({ session, balances }) {
         </p>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-[3rem] p-8 shadow-sm space-y-6">
+      <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Industry Sector *</label>
+            <label className="ui-label">Industry Sector *</label>
             <select
               value={form.sector}
               onChange={e => setForm(p => ({ ...p, sector: e.target.value }))}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-sm outline-none focus:border-blue-500 appearance-none"
+              className="ui-select"
             >
               <option value="">Select sector…</option>
               {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Target Region *</label>
+            <label className="ui-label">Target Region *</label>
             <select
               value={form.region}
               onChange={e => setForm(p => ({ ...p, region: e.target.value }))}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-sm outline-none focus:border-blue-500 appearance-none"
+              className="ui-select"
             >
               <option value="">Select region…</option>
               {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -345,22 +345,22 @@ export default function MarketIntelligence({ session, balances }) {
         </div>
 
         <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Focus Keywords <span className="normal-case text-slate-400">(optional)</span></label>
+          <label className="ui-label">Focus Keywords <span className="normal-case text-slate-400">(optional)</span></label>
           <input
             value={form.keywords}
             onChange={e => setForm(p => ({ ...p, keywords: e.target.value }))}
             placeholder="e.g. mobile payments, SME lending, cross-border transfers…"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-sm outline-none focus:border-blue-500"
+            className="ui-input"
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Company Stage</label>
+            <label className="ui-label">Company Stage</label>
             <select
               value={form.company_stage}
               onChange={e => setForm(p => ({ ...p, company_stage: e.target.value }))}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-sm outline-none focus:border-blue-500 appearance-none"
+              className="ui-select"
             >
               <option value="idea">Idea / Pre-seed</option>
               <option value="startup">Early Startup</option>
@@ -370,13 +370,13 @@ export default function MarketIntelligence({ session, balances }) {
             </select>
           </div>
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Report Depth</label>
+            <label className="ui-label">Report Depth</label>
             <div className="flex gap-2">
               {[['standard','Standard'], ['deep','Deep Dive']].map(([v,l]) => (
                 <button
                   key={v}
                   onClick={() => setForm(p => ({ ...p, report_depth: v }))}
-                  className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                  className={`flex-1 py-3.5 rounded-xl text-sm font-semibold border transition-all ${
                     form.report_depth === v ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300'
                   }`}
                 >{l}</button>
@@ -387,7 +387,7 @@ export default function MarketIntelligence({ session, balances }) {
 
         {/* Optional doc upload */}
         <div>
-          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
+          <label className="ui-label">
             Attach Context Docs <span className="normal-case text-slate-400">(optional — pitch deck, biz plan…)</span>
           </label>
           <div
@@ -420,7 +420,7 @@ export default function MarketIntelligence({ session, balances }) {
         <button
           onClick={generateReport}
           disabled={!form.sector || !form.region}
-          className="w-full py-5 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+          className="ui-btn ui-btn-primary"
         >
           <Brain size={16} /> Generate Market Intelligence Report
           <ChevronRight size={16} />
@@ -432,7 +432,7 @@ export default function MarketIntelligence({ session, balances }) {
   // ── Step 1: Processing ────────────────────────────────────────────────────────
   if (step === 1) return (
     <div className="max-w-lg mx-auto animate-in fade-in zoom-in-95 duration-500">
-      <div className="bg-slate-900 border border-slate-800 rounded-[3rem] p-10 text-center mb-6">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 text-center mb-6">
         <div className="relative w-28 h-28 mx-auto mb-6">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="44" fill="none" stroke="#1e293b" strokeWidth="8" />
@@ -442,10 +442,10 @@ export default function MarketIntelligence({ session, balances }) {
               strokeLinecap="round" className="transition-all duration-300" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-black text-white">{progress}%</span>
+            <span className="text-2xl font-bold text-white">{progress}%</span>
           </div>
         </div>
-        <h3 className="text-xl font-black text-white mb-1">AI Agent Running</h3>
+        <h3 className="text-xl font-bold text-white mb-1">AI Agent Running</h3>
         <p className="text-xs text-slate-400">Analysing {form.sector} · {form.region}</p>
       </div>
       <ModuleLoader modules={INTEL_MODULES} active={activeModule} />
@@ -459,16 +459,16 @@ export default function MarketIntelligence({ session, balances }) {
       <div className="max-w-3xl mx-auto animate-in fade-in zoom-in-95 duration-500 space-y-6">
 
         {/* Header */}
-        <div className="bg-slate-900 border border-slate-800 rounded-[3rem] p-8">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Market Intelligence Report</p>
-              <h2 className="text-2xl font-black text-white">{report.sector}</h2>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Market Intelligence Report</p>
+              <h2 className="text-2xl font-bold text-white">{report.sector}</h2>
               <p className="text-sm text-slate-400 flex items-center gap-1.5 mt-1"><Map size={13} />{report.region}</p>
             </div>
             <div className="text-right shrink-0">
               <ScoreBadge score={report.overall_score} />
-              <p className="text-[10px] text-slate-500 mt-1">Opportunity Score</p>
+              <p className="text-xs text-slate-500 mt-1">Opportunity Score</p>
             </div>
           </div>
 
@@ -482,8 +482,8 @@ export default function MarketIntelligence({ session, balances }) {
             ].map(({ label, value, icon: Icon }) => (
               <div key={label} className="bg-slate-800/60 rounded-2xl p-4 text-center">
                 <Icon size={16} className="mx-auto mb-1.5 text-blue-400" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</p>
-                <p className="text-lg font-black text-white">{value}</p>
+                <p className="text-xs font-semibold text-slate-500 mb-1">{label}</p>
+                <p className="text-lg font-bold text-white">{value}</p>
               </div>
             ))}
           </div>
@@ -496,8 +496,8 @@ export default function MarketIntelligence({ session, balances }) {
         </div>
 
         {/* Competitive landscape */}
-        <div className="bg-white border border-slate-200 rounded-[2rem] p-6">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <Building2 size={15} className="text-violet-500" /> Competitive Landscape
           </h3>
           <div className="space-y-3">
@@ -505,24 +505,24 @@ export default function MarketIntelligence({ session, balances }) {
               const SI = SIGNAL_ICON[c.signal];
               return (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black flex items-center justify-center">{i + 1}</span>
+                  <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 text-xs font-bold flex items-center justify-center">{i + 1}</span>
                   <span className="flex-1 text-sm font-bold text-slate-700">{c.name}</span>
                   <div className="flex-1 bg-slate-100 rounded-full h-2">
                     <div className="bg-violet-500 h-2 rounded-full transition-all" style={{ width: `${c.share}%` }} />
                   </div>
-                  <span className="text-xs font-black text-slate-500 w-10 text-right">{c.share}%</span>
+                  <span className="text-xs font-bold text-slate-500 w-10 text-right">{c.share}%</span>
                   <SI size={14} className={SIGNAL_COLOR[c.signal]} />
                 </div>
               );
             })}
           </div>
-          <p className="text-[10px] text-slate-400 mt-3">Market share estimates · {report.market_maturity} market</p>
+          <p className="text-xs text-slate-400 mt-3">Market share estimates · {report.market_maturity} market</p>
         </div>
 
         {/* Trends + Segments side by side */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white border border-slate-200 rounded-[2rem] p-6">
-            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
               <TrendingUp size={15} className="text-emerald-500" /> Growth Trends
             </h3>
             <ul className="space-y-3">
@@ -534,8 +534,8 @@ export default function MarketIntelligence({ session, balances }) {
               ))}
             </ul>
           </div>
-          <div className="bg-white border border-slate-200 rounded-[2rem] p-6">
-            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
               <Users size={15} className="text-amber-500" /> Customer Segments
             </h3>
             <div className="space-y-3">
@@ -545,7 +545,7 @@ export default function MarketIntelligence({ session, balances }) {
                   <div key={i} className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-700">{s.name}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-slate-500">{s.size}</span>
+                      <span className="text-xs font-bold text-slate-500">{s.size}</span>
                       <SI size={12} className={SIGNAL_COLOR[s.growth]} />
                     </div>
                   </div>
@@ -556,14 +556,14 @@ export default function MarketIntelligence({ session, balances }) {
         </div>
 
         {/* Risks */}
-        <div className="bg-white border border-slate-200 rounded-[2rem] p-6">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <AlertTriangle size={15} className="text-orange-500" /> Risk Factors
           </h3>
           <div className="space-y-2.5">
             {report.risks.map((r, i) => (
               <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${RISK_COLOR[r.level]}`}>
-                <span className={`text-[10px] font-black uppercase w-14 shrink-0`}>{r.level}</span>
+                <span className={`text-xs font-semibold w-14 shrink-0`}>{r.level}</span>
                 <span className="text-xs font-medium">{r.label}</span>
               </div>
             ))}
@@ -571,18 +571,18 @@ export default function MarketIntelligence({ session, balances }) {
         </div>
 
         {/* Entry strategies */}
-        <div className="bg-white border border-slate-200 rounded-[2rem] p-6">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <Target size={15} className="text-teal-500" /> Market Entry Strategies
           </h3>
           <div className="space-y-4">
             {report.entry_strategies.map((s, i) => (
               <div key={i} className="flex gap-4">
                 <div className="w-7 h-7 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
-                  <span className="text-[11px] font-black text-teal-600">{i + 1}</span>
+                  <span className="text-[11px] font-bold text-teal-600">{i + 1}</span>
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-800 mb-1">{s.title}</p>
+                  <p className="text-xs font-bold text-slate-800 mb-1">{s.title}</p>
                   <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
                 </div>
               </div>
@@ -591,16 +591,16 @@ export default function MarketIntelligence({ session, balances }) {
         </div>
 
         {/* Regulatory summary */}
-        <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-6">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
             <Shield size={15} className="text-rose-500" /> Regulatory Environment
           </h3>
           <p className="text-sm text-slate-600 leading-relaxed">{report.regulatory_summary}</p>
         </div>
 
         {/* Innovation signals */}
-        <div className="bg-indigo-900/20 border border-indigo-800 rounded-[2rem] p-6">
-          <h3 className="text-sm font-black text-indigo-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <div className="bg-indigo-900/20 border border-indigo-800 rounded-2xl p-6">
+          <h3 className="text-sm font-semibold text-indigo-300 mb-4 flex items-center gap-2">
             <Lightbulb size={15} /> Innovation Signals
           </h3>
           <ul className="space-y-3">
@@ -615,10 +615,10 @@ export default function MarketIntelligence({ session, balances }) {
 
         {/* Actions */}
         <div className="flex gap-3 pb-8">
-          <button onClick={reset} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+          <button onClick={reset} className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-2xl font-semibold text-sm hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
             <RefreshCw size={14} /> New Report
           </button>
-          <button onClick={() => window.print()} className="flex-1 py-4 bg-blue-700 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
+          <button onClick={() => window.print()} className="ui-btn ui-btn-primary flex-1">
             <BookOpen size={14} /> Export Report
           </button>
         </div>

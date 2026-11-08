@@ -140,7 +140,7 @@ export default function AppSwitcher({ currentApp, supabase, light = false }) {
           <rect x="10" y="17" width="4" height="4" rx="1" />
           <rect x="17" y="17" width="4" height="4" rx="1" />
         </svg>
-        <span className="text-xs font-semibold uppercase tracking-widest">IFB Apps</span>
+        <span className="text-xs font-semibold">IFB Apps</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
           className={`w-3 h-3 ml-auto transition-transform ${open ? 'rotate-180' : ''}`}>
           <polyline points="6 9 12 15 18 9" />

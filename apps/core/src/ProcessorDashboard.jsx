@@ -16,7 +16,7 @@ async function sendUserDepositConfirmEmail(userEmail, userName, amountUsd, netwo
         html: `
           <div style="font-family:sans-serif;background:#0f172a;color:#e2e8f0;padding:32px">
             <div style="max-width:520px;margin:0 auto;background:#1e293b;border-radius:16px;padding:32px;border:1px solid #334155">
-              <h1 style="color:#10b981;font-size:22px;margin:0 0 8px">✅ Deposit Confirmed</h1>
+              <h1 style="color:#10b981;font-size:22px;margin:0 0 8px">Deposit Confirmed</h1>
               <p style="color:#94a3b8;margin:0 0 24px">Hi ${first}, your deposit has been confirmed.</p>
               <div style="background:#0f172a;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
                 <p style="margin:0;font-size:32px;font-weight:900;color:#10b981">+$${Number(amountUsd).toFixed(2)}</p>
@@ -41,7 +41,7 @@ async function sendUserWithdrawalConfirmEmail(userEmail, userName, amountUsd, ne
         html: `
           <div style="font-family:sans-serif;background:#0f172a;color:#e2e8f0;padding:32px">
             <div style="max-width:520px;margin:0 auto;background:#1e293b;border-radius:16px;padding:32px;border:1px solid #334155">
-              <h1 style="color:#3b82f6;font-size:22px;margin:0 0 8px">📤 Withdrawal Sent</h1>
+              <h1 style="color:#3b82f6;font-size:22px;margin:0 0 8px">Withdrawal Sent</h1>
               <p style="color:#94a3b8;margin:0 0 24px">Hi ${first}, your withdrawal has been processed.</p>
               <div style="background:#0f172a;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
                 <p style="margin:0;font-size:32px;font-weight:900;color:#3b82f6">$${Number(amountUsd).toFixed(2)}</p>
@@ -95,13 +95,13 @@ function LiveTimer({ startAt }) {
 
   return (
     <div className={`rounded-xl p-2 text-center ${urgent ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-50'}`}>
-      <p className={`text-[9px] uppercase tracking-widest font-black ${urgent ? 'text-emerald-600' : 'text-slate-500'}`}>
+      <p className={`text-xs font-semibold ${urgent ? 'text-emerald-600' : 'text-slate-500'}`}>
         {urgent ? '⚡ ACT NOW' : 'Elapsed'}
       </p>
-      <p className={`text-lg font-black font-mono ${urgent ? 'text-emerald-600' : 'text-slate-500'}`}>
+      <p className={`text-lg font-bold font-mono ${urgent ? 'text-emerald-600' : 'text-slate-500'}`}>
         {mm}:{ss}
       </p>
-      <p className={`text-[9px] font-black ${comm.color}`}>{comm.pct}% · {comm.label}</p>
+      <p className={`text-xs font-bold ${comm.color}`}>{comm.pct}% · {comm.label}</p>
     </div>
   );
 }
@@ -122,9 +122,9 @@ function OrderCard({ order, type, onAction, loading }) {
   if (result) return (
     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center space-y-1">
       <CheckCircle2 size={28} className="text-emerald-600 mx-auto" />
-      <p className="font-black text-emerald-600">Done!</p>
-      <p className="text-2xl font-black text-emerald-600">+${Number(result.commission_usd || 0).toFixed(3)}</p>
-      <p className="text-[10px] text-slate-500">{result.commission_pct}% · {result.response_time_s}s</p>
+      <p className="font-bold text-emerald-600">Done!</p>
+      <p className="text-2xl font-bold text-emerald-600">+${Number(result.commission_usd || 0).toFixed(3)}</p>
+      <p className="text-xs text-slate-500">{result.commission_pct}% · {result.response_time_s}s</p>
     </div>
   );
 
@@ -134,29 +134,29 @@ function OrderCard({ order, type, onAction, loading }) {
         <div className="flex items-center gap-2">
           {isDeposit ? <ArrowDownLeft size={16} className="text-emerald-600" /> : <ArrowUpRight size={16} className="text-blue-600" />}
           <div>
-            <p className="font-black text-slate-900 text-sm">{order.user_name || 'Unknown User'}</p>
-            <p className="text-[10px] text-slate-500">{new Date(order.created_at).toLocaleString()}</p>
+            <p className="font-bold text-slate-900 text-sm">{order.user_name || 'Unknown User'}</p>
+            <p className="text-xs text-slate-500">{new Date(order.created_at).toLocaleString()}</p>
           </div>
         </div>
-        <p className={`text-xl font-black ${isDeposit ? 'text-emerald-600' : 'text-blue-600'}`}>
+        <p className={`text-xl font-bold ${isDeposit ? 'text-emerald-600' : 'text-blue-600'}`}>
           ${Number(order.amount_usd).toFixed(2)}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-slate-50 rounded-xl p-2">
-          <p className="text-[9px] text-slate-500 uppercase tracking-widest">Network</p>
-          <p className="text-xs font-black text-slate-900">{order.network || '—'}</p>
+          <p className="text-xs text-slate-500">Network</p>
+          <p className="text-xs font-bold text-slate-900">{order.network || '—'}</p>
         </div>
         {isDeposit ? (
           <div className="bg-slate-50 rounded-xl p-2">
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest">Ref</p>
-            <p className="text-xs font-black text-amber-600 font-mono">{order.reference_code || '—'}</p>
+            <p className="text-xs text-slate-500">Ref</p>
+            <p className="text-xs font-bold text-amber-600 font-mono">{order.reference_code || '—'}</p>
           </div>
         ) : (
           <div className="bg-slate-50 rounded-xl p-2">
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest">Send To</p>
-            <p className="text-[10px] font-black text-slate-900 font-mono">{order.user_mobile || '—'}</p>
+            <p className="text-xs text-slate-500">Send To</p>
+            <p className="text-xs font-bold text-slate-900 font-mono">{order.user_mobile || '—'}</p>
           </div>
         )}
         <LiveTimer startAt={startAt} />
@@ -164,11 +164,11 @@ function OrderCard({ order, type, onAction, loading }) {
 
       {isDeposit && order.proof_image_url && (
         <a href={order.proof_image_url} target="_blank" rel="noreferrer"
-          className="text-[10px] text-blue-600 underline font-bold block">View proof image</a>
+          className="text-xs text-blue-600 underline font-bold block">View proof image</a>
       )}
 
       <button onClick={handleAction} disabled={confirming || loading}
-        className={`w-full py-3 rounded-xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
+        className={`w-full py-3 rounded-xl font-semibold text-[11px] flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
           isDeposit ? 'bg-emerald-500 hover:bg-emerald-400 text-white' : 'bg-blue-500 hover:bg-blue-400 text-white'
         }`}>
         {confirming ? <Loader2 size={13} className="animate-spin" /> : isDeposit ? <CheckCircle2 size={13} /> : <Send size={13} />}
@@ -274,18 +274,18 @@ export default function ProcessorDashboard({ session }) {
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-lg font-black text-blue-600">D</span>
-              <span className="text-lg font-black text-red-600">E</span>
-              <span className="text-lg font-black text-amber-600">U</span>
-              <span className="text-lg font-black text-emerald-600">S</span>
+              <span className="text-lg font-bold text-blue-600">D</span>
+              <span className="text-lg font-bold text-red-600">E</span>
+              <span className="text-lg font-bold text-amber-600">U</span>
+              <span className="text-lg font-bold text-emerald-600">S</span>
             </div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Processor Portal</p>
+            <p className="text-xs font-semibold text-slate-500">Processor Portal</p>
           </div>
           <div className="flex items-center gap-3">
             {hasLow && (
               <div className="flex items-center gap-1 px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-xl">
                 <AlertTriangle size={11} className="text-amber-600" />
-                <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Low Stock</span>
+                <span className="text-xs font-semibold text-amber-600">Low Stock</span>
               </div>
             )}
             <button onClick={load} className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all">
@@ -299,22 +299,22 @@ export default function ProcessorDashboard({ session }) {
         {/* Profile + Tier */}
         <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-black text-xl">
+            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-bold text-xl">
               {(processor.full_name || '?').charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-black text-slate-900 text-base">{processor.full_name}</p>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${tierColor}`}>
+                <p className="font-bold text-slate-900 text-base">{processor.full_name}</p>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${tierColor}`}>
                   {tierIcon} {processor.tier}
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500">{processor.country} · {processor.city}</p>
+              <p className="text-xs text-slate-500">{processor.country} · {processor.city}</p>
               <div className="flex items-center gap-3 mt-1">
-                <span className="text-[9px] text-amber-600 font-black">★ {Number(processor.cot_rating).toFixed(1)}</span>
-                <span className="text-[9px] text-slate-500">{processor.completed_orders || 0} completed</span>
+                <span className="text-xs text-amber-600 font-bold">{Number(processor.cot_rating).toFixed(1)}</span>
+                <span className="text-xs text-slate-500">{processor.completed_orders || 0} completed</span>
                 {processor.avg_response_time_s > 0 && (
-                  <span className="text-[9px] text-slate-500">avg {processor.avg_response_time_s}s</span>
+                  <span className="text-xs text-slate-500">avg {processor.avg_response_time_s}s</span>
                 )}
               </div>
             </div>
@@ -323,22 +323,22 @@ export default function ProcessorDashboard({ session }) {
           {/* Earnings stats */}
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 text-center">
-              <p className="text-[9px] text-emerald-400/60 uppercase tracking-widest">This Month</p>
-              <p className="text-lg font-black text-emerald-600">${monthEarnings.toFixed(2)}</p>
+              <p className="text-xs text-emerald-400/60">This Month</p>
+              <p className="text-lg font-bold text-emerald-600">${monthEarnings.toFixed(2)}</p>
             </div>
             <div className="bg-slate-50 rounded-xl p-2 text-center">
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest">Total Earned</p>
-              <p className="text-lg font-black text-slate-900">${Number(processor.total_earned_usd || 0).toFixed(2)}</p>
+              <p className="text-xs text-slate-500">Total Earned</p>
+              <p className="text-lg font-bold text-slate-900">${Number(processor.total_earned_usd || 0).toFixed(2)}</p>
             </div>
             <div className="bg-slate-50 rounded-xl p-2 text-center">
-              <p className="text-[9px] text-slate-500 uppercase tracking-widest">⚡ Fast Orders</p>
-              <p className="text-lg font-black text-amber-600">{processor.fast_orders_count || 0}</p>
+              <p className="text-xs text-slate-500">Fast Orders</p>
+              <p className="text-lg font-bold text-amber-600">{processor.fast_orders_count || 0}</p>
             </div>
           </div>
 
           {/* Commission guide */}
           <div className="bg-slate-50 rounded-xl p-3">
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Speed = Higher Earnings</p>
+            <p className="text-xs font-semibold text-slate-500 mb-2">Speed = Higher Earnings</p>
             <div className="grid grid-cols-5 gap-1 text-center">
               {[
                 { t: '<1 min', p: '2.5%', c: 'text-emerald-600' },
@@ -348,8 +348,8 @@ export default function ProcessorDashboard({ session }) {
                 { t: '>30 min', p: '0.5%', c: 'text-red-600' },
               ].map(r => (
                 <div key={r.t}>
-                  <p className={`text-sm font-black ${r.c}`}>{r.p}</p>
-                  <p className="text-[8px] text-slate-500">{r.t}</p>
+                  <p className={`text-sm font-bold ${r.c}`}>{r.p}</p>
+                  <p className="text-xs text-slate-500">{r.t}</p>
                 </div>
               ))}
             </div>
@@ -359,19 +359,19 @@ export default function ProcessorDashboard({ session }) {
         {/* Stock levels */}
         {(stock || []).length > 0 && (
           <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Your Stock</p>
+            <p className="text-xs font-semibold text-slate-500 mb-2">Your Stock</p>
             <div className="grid grid-cols-2 gap-2">
               {(stock || []).map(s => (
                 <div key={`${s.network}-${s.country}`} className={`p-3 rounded-xl border ${s.balance_usd < s.low_threshold_usd ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-slate-500">{s.network}</span>
-                    <span className={`text-[10px] font-black ${s.balance_usd < s.low_threshold_usd ? 'text-red-600' : 'text-emerald-600'}`}>
+                    <span className="text-xs font-bold text-slate-500">{s.network}</span>
+                    <span className={`text-xs font-bold ${s.balance_usd < s.low_threshold_usd ? 'text-red-600' : 'text-emerald-600'}`}>
                       ${s.balance_usd.toFixed(0)}
                     </span>
                   </div>
                   <StockBar balanceUsd={s.balance_usd} thresholdUsd={s.low_threshold_usd} />
                   {s.balance_usd < s.low_threshold_usd && (
-                    <p className="text-[9px] text-red-600 font-bold mt-1">⚠ Low — contact admin</p>
+                    <p className="text-xs text-red-600 font-bold mt-1">Low — contact admin</p>
                   )}
                 </div>
               ))}
@@ -387,12 +387,12 @@ export default function ProcessorDashboard({ session }) {
               { key: 'withdrawals', label: 'Withdrawals', count: withs.length },
             ].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
                   tab === t.key ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
                 }`}>
                 {t.label}
                 {t.count > 0 && (
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black ${tab === t.key ? 'bg-slate-50' : 'bg-blue-600 text-white'}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${tab === t.key ? 'bg-slate-50' : 'bg-blue-600 text-white'}`}>
                     {t.count}
                   </span>
                 )}

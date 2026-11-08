@@ -33,7 +33,7 @@ class ErrorBoundary extends React.Component {
         alignItems: 'center', justifyContent: 'center',
         padding: '32px', fontFamily: 'Inter, system-ui, sans-serif', textAlign: 'center'
       }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⚡</div>
+        <div style={{ fontSize: 48, marginBottom: 16 }}></div>
         <p style={{ fontWeight: 900, fontSize: 18, color: '#0f172a', marginBottom: 8 }}>Something went wrong</p>
         <p style={{ fontSize: 13, color: '#64748b', marginBottom: 32, maxWidth: 280 }}>
           The app encountered an error. Tap below to reload.

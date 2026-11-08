@@ -288,10 +288,10 @@ export default function Training({ session }) {
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 text-slate-800">
       
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border border-slate-200 p-6 rounded-[2.5rem] shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">IFB Academy</h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">Institutional Intelligence Protocols</p>
+          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">IFB Academy</h2>
+          <p className="text-xs font-semibold text-blue-600 mt-1">Institutional Intelligence Protocols</p>
         </div>
         
         <div className="flex bg-slate-100 p-2 rounded-2xl border border-slate-200 shadow-inner w-full md:w-auto overflow-x-auto no-scrollbar">
@@ -302,7 +302,7 @@ export default function Training({ session }) {
             <button 
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setActiveModule(null); }}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}
+              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}
             >
               {tab.label}
             </button>
@@ -312,13 +312,13 @@ export default function Training({ session }) {
 
       {activeTab === 'ACADEMY' && !activeModule && (
         <div className="space-y-8 animate-in slide-in-from-left-4">
-          <div className="bg-slate-900 text-white p-8 md:p-10 rounded-[3rem] shadow-xl border border-slate-800 flex flex-col md:flex-row gap-10">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-8 md:p-10 rounded-3xl shadow-sm border flex flex-col md:flex-row gap-10">
             <div className="flex-1 border-b md:border-b-0 md:border-r border-slate-700 pb-8 md:pb-0 md:pr-8">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6">Behavioral Analysis</h3>
+              <h3 className="text-sm font-semibold text-slate-500 mb-6">Behavioral Analysis</h3>
               <div className="flex items-end gap-4 mb-2">
-                <span className="text-6xl font-black tracking-tighter text-blue-400">{overallProgress}%</span>
+                <span className="text-6xl font-bold tracking-tighter text-blue-400">{overallProgress}%</span>
               </div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sovereign Foundation Mastered</p>
+              <p className="text-xs font-bold text-slate-500">Sovereign Foundation Mastered</p>
             </div>
 
             <div className="flex-1 space-y-6 flex flex-col justify-center">
@@ -328,7 +328,7 @@ export default function Training({ session }) {
                 { label: 'Compliance Index', score: userProfile.compliance_score, color: 'bg-indigo-500' }
               ].map((metric, i) => (
                 <div key={i} className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-300">
+                  <div className="flex justify-between text-xs font-semibold text-slate-300">
                     <span>{metric.label}</span>
                     <span>{metric.score}/100</span>
                   </div>
@@ -347,7 +347,7 @@ export default function Training({ session }) {
                 <div 
                   key={mod.id} 
                   onClick={() => startModule(mod)}
-                  className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-slate-300 transition-all cursor-pointer group flex flex-col justify-between min-h-[220px] relative overflow-hidden"
+                  className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group flex flex-col justify-between min-h-[220px] relative overflow-hidden"
                 >
                   <div className="relative z-10">
                     <div className="flex justify-between items-start mb-6">
@@ -356,13 +356,13 @@ export default function Training({ session }) {
                       </div>
                       {isCompleted ? <CheckCircle2 size={18} className="text-emerald-500"/> : <Play size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors"/>}
                     </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1">{mod.track}</span>
-                    <h3 className="text-lg font-black text-slate-800 leading-tight">{mod.title}</h3>
+                    <span className="text-xs font-semibold text-slate-500 block mb-1">{mod.track}</span>
+                    <h3 className="text-lg font-bold text-slate-800 leading-tight">{mod.title}</h3>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-6 relative z-10">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500 mt-6 relative z-10">
                     Reward: +{mod.points} PTs
                   </div>
-                  {isCompleted && <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-[2.5rem] pointer-events-none"></div>}
+                  {isCompleted && <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-3xl pointer-events-none"></div>}
                 </div>
               );
             })}
@@ -373,7 +373,7 @@ export default function Training({ session }) {
       {activeTab === 'ACADEMY' && activeModule && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
           <div 
-            className="bg-white rounded-[3rem] w-full max-w-lg shadow-2xl overflow-hidden relative border border-slate-100 h-[600px] flex flex-col"
+            className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative border border-slate-100 h-[600px] flex flex-col"
             // 🔥 Instantly cancel auto-advance if the user moves their mouse inside the reading panel
             onMouseMove={() => {
               if (countdown !== null) setCountdown(null);
@@ -405,10 +405,10 @@ export default function Training({ session }) {
               
               {activeModule.screens[currentStep].type === 'statement' && (
                 <div className="text-center space-y-6">
-                  <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner border border-blue-100">
+                  <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-blue-100">
                     {activeModule.icon}
                   </div>
-                  <h2 className="text-3xl font-black text-slate-800 tracking-tighter leading-tight">
+                  <h2 className="text-3xl font-bold text-slate-800 tracking-tighter leading-tight">
                     {activeModule.screens[currentStep].text}
                   </h2>
                 </div>
@@ -416,8 +416,8 @@ export default function Training({ session }) {
 
               {activeModule.screens[currentStep].type === 'explanation' && (
                 <div className="space-y-4 text-left">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-md inline-block">The Protocol</span>
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">{activeModule.screens[currentStep].title}</h2>
+                  <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-md inline-block">The Protocol</span>
+                  <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{activeModule.screens[currentStep].title}</h2>
                   <p className="text-slate-600 font-medium leading-relaxed text-sm">
                     {activeModule.screens[currentStep].text}
                   </p>
@@ -426,8 +426,8 @@ export default function Training({ session }) {
 
               {activeModule.screens[currentStep].type === 'example' && (
                 <div className="space-y-4 text-left p-6 bg-slate-50 border border-slate-200 rounded-3xl shadow-sm">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><Target size={12}/> Case Study</span>
-                  <h2 className="text-lg font-black text-slate-800">{activeModule.screens[currentStep].title}</h2>
+                  <span className="text-xs font-semibold text-slate-500 flex items-center gap-2"><Target size={12}/> Case Study</span>
+                  <h2 className="text-lg font-bold text-slate-800">{activeModule.screens[currentStep].title}</h2>
                   <p className="text-slate-600 font-medium leading-relaxed text-sm italic border-l-2 border-slate-300 pl-4">
                     "{activeModule.screens[currentStep].text}"
                   </p>
@@ -436,8 +436,8 @@ export default function Training({ session }) {
 
               {activeModule.screens[currentStep].type === 'quiz' && (
                 <div className="space-y-6 text-left">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md inline-block">Verification Required</span>
-                  <h2 className="text-xl font-black text-slate-800 tracking-tight">{activeModule.screens[currentStep].question}</h2>
+                  <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-md inline-block">Verification Required</span>
+                  <h2 className="text-xl font-bold text-slate-800 tracking-tight">{activeModule.screens[currentStep].question}</h2>
                   
                   <div className="space-y-3 pt-4">
                     {activeModule.screens[currentStep].options.map((opt, i) => {
@@ -466,7 +466,7 @@ export default function Training({ session }) {
                       )
                     })}
                   </div>
-                  {quizStatus === 'incorrect' && <p className="text-xs font-black text-red-500 uppercase tracking-widest text-center animate-pulse">Protocol Violation. Try Again.</p>}
+                  {quizStatus === 'incorrect' && <p className="text-xs font-semibold text-red-500 text-center animate-pulse">Something went wrong. Please try again.</p>}
                 </div>
               )}
 
@@ -476,7 +476,7 @@ export default function Training({ session }) {
               <button 
                 onClick={handleNextStep}
                 disabled={activeModule.screens[currentStep].type === 'quiz' && selectedAnswer === null}
-                className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+                className="ui-btn ui-btn-primary"
               >
                 {/* 🔥 Button transforms into a visual countdown indicator */}
                 {countdown !== null 
@@ -490,15 +490,15 @@ export default function Training({ session }) {
 
       {/* MODE 2: AI MENTOR */}
       {activeTab === 'AI_MENTOR' && (
-        <div className="bg-white border border-slate-200 rounded-[3rem] shadow-sm overflow-hidden flex flex-col h-[600px] animate-in slide-in-from-right-4">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col h-[600px] animate-in slide-in-from-right-4">
           
           <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-50 border border-blue-100 text-blue-600 rounded-full flex items-center justify-center shadow-sm">
               <BrainCircuit size={20}/>
             </div>
             <div>
-              <h3 className="text-sm font-black text-slate-800">Intelligence Core</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+              <h3 className="text-sm font-bold text-slate-800">Intelligence Core</h3>
+              <p className="text-xs font-bold text-slate-500 flex items-center gap-1">
                 <Sparkles size={10} className="text-blue-400"/> Operational Protocol Support
               </p>
             </div>
@@ -536,13 +536,13 @@ export default function Training({ session }) {
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 placeholder="Query institutional protocols..." 
-                className="w-full bg-white border border-slate-200 rounded-2xl py-5 pl-6 pr-16 text-sm font-bold text-slate-800 outline-none focus:border-blue-500 transition-colors shadow-sm"
+                className="ui-input pl-6 pr-16"
                 disabled={isAiTyping}
               />
               <button 
                 type="submit" 
                 disabled={!userInput.trim() || isAiTyping}
-                className="absolute right-2 w-12 h-12 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-300 text-white rounded-xl flex items-center justify-center transition-colors shadow-md"
+                className="ui-btn ui-btn-primary absolute right-2 w-12 w-auto"
               >
                 <Send size={18} className="ml-0.5"/>
               </button>
@@ -554,8 +554,8 @@ export default function Training({ session }) {
       {notification && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-top-10 duration-500">
            <div className={`px-8 py-5 rounded-3xl shadow-2xl border-2 backdrop-blur-2xl flex items-center gap-4 ${notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
-             <div className={`w-3 h-3 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-red-400 shadow-[0_0_10px_#f87171]'}`}></div>
-             <p className="font-black text-[11px] uppercase tracking-[0.2em]">{notification.text}</p>
+             <div className={`w-3 h-3 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+             <p className="font-semibold text-[11px]">{notification.text}</p>
            </div>
         </div>
       )}

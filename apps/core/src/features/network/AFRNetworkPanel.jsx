@@ -53,9 +53,9 @@ function StatCard({ icon, label, value, sub, accent = 'blue' }) {
     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-start gap-3">
       <div className={`p-2 rounded-xl ${colors[accent]}`}>{icon}</div>
       <div>
-        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">{label}</p>
-        <p className="text-xl font-black text-slate-900 mt-0.5">{value}</p>
-        {sub && <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>}
+        <p className="text-xs text-slate-500 font-semibold">{label}</p>
+        <p className="text-xl font-bold text-slate-900 mt-0.5">{value}</p>
+        {sub && <p className="text-xs text-slate-500 mt-0.5">{sub}</p>}
       </div>
     </div>
   );
@@ -80,25 +80,25 @@ function NetworkGlobe({ stats }) {
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-4">
           <Globe size={16} className="text-blue-600" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">AFR Network — Global</span>
+          <span className="text-xs font-semibold text-slate-500">AFR Network — Global</span>
           <div className="ml-auto flex items-center gap-1.5">
             <PulsingDot color="bg-green-400" />
-            <span className="text-[10px] text-green-600 font-black">LIVE</span>
+            <span className="text-xs text-green-600 font-bold">LIVE</span>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-2xl font-black text-slate-900">{(total || 0).toLocaleString()}</p>
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest">Total Nodes</p>
+            <p className="text-2xl font-bold text-slate-900">{(total || 0).toLocaleString()}</p>
+            <p className="text-xs text-slate-500">Total Nodes</p>
           </div>
           <div>
-            <p className="text-2xl font-black text-green-600">{(online || 0).toLocaleString()}</p>
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest">Online Now</p>
+            <p className="text-2xl font-bold text-green-600">{(online || 0).toLocaleString()}</p>
+            <p className="text-xs text-slate-500">Online Now</p>
           </div>
           <div>
-            <p className="text-2xl font-black text-blue-600">{pct}%</p>
-            <p className="text-[9px] text-slate-500 uppercase tracking-widest">Health</p>
+            <p className="text-2xl font-bold text-blue-600">{pct}%</p>
+            <p className="text-xs text-slate-500">Health</p>
           </div>
         </div>
 
@@ -106,17 +106,17 @@ function NetworkGlobe({ stats }) {
           <div className="h-full bg-gradient-to-r from-blue-500 to-green-400 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[9px]">
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
           <div className="bg-slate-50 rounded-xl p-2">
-            <p className="text-blue-600 font-black">{(stats?.light_nodes || 0).toLocaleString()}</p>
+            <p className="text-blue-600 font-bold">{(stats?.light_nodes || 0).toLocaleString()}</p>
             <p className="text-slate-500">Light</p>
           </div>
           <div className="bg-slate-50 rounded-xl p-2">
-            <p className="text-purple-600 font-black">{(stats?.validators || 0).toLocaleString()}</p>
+            <p className="text-purple-600 font-bold">{(stats?.validators || 0).toLocaleString()}</p>
             <p className="text-slate-500">Validators</p>
           </div>
           <div className="bg-slate-50 rounded-xl p-2">
-            <p className="text-emerald-600 font-black">{(stats?.gateways || 0).toLocaleString()}</p>
+            <p className="text-emerald-600 font-bold">{(stats?.gateways || 0).toLocaleString()}</p>
             <p className="text-slate-500">Gateways</p>
           </div>
         </div>
@@ -134,38 +134,38 @@ function NodeStatusCard({ nodeType, nodeId, isRegistered, uptimeFormatted, pendi
         <div className="flex items-center gap-2">
           <span className={tier.color}>{tier.icon}</span>
           <div>
-            <p className={`text-sm font-black ${tier.color}`}>{tier.label}</p>
-            <p className="text-[9px] text-slate-500 font-mono">{nodeId?.slice(0, 22)}…</p>
+            <p className={`text-sm font-bold ${tier.color}`}>{tier.label}</p>
+            <p className="text-xs text-slate-500 font-mono">{nodeId?.slice(0, 22)}…</p>
           </div>
         </div>
         {isRegistered
-          ? <div className="flex items-center gap-1.5"><PulsingDot color="bg-green-400" /><span className="text-[9px] text-green-600 font-black">ACTIVE</span></div>
-          : <div className="flex items-center gap-1.5"><PulsingDot color="bg-amber-400" /><span className="text-[9px] text-amber-600 font-black">SYNCING</span></div>
+          ? <div className="flex items-center gap-1.5"><PulsingDot color="bg-green-400" /><span className="text-xs text-green-600 font-bold">ACTIVE</span></div>
+          : <div className="flex items-center gap-1.5"><PulsingDot color="bg-amber-400" /><span className="text-xs text-amber-600 font-bold">SYNCING</span></div>
         }
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-slate-50 rounded-xl p-3 text-center">
-          <p className="text-lg font-black text-slate-900">{uptimeFormatted}</p>
-          <p className="text-[8px] text-slate-500 uppercase">Uptime</p>
+          <p className="text-lg font-bold text-slate-900">{uptimeFormatted}</p>
+          <p className="text-xs text-slate-500">Uptime</p>
         </div>
         <div className="bg-slate-50 rounded-xl p-3 text-center">
-          <p className="text-lg font-black text-amber-600">{parseFloat(pendingRewards || 0).toFixed(3)}</p>
-          <p className="text-[8px] text-slate-500 uppercase">Pending AFR</p>
+          <p className="text-lg font-bold text-amber-600">{parseFloat(pendingRewards || 0).toFixed(3)}</p>
+          <p className="text-xs text-slate-500">Pending AFR</p>
         </div>
         <div className="bg-slate-50 rounded-xl p-3 text-center">
-          <p className="text-lg font-black text-slate-900">{(txRelayed || 0).toLocaleString()}</p>
-          <p className="text-[8px] text-slate-500 uppercase">TX Relayed</p>
+          <p className="text-lg font-bold text-slate-900">{(txRelayed || 0).toLocaleString()}</p>
+          <p className="text-xs text-slate-500">TX Relayed</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[10px] text-slate-500 mb-4">
+      <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
         <Coins size={12} className="text-amber-600" />
         <span>Earning: <strong className={tier.color}>{tier.reward}</strong></span>
       </div>
 
       {claimResult && (
-        <div className={`text-[10px] rounded-xl px-3 py-2 mb-3 ${claimResult.ok ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+        <div className={`text-xs rounded-xl px-3 py-2 mb-3 ${claimResult.ok ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
           {claimResult.ok ? `Claimed ${parseFloat(claimResult.amount).toFixed(3)} AFR` : claimResult.reason}
         </div>
       )}
@@ -173,7 +173,7 @@ function NodeStatusCard({ nodeType, nodeId, isRegistered, uptimeFormatted, pendi
       <button
         onClick={claimRewards}
         disabled={isClaiming || pendingRewards < 1}
-        className="w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-500 text-black hover:bg-amber-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-3 rounded-xl text-xs font-semibold bg-amber-500 text-black hover:bg-amber-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isClaiming ? 'Claiming…' : `Claim ${parseFloat(pendingRewards || 0).toFixed(3)} AFR`}
       </button>
@@ -187,7 +187,7 @@ function UpgradePath({ nodeType }) {
 
   return (
     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Node Upgrade Path</p>
+      <p className="text-xs font-semibold text-slate-500 mb-4">Node Upgrade Path</p>
       <div className="space-y-3">
         {tiers.map((t, i) => {
           const tier = TIER[t];
@@ -197,11 +197,11 @@ function UpgradePath({ nodeType }) {
             <div key={t} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive ? `${tier.bg} ${tier.border}` : 'border-slate-200 bg-slate-50'}`}>
               <span className={isUnlocked ? tier.color : 'text-slate-600'}>{tier.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className={`text-[10px] font-black ${isActive ? tier.color : isUnlocked ? 'text-slate-900' : 'text-slate-500'}`}>{tier.label}</p>
-                <p className="text-[9px] text-slate-500 truncate">{tier.reward}</p>
+                <p className={`text-xs font-bold ${isActive ? tier.color : isUnlocked ? 'text-slate-900' : 'text-slate-500'}`}>{tier.label}</p>
+                <p className="text-xs text-slate-500 truncate">{tier.reward}</p>
               </div>
               {tier.stake && !isUnlocked && (
-                <div className="flex items-center gap-1 text-[9px] text-slate-500">
+                <div className="flex items-center gap-1 text-xs text-slate-500">
                   <Lock size={10} />
                   <span>{tier.stake} stake</span>
                 </div>
@@ -211,7 +211,7 @@ function UpgradePath({ nodeType }) {
           );
         })}
       </div>
-      <p className="text-[9px] text-slate-600 mt-3 leading-relaxed">
+      <p className="text-xs text-slate-600 mt-3 leading-relaxed">
         Upgrade your node by staking AFR. Validators confirm blocks; Gateways route cross-region traffic. Both earn enhanced rewards.
       </p>
     </div>
@@ -221,7 +221,7 @@ function UpgradePath({ nodeType }) {
 function BlockchainStats({ stats }) {
   return (
     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">AFR Chain — Live Stats</p>
+      <p className="text-xs font-semibold text-slate-500 mb-4">AFR Chain — Live Stats</p>
       <div className="grid grid-cols-2 gap-3">
         {[
           { label: 'Block Height', value: (stats?.total_blocks || 0).toLocaleString(), icon: <Layers size={13} className="text-blue-600" /> },
@@ -232,8 +232,8 @@ function BlockchainStats({ stats }) {
           <div key={item.label} className="bg-white rounded-xl p-3 flex items-center gap-2">
             {item.icon}
             <div>
-              <p className="text-sm font-black text-slate-900">{item.value}</p>
-              <p className="text-[8px] text-slate-500">{item.label}</p>
+              <p className="text-sm font-bold text-slate-900">{item.value}</p>
+              <p className="text-xs text-slate-500">{item.label}</p>
             </div>
           </div>
         ))}
@@ -260,9 +260,9 @@ export default function AFRNetworkPanel({ session, profile }) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Cpu size={16} className="text-blue-600" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">AFR Network Node</span>
+              <span className="text-xs font-semibold text-blue-600">AFR Network Node</span>
             </div>
-            <h2 className="text-2xl font-black text-slate-900">Your Device = The Bank</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Your Device = The Bank</h2>
             <p className="text-slate-500 text-sm mt-1 max-w-lg">
               Every DEUS installation is a sovereign node on the AFR blockchain. No data centers, no pollution — the network lives on your phone.
             </p>
@@ -270,9 +270,9 @@ export default function AFRNetworkPanel({ session, profile }) {
           <div className="flex flex-col items-end gap-1">
             <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-xl px-3 py-1.5">
               <PulsingDot color="bg-green-400" />
-              <span className="text-[10px] font-black text-green-600">NODE ONLINE</span>
+              <span className="text-xs font-bold text-green-600">NODE ONLINE</span>
             </div>
-            <p className="text-[9px] text-slate-600">{node.nodeId?.slice(0, 18)}…</p>
+            <p className="text-xs text-slate-600">{node.nodeId?.slice(0, 18)}…</p>
           </div>
         </div>
       </div>
@@ -281,7 +281,7 @@ export default function AFRNetworkPanel({ session, profile }) {
       <div className="flex gap-2">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === t.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}>
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab === t.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}>
             {t.label}
           </button>
         ))}
@@ -306,7 +306,7 @@ export default function AFRNetworkPanel({ session, profile }) {
           <NetworkGlobe stats={node.networkStats} />
           <BlockchainStats stats={node.networkStats} />
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Why Decentralized?</p>
+            <p className="text-xs font-semibold text-slate-500 mb-3">Why Decentralized?</p>
             <div className="space-y-2">
               {[
                 ['No data centers', 'Your device stores and validates transactions locally.', 'text-green-600'],
@@ -317,8 +317,8 @@ export default function AFRNetworkPanel({ session, profile }) {
                 <div key={title} className="flex gap-3 p-3 bg-white rounded-xl">
                   <CheckCircle size={14} className={`${color} shrink-0 mt-0.5`} />
                   <div>
-                    <p className={`text-[10px] font-black ${color}`}>{title}</p>
-                    <p className="text-[9px] text-slate-500 mt-0.5">{desc}</p>
+                    <p className={`text-xs font-bold ${color}`}>{title}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -332,15 +332,15 @@ export default function AFRNetworkPanel({ session, profile }) {
         <div className="space-y-4">
           <UpgradePath nodeType={node.nodeType} />
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Install on More Devices</p>
+            <p className="text-xs font-semibold text-slate-500 mb-3">Install on More Devices</p>
             <p className="text-sm text-slate-600 mb-4">
               Install DEUS on your phone, tablet, or another computer — each device joins as an additional node and earns rewards independently.
             </p>
             <div className="flex gap-2">
-              <button className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+              <button className="ui-btn ui-btn-primary flex-1">
                 <Download size={13} /> Install on Device
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+              <button className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-xl text-sm font-semibold transition-all">
                 <Radio size={13} /> Share Node Link
               </button>
             </div>

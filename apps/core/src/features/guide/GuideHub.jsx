@@ -68,19 +68,19 @@ export default function GuideHub({ onClose }) {
       {/* Top bar */}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-black">
+          <span className="text-xl font-bold">
             <span className="text-[#4285F4]">D</span>
             <span className="text-[#EA4335]">E</span>
             <span className="text-[#FBBC04]">U</span>
             <span className="text-[#34A853]">S</span>
           </span>
-          <span className="text-slate-500 text-xs font-black uppercase tracking-widest">{hubTitle[lang]}</span>
+          <span className="text-slate-500 text-xs font-semibold">{hubTitle[lang]}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
             {['en', 'fr', 'es'].map((l) => (
               <button key={l} onClick={() => setLang(l)}
-                className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>
+                className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>
                 {l.toUpperCase()}
               </button>
             ))}
@@ -95,7 +95,7 @@ export default function GuideHub({ onClose }) {
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
         <BookOpen size={32} className="text-slate-600 mb-4" />
-        <h1 className="text-2xl font-black text-slate-900 mb-1">{hubTitle[lang]}</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">{hubTitle[lang]}</h1>
         <p className="text-slate-500 text-sm mb-10">{hubSub[lang]}</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl">
@@ -108,9 +108,9 @@ export default function GuideHub({ onClose }) {
                 <div className={`w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 ${c.icon}`}>
                   <Icon size={22} />
                 </div>
-                <h2 className="text-slate-900 font-black text-lg mb-2 leading-tight">{g.title[lang]}</h2>
+                <h2 className="text-slate-900 font-bold text-lg mb-2 leading-tight">{g.title[lang]}</h2>
                 <p className="text-slate-500 text-xs leading-relaxed mb-4">{g.desc[lang]}</p>
-                <div className={`inline-flex items-center gap-2 ${c.btn} text-slate-900 text-xs font-black px-4 py-2 rounded-xl transition-colors`}>
+                <div className={`inline-flex items-center gap-2 ${c.btn} text-slate-900 text-xs font-bold px-4 py-2 rounded-xl transition-colors`}>
                   {lang === 'fr' ? 'Commencer' : lang === 'es' ? 'Comenzar' : 'Start Guide'}
                   <ArrowRight size={13} />
                 </div>

@@ -23,10 +23,10 @@ export default function TopHeader({
           className="md:hidden flex items-center gap-1.5 -ml-1"
           aria-label="Open menu"
         >
-          <span className="text-xl font-black text-slate-900 tracking-tight">DEUS</span>
-          <span className="px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider rounded bg-blue-100 text-blue-700">OS</span>
+          <span className="text-xl font-bold text-slate-900 tracking-tight">DEUS</span>
+          <span className="px-1.5 py-0.5 text-xs font-bold rounded bg-blue-100 text-blue-700">OS</span>
         </button>
-        <h2 className="hidden md:block font-black text-lg text-slate-800 tracking-tight">
+        <h2 className="hidden md:block font-bold text-lg text-slate-800 tracking-tight">
           {tabTitles[activeTab]}
         </h2>
       </div>
@@ -60,11 +60,11 @@ export default function TopHeader({
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchExpanded(true)}
             onBlur={() => { setTimeout(() => setIsSearchExpanded(false), 200); }}
-            className="w-full pl-10 pr-4 py-2 bg-white/50 border border-white/60 rounded-full outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/50 transition-all text-sm font-medium text-slate-700 shadow-sm"
+            className="ui-input pl-10 pr-4 font-medium"
           />
           {isSearchExpanded && searchQuery.length > 0 && (
             <div className="absolute top-full mt-2 left-0 w-80 bg-white border border-slate-200 shadow-xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Search Results</p>
+              <p className="text-xs font-bold text-slate-500 mb-2">Search Results</p>
               {searchResults.transactions.length > 0 ? (
                 <div className="space-y-1">
                   <span className="text-[11px] font-semibold text-slate-500">Transactions</span>

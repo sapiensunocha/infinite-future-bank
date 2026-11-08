@@ -125,7 +125,7 @@ function ApplyForm({ session, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-black text-slate-900 mb-1">Apply to IFB Venture Exchange</h2>
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Apply to IFB Venture Exchange</h2>
         <p className="text-sm text-slate-500">Pascaline will guide you through every stage until your IPO.</p>
       </div>
 
@@ -186,7 +186,7 @@ function ApplyForm({ session, onSuccess }) {
           {SECTORS.map(s => (
             <button key={s.id} type="button"
               onClick={() => setForm(f => ({ ...f, sector: s.id }))}
-              className={`px-3 py-2 rounded-xl text-xs font-black border transition-all ${
+              className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
                 form.sector === s.id
                   ? 'bg-blue-600 text-white border-blue-500'
                   : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-500'
@@ -198,7 +198,7 @@ function ApplyForm({ session, onSuccess }) {
       </div>
 
       <button type="submit" disabled={loading}
-        className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg">
+        className="ui-btn ui-btn-primary">
         {loading ? <Loader2 size={16} className="animate-spin"/> : <TrendingUp size={16}/>}
         {loading ? 'Submitting Application...' : 'Submit IPO Application'}
       </button>
@@ -244,15 +244,15 @@ function VentureDetail({ venture, requirements, onRefresh }) {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <span className="text-2xl">{SECTORS.find(s => s.id === venture.sector)?.icon || '🏢'}</span>
-              <h2 className="text-2xl font-black text-slate-900">{venture.company_name}</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{venture.company_name}</h2>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
-              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${STAGE_COLORS[venture.stage] || STAGE_COLORS.applied}`}>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${STAGE_COLORS[venture.stage] || STAGE_COLORS.applied}`}>
                 {STAGES.find(s => s.id === venture.stage)?.label || venture.stage}
               </span>
               <span className="text-slate-500 text-xs">{venture.sector} · {venture.country}</span>
               {venture.ticker_symbol && (
-                <span className="px-2 py-1 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-lg text-[10px] font-black">
+                <span className="px-2 py-1 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-lg text-xs font-bold">
                   ${venture.ticker_symbol}
                 </span>
               )}
@@ -261,8 +261,8 @@ function VentureDetail({ venture, requirements, onRefresh }) {
           <div className="text-right">
             {venture.valuation > 0 && (
               <div>
-                <p className="text-xs text-slate-500 uppercase font-bold">Valuation</p>
-                <p className="text-xl font-black text-slate-900">{fmtUSD(venture.valuation)}</p>
+                <p className="text-xs text-slate-500 font-bold">Valuation</p>
+                <p className="text-xl font-bold text-slate-900">{fmtUSD(venture.valuation)}</p>
               </div>
             )}
           </div>
@@ -278,8 +278,8 @@ function VentureDetail({ venture, requirements, onRefresh }) {
           ].map(({ label, value, icon: Icon }) => (
             <div key={label} className="bg-slate-50 rounded-xl p-3">
               <Icon size={12} className="text-slate-500 mb-1"/>
-              <p className="text-slate-900 font-black text-sm">{value}</p>
-              <p className="text-[9px] text-slate-500 uppercase font-bold">{label}</p>
+              <p className="text-slate-900 font-bold text-sm">{value}</p>
+              <p className="text-xs text-slate-500 font-bold">{label}</p>
             </div>
           ))}
         </div>
@@ -287,7 +287,7 @@ function VentureDetail({ venture, requirements, onRefresh }) {
 
       {/* Stage Pipeline */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6">
-        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-5">Listing Pipeline</h3>
+        <h3 className="text-sm font-semibold text-slate-900 mb-5">Listing Pipeline</h3>
         <div className="flex items-center gap-1 overflow-x-auto pb-2">
           {STAGES.map((s, i) => {
             const done    = i < stageIdx;
@@ -296,14 +296,14 @@ function VentureDetail({ venture, requirements, onRefresh }) {
             return (
               <React.Fragment key={s.id}>
                 <div className={`flex flex-col items-center min-w-[60px] ${locked ? 'opacity-40' : ''}`}>
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs border-2 transition-all ${
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all ${
                     done    ? 'bg-emerald-500 border-emerald-400 text-white' :
                     current ? 'bg-blue-600 border-blue-400 text-white ring-2 ring-blue-200' :
                     'bg-slate-50 border-slate-200 text-slate-500'
                   }`}>
                     {done ? <CheckCircle2 size={16}/> : s.short}
                   </div>
-                  <p className="text-[8px] font-black uppercase text-slate-500 mt-1.5 text-center leading-tight">{s.label}</p>
+                  <p className="text-xs font-semibold text-slate-500 mt-1.5 text-center leading-tight">{s.label}</p>
                 </div>
                 {i < STAGES.length - 1 && (
                   <div className={`flex-1 h-0.5 min-w-[12px] ${i < stageIdx ? 'bg-emerald-500' : 'bg-slate-100'}`}/>
@@ -319,13 +319,13 @@ function VentureDetail({ venture, requirements, onRefresh }) {
         <div className="bg-white border border-slate-200 rounded-3xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-sm font-semibold text-slate-900">
                 Stage Requirements — {STAGES.find(s => s.id === venture.stage)?.label}
               </h3>
-              <p className="text-[10px] text-slate-500 mt-0.5">{doneCount}/{stageReqs.length} completed</p>
+              <p className="text-xs text-slate-500 mt-0.5">{doneCount}/{stageReqs.length} completed</p>
             </div>
             <div className="w-12 h-12 rounded-full border-2 border-slate-200 flex items-center justify-center">
-              <span className="text-sm font-black text-slate-900">{Math.round(doneCount/stageReqs.length*100)}%</span>
+              <span className="text-sm font-bold text-slate-900">{Math.round(doneCount/stageReqs.length*100)}%</span>
             </div>
           </div>
 
@@ -346,8 +346,8 @@ function VentureDetail({ venture, requirements, onRefresh }) {
                     : <Circle size={18} className="text-slate-600 shrink-0 mt-0.5"/>
                   }
                   <div>
-                    <p className={`text-sm font-black ${checked ? 'text-emerald-600 line-through' : 'text-slate-900'}`}>{req.label}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{req.description}</p>
+                    <p className={`text-sm font-bold ${checked ? 'text-emerald-600 line-through' : 'text-slate-900'}`}>{req.label}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{req.description}</p>
                   </div>
                 </button>
               );
@@ -370,10 +370,10 @@ function VentureDetail({ venture, requirements, onRefresh }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Sparkles size={16} className="text-blue-600"/>
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Pascaline AI Guidance</h3>
+            <h3 className="text-sm font-semibold text-slate-900">Pascaline AI Guidance</h3>
           </div>
           <button onClick={generateGuidance} disabled={loadingAI}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-600 text-[10px] font-black uppercase rounded-xl hover:bg-blue-50 transition-all disabled:opacity-50">
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-600 text-sm font-semibold rounded-xl hover:bg-blue-50 transition-all disabled:opacity-50">
             {loadingAI ? <Loader2 size={12} className="animate-spin"/> : <RefreshCw size={12}/>}
             {loadingAI ? 'Analyzing...' : 'Get Guidance'}
           </button>
@@ -390,20 +390,20 @@ function VentureDetail({ venture, requirements, onRefresh }) {
         <div className="bg-gradient-to-br from-emerald-50 to-blue-50 border border-emerald-200 rounded-3xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <Trophy size={20} className="text-emerald-600"/>
-            <h3 className="text-lg font-black text-slate-900">Trading Live on IFB VSE</h3>
+            <h3 className="text-lg font-bold text-slate-900">Trading Live on IFB VSE</h3>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-[9px] text-slate-500 uppercase font-bold">Ticker</p>
-              <p className="text-2xl font-black text-emerald-600">${venture.ticker_symbol}</p>
+              <p className="text-xs text-slate-500 font-bold">Ticker</p>
+              <p className="text-2xl font-bold text-emerald-600">${venture.ticker_symbol}</p>
             </div>
             <div>
-              <p className="text-[9px] text-slate-500 uppercase font-bold">Share Price</p>
-              <p className="text-2xl font-black text-slate-900">${venture.share_price}</p>
+              <p className="text-xs text-slate-500 font-bold">Share Price</p>
+              <p className="text-2xl font-bold text-slate-900">${venture.share_price}</p>
             </div>
             <div>
-              <p className="text-[9px] text-slate-500 uppercase font-bold">Market Cap</p>
-              <p className="text-2xl font-black text-slate-900">{fmtUSD(venture.market_cap)}</p>
+              <p className="text-xs text-slate-500 font-bold">Market Cap</p>
+              <p className="text-2xl font-bold text-slate-900">{fmtUSD(venture.market_cap)}</p>
             </div>
           </div>
         </div>
@@ -427,7 +427,7 @@ function MarketBoard({ listed }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-black text-slate-900">IFB Venture Exchange</h2>
+        <h2 className="text-2xl font-bold text-slate-900">IFB Venture Exchange</h2>
         <p className="text-slate-500 text-sm mt-1">{listed.length} companies listed · Real-time market</p>
       </div>
 
@@ -437,7 +437,7 @@ function MarketBoard({ listed }) {
         if (!companies.length) return null;
         return (
           <div key={sector.id}>
-            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-slate-500 mb-3 flex items-center gap-2">
               <span>{sector.icon}</span> {sector.id}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -445,27 +445,27 @@ function MarketBoard({ listed }) {
                 <div key={c.id} className="bg-white border border-slate-200 rounded-2xl p-4 hover:border-emerald-200 transition-colors">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-black text-slate-900">{c.company_name}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{c.country}</p>
+                      <p className="font-bold text-slate-900">{c.company_name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{c.country}</p>
                     </div>
                     {c.ticker_symbol && (
-                      <span className="px-2 py-1 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-lg text-[10px] font-black">
+                      <span className="px-2 py-1 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-lg text-xs font-bold">
                         ${c.ticker_symbol}
                       </span>
                     )}
                   </div>
                   <div className="grid grid-cols-3 gap-3 mt-3">
                     <div>
-                      <p className="text-[9px] text-slate-600 uppercase">Price</p>
-                      <p className="text-sm font-black text-slate-900">${c.share_price || '—'}</p>
+                      <p className="text-xs text-slate-600">Price</p>
+                      <p className="text-sm font-bold text-slate-900">${c.share_price || '—'}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-slate-600 uppercase">Mkt Cap</p>
-                      <p className="text-sm font-black text-slate-900">{c.market_cap ? fmtUSD(c.market_cap) : '—'}</p>
+                      <p className="text-xs text-slate-600">Mkt Cap</p>
+                      <p className="text-sm font-bold text-slate-900">{c.market_cap ? fmtUSD(c.market_cap) : '—'}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-slate-600 uppercase">Revenue</p>
-                      <p className="text-sm font-black text-slate-900">{fmtUSD(c.annual_revenue)}</p>
+                      <p className="text-xs text-slate-600">Revenue</p>
+                      <p className="text-sm font-bold text-slate-900">{fmtUSD(c.annual_revenue)}</p>
                     </div>
                   </div>
                 </div>
@@ -523,7 +523,7 @@ export default function VentureExchange({ session, profile }) {
               <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
                 <TrendingUp size={20} className="text-emerald-600"/>
               </div>
-              <h1 className="text-3xl font-black text-slate-900">IFB Venture Exchange</h1>
+              <h1 className="text-3xl font-bold text-slate-900">IFB Venture Exchange</h1>
             </div>
             <p className="text-sm text-slate-500 max-w-lg">
               Apply for a public listing. Pascaline AI guides your company through 6 stages from application to IPO.
@@ -531,13 +531,13 @@ export default function VentureExchange({ session, profile }) {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <div className="text-center">
-              <p className="text-2xl font-black text-slate-900">{listedCos.length}</p>
-              <p className="text-[9px] text-slate-500 uppercase font-bold">Listed</p>
+              <p className="text-2xl font-bold text-slate-900">{listedCos.length}</p>
+              <p className="text-xs text-slate-500 font-bold">Listed</p>
             </div>
             <div className="w-px h-10 bg-slate-100"/>
             <div className="text-center">
-              <p className="text-2xl font-black text-emerald-600">{SECTORS.length}</p>
-              <p className="text-[9px] text-slate-500 uppercase font-bold">Sectors</p>
+              <p className="text-2xl font-bold text-emerald-600">{SECTORS.length}</p>
+              <p className="text-xs text-slate-500 font-bold">Sectors</p>
             </div>
           </div>
         </div>
@@ -549,7 +549,7 @@ export default function VentureExchange({ session, profile }) {
           const Icon = v.icon;
           return (
             <button key={v.id} onClick={() => setView(v.id)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+              className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all ${
                 view === v.id
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'

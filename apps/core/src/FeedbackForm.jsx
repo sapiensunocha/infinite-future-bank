@@ -75,20 +75,20 @@ export default function FeedbackForm({ session, onClose }) {
   if (submitted) {
     return (
       <div className="relative z-10 w-full max-w-lg mx-auto animate-in fade-in zoom-in duration-500 text-slate-800">
-        <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-12 text-center space-y-6 relative overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-12 text-center space-y-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80"></div>
           
-          <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/20">
+          <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl flex items-center justify-center mx-auto shadow-xl">
             <CheckCircle2 size={48} strokeWidth={2.5} />
           </div>
           
           <div>
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight mb-2">Intelligence Received</h2>
-            <p className="text-slate-500 font-medium tracking-tight leading-relaxed">Your feedback has been securely integrated into the IFB roadmap. Together, we redefine the protocol.</p>
+            <h2 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">Thank you</h2>
+            <p className="text-slate-500 font-medium tracking-tight leading-relaxed">We read every message. Your feedback helps us improve IFB.</p>
           </div>
           
-          <button onClick={onClose} className="relative w-full overflow-hidden bg-slate-900 rounded-2xl p-5 flex items-center justify-center shadow-xl hover:shadow-slate-500/20 hover:-translate-y-0.5 transition-all group mt-8">
-            <span className="relative z-10 text-white font-black text-[11px] uppercase tracking-[0.2em]">Close Terminal</span>
+          <button onClick={onClose} className="relative w-full overflow-hidden bg-slate-900 rounded-2xl p-5 flex items-center justify-center shadow-xl transition-all group mt-8">
+            <span className="relative z-10 text-white font-semibold text-[15px]">Done</span>
           </button>
         </div>
       </div>
@@ -101,19 +101,19 @@ export default function FeedbackForm({ session, onClose }) {
       case 0:
         return (
           <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
-            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center justify-center gap-2 mb-8">
+            <label className="text-[11px] font-semibold text-slate-500 flex items-center justify-center gap-2 mb-8">
               <Star size={16} className="text-blue-500"/> 1. Overall Impression
             </label>
-            <h3 className="text-2xl font-black text-center text-slate-800 mb-8 tracking-tight">How would you rate your experience with IFB so far?</h3>
+            <h3 className="text-2xl font-bold text-center text-slate-800 mb-8 tracking-tight">How would you rate your experience with IFB so far?</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {impressions.map(opt => (
                 <button
                   key={opt}
                   type="button"
                   onClick={() => setFormData({ ...formData, overall_impression: opt })}
-                  className={`py-6 rounded-2xl border text-[13px] font-black uppercase tracking-wider transition-all backdrop-blur-md shadow-sm ${
+                  className={`py-6 rounded-2xl border text-[13px] font-semibold transition-all backdrop-blur-md shadow-sm ${
                     formData.overall_impression === opt 
-                      ? 'bg-blue-600 border-blue-500 text-white shadow-blue-500/20 shadow-lg scale-[1.02]' 
+                      ? 'bg-blue-600 border-blue-500 text-white shadow-lg scale-[1.02]' 
                       : 'bg-white/50 border-white/60 text-slate-500 hover:bg-white/80 hover:border-blue-200 hover:text-blue-600'
                   }`}
                 >
@@ -126,17 +126,17 @@ export default function FeedbackForm({ session, onClose }) {
       case 1:
         return (
           <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
-            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center justify-center gap-2 mb-8">
+            <label className="text-[11px] font-semibold text-slate-500 flex items-center justify-center gap-2 mb-8">
               <Sparkles size={16} className="text-emerald-500"/> 2. Feature Interest
             </label>
-            <h3 className="text-2xl font-black text-center text-slate-800 mb-8 tracking-tight">Which IFB capabilities excite you the most?</h3>
+            <h3 className="text-2xl font-bold text-center text-slate-800 mb-8 tracking-tight">Which IFB capabilities excite you the most?</h3>
             <div className="grid grid-cols-1 gap-4">
               {interests.map(item => {
                 const isChecked = formData.features_interest.includes(item);
                 return (
                   <label key={item} className={`flex items-center gap-4 p-5 rounded-2xl border cursor-pointer transition-all backdrop-blur-md shadow-sm ${
                     isChecked 
-                      ? 'bg-emerald-50/80 border-emerald-200 shadow-emerald-500/10 scale-[1.01]' 
+                      ? 'bg-emerald-50/80 border-emerald-200 scale-[1.01]' 
                       : 'bg-white/50 border-white/60 hover:bg-white/80'
                   }`}>
                     <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors ${
@@ -156,15 +156,15 @@ export default function FeedbackForm({ session, onClose }) {
       case 2:
         return (
           <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300 group">
-            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center justify-center gap-2 mb-8">
+            <label className="text-[11px] font-semibold text-slate-500 flex items-center justify-center gap-2 mb-8">
                3. Topics to Explore
             </label>
-            <h3 className="text-2xl font-black text-center text-slate-800 mb-8 tracking-tight">What should IFB focus on next?</h3>
+            <h3 className="text-2xl font-bold text-center text-slate-800 mb-8 tracking-tight">What should IFB focus on next?</h3>
             <textarea
               autoFocus
               value={formData.topics_focus}
               onChange={(e) => setFormData({ ...formData, topics_focus: e.target.value })}
-              className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-3xl p-8 text-lg font-bold text-slate-800 outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60 min-h-[200px] resize-none leading-relaxed"
+              className="ui-textarea min-h-[200px] resize-none"
               placeholder="Type your vision here..."
             />
           </div>
@@ -172,15 +172,15 @@ export default function FeedbackForm({ session, onClose }) {
       case 3:
         return (
           <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300 group">
-            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center justify-center gap-2 mb-8">
+            <label className="text-[11px] font-semibold text-slate-500 flex items-center justify-center gap-2 mb-8">
                4. Traditional Challenges
             </label>
-            <h3 className="text-2xl font-black text-center text-slate-800 mb-8 tracking-tight">What is your biggest frustration with traditional banks?</h3>
+            <h3 className="text-2xl font-bold text-center text-slate-800 mb-8 tracking-tight">What is your biggest frustration with traditional banks?</h3>
             <textarea
               autoFocus
               value={formData.traditional_challenges}
               onChange={(e) => setFormData({ ...formData, traditional_challenges: e.target.value })}
-              className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-3xl p-8 text-lg font-bold text-slate-800 outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60 min-h-[200px] resize-none leading-relaxed"
+              className="ui-textarea min-h-[200px] resize-none"
               placeholder="Tell us what's broken..."
             />
           </div>
@@ -188,15 +188,15 @@ export default function FeedbackForm({ session, onClose }) {
       case 4:
         return (
           <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300 group">
-            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center justify-center gap-2 mb-8">
+            <label className="text-[11px] font-semibold text-slate-500 flex items-center justify-center gap-2 mb-8">
                5. Specific Solutions
             </label>
-            <h3 className="text-2xl font-black text-center text-slate-800 mb-8 tracking-tight">What exact features do you wish IFB would provide?</h3>
+            <h3 className="text-2xl font-bold text-center text-slate-800 mb-8 tracking-tight">What exact features do you wish IFB would provide?</h3>
             <textarea
               autoFocus
               value={formData.requested_solutions}
               onChange={(e) => setFormData({ ...formData, requested_solutions: e.target.value })}
-              className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-3xl p-8 text-lg font-bold text-slate-800 outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60 min-h-[200px] resize-none leading-relaxed"
+              className="ui-textarea min-h-[200px] resize-none"
               placeholder="Design the future..."
             />
           </div>
@@ -204,15 +204,15 @@ export default function FeedbackForm({ session, onClose }) {
       case 5:
         return (
           <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300 group">
-            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center justify-center gap-2 mb-8">
+            <label className="text-[11px] font-semibold text-slate-500 flex items-center justify-center gap-2 mb-8">
                6. General Feedback
             </label>
-            <h3 className="text-2xl font-black text-center text-slate-800 mb-8 tracking-tight">Any suggestions on our approach, design, or communication?</h3>
+            <h3 className="text-2xl font-bold text-center text-slate-800 mb-8 tracking-tight">Any suggestions on our approach, design, or communication?</h3>
             <textarea
               autoFocus
               value={formData.general_feedback}
               onChange={(e) => setFormData({ ...formData, general_feedback: e.target.value })}
-              className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-3xl p-8 text-lg font-bold text-slate-800 outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60 min-h-[200px] resize-none leading-relaxed"
+              className="ui-textarea min-h-[200px] resize-none"
               placeholder="We are listening..."
             />
           </div>
@@ -220,29 +220,29 @@ export default function FeedbackForm({ session, onClose }) {
       case 6:
         return (
           <div className="space-y-8 animate-in slide-in-from-right-4 fade-in duration-300">
-            <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 flex items-center justify-center gap-2 mb-4">
+            <label className="text-[11px] font-semibold text-slate-500 flex items-center justify-center gap-2 mb-4">
                7. Secure Transmission
             </label>
-            <h3 className="text-2xl font-black text-center text-slate-800 mb-8 tracking-tight">Confirm your identity to securely log this protocol.</h3>
+            <h3 className="text-2xl font-bold text-center text-slate-800 mb-8 tracking-tight">Confirm your identity to securely log this protocol.</h3>
             
             <div className="space-y-6">
               <div className="space-y-3 group">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pl-2 group-focus-within:text-blue-500 transition-colors">Confirm Name</label>
+                <label className="ui-label pl-2 group-focus-within:text-blue-500 transition-colors">Confirm Name</label>
                 <input 
                   type="text" 
                   value={formData.contact_name}
                   onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
-                  className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl p-6 text-lg font-bold text-slate-800 outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60"
+                  className="ui-input text-lg"
                   placeholder="Your Name"
                 />
               </div>
               <div className="space-y-3 group">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pl-2 group-focus-within:text-blue-500 transition-colors">Confirm Email</label>
+                <label className="ui-label pl-2 group-focus-within:text-blue-500 transition-colors">Confirm Email</label>
                 <input 
                   type="email" 
                   value={formData.contact_email}
                   onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
-                  className="w-full bg-white/50 backdrop-blur-md border border-white/60 rounded-2xl p-6 text-lg font-bold text-slate-800 outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner hover:bg-white/60"
+                  className="ui-input text-lg"
                   placeholder="banker@deus.com"
                 />
               </div>
@@ -261,24 +261,24 @@ export default function FeedbackForm({ session, onClose }) {
     <div className="relative w-full max-w-3xl mx-auto py-10 px-4 min-h-screen flex flex-col justify-center text-slate-800">
       
       {/* Ambient Background Glows */}
-      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-blue-200/40 to-indigo-300/20 blur-3xl pointer-events-none z-0"></div>
-      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tl from-emerald-200/30 to-teal-300/10 blur-3xl pointer-events-none z-0"></div>
+      <div className="fixed top-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full blur-3xl pointer-events-none z-0 bg-blue-50"></div>
+      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full blur-3xl pointer-events-none z-0 bg-blue-50"></div>
 
       <div className="relative z-10 w-full animate-in slide-in-from-bottom-10 duration-700">
         
         {/* DEUS Logo Header */}
         <div className="flex flex-col items-center mb-10">
           <div className="flex items-center gap-1 cursor-pointer hover:scale-105 transition-transform" onClick={onClose}>
-            <span className="text-5xl font-black text-[#4285F4] tracking-tighter">D</span>
-            <span className="text-5xl font-black text-[#EA4335] tracking-tighter">E</span>
-            <span className="text-5xl font-black text-[#FBBC04] tracking-tighter">U</span>
-            <span className="text-5xl font-black text-[#34A853] tracking-tighter">S</span>
+            <span className="text-5xl font-bold text-[#4285F4] tracking-tighter">D</span>
+            <span className="text-5xl font-bold text-[#EA4335] tracking-tighter">E</span>
+            <span className="text-5xl font-bold text-[#FBBC04] tracking-tighter">U</span>
+            <span className="text-5xl font-bold text-[#34A853] tracking-tighter">S</span>
             <Sparkles className="text-blue-500 ml-2 drop-shadow-md" size={28} />
           </div>
         </div>
 
         {/* Main Glass Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden relative min-h-[500px] flex flex-col">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden relative min-h-[500px] flex flex-col">
           
           {/* Progress Bar Header */}
           <div className="relative h-2 bg-slate-100 w-full">
@@ -306,7 +306,7 @@ export default function FeedbackForm({ session, onClose }) {
                 <button 
                   type="button" 
                   onClick={handleBack}
-                  className="px-6 py-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.15em] text-slate-400 hover:text-slate-800 transition-colors"
+                  className="px-6 py-4 flex items-center gap-2 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   <ArrowLeft size={16} /> Back
                 </button>
@@ -319,19 +319,19 @@ export default function FeedbackForm({ session, onClose }) {
                   type="button" 
                   onClick={handleNext}
                   disabled={currentStep === 0 && !formData.overall_impression}
-                  className="relative overflow-hidden bg-slate-900 text-white rounded-2xl px-10 py-5 flex items-center gap-3 shadow-xl hover:shadow-slate-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 group"
+                  className="ui-btn ui-btn-primary relative w-auto"
                 >
-                  <span className="relative z-10 font-black text-[11px] uppercase tracking-[0.2em]">Continue</span>
+                  <span className="relative z-10 font-semibold text-[11px]">Continue</span>
                   <ArrowRight size={16} className="relative z-10 group-hover:translate-x-1 transition-transform" />
                 </button>
               ) : (
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="relative overflow-hidden bg-blue-600 text-white rounded-2xl px-10 py-5 flex items-center gap-3 shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 group"
+                  className="ui-btn ui-btn-primary relative w-auto"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                  <div className="relative z-10 flex items-center gap-2 font-black text-[11px] uppercase tracking-[0.2em]">
+                  <div className="relative z-10 flex items-center gap-2 font-semibold text-[11px]">
                     {loading ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
                     {loading ? 'Transmitting...' : 'Transmit Intelligence'}
                   </div>
@@ -343,7 +343,7 @@ export default function FeedbackForm({ session, onClose }) {
         </div>
 
         {/* Step Indicator Text */}
-        <div className="text-center mt-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+        <div className="text-center mt-6 text-xs font-semibold text-slate-500">
           Module {currentStep + 1} of {TOTAL_STEPS}
         </div>
 

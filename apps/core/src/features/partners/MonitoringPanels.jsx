@@ -157,7 +157,7 @@ export function RiskFieldsTab({ partner, refreshKey, canManage, onChanged }) {
       </div>
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
         {FILTERS.map(([k, label]) => (
-          <button key={k} type="button" onClick={() => setFilter(k)} className={`shrink-0 h-9 px-3 rounded-lg text-sm font-medium ${filter === k ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>{label}</button>
+          <button key={k} type="button" onClick={() => setFilter(k)} className={`shrink-0 h-9 px-3 rounded-lg text-sm font-medium ${filter === k ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>{label}</button>
         ))}
       </div>
       <div className="ui-card divide-y divide-slate-100 overflow-hidden">
@@ -191,7 +191,7 @@ export function AlertsTab({ partner, canEdit, refreshKey }) {
     <div className="space-y-3">
       <div className="flex gap-1.5">
         {[['open', 'Open'], ['acknowledged', 'Acknowledged'], ['resolved', 'Resolved'], ['all', 'All']].map(([k, l]) => (
-          <button key={k} type="button" onClick={() => setStatus(k)} className={`h-9 px-3 rounded-lg text-sm font-medium ${status === k ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>{l}</button>
+          <button key={k} type="button" onClick={() => setStatus(k)} className={`h-9 px-3 rounded-lg text-sm font-medium ${status === k ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>{l}</button>
         ))}
       </div>
       {err && <ErrorNote>{err}</ErrorNote>}
@@ -258,7 +258,7 @@ export function ReportsTab({ partner }) {
     <div className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
         {[['week', 'Last 7 days'], ['quarter', 'This quarter'], ['last_quarter', 'Last quarter']].map(([k, l]) => (
-          <button key={k} type="button" onClick={() => setKind(k)} className={`h-9 px-3 rounded-lg text-sm font-medium ${kind === k ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>{l}</button>
+          <button key={k} type="button" onClick={() => setKind(k)} className={`h-9 px-3 rounded-lg text-sm font-medium ${kind === k ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>{l}</button>
         ))}
       </div>
       {err && <ErrorNote>{err}</ErrorNote>}

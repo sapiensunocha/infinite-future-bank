@@ -227,7 +227,7 @@ function Phone({ children, dark = false }) {
       <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-5 bg-black rounded-full z-10" />
       <div className={`absolute top-8 left-4 right-4 flex justify-between items-center z-10 ${dark ? 'text-white' : 'text-slate-800'}`} style={{ fontSize: 8, fontWeight: 700 }}>
         <span>9:41</span>
-        <div className="flex items-center gap-1"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+        <div className="flex items-center gap-1"><span>●●●</span><span>WiFi</span><span></span></div>
       </div>
       <div className="absolute top-14 left-1 right-1 bottom-1 rounded-b-[32px] overflow-hidden">
         {children}
@@ -245,7 +245,7 @@ function HL({ children, onTap, done, radius = 'rounded-xl', labelPos = 'top' }) 
         <>
           <span className={`absolute inset-0 ${radius} border-2 border-yellow-400 animate-ping opacity-75`} />
           <span className={`absolute inset-0 ${radius} border-2 border-yellow-400`} />
-          <span className={`absolute ${labelPos === 'top' ? '-top-5' : '-bottom-5'} left-1/2 -translate-x-1/2 text-yellow-400 font-black whitespace-nowrap`} style={{ fontSize: 8 }}>TAP!</span>
+          <span className={`absolute ${labelPos === 'top' ? '-top-5' : '-bottom-5'} left-1/2 -translate-x-1/2 text-yellow-400 font-bold whitespace-nowrap`} style={{ fontSize: 8 }}>TAP!</span>
         </>
       )}
       {done && (
@@ -276,7 +276,7 @@ function BusinessMenuScreen({ hl, onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="px-3 pt-2 pb-2">
         <div className="text-slate-500" style={{ fontSize: 8 }}>IFB Business Suite</div>
-        <div className="text-slate-900 font-black" style={{ fontSize: 13 }}>Business Hub</div>
+        <div className="text-slate-900 font-bold" style={{ fontSize: 13 }}>Business Hub</div>
       </div>
       <div className="px-3 grid grid-cols-3 gap-2 flex-1">
         {items.map((item) => {
@@ -304,7 +304,7 @@ function FormationScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
         <ArrowLeft size={13} className="text-slate-800" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Company Formation</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Company Formation</span>
       </div>
       {/* Jurisdiction cards */}
       <div className="px-3 pt-2 flex flex-col gap-2 flex-1">
@@ -337,7 +337,7 @@ function FormationScreen({ onTap, done }) {
       {/* CTA */}
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-blue-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-blue-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Start Formation
           </div>
         </HL>
@@ -351,7 +351,7 @@ function KYCScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2">
         <ArrowLeft size={13} className="text-slate-900" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Identity Verification</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Identity Verification</span>
       </div>
       {/* KYC steps */}
       <div className="px-3 flex flex-col gap-2 flex-1 pt-1">
@@ -362,7 +362,7 @@ function KYCScreen({ onTap, done }) {
         ].map((item) => (
           <div key={item.step} className="flex items-start gap-3 bg-slate-50 rounded-2xl p-3">
             <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-              <span className="text-slate-900 font-black" style={{ fontSize: 9 }}>{item.step}</span>
+              <span className="text-slate-900 font-bold" style={{ fontSize: 9 }}>{item.step}</span>
             </div>
             <div>
               <div className="text-slate-900 font-bold" style={{ fontSize: 9 }}>{item.label}</div>
@@ -379,7 +379,7 @@ function KYCScreen({ onTap, done }) {
       {/* CTA */}
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-violet-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-violet-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Start Verification
           </div>
         </HL>
@@ -393,7 +393,7 @@ function BankingScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
         <ArrowLeft size={13} className="text-slate-800" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Business Banking</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Business Banking</span>
       </div>
       <div className="px-3 pt-3 flex flex-col gap-2 flex-1">
         {/* IBAN card */}
@@ -416,7 +416,7 @@ function BankingScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-emerald-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-emerald-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Open Business Account
           </div>
         </HL>
@@ -430,14 +430,14 @@ function CapitalScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2">
         <ArrowLeft size={13} className="text-slate-900" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>VentureX</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>VentureX</span>
       </div>
       <div className="px-3 flex flex-col gap-2 flex-1 pt-1">
         {/* Stats row */}
         <div className="flex gap-2">
           {[{ label: 'Active Listings', val: '234' }, { label: 'Total Raised', val: '$12.4M' }, { label: 'Investors', val: '1,840' }].map((s) => (
             <div key={s.label} className="flex-1 bg-slate-50 rounded-xl p-2 text-center">
-              <div className="text-slate-900 font-black" style={{ fontSize: 10 }}>{s.val}</div>
+              <div className="text-slate-900 font-bold" style={{ fontSize: 10 }}>{s.val}</div>
               <div className="text-slate-500" style={{ fontSize: 6 }}>{s.label}</div>
             </div>
           ))}
@@ -461,7 +461,7 @@ function CapitalScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-indigo-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-indigo-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             List Company
           </div>
         </HL>
@@ -475,7 +475,7 @@ function InsuranceScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
         <ArrowLeft size={13} className="text-slate-800" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Business Insurance</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Business Insurance</span>
       </div>
       <div className="px-3 pt-3 flex flex-col gap-2 flex-1">
         {[
@@ -496,7 +496,7 @@ function InsuranceScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-slate-800 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-slate-800 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Get Quote
           </div>
         </HL>
@@ -510,14 +510,14 @@ function PayrollScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2">
         <ArrowLeft size={13} className="text-slate-900" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Payroll</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Payroll</span>
       </div>
       <div className="px-3 flex flex-col gap-2 flex-1 pt-1">
         {/* Summary */}
         <div className="flex gap-2">
           {[{ label: 'Employees', val: '3' }, { label: 'Next Run', val: 'Jul 1' }, { label: 'Total', val: '$4,200' }].map((s) => (
             <div key={s.label} className="flex-1 bg-slate-50 rounded-xl p-2 text-center">
-              <div className="text-slate-900 font-black" style={{ fontSize: 11 }}>{s.val}</div>
+              <div className="text-slate-900 font-bold" style={{ fontSize: 11 }}>{s.val}</div>
               <div className="text-slate-500" style={{ fontSize: 6 }}>{s.label}</div>
             </div>
           ))}
@@ -526,7 +526,7 @@ function PayrollScreen({ onTap, done }) {
         {[{ name: 'Alice M.', role: 'Engineer', salary: '$2,000/mo' }, { name: 'Bob K.', role: 'Designer', salary: '$1,200/mo' }].map((e) => (
           <div key={e.name} className="bg-slate-50 rounded-2xl p-3 flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-slate-900 font-black" style={{ fontSize: 9 }}>{e.name[0]}</span>
+              <span className="text-slate-900 font-bold" style={{ fontSize: 9 }}>{e.name[0]}</span>
             </div>
             <div className="flex-1">
               <div className="text-slate-900 font-bold" style={{ fontSize: 9 }}>{e.name}</div>
@@ -538,7 +538,7 @@ function PayrollScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-blue-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-blue-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Add Employee
           </div>
         </HL>
@@ -552,7 +552,7 @@ function AnalyticsScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
         <ArrowLeft size={13} className="text-slate-800" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Analytics</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Analytics</span>
       </div>
       <div className="px-3 pt-2 flex flex-col gap-2 flex-1">
         {/* Revenue chart stub */}
@@ -573,7 +573,7 @@ function AnalyticsScreen({ onTap, done }) {
         <div className="flex gap-2">
           {[{ label: 'Revenue', val: '$18.2K', color: 'text-emerald-600' }, { label: 'Expenses', val: '$6.4K', color: 'text-red-500' }, { label: 'Net', val: '$11.8K', color: 'text-blue-600' }].map((k) => (
             <div key={k.label} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-2 text-center">
-              <div className={`font-black ${k.color}`} style={{ fontSize: 10 }}>{k.val}</div>
+              <div className={`font-bold ${k.color}`} style={{ fontSize: 10 }}>{k.val}</div>
               <div className="text-slate-400" style={{ fontSize: 6 }}>{k.label}</div>
             </div>
           ))}
@@ -581,7 +581,7 @@ function AnalyticsScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-slate-800 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-slate-800 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             View Full Report
           </div>
         </HL>
@@ -595,7 +595,7 @@ function DocumentsScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2">
         <ArrowLeft size={13} className="text-slate-900" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Corporate Documents</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Corporate Documents</span>
       </div>
       <div className="px-3 flex flex-col gap-2 flex-1 pt-1">
         {[
@@ -635,14 +635,14 @@ function VaultScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2">
         <ArrowLeft size={13} className="text-slate-900" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Business Vault</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Business Vault</span>
       </div>
       <div className="px-3 flex flex-col gap-2 flex-1 pt-1">
         {/* Vault balance */}
         <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 text-center">
           <Lock size={18} className="text-indigo-600 mx-auto mb-1" />
           <div className="text-slate-500" style={{ fontSize: 7 }}>Vaulted Balance</div>
-          <div className="text-slate-900 font-black" style={{ fontSize: 22 }}>$3,200.00</div>
+          <div className="text-slate-900 font-bold" style={{ fontSize: 22 }}>$3,200.00</div>
           <div className="text-indigo-600" style={{ fontSize: 7 }}>Earning 2.5% APY</div>
         </div>
         {/* Allocation rows */}
@@ -656,7 +656,7 @@ function VaultScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-indigo-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-indigo-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Lock Funds
           </div>
         </HL>
@@ -670,7 +670,7 @@ function IPOScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
         <ArrowLeft size={13} className="text-slate-800" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>IPO Launchpad</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>IPO Launchpad</span>
       </div>
       <div className="px-3 pt-3 flex flex-col gap-2 flex-1">
         {/* Requirements checklist */}
@@ -694,7 +694,7 @@ function IPOScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-slate-800 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-slate-800 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Submit IPO Application
           </div>
         </HL>
@@ -708,7 +708,7 @@ function CorporateCardScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2">
         <ArrowLeft size={13} className="text-slate-900" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Corporate Cards</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Corporate Cards</span>
       </div>
       <div className="px-3 flex flex-col gap-2 flex-1 pt-1">
         {/* Card preview */}
@@ -718,7 +718,7 @@ function CorporateCardScreen({ onTap, done }) {
               <div className="text-slate-500" style={{ fontSize: 6 }}>CORPORATE CARD</div>
               <div className="text-slate-900 font-bold" style={{ fontSize: 8 }}>My Company Ltd</div>
             </div>
-            <div className="text-blue-600 font-black" style={{ fontSize: 10 }}>VISA</div>
+            <div className="text-blue-600 font-bold" style={{ fontSize: 10 }}>VISA</div>
           </div>
           <div className="text-slate-900 font-mono mt-1" style={{ fontSize: 9, letterSpacing: 2 }}>•••• •••• •••• 7742</div>
           <div className="flex justify-between mt-1">
@@ -730,7 +730,7 @@ function CorporateCardScreen({ onTap, done }) {
         {[{ name: 'Alice M.', limit: '$3,000', spent: '$780' }, { name: 'Bob K.', limit: '$2,000', spent: '$450' }].map((c) => (
           <div key={c.name} className="flex items-center gap-2 bg-slate-50 rounded-xl p-2">
             <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center">
-              <span className="text-slate-900 font-black" style={{ fontSize: 8 }}>{c.name[0]}</span>
+              <span className="text-slate-900 font-bold" style={{ fontSize: 8 }}>{c.name[0]}</span>
             </div>
             <div className="flex-1">
               <div className="text-slate-900 font-bold" style={{ fontSize: 8 }}>{c.name}</div>
@@ -742,7 +742,7 @@ function CorporateCardScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-indigo-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-indigo-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Request Card
           </div>
         </HL>
@@ -756,13 +756,13 @@ function ComplianceScreen({ onTap, done }) {
     <div className="w-full h-full bg-white flex flex-col">
       <div className="flex items-center gap-2 px-3 pt-2 pb-2 border-b border-slate-100">
         <ArrowLeft size={13} className="text-slate-800" />
-        <span className="text-slate-900 font-black" style={{ fontSize: 11 }}>Compliance</span>
+        <span className="text-slate-900 font-bold" style={{ fontSize: 11 }}>Compliance</span>
       </div>
       <div className="px-3 pt-3 flex flex-col gap-2 flex-1">
         {/* Score */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
           <div className="text-slate-500" style={{ fontSize: 7 }}>Compliance Score</div>
-          <div className="text-emerald-600 font-black" style={{ fontSize: 26 }}>87</div>
+          <div className="text-emerald-600 font-bold" style={{ fontSize: 26 }}>87</div>
           <div className="text-emerald-600 font-bold" style={{ fontSize: 7 }}>Green · Limits unlocked</div>
         </div>
         {/* Items */}
@@ -781,7 +781,7 @@ function ComplianceScreen({ onTap, done }) {
       </div>
       <div className="px-3 pb-3">
         <HL onTap={onTap} done={done} radius="rounded-xl" labelPos="top">
-          <div className="w-full bg-blue-600 rounded-xl text-center text-white font-black" style={{ fontSize: 10, padding: '7px' }}>
+          <div className="w-full bg-blue-600 rounded-xl text-center text-white font-bold" style={{ fontSize: 10, padding: '7px' }}>
             Run Compliance Check
           </div>
         </HL>
@@ -796,7 +796,7 @@ function SummaryScreen() {
       <div className="w-14 h-14 rounded-full bg-blue-50 border-2 border-blue-500 flex items-center justify-center mb-3">
         <Building2 size={28} className="text-blue-600" />
       </div>
-      <div className="text-slate-900 font-black text-center mb-1" style={{ fontSize: 13 }}>All 13 Business Stages!</div>
+      <div className="text-slate-900 font-bold text-center mb-1" style={{ fontSize: 13 }}>All 13 Business Stages!</div>
       <div className="text-slate-500 text-center mb-3" style={{ fontSize: 8 }}>Take the assessment to earn your Business Certificate</div>
       <div className="grid grid-cols-3 gap-1 w-full">
         {['Formation', 'KYC', 'Banking', 'Capital', 'Insurance', 'Payroll', 'Analytics', 'Documents', 'Vault', 'IPO', 'Corp Card', 'Compliance', 'Business Hub'].map((l) => (
@@ -873,7 +873,7 @@ export default function CompanyGuide({ onClose }) {
             <button onClick={() => setMode('course')} className="text-slate-500 hover:text-slate-900">
               <ChevronLeft size={18} />
             </button>
-            <span className="text-slate-900 font-black text-sm">
+            <span className="text-slate-900 font-bold text-sm">
               {lang === 'fr' ? 'Évaluation' : lang === 'es' ? 'Evaluación' : 'Assessment'}
             </span>
           </div>
@@ -881,7 +881,7 @@ export default function CompanyGuide({ onClose }) {
             <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
               {['en', 'fr', 'es'].map((l) => (
                 <button key={l} onClick={() => setLang(l)}
-                  className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>
+                  className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>
                   {l.toUpperCase()}
                 </button>
               ))}
@@ -897,7 +897,7 @@ export default function CompanyGuide({ onClose }) {
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${passed ? 'bg-emerald-50 border-2 border-emerald-500' : 'bg-red-50 border-2 border-red-500'}`}>
                 {passed ? <Award size={36} className="text-emerald-600" /> : <X size={36} className="text-red-600" />}
               </div>
-              <div className="text-slate-900 font-black text-2xl mb-1">{score}/8</div>
+              <div className="text-slate-900 font-bold text-2xl mb-1">{score}/8</div>
               <div className={`text-sm font-bold mb-6 ${passed ? 'text-emerald-600' : 'text-red-600'}`}>
                 {passed ? (lang === 'fr' ? 'Réussi!' : lang === 'es' ? '¡Aprobado!' : 'Passed!') : (lang === 'fr' ? 'Réessayez' : lang === 'es' ? 'Intenta de nuevo' : 'Try again')}
               </div>
@@ -913,12 +913,12 @@ export default function CompanyGuide({ onClose }) {
               ))}
               <div className="flex gap-3 mt-4">
                 <button onClick={() => { setAnswers({}); setSubmitted(false); }}
-                  className="px-5 py-2 rounded-xl bg-slate-100 text-slate-900 font-black text-sm">
+                  className="px-5 py-2 rounded-xl bg-slate-100 text-slate-900 font-bold text-sm">
                   {lang === 'fr' ? 'Réessayer' : lang === 'es' ? 'Reintentar' : 'Retake'}
                 </button>
                 {passed && (
                   <button onClick={() => setMode('cert')}
-                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm">
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm">
                     {lang === 'fr' ? 'Voir le Certificat' : lang === 'es' ? 'Ver Certificado' : 'Get Certificate'}
                   </button>
                 )}
@@ -943,7 +943,7 @@ export default function CompanyGuide({ onClose }) {
               <button
                 disabled={Object.keys(answers).length < qs.length}
                 onClick={() => setSubmitted(true)}
-                className={`w-full py-3 rounded-2xl font-black text-slate-900 transition-colors ${Object.keys(answers).length < qs.length ? 'bg-slate-100 cursor-not-allowed opacity-50' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                className={`w-full py-3 rounded-2xl font-bold text-slate-900 transition-colors ${Object.keys(answers).length < qs.length ? 'bg-slate-100 cursor-not-allowed opacity-50' : 'bg-blue-600 hover:bg-blue-700'}`}>
                 {lang === 'fr' ? 'Soumettre' : lang === 'es' ? 'Enviar' : 'Submit'}
               </button>
             </div>
@@ -960,26 +960,26 @@ export default function CompanyGuide({ onClose }) {
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-sm bg-gradient-to-b from-blue-50 to-slate-50 border-2 border-blue-200 rounded-3xl p-8 flex flex-col items-center">
           <div className="flex gap-1 mb-4">
-            <span className="text-2xl font-black text-[#4285F4]">D</span>
-            <span className="text-2xl font-black text-[#EA4335]">E</span>
-            <span className="text-2xl font-black text-[#FBBC04]">U</span>
-            <span className="text-2xl font-black text-[#34A853]">S</span>
+            <span className="text-2xl font-bold text-[#4285F4]">D</span>
+            <span className="text-2xl font-bold text-[#EA4335]">E</span>
+            <span className="text-2xl font-bold text-[#FBBC04]">U</span>
+            <span className="text-2xl font-bold text-[#34A853]">S</span>
           </div>
           <Award size={48} className="text-blue-600 mb-3" />
-          <div className="text-blue-600 font-black text-center text-lg mb-2">{c.title}</div>
+          <div className="text-blue-600 font-bold text-center text-lg mb-2">{c.title}</div>
           <div className="text-slate-500 text-xs text-center mb-4">{lang === 'fr' ? 'Ceci certifie que' : lang === 'es' ? 'Esto certifica que' : 'This certifies that'}</div>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={lang === 'fr' ? 'Votre nom complet' : lang === 'es' ? 'Tu nombre completo' : 'Your full name'}
-            className="w-full bg-slate-50 text-slate-900 text-center font-black text-lg rounded-xl px-4 py-2 mb-4 border border-blue-200 focus:outline-none focus:border-blue-400"
+            className="ui-input text-center text-lg mb-4"
           />
           <div className="text-slate-600 text-xs text-center mb-2">{c.sub}</div>
           <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 mb-6">
-            <div className="text-blue-600 font-black text-center" style={{ fontSize: 11 }}>{lang === 'fr' ? 'Score' : lang === 'es' ? 'Puntaje' : 'Score'}: {QUESTIONS[lang].length}/{QUESTIONS[lang].length}</div>
+            <div className="text-blue-600 font-bold text-center" style={{ fontSize: 11 }}>{lang === 'fr' ? 'Score' : lang === 'es' ? 'Puntaje' : 'Score'}: {QUESTIONS[lang].length}/{QUESTIONS[lang].length}</div>
           </div>
           <div className="text-slate-500 text-xs text-center mb-6">{c.issuer}</div>
-          <button onClick={onClose} className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm">
+          <button onClick={onClose} className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm">
             {lang === 'fr' ? 'Fermer' : lang === 'es' ? 'Cerrar' : 'Done'}
           </button>
         </div>
@@ -993,13 +993,13 @@ export default function CompanyGuide({ onClose }) {
       {/* Top bar */}
       <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-xl font-black">
+          <span className="text-xl font-bold">
             <span className="text-[#4285F4]">D</span>
             <span className="text-[#EA4335]">E</span>
             <span className="text-[#FBBC04]">U</span>
             <span className="text-[#34A853]">S</span>
           </span>
-          <span className="text-slate-500 text-xs font-black uppercase tracking-widest">
+          <span className="text-slate-500 text-xs font-semibold">
             {lang === 'fr' ? 'Guide Entreprise' : lang === 'es' ? 'Guía Empresarial' : 'Business Guide'}
           </span>
         </div>
@@ -1007,7 +1007,7 @@ export default function CompanyGuide({ onClose }) {
           <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1">
             {['en', 'fr', 'es'].map((l) => (
               <button key={l} onClick={() => setLang(l)}
-                className={`text-[10px] font-black px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>
+                className={`text-xs font-bold px-2 py-1 rounded-lg transition-colors ${lang === l ? 'bg-white text-slate-900' : 'text-slate-900'}`}>
                 {l.toUpperCase()}
               </button>
             ))}
@@ -1035,7 +1035,7 @@ export default function CompanyGuide({ onClose }) {
 
           {/* Phone column */}
           <div className="flex-shrink-0 w-full md:w-auto flex flex-col items-center gap-2">
-            <div className="text-slate-500 text-[10px] font-mono bg-white border border-slate-200 rounded-lg px-3 py-1 text-center">
+            <div className="text-slate-500 text-xs font-mono bg-white border border-slate-200 rounded-lg px-3 py-1 text-center">
               {s.path[lang]}
             </div>
             {/* Scale phone to 80% on mobile, full size on md+ */}
@@ -1046,7 +1046,7 @@ export default function CompanyGuide({ onClose }) {
             </div>
             {!s.noTap && !tapped[slide] && (
               <div className="flex items-center gap-2 bg-yellow-400/10 border border-yellow-200 rounded-xl px-3 py-2 max-w-[252px] text-center">
-                <span className="text-yellow-600 text-xs font-black animate-pulse flex-shrink-0">👆</span>
+                <span className="text-yellow-600 text-xs font-bold animate-pulse flex-shrink-0"></span>
                 <span className="text-yellow-600 text-xs font-bold leading-tight">{s.prompt[lang]}</span>
               </div>
             )}
@@ -1062,7 +1062,7 @@ export default function CompanyGuide({ onClose }) {
 
           {/* Explanation column — fills remaining space on desktop, full-width on mobile */}
           <div className="flex-1 w-full flex flex-col gap-4">
-            <h2 className="text-slate-900 font-black text-lg md:text-xl leading-tight">{s.title[lang]}</h2>
+            <h2 className="text-slate-900 font-bold text-lg md:text-xl leading-tight">{s.title[lang]}</h2>
 
             {showExplain ? (
               <>
@@ -1071,7 +1071,7 @@ export default function CompanyGuide({ onClose }) {
                 </div>
                 {s.tip && s.tip[lang] && (
                   <div className="bg-blue-50 border border-blue-600/20 rounded-2xl p-4 flex gap-3">
-                    <span className="text-blue-600 text-base flex-shrink-0">💡</span>
+                    <span className="text-blue-600 text-base flex-shrink-0"></span>
                     <p className="text-blue-600 text-xs leading-relaxed">{s.tip[lang]}</p>
                   </div>
                 )}
@@ -1079,7 +1079,7 @@ export default function CompanyGuide({ onClose }) {
             ) : (
               <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-5 flex flex-col items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-yellow-400/10 border-2 border-yellow-200 flex items-center justify-center animate-pulse">
-                  <span className="text-xl">👆</span>
+                  <span className="text-xl"></span>
                 </div>
                 <p className="text-slate-500 text-sm text-center leading-relaxed">
                   {lang === 'fr' ? 'Appuyez sur l\'élément surligné dans l\'écran du téléphone pour déverrouiller l\'explication.'
@@ -1095,7 +1095,7 @@ export default function CompanyGuide({ onClose }) {
       {/* Navigation */}
       <div className="bg-white border-t border-slate-200 px-3 md:px-4 py-2 md:py-3 flex items-center justify-between gap-2 flex-shrink-0">
         <button onClick={goPrev} disabled={slide === 0}
-          className={`flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm transition-colors flex-shrink-0 ${slide === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>
+          className={`flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-bold text-xs md:text-sm transition-colors flex-shrink-0 ${slide === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-900 bg-slate-50 hover:bg-slate-100'}`}>
           <ChevronLeft size={14} /> {lang === 'fr' ? 'Préc.' : lang === 'es' ? 'Ant.' : 'Prev'}
         </button>
 
@@ -1109,12 +1109,12 @@ export default function CompanyGuide({ onClose }) {
 
         {slide === SLIDES.length - 1 ? (
           <button onClick={() => setMode('assessment')}
-            className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0">
+            className="flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-bold text-xs md:text-sm bg-emerald-600 hover:bg-emerald-700 text-white flex-shrink-0">
             {lang === 'fr' ? 'Éval.' : lang === 'es' ? 'Eval.' : 'Quiz'} <ChevronRight size={14} />
           </button>
         ) : (
           <button onClick={goNext} disabled={!canNext}
-            className={`flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-black text-xs md:text-sm transition-colors flex-shrink-0 ${!canNext ? 'bg-slate-50 text-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
+            className={`flex items-center gap-1 px-3 md:px-4 py-2 rounded-xl font-bold text-xs md:text-sm transition-colors flex-shrink-0 ${!canNext ? 'bg-slate-50 text-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
             {lang === 'fr' ? 'Suiv.' : lang === 'es' ? 'Sig.' : 'Next'} <ChevronRight size={14} />
           </button>
         )}

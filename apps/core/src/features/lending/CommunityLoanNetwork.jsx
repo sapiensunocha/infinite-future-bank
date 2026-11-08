@@ -16,7 +16,7 @@ function ScoreBadge({ score }) {
     score >= 50 ? 'bg-amber-100  text-amber-700  border-amber-200' :
                   'bg-red-100    text-red-700    border-red-200';
   return (
-    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border ${color}`}>
+    <span className={`text-xs font-semibold px-2 py-1 rounded-lg border ${color}`}>
       Score {Math.round(score)}
     </span>
   );
@@ -230,21 +230,21 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
               <Building2 size={20} className="text-indigo-600"/>
             </div>
             <div>
-              <h3 className="font-black text-slate-900 text-lg">Create Financial Community</h3>
+              <h3 className="font-bold text-slate-900 text-lg">Create Financial Community</h3>
               <p className="text-xs text-slate-500">Set up your group and define contribution rules</p>
             </div>
           </div>
           <form onSubmit={createCommunity} className="space-y-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Community Name</label>
+              <label className="ui-label">Community Name</label>
               <input required value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))}
                 placeholder="e.g. Farmers Collective Nairobi"
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-indigo-400"/>
+                className="ui-input"/>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Purpose / Category</label>
+              <label className="ui-label">Purpose / Category</label>
               <select required value={form.purpose} onChange={e => setForm(p=>({...p,purpose:e.target.value}))}
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-indigo-400 bg-white">
+                className="ui-select">
                 <option value="">Select purpose</option>
                 {['Farmers','Traders','Women Entrepreneurs','Youth',
                   'Healthcare Workers','Teachers','Tech Startups',
@@ -254,35 +254,35 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Description (optional)</label>
+              <label className="ui-label">Description (optional)</label>
               <textarea value={form.description} onChange={e => setForm(p=>({...p,description:e.target.value}))}
                 rows={2} placeholder="What brings your community together?"
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-indigo-400 resize-none"/>
+                className="ui-textarea resize-none"/>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Contribution Amount ($)</label>
+                <label className="ui-label">Contribution Amount ($)</label>
                 <input type="number" min="1" required value={form.contribution_amount}
                   onChange={e => setForm(p=>({...p,contribution_amount:e.target.value}))}
-                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-indigo-400"/>
+                  className="ui-input"/>
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Frequency</label>
+                <label className="ui-label">Frequency</label>
                 <select value={form.contribution_frequency} onChange={e => setForm(p=>({...p,contribution_frequency:e.target.value}))}
-                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-indigo-400 bg-white">
+                  className="ui-select">
                   <option value="monthly">Monthly</option>
                   <option value="weekly">Weekly</option>
                 </select>
               </div>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Max Members</label>
+              <label className="ui-label">Max Members</label>
               <input type="number" min="3" max="200" required value={form.max_members}
                 onChange={e => setForm(p=>({...p,max_members:e.target.value}))}
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-indigo-400"/>
+                className="ui-input"/>
             </div>
             <button type="submit" disabled={loading}
-              className="w-full bg-indigo-600 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              className="ui-btn ui-btn-primary">
               {loading ? <Loader2 size={16} className="animate-spin"/> : <Plus size={16}/>}
               Launch Community
             </button>
@@ -306,35 +306,35 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
         </button>
 
         {/* Community Header */}
-        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
           <Globe size={140} className="absolute -right-8 -bottom-8 opacity-5"/>
           <div className="relative z-10">
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1">{selected.purpose}</p>
-                <h2 className="text-2xl font-black mb-2">{selected.name}</h2>
+                <p className="text-xs font-semibold text-indigo-300 mb-1">{selected.purpose}</p>
+                <h2 className="text-2xl font-bold mb-2">{selected.name}</h2>
                 {selected.description && <p className="text-sm text-slate-400 max-w-md">{selected.description}</p>}
               </div>
               <ScoreBadge score={selected.group_credit_score || 50}/>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-6">
               <div className="bg-white/10 rounded-2xl p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1">Pool Balance</p>
-                <p className="text-xl font-black">${pool.toLocaleString()}</p>
+                <p className="text-xs font-semibold text-indigo-300 mb-1">Pool Balance</p>
+                <p className="text-xl font-bold">${pool.toLocaleString()}</p>
               </div>
               <div className="bg-white/10 rounded-2xl p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1">Members</p>
-                <p className="text-xl font-black">{members.length} / {selected.max_members}</p>
+                <p className="text-xs font-semibold text-indigo-300 mb-1">Members</p>
+                <p className="text-xl font-bold">{members.length} / {selected.max_members}</p>
               </div>
               <div className="bg-white/10 rounded-2xl p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1">Contribution</p>
-                <p className="text-xl font-black">${selected.contribution_amount}<span className="text-xs text-slate-400 ml-1">/{selected.contribution_frequency}</span></p>
+                <p className="text-xs font-semibold text-indigo-300 mb-1">Contribution</p>
+                <p className="text-xl font-bold">${selected.contribution_amount}<span className="text-xs text-slate-400 ml-1">/{selected.contribution_frequency}</span></p>
               </div>
             </div>
             {selected.ifb_matched && (
               <div className="mt-4 bg-emerald-500/20 border border-emerald-400/30 rounded-2xl px-4 py-2 flex items-center gap-2">
                 <Award size={14} className="text-emerald-400"/>
-                <span className="text-xs font-black text-emerald-300">IFB matched ${selected.ifb_match_amount?.toLocaleString()} — External Funding Unlocked</span>
+                <span className="text-xs font-bold text-emerald-300">IFB matched ${selected.ifb_match_amount?.toLocaleString()} — External Funding Unlocked</span>
               </div>
             )}
           </div>
@@ -344,7 +344,7 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
         <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
           {[['overview','Overview'],['contribute','Contribute'],['request','Request Loan'],['loans','Loan Board'],['members','Members']].map(([k,l]) => (
             <button key={k} onClick={() => setInnerTab(k)}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${innerTab===k ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${innerTab===k ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>
               {l}
             </button>
           ))}
@@ -354,7 +354,7 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
         {innerTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
-              <h4 className="font-black text-slate-800 flex items-center gap-2"><BarChart3 size={16} className="text-indigo-500"/> Group Credit Health</h4>
+              <h4 className="font-bold text-slate-800 flex items-center gap-2"><BarChart3 size={16} className="text-indigo-500"/> Group Credit Health</h4>
               {[
                 ['Group Credit Score', selected.group_credit_score, 'indigo'],
                 ['Repayment Score',    selected.repayment_score,    'emerald'],
@@ -371,25 +371,25 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
               ))}
             </div>
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-3">
-              <h4 className="font-black text-slate-800 flex items-center gap-2"><Lock size={16} className="text-slate-500"/> Your Position</h4>
+              <h4 className="font-bold text-slate-800 flex items-center gap-2"><Lock size={16} className="text-slate-500"/> Your Position</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between font-semibold text-slate-600">
                   <span>Your contributions</span>
-                  <span className="font-black text-slate-900">${(myMem?.total_contributed || 0).toFixed(2)}</span>
+                  <span className="font-bold text-slate-900">${(myMem?.total_contributed || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-slate-600">
                   <span>Max loan available</span>
-                  <span className="font-black text-indigo-700">${maxLoan.toFixed(2)}</span>
+                  <span className="font-bold text-indigo-700">${maxLoan.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-slate-600">
                   <span>Active loan</span>
-                  <span className={`font-black ${myActiveLoan ? 'text-amber-600' : 'text-slate-400'}`}>
+                  <span className={`font-bold ${myActiveLoan ? 'text-amber-600' : 'text-slate-400'}`}>
                     {myActiveLoan ? `$${parseFloat(myActiveLoan.amount).toFixed(2)}` : 'None'}
                   </span>
                 </div>
                 <div className="flex justify-between font-semibold text-slate-600">
                   <span>My repayment score</span>
-                  <span className="font-black text-emerald-600">{Math.round(myMem?.repayment_score || 50)}</span>
+                  <span className="font-bold text-emerald-600">{Math.round(myMem?.repayment_score || 50)}</span>
                 </div>
               </div>
               {selected.group_credit_score >= 70 && (
@@ -410,20 +410,20 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
                 <Wallet size={18} className="text-emerald-600"/>
               </div>
               <div>
-                <h4 className="font-black text-slate-900">Make Contribution</h4>
+                <h4 className="font-bold text-slate-900">Make Contribution</h4>
                 <p className="text-xs text-slate-500">Your wallet: ${(balances?.liquid_usd || 0).toFixed(2)}</p>
               </div>
             </div>
             <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 text-center">
               <p className="text-xs text-indigo-600 font-bold mb-1">Contribution Amount</p>
-              <p className="text-3xl font-black text-indigo-900">${selected.contribution_amount}</p>
-              <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest">{selected.contribution_frequency}</p>
+              <p className="text-3xl font-bold text-indigo-900">${selected.contribution_amount}</p>
+              <p className="text-xs text-indigo-500 font-bold">{selected.contribution_frequency}</p>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
               This amount is debited from your IFB wallet and added to the community pool. Your max loan eligibility grows 3× your total contributions.
             </p>
             <button onClick={contribute} disabled={loading || (balances?.liquid_usd || 0) < parseFloat(selected.contribution_amount)}
-              className="w-full bg-emerald-600 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full bg-emerald-600 text-white rounded-2xl py-4 font-semibold text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               {loading ? <Loader2 size={16} className="animate-spin"/> : <HandCoins size={16}/>}
               Contribute Now
             </button>
@@ -438,38 +438,38 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
                 <HandCoins size={18} className="text-purple-600"/>
               </div>
               <div>
-                <h4 className="font-black text-slate-900">Request Community Loan</h4>
-                <p className="text-xs text-slate-500">Max eligible: <span className="font-black text-indigo-700">${maxLoan.toFixed(2)}</span></p>
+                <h4 className="font-bold text-slate-900">Request Community Loan</h4>
+                <p className="text-xs text-slate-500">Max eligible: <span className="font-bold text-indigo-700">${maxLoan.toFixed(2)}</span></p>
               </div>
             </div>
             {myActiveLoan ? (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
                 <AlertCircle size={16} className="text-amber-600 mt-0.5"/>
                 <div>
-                  <p className="text-sm font-black text-amber-800">Active loan exists</p>
+                  <p className="text-sm font-bold text-amber-800">Active loan exists</p>
                   <p className="text-xs text-amber-600 mt-1">Repay your current ${parseFloat(myActiveLoan.amount).toFixed(2)} loan before requesting a new one.</p>
                 </div>
               </div>
             ) : (
               <form onSubmit={requestLoan} className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Loan Amount ($)</label>
+                  <label className="ui-label">Loan Amount ($)</label>
                   <input type="number" min="1" max={maxLoan} required value={loanForm.amount}
                     onChange={e => setLoanForm(p=>({...p,amount:e.target.value}))}
                     placeholder={`Max $${maxLoan.toFixed(2)}`}
-                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-purple-400"/>
+                    className="ui-input"/>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Purpose</label>
+                  <label className="ui-label">Purpose</label>
                   <input required value={loanForm.purpose}
                     onChange={e => setLoanForm(p=>({...p,purpose:e.target.value}))}
                     placeholder="e.g. Stock for harvest season"
-                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-purple-400"/>
+                    className="ui-input"/>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Repayment Period</label>
+                  <label className="ui-label">Repayment Period</label>
                   <select value={loanForm.repayment_days} onChange={e => setLoanForm(p=>({...p,repayment_days:e.target.value}))}
-                    className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-semibold outline-none focus:border-purple-400 bg-white">
+                    className="ui-select">
                     <option value="30">30 days</option>
                     <option value="60">60 days</option>
                     <option value="90">90 days</option>
@@ -477,13 +477,13 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
                   </select>
                 </div>
                 <div className="bg-slate-50 rounded-2xl p-4 text-xs text-slate-600 space-y-1">
-                  <p className="font-black text-slate-700">How approval works:</p>
+                  <p className="font-bold text-slate-700">How approval works:</p>
                   <p>• 3 community members must vote to approve</p>
                   <p>• Funds are auto-disbursed to your wallet instantly</p>
                   <p>• 0% interest — community spirit, not profit</p>
                 </div>
                 <button type="submit" disabled={loading}
-                  className="w-full bg-purple-600 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  className="ui-btn ui-btn-primary">
                   {loading ? <Loader2 size={16} className="animate-spin"/> : <ArrowUpRight size={16}/>}
                   Submit for Community Vote
                 </button>
@@ -505,12 +505,12 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
               <div key={loan.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-4">
                 <div className="flex items-start justify-between flex-wrap gap-2">
                   <div>
-                    <p className="font-black text-slate-900">{loan.borrower_name}</p>
+                    <p className="font-bold text-slate-900">{loan.borrower_name}</p>
                     <p className="text-xs text-slate-500 mt-0.5">"{loan.purpose}"</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-slate-900">${parseFloat(loan.amount).toFixed(2)}</span>
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${statusColor(loan.status)}`}>{loan.status}</span>
+                    <span className="text-lg font-bold text-slate-900">${parseFloat(loan.amount).toFixed(2)}</span>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${statusColor(loan.status)}`}>{loan.status}</span>
                   </div>
                 </div>
                 {loan.status === 'voting' && (
@@ -523,11 +523,11 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
                     {loan.borrower_id !== userId && (
                       <div className="flex gap-3">
                         <button onClick={() => voteLoan(loan.id, 'approve')} disabled={loading}
-                          className="flex-1 bg-emerald-600 text-white rounded-xl py-2.5 font-black text-xs uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-1">
+                          className="ui-btn ui-btn-primary flex-1">
                           <CheckCircle2 size={14}/> Approve
                         </button>
                         <button onClick={() => voteLoan(loan.id, 'reject')} disabled={loading}
-                          className="flex-1 bg-red-500 text-white rounded-xl py-2.5 font-black text-xs uppercase tracking-widest hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-1">
+                          className="ui-btn ui-btn-danger flex-1">
                           <X size={14}/> Reject
                         </button>
                       </div>
@@ -539,9 +539,9 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
                     <input type="number" min="1" value={repayAmount}
                       onChange={e => setRepayAmount(e.target.value)}
                       placeholder="Repay amount $"
-                      className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-indigo-400"/>
+                      className="ui-input flex-1"/>
                     <button onClick={() => repayLoan(loan.id)} disabled={loading}
-                      className="bg-indigo-600 text-white rounded-xl px-5 py-2.5 font-black text-xs uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1">
+                      className="bg-blue-600 text-white rounded-xl px-5 py-2.5 font-semibold text-xs hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1">
                       {loading ? <Loader2 size={12} className="animate-spin"/> : <RefreshCw size={12}/>} Repay
                     </button>
                   </div>
@@ -564,16 +564,16 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
               <div key={m.id} className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
-                    <span className="text-indigo-700 font-black text-sm">{(m.profiles?.full_name||'?')[0].toUpperCase()}</span>
+                    <span className="text-indigo-700 font-bold text-sm">{(m.profiles?.full_name||'?')[0].toUpperCase()}</span>
                   </div>
                   <div>
-                    <p className="font-black text-slate-900 text-sm">{m.profiles?.full_name || 'Member'}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{m.role} · {new Date(m.joined_at).toLocaleDateString()}</p>
+                    <p className="font-bold text-slate-900 text-sm">{m.profiles?.full_name || 'Member'}</p>
+                    <p className="text-xs text-slate-500 font-bold">{m.role} · {new Date(m.joined_at).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-black text-slate-900">${parseFloat(m.total_contributed||0).toFixed(2)}</p>
-                  <p className="text-[10px] text-slate-500 font-bold">contributed</p>
+                  <p className="text-sm font-bold text-slate-900">${parseFloat(m.total_contributed||0).toFixed(2)}</p>
+                  <p className="text-xs text-slate-500 font-bold">contributed</p>
                 </div>
               </div>
             ))}
@@ -589,27 +589,27 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
       <Toast n={toast} />
 
       {/* Hero */}
-      <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 rounded-[3rem] p-10 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-10 text-white shadow-xl relative overflow-hidden">
         <Users size={180} className="absolute -right-10 -bottom-10 opacity-5"/>
         <div className="relative z-10">
-          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-2">IFB Community Capital System</p>
-          <h2 className="text-3xl font-black tracking-tight mb-2">Community Loan Network</h2>
+          <p className="text-xs font-semibold text-indigo-300 mb-2">IFB Community Capital System</p>
+          <h2 className="text-3xl font-bold tracking-tight mb-2">Community Loan Network</h2>
           <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
             Pool capital with your community. Access microloans backed by peer trust — not banks.
             High-performing groups unlock IFB matching funds, donor grants, and institutional credit lines.
           </p>
           <div className="grid grid-cols-3 gap-4 mt-6">
             <div className="bg-white/10 rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1">My Communities</p>
-              <p className="text-2xl font-black">{myStats.communities}</p>
+              <p className="text-xs font-semibold text-indigo-300 mb-1">My Communities</p>
+              <p className="text-2xl font-bold">{myStats.communities}</p>
             </div>
             <div className="bg-white/10 rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1">Total Pool</p>
-              <p className="text-2xl font-black">${parseFloat(myStats.total_pool||0).toFixed(0)}</p>
+              <p className="text-xs font-semibold text-indigo-300 mb-1">Total Pool</p>
+              <p className="text-2xl font-bold">${parseFloat(myStats.total_pool||0).toFixed(0)}</p>
             </div>
             <div className="bg-white/10 rounded-2xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 mb-1">Active Loans</p>
-              <p className="text-2xl font-black">{myStats.active_loans}</p>
+              <p className="text-xs font-semibold text-indigo-300 mb-1">Active Loans</p>
+              <p className="text-2xl font-bold">{myStats.active_loans}</p>
             </div>
           </div>
         </div>
@@ -618,11 +618,11 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
       {/* Actions */}
       <div className="flex gap-3">
         <button onClick={() => setView('create')}
-          className="flex-1 bg-indigo-600 text-white rounded-2xl py-3.5 font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
+          className="ui-btn ui-btn-primary flex-1">
           <Plus size={14}/> Create Community
         </button>
         <button onClick={loadAll} disabled={loading}
-          className="bg-white border border-slate-200 text-slate-600 rounded-2xl px-4 py-3.5 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors shadow-sm">
+          className="bg-white border border-slate-200 text-slate-600 rounded-2xl px-4 py-3.5 font-semibold text-xs hover:bg-slate-50 transition-colors shadow-sm">
           {loading ? <Loader2 size={14} className="animate-spin"/> : <RefreshCw size={14}/>}
         </button>
       </div>
@@ -630,28 +630,28 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
       {/* My Communities */}
       {communities.length > 0 && (
         <section>
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2">
+          <h3 className="text-xs font-semibold text-slate-500 mb-3 flex items-center gap-2">
             <Star size={12}/> My Communities
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {communities.map(c => (
               <button key={c.id} onClick={() => loadCommunityDetail(c)}
-                className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all text-left group">
+                className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-lg transition-all text-left group">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-0.5">{c.purpose}</p>
-                    <p className="font-black text-slate-900">{c.name}</p>
+                    <p className="text-xs font-semibold text-indigo-500 mb-0.5">{c.purpose}</p>
+                    <p className="font-bold text-slate-900">{c.name}</p>
                   </div>
                   <ScoreBadge score={c.group_credit_score||50}/>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Pool</p>
-                    <p className="font-black text-slate-800">${parseFloat(c.pool_balance||0).toFixed(2)}</p>
+                    <p className="text-xs text-slate-500 font-bold">Pool</p>
+                    <p className="font-bold text-slate-800">${parseFloat(c.pool_balance||0).toFixed(2)}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Contribution</p>
-                    <p className="font-black text-slate-800">${c.contribution_amount}/{c.contribution_frequency}</p>
+                    <p className="text-xs text-slate-500 font-bold">Contribution</p>
+                    <p className="font-bold text-slate-800">${c.contribution_amount}/{c.contribution_frequency}</p>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center justify-between">
@@ -668,7 +668,7 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
 
       {/* Discover All Communities */}
       <section>
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2">
+        <h3 className="text-xs font-semibold text-slate-500 mb-3 flex items-center gap-2">
           <Globe size={12}/> Discover Communities
         </h3>
         {loading && <div className="text-center py-6"><Loader2 className="animate-spin mx-auto text-indigo-400"/></div>}
@@ -677,13 +677,13 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
             <div key={c.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <p className="font-black text-slate-900 truncate">{c.name}</p>
+                  <p className="font-bold text-slate-900 truncate">{c.name}</p>
                   <ScoreBadge score={c.group_credit_score||50}/>
                 </div>
                 <p className="text-xs text-slate-500 font-semibold">{c.purpose} · ${c.contribution_amount}/{c.contribution_frequency} · Pool ${parseFloat(c.pool_balance||0).toFixed(0)}</p>
               </div>
               <button onClick={() => joinCommunity(c.id)} disabled={loading}
-                className="bg-indigo-600 text-white rounded-xl px-4 py-2 font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-1 shrink-0">
+                className="bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold text-xs hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-1 shrink-0">
                 <UserPlus size={12}/> Join
               </button>
             </div>
@@ -703,7 +703,7 @@ export default function CommunityLoanNetwork({ session, balances, fetchAllData }
             <TrendingUp size={18} className="text-emerald-600"/>
           </div>
           <div>
-            <p className="font-black text-slate-900 mb-1">How communities unlock external funding</p>
+            <p className="font-bold text-slate-900 mb-1">How communities unlock external funding</p>
             <p className="text-xs text-slate-600 leading-relaxed">Communities with a Credit Score above 70 can apply for IFB Capital Matching, donor grants, and institutional credit lines through the IFB Capital Network. Each repayment builds your group reputation permanently on the IFB ledger.</p>
           </div>
         </div>

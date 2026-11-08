@@ -456,16 +456,16 @@ export default function TicketGate({ session, balances, fetchAllData }) {
       {notification && (
         <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[800] px-8 py-4 rounded-full shadow-2xl border-2 flex items-center gap-3 animate-in slide-in-from-top-4 ${notification.type === 'error' ? 'bg-red-900 border-red-500 text-red-200' : 'bg-slate-900 border-emerald-500 text-emerald-300'}`}>
           {notification.type === 'error' ? <XCircle size={20} /> : <ShieldCheck size={20} />}
-          <span className="font-black text-sm uppercase tracking-widest">{notification.msg}</span>
+          <span className="font-semibold text-sm">{notification.msg}</span>
         </div>
       )}
 
       {/* MAIN TABS */}
-      <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm w-fit">
-        <button onClick={() => setMainTab('EXPLORE')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${mainTab === 'EXPLORE' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>
+      <div className="ui-segment w-full sm:w-fit">
+        <button onClick={() => setMainTab('EXPLORE')} className={`flex items-center justify-center gap-2 ${mainTab === 'EXPLORE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>
           <Globe2 size={14} /> Explore Events
         </button>
-        <button onClick={() => setMainTab('BOX_OFFICE')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${mainTab === 'BOX_OFFICE' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}>
+        <button onClick={() => setMainTab('BOX_OFFICE')} className={`flex items-center justify-center gap-2 ${mainTab === 'BOX_OFFICE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}>
           <Ticket size={14} /> My Box Office
         </button>
       </div>
@@ -475,14 +475,14 @@ export default function TicketGate({ session, balances, fetchAllData }) {
       {/* ================================================================= */}
       {mainTab === 'EXPLORE' && (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white relative overflow-hidden">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-3xl text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
-            <h2 className="text-3xl font-black mb-1 relative z-10">IFB Event Network</h2>
+            <h2 className="text-3xl font-bold mb-1 relative z-10">Events</h2>
             <p className="text-sm text-slate-400 font-medium relative z-10">Buy tickets instantly with your IFB balance. No card needed.</p>
             {balances && (
               <div className="mt-4 inline-flex items-center gap-2 bg-white/10 border border-white/20 px-4 py-2 rounded-xl relative z-10">
                 <Wallet size={16} className="text-indigo-400" />
-                <span className="text-sm font-black text-white">Balance: ${(balances.liquid_usd || 0).toFixed(2)}</span>
+                <span className="text-sm font-bold text-white">Balance: ${(balances.liquid_usd || 0).toFixed(2)}</span>
               </div>
             )}
           </div>
@@ -492,12 +492,12 @@ export default function TicketGate({ session, balances, fetchAllData }) {
             <div className="relative flex-1">
               <Search className="absolute left-4 top-3.5 text-slate-400" size={18} />
               <input type="text" placeholder="Search events, locations..." value={exploreSearch} onChange={e => setExploreSearch(e.target.value)}
-                className="w-full bg-white border border-slate-200 p-3 pl-11 rounded-2xl font-bold text-sm outline-none focus:border-indigo-400 shadow-sm" />
+                className="ui-input pl-11" />
             </div>
             <div className="relative">
               <MapPin className="absolute left-4 top-3.5 text-slate-400" size={16} />
               <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)}
-                className="bg-white border border-slate-200 p-3 pl-10 pr-8 rounded-2xl font-bold text-sm outline-none focus:border-indigo-400 shadow-sm cursor-pointer appearance-none min-w-[160px]">
+                className="ui-select min-w-[160px]">
                 <option value="">All Locations</option>
                 {allLocations.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
@@ -505,14 +505,14 @@ export default function TicketGate({ session, balances, fetchAllData }) {
             <div className="relative">
               <Tag className="absolute left-4 top-3.5 text-slate-400" size={16} />
               <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
-                className="bg-white border border-slate-200 p-3 pl-10 pr-8 rounded-2xl font-bold text-sm outline-none focus:border-indigo-400 shadow-sm cursor-pointer appearance-none min-w-[160px]">
+                className="ui-select min-w-[160px]">
                 <option value="">All Categories</option>
                 {EVENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             {(exploreSearch || locationFilter || categoryFilter) && (
               <button onClick={() => { setExploreSearch(''); setLocationFilter(''); setCategoryFilter(''); }}
-                className="px-5 py-3 bg-slate-100 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-slate-200 transition-colors shrink-0">Clear</button>
+                className="px-5 py-3 bg-slate-100 text-slate-600 font-semibold text-sm rounded-2xl hover:bg-slate-200 transition-colors shrink-0">Clear</button>
             )}
           </div>
 
@@ -520,7 +520,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
           {exploreLoading ? (
             <div className="text-center py-16"><Loader2 className="animate-spin mx-auto text-indigo-500 mb-3" size={32} /><p className="font-bold text-slate-400">Loading events...</p></div>
           ) : filteredEvents.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-[2rem] border border-dashed border-slate-300">
+            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
               <Ticket size={40} className="mx-auto text-slate-300 mb-3" />
               <p className="font-bold text-slate-500">No events match your filters.</p>
             </div>
@@ -536,13 +536,13 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                 const isOwn = ev.organizer_id === session.user.id;
 
                 return (
-                  <div key={ev.id} className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
+                  <div key={ev.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
                     <div className="h-36 bg-slate-100 relative overflow-hidden">
                       <img src={ev.event_image_url || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=2000'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80" alt="" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      {category && <span className={`absolute top-3 left-3 text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${categoryColors[category] || 'bg-slate-100 text-slate-600'}`}>{category}</span>}
-                      {isSoldOut && <span className="absolute top-3 right-3 bg-red-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Sold Out</span>}
-                      {isOwn && <span className="absolute top-3 right-3 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg">Your Event</span>}
+                      {category && <span className={`absolute top-3 left-3 text-xs font-semibold px-2 py-1 rounded-lg ${categoryColors[category] || 'bg-slate-100 text-slate-600'}`}>{category}</span>}
+                      {isSoldOut && <span className="absolute top-3 right-3 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-lg">Sold Out</span>}
+                      {isOwn && <span className="absolute top-3 right-3 bg-indigo-600 text-white text-xs font-semibold px-2 py-1 rounded-lg">Your Event</span>}
                       <div className="absolute bottom-3 left-3 flex items-center gap-1 text-white text-xs font-bold">
                         <Calendar size={12} /> {formatDate(ev.event_date)}
                         {ev.event_date && <span className="ml-1 opacity-70">{formatTime(ev.event_date)}</span>}
@@ -550,12 +550,12 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                     </div>
                     <div className="p-5 flex flex-col flex-1 justify-between">
                       <div>
-                        <h3 className="font-black text-slate-800 text-base mb-1 leading-tight">{ev.event_name}</h3>
+                        <h3 className="font-bold text-slate-800 text-base mb-1 leading-tight">{ev.event_name}</h3>
                         {ev.location_name && <p className="text-xs text-slate-400 font-bold flex items-center gap-1 mb-2"><MapPin size={11} /> {ev.location_name}</p>}
-                        {ev['profiles'] && <p className="text-[10px] text-slate-400 font-bold mb-3">by {ev['profiles']?.full_name || 'IFB Member'}</p>}
+                        {ev['profiles'] && <p className="text-xs text-slate-400 font-bold mb-3">by {ev['profiles']?.full_name || 'IFB Member'}</p>}
                         {total > 0 && (
                           <div className="mb-3">
-                            <div className="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+                            <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
                               <span>{spotsLeft} spots left</span><span>{sold}/{total}</span>
                             </div>
                             <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -566,11 +566,11 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                       </div>
                       <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                         <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">From</p>
-                          <p className="text-xl font-black text-slate-800">{minP === 0 ? 'Free' : `$${minP.toFixed(2)}`}</p>
+                          <p className="text-xs font-semibold text-slate-500">From</p>
+                          <p className="text-xl font-bold text-slate-800">{minP === 0 ? 'Free' : `$${minP.toFixed(2)}`}</p>
                         </div>
                         <button disabled={isSoldOut || isOwn} onClick={() => openBuyModal(ev)}
-                          className={`px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm ${isSoldOut || isOwn ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-indigo-200 hover:shadow-md'}`}>
+                          className={`px-5 py-3 rounded-xl font-semibold text-sm transition-all shadow-sm ${isSoldOut || isOwn ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md'}`}>
                           {isOwn ? 'Your Event' : isSoldOut ? 'Sold Out' : 'Get Ticket'}
                         </button>
                       </div>
@@ -586,14 +586,14 @@ export default function TicketGate({ session, balances, fetchAllData }) {
       {/* ─── BUY TICKET MODAL ─────────────────────────────────────────── */}
       {buyModal && mainTab === 'EXPLORE' && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 max-h-[90vh] flex flex-col">
             {/* Event image header */}
             <div className="h-40 relative shrink-0">
               <img src={buyModal.event_image_url || 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=2000'} className="w-full h-full object-cover" alt="" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/20" />
               <button onClick={() => setBuyModal(null)} className="absolute top-4 right-4 bg-white/20 backdrop-blur p-2 rounded-xl text-white hover:bg-white/40 transition-colors"><X size={18} /></button>
               <div className="absolute bottom-4 left-5">
-                <h3 className="font-black text-white text-xl leading-tight">{buyModal.event_name}</h3>
+                <h3 className="font-bold text-white text-xl leading-tight">{buyModal.event_name}</h3>
                 <p className="text-sm text-white/80 font-bold flex items-center gap-1 mt-0.5"><Calendar size={12} /> {formatDate(buyModal.event_date)} · {buyModal.location_name}</p>
               </div>
             </div>
@@ -602,21 +602,21 @@ export default function TicketGate({ session, balances, fetchAllData }) {
               {boughtTicket ? (
                 <div className="p-8 text-center space-y-4">
                   <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto"><Check size={32} className="text-emerald-600" /></div>
-                  <h4 className="text-xl font-black text-slate-800">Ticket Secured!</h4>
+                  <h4 className="text-xl font-bold text-slate-800">Ticket Secured!</h4>
                   {boughtTicket.tierName && <p className="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-1 rounded-full inline-block">{boughtTicket.tierName}</p>}
                   <p className="text-sm text-slate-500">Your IFB balance has been debited {fmt(boughtTicket.price)}. Present this QR at the gate.</p>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block">
                     <QRCode value={`${APP_DOMAIN}/ticket/${boughtTicket.qrHash}`} size={140} fgColor="#1e293b" />
                   </div>
                   <p className="font-mono text-xs text-slate-400">{boughtTicket.qrHash}</p>
-                  <button onClick={() => setBuyModal(null)} className="w-full py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-colors">Done</button>
+                  <button onClick={() => setBuyModal(null)} className="ui-btn ui-btn-primary">Done</button>
                 </div>
               ) : (
                 <div className="p-6 space-y-5">
                   {/* Tier selector */}
                   {buyTiers.length > 0 ? (
                     <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Your Ticket</p>
+                      <p className="text-xs font-semibold text-slate-500">Select Your Ticket</p>
                       {buyTiers.map(tier => {
                         const tierFull = (tier.tickets_sold || 0) >= (tier.capacity || 9999);
                         const isSelected = selectedTier?.id === tier.id;
@@ -629,13 +629,13 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                                 {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                               </div>
                               <div>
-                                <p className={`font-black text-sm ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>{tier.tier_name}</p>
-                                <p className="text-[10px] text-slate-400 font-bold">
+                                <p className={`font-bold text-sm ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>{tier.tier_name}</p>
+                                <p className="text-xs text-slate-400 font-bold">
                                   {tierFull ? 'Sold Out' : `${(tier.capacity || 0) - (tier.tickets_sold || 0)} remaining`}
                                 </p>
                               </div>
                             </div>
-                            <p className={`font-black text-lg ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>
+                            <p className={`font-bold text-lg ${isSelected ? 'text-indigo-700' : 'text-slate-800'}`}>
                               {parseFloat(tier.price) === 0 ? 'Free' : fmt(tier.price)}
                             </p>
                           </button>
@@ -645,8 +645,8 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                   ) : (
                     <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ticket Price</p>
-                        <p className="text-2xl font-black text-slate-800">{parseFloat(buyModal.ticket_price) === 0 ? 'Free' : fmt(buyModal.ticket_price)}</p>
+                        <p className="text-xs font-semibold text-slate-500">Ticket Price</p>
+                        <p className="text-2xl font-bold text-slate-800">{parseFloat(buyModal.ticket_price) === 0 ? 'Free' : fmt(buyModal.ticket_price)}</p>
                       </div>
                     </div>
                   )}
@@ -654,11 +654,11 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                   {/* Balance summary */}
                   {selectedTier && (
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
-                      <div className="flex justify-between text-sm"><span className="text-slate-500 font-bold">You're buying</span><span className="font-black text-slate-800">{selectedTier.tier_name}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-500 font-bold">You're buying</span><span className="font-bold text-slate-800">{selectedTier.tier_name}</span></div>
                       <div className="flex justify-between text-sm"><span className="text-slate-500 font-bold">Your Balance</span>
-                        <span className={`font-black ${(balances?.liquid_usd || 0) < parseFloat(selectedTier.price || 0) ? 'text-red-600' : 'text-emerald-600'}`}>${(balances?.liquid_usd || 0).toFixed(2)}</span>
+                        <span className={`font-bold ${(balances?.liquid_usd || 0) < parseFloat(selectedTier.price || 0) ? 'text-red-600' : 'text-emerald-600'}`}>${(balances?.liquid_usd || 0).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-sm font-black border-t border-slate-200 pt-2">
+                      <div className="flex justify-between text-sm font-bold border-t border-slate-200 pt-2">
                         <span className="text-slate-600">Total</span>
                         <span className="text-indigo-600">{parseFloat(selectedTier.price) === 0 ? 'Free' : fmt(selectedTier.price)}</span>
                       </div>
@@ -672,10 +672,10 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                   )}
 
                   <div className="flex gap-3">
-                    <button onClick={() => setBuyModal(null)} className="w-1/3 py-4 bg-slate-100 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200">Cancel</button>
+                    <button onClick={() => setBuyModal(null)} className="w-1/3 py-4 bg-slate-100 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-200">Cancel</button>
                     <button onClick={handleBuyWithBalance}
                       disabled={isBuying || (buyTiers.length > 0 && !selectedTier) || (selectedTier && parseFloat(selectedTier.price || 0) > 0 && (balances?.liquid_usd || 0) < parseFloat(selectedTier.price || 0))}
-                      className="w-2/3 py-4 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                      className="w-2/3 py-4 bg-indigo-600 text-white rounded-xl font-semibold text-xs hover:bg-indigo-500 transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
                       {isBuying ? <Loader2 size={16} className="animate-spin" /> : <Wallet size={14} />}
                       {isBuying ? 'Processing...' : !selectedTier && buyTiers.length > 0 ? 'Select a Tier' : selectedTier && parseFloat(selectedTier.price) === 0 ? 'Get Free Ticket' : `Pay ${selectedTier ? fmt(selectedTier.price) : fmt(buyModal.ticket_price)}`}
                     </button>
@@ -696,10 +696,10 @@ export default function TicketGate({ session, balances, fetchAllData }) {
             <div className="space-y-6">
               <div className="flex justify-between items-end">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-800 tracking-tighter">Event Management</h2>
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">Your IFB Box Office</p>
+                  <h2 className="text-3xl font-bold text-slate-800 tracking-tighter">Event Management</h2>
+                  <p className="text-xs font-semibold text-slate-500 mt-1">Your IFB Box Office</p>
                 </div>
-                <button onClick={openCreateModal} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex items-center gap-2 shadow-xl hover:bg-indigo-500 transition-all">
+                <button onClick={openCreateModal} className="ui-btn ui-btn-primary w-auto">
                   <Plus size={16} /> Create Event
                 </button>
               </div>
@@ -721,7 +721,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                         : `$${parseFloat(ev.ticket_price || 0).toFixed(2)}`
                     : `$${parseFloat(ev.ticket_price || 0).toFixed(2)}`;
                   return (
-                    <div key={ev.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group relative">
+                    <div key={ev.id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group relative">
                       <div className="absolute top-4 right-4 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={(e) => { e.stopPropagation(); openEditModal(ev); }} className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-blue-600 shadow-md"><Edit2 size={16} /></button>
                         <button onClick={(e) => { e.stopPropagation(); setConfirmModal({ type: 'event', id: ev.id, label: ev.event_name }); }} className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-red-600 shadow-md"><Trash2 size={16} /></button>
@@ -729,20 +729,20 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                       <div className="h-32 bg-slate-100 relative overflow-hidden">
                         <img src={ev.event_image_url} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" alt="" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        <span className="absolute bottom-3 left-4 text-white font-black text-xs uppercase tracking-widest flex items-center gap-1"><Calendar size={12} /> {formatDate(ev.event_date)}</span>
+                        <span className="absolute bottom-3 left-4 text-white font-semibold text-xs flex items-center gap-1"><Calendar size={12} /> {formatDate(ev.event_date)}</span>
                         {parseCategory(ev.required_fields) && (
-                          <span className={`absolute top-3 left-3 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${categoryColors[parseCategory(ev.required_fields)] || 'bg-slate-100 text-slate-600'}`}>{parseCategory(ev.required_fields)}</span>
+                          <span className={`absolute top-3 left-3 text-xs font-semibold px-2 py-0.5 rounded-lg ${categoryColors[parseCategory(ev.required_fields)] || 'bg-slate-100 text-slate-600'}`}>{parseCategory(ev.required_fields)}</span>
                         )}
                       </div>
                       <div className="p-5">
-                        <h3 className="font-black text-base text-slate-800 mb-1 truncate">{ev.event_name}</h3>
+                        <h3 className="font-bold text-base text-slate-800 mb-1 truncate">{ev.event_name}</h3>
                         <p className="text-xs text-slate-400 font-bold mb-1 flex items-center gap-1"><MapPin size={11} />{ev.location_name || 'No location set'}</p>
-                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500 border-t border-slate-100 mt-3 pt-3">
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500 border-t border-slate-100 mt-3 pt-3">
                           <span>{ev.tickets_sold || 0} / {ev.total_slots} sold</span>
                           <span className="text-indigo-600">{priceLabel}</span>
                         </div>
                         <button onClick={() => { setSelectedEvent(ev); loadTickets(ev.id); setBoView('LIST'); fetchTiersForEvent(ev.id); }}
-                          className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-colors">
+                          className="ui-btn ui-btn-primary mt-4">
                           Manage Operations
                         </button>
                       </div>
@@ -756,7 +756,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
           {/* Event Management Detail */}
           {selectedEvent && (
             <div className="space-y-5 animate-in slide-in-from-right-4">
-              <button onClick={() => setSelectedEvent(null)} className="text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 flex items-center gap-2">
+              <button onClick={() => setSelectedEvent(null)} className="text-sm font-semibold text-slate-500 hover:text-slate-900 flex items-center gap-2">
                 <ChevronLeft size={14} /> Back to Registry
               </button>
 
@@ -767,7 +767,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                     <div key={tier.id} className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl shadow-sm text-xs font-bold text-slate-700">
                       <Ticket size={12} className="text-indigo-500" />
                       <span>{tier.tier_name}</span>
-                      <span className="font-black text-indigo-600">{fmt(tier.price)}</span>
+                      <span className="font-bold text-indigo-600">{fmt(tier.price)}</span>
                       <span className="text-slate-400">{tier.tickets_sold || 0}/{tier.capacity}</span>
                     </div>
                   ))}
@@ -777,27 +777,27 @@ export default function TicketGate({ session, balances, fetchAllData }) {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
                   {[['LIST', 'Guest List'], ['SCANNER', 'Gate Scanner'], ['DESIGNER', 'Credential']].map(([v, label]) => (
-                    <button key={v} onClick={() => setBoView(v)} className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${boView === v ? 'bg-slate-900 text-white' : 'text-slate-500'}`}>{label}</button>
+                    <button key={v} onClick={() => setBoView(v)} className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${boView === v ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>{label}</button>
                   ))}
                 </div>
               </div>
 
               {/* Guest List */}
               {boView === 'LIST' && (
-                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
                   <div className="p-8 border-b border-slate-100 flex justify-between items-center flex-wrap gap-4">
                     <div>
-                      <h3 className="text-2xl font-black text-slate-800 tracking-tighter">{selectedEvent.event_name}</h3>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{tickets.length} / {selectedEvent.total_slots} Issued · {tickets.filter(t => t.is_scanned).length} Checked In</p>
+                      <h3 className="text-2xl font-bold text-slate-800 tracking-tighter">{selectedEvent.event_name}</h3>
+                      <p className="text-xs font-bold text-slate-500 mt-1">{tickets.length} / {selectedEvent.total_slots} Issued · {tickets.filter(t => t.is_scanned).length} Checked In</p>
                     </div>
                     <button onClick={exportGuestList} className="p-3 bg-slate-50 rounded-2xl hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition-all border border-slate-100 flex items-center gap-2">
-                      <Download size={16} /><span className="text-[10px] font-black uppercase">Export CSV</span>
+                      <Download size={16} /><span className="text-xs font-semibold">Export CSV</span>
                     </button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead className="bg-slate-50">
-                        <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <tr className="text-xs font-semibold text-slate-500">
                           <th className="p-5">Identity / Email</th>
                           <th className="p-5">Tier</th>
                           <th className="p-5">Status</th>
@@ -814,27 +814,27 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                               {editTicketId === t.id ? (
                                 <div className="flex items-center gap-2">
                                   <input type="email" value={editTicketEmail} onChange={e => setEditTicketEmail(e.target.value)}
-                                    className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm font-bold text-slate-900 outline-none w-48" autoFocus />
+                                    className="ui-input w-48" autoFocus />
                                   <button onClick={() => updateTicketEmail(t.id)} className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><Save size={14} /></button>
                                   <button onClick={() => setEditTicketId(null)} className="p-1.5 bg-slate-200 text-slate-600 rounded-lg"><X size={14} /></button>
                                 </div>
                               ) : (
                                 <>
                                   <p className="font-bold text-slate-800">{t.buyer_email}</p>
-                                  <p className="text-[9px] font-mono text-slate-400">{t.qr_code_hash?.substring(0, 20)}...</p>
+                                  <p className="text-xs font-mono text-slate-400">{t.qr_code_hash?.substring(0, 20)}...</p>
                                 </>
                               )}
                             </td>
                             <td className="p-5">
                               {t.tier_name
-                                ? <span className="text-[8px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md font-black uppercase">{t.tier_name}</span>
+                                ? <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md font-semibold">{t.tier_name}</span>
                                 : <span className="text-slate-300 text-xs">—</span>}
-                              {t.price_paid != null && <p className="text-[9px] text-slate-400 mt-0.5">{fmt(t.price_paid)}</p>}
+                              {t.price_paid != null && <p className="text-xs text-slate-400 mt-0.5">{fmt(t.price_paid)}</p>}
                             </td>
                             <td className="p-5">
-                              {t.status === 'cancelled' ? <span className="text-[8px] bg-red-50 text-red-500 px-2 py-1 rounded-md font-black uppercase">Revoked</span>
-                                : t.is_scanned ? <span className="text-[8px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md font-black uppercase">At Door</span>
-                                  : <span className="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-md font-black uppercase">Active</span>}
+                              {t.status === 'cancelled' ? <span className="text-xs bg-red-50 text-red-500 px-2 py-1 rounded-md font-semibold">Revoked</span>
+                                : t.is_scanned ? <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md font-semibold">At Door</span>
+                                  : <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md font-semibold">Active</span>}
                             </td>
                             <td className="p-5 text-xs text-slate-400 font-bold">{new Date(t.purchased_at).toLocaleDateString()}</td>
                             <td className="p-5 text-right">
@@ -854,15 +854,15 @@ export default function TicketGate({ session, balances, fetchAllData }) {
 
               {/* Gate Scanner */}
               {boView === 'SCANNER' && (
-                <div className="bg-slate-900 rounded-[3rem] p-12 text-center border border-slate-800 shadow-2xl">
-                  <div className="w-24 h-24 mx-auto rounded-[2rem] flex items-center justify-center mb-8 shadow-xl bg-white/5 text-slate-600"><QrCode size={48} /></div>
-                  <h3 className="text-3xl font-black text-white mb-2">Gate Access Terminal</h3>
-                  <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-12">USB Scanner or Manual Entry</p>
+                <div className="bg-slate-900 rounded-3xl p-12 text-center border border-slate-800 shadow-2xl">
+                  <div className="w-24 h-24 mx-auto rounded-2xl flex items-center justify-center mb-8 shadow-xl bg-white/5 text-slate-600"><QrCode size={48} /></div>
+                  <h3 className="text-3xl font-bold text-white mb-2">Gate Access Terminal</h3>
+                  <p className="text-xs font-semibold text-indigo-400 mb-12">USB Scanner or Manual Entry</p>
                   <form onSubmit={handleScanInput} className="max-w-md mx-auto">
                     <input ref={scannerRef} autoFocus value={scanInput} onChange={e => setScanInput(e.target.value)}
-                      className="w-full bg-white/5 border-2 border-white/10 p-6 rounded-2xl text-center text-white font-mono tracking-widest outline-none focus:border-indigo-500 mb-4"
+                      className="ui-input text-center font-mono tracking-widest mb-4"
                       placeholder="READY TO SCAN..." autoComplete="off" />
-                    <button type="submit" disabled={!scanInput} className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all disabled:opacity-50 flex items-center gap-2 mx-auto">
+                    <button type="submit" disabled={!scanInput} className="ui-btn ui-btn-primary mx-auto w-auto">
                       <Camera size={16} /> Validate Entry
                     </button>
                   </form>
@@ -875,23 +875,23 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                 return (
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     <div className="space-y-4">
-                      <h3 className="text-xl font-black text-slate-800 tracking-tight">Credential Preview</h3>
-                      <div className="max-w-sm mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
+                      <h3 className="text-xl font-bold text-slate-800 tracking-tight">Credential Preview</h3>
+                      <div className="max-w-sm mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
                         <div className="h-48 bg-slate-900 relative">
                           <img src={selectedEvent.event_image_url} className="w-full h-full object-cover opacity-60" alt="" />
                           <div className="absolute top-5 left-5 w-12 h-12 bg-white rounded-xl shadow-lg flex items-center justify-center border-2 border-white overflow-hidden">
-                            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-lg" /> : <span className="font-black text-slate-800 text-sm">IFB</span>}
+                            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover rounded-lg" /> : <span className="font-bold text-slate-800 text-sm">IFB</span>}
                           </div>
                         </div>
                         <div className="p-7 space-y-5">
                           <div>
-                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">{selectedEvent.location_name}</p>
-                            <h4 className="text-xl font-black text-slate-900 leading-tight">{selectedEvent.event_name}</h4>
+                            <p className="text-xs font-semibold text-indigo-600 mb-1">{selectedEvent.location_name}</p>
+                            <h4 className="text-xl font-bold text-slate-900 leading-tight">{selectedEvent.event_name}</h4>
                             <p className="text-xs text-slate-400 font-bold mt-1">{formatDate(selectedEvent.event_date)}</p>
                           </div>
                           <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
                             <div className="overflow-hidden">
-                              <p className="text-[9px] font-black text-slate-400 uppercase">Guest</p>
+                              <p className="text-xs font-semibold text-slate-500">Guest</p>
                               <p className="font-bold text-slate-900 truncate">{preview.email}</p>
                             </div>
                             <div className="p-1.5 bg-white rounded-lg shadow-sm ml-2 shrink-0">
@@ -899,19 +899,19 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                             </div>
                           </div>
                           <div className="flex justify-between border-t border-dashed border-slate-200 pt-5">
-                            <div className="text-center flex-1"><p className="text-[8px] font-black text-slate-400 uppercase">Entry</p><p className="text-sm font-black text-slate-800">V-LEVEL</p></div>
+                            <div className="text-center flex-1"><p className="text-xs font-semibold text-slate-500">Entry</p><p className="text-sm font-bold text-slate-800">V-LEVEL</p></div>
                             <div className="w-px h-8 bg-slate-200" />
-                            <div className="text-center flex-1"><p className="text-[8px] font-black text-slate-400 uppercase">Verified</p><p className="text-sm font-black text-emerald-600">DB-SYNCED</p></div>
+                            <div className="text-center flex-1"><p className="text-xs font-semibold text-slate-500">Verified</p><p className="text-sm font-bold text-emerald-600">DB-SYNCED</p></div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col justify-center text-center">
+                    <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center text-center">
                       <LinkIcon size={40} className="mx-auto text-indigo-600 mb-4" />
-                      <h4 className="text-xl font-black text-slate-800">Public Event Link</h4>
+                      <h4 className="text-xl font-bold text-slate-800">Public Event Link</h4>
                       <p className="text-sm text-slate-500 mt-2 mb-6">Share to allow IFB members to discover and buy tickets directly.</p>
                       <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs text-slate-900 break-all mb-5 select-all">{APP_DOMAIN}/events/{selectedEvent.id}</div>
-                      <button onClick={() => copyText(`${APP_DOMAIN}/events/${selectedEvent.id}`, 'Public Link Copied!')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-md">Copy Secure Link</button>
+                      <button onClick={() => copyText(`${APP_DOMAIN}/events/${selectedEvent.id}`, 'Public Link Copied!')} className="ui-btn ui-btn-primary">Copy Secure Link</button>
                     </div>
                   </div>
                 );
@@ -926,15 +926,15 @@ export default function TicketGate({ session, balances, fetchAllData }) {
         <div className="fixed inset-0 z-[700] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-8 text-center space-y-4 animate-in zoom-in-95">
             <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto"><Trash2 size={24} className="text-red-500" /></div>
-            <h4 className="font-black text-slate-800 text-lg">Confirm Delete</h4>
+            <h4 className="font-bold text-slate-800 text-lg">Confirm Delete</h4>
             <p className="text-sm text-slate-500 font-bold leading-relaxed">
               {confirmModal.type === 'event' ? `Permanently delete "${confirmModal.label}" and all tiers/tickets?` : `Destroy ticket for "${confirmModal.label}"?`}
             </p>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setConfirmModal(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={() => setConfirmModal(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors">Cancel</button>
               <button onClick={() => confirmModal.type === 'event' ? deleteEvent(confirmModal.id) : deleteTicket(confirmModal.id)}
                 disabled={isLoading}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-1">
+                className="ui-btn ui-btn-danger flex-1">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : 'Delete'}
               </button>
             </div>
@@ -945,9 +945,9 @@ export default function TicketGate({ session, balances, fetchAllData }) {
       {/* ─── EVENT CREATE / EDIT MODAL ─────────────────────────────────── */}
       {isCreating && mainTab === 'BOX_OFFICE' && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-[3rem] w-full max-w-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col">
             <div className="p-8 border-b flex justify-between items-center bg-slate-50/50 shrink-0">
-              <h3 className="font-black text-xl text-slate-800">{editingEvent ? 'Edit Event' : 'Create New Event'}</h3>
+              <h3 className="font-bold text-xl text-slate-800">{editingEvent ? 'Edit Event' : 'Create New Event'}</h3>
               <button onClick={() => setIsCreating(false)} className="p-2 bg-white rounded-xl shadow-sm hover:bg-slate-100"><X size={20} /></button>
             </div>
 
@@ -955,53 +955,53 @@ export default function TicketGate({ session, balances, fetchAllData }) {
               <div className="p-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
 
                 <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Title *</label>
+                  <label className="ui-label">Event Title *</label>
                   <input required value={newEvent.name} onChange={e => setNewEvent({ ...newEvent, name: e.target.value })}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="Global Tech Summit 2026" />
+                    className="ui-input" placeholder="Global Tech Summit 2026" />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Category *</label>
+                  <label className="ui-label">Category *</label>
                   <select required value={newEvent.category} onChange={e => setNewEvent({ ...newEvent, category: e.target.value })}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900 cursor-pointer">
+                    className="ui-select">
                     <option value="">Select Category</option>
                     {EVENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Venue / Location *</label>
+                  <label className="ui-label">Venue / Location *</label>
                   <input required value={newEvent.location} onChange={e => setNewEvent({ ...newEvent, location: e.target.value })}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="IFB Global HQ, New York" />
+                    className="ui-input" placeholder="IFB Global HQ, New York" />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Date & Time *</label>
+                  <label className="ui-label">Date & Time *</label>
                   <input required type="datetime-local" value={newEvent.date} onChange={e => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" />
+                    className="ui-input" />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Cover Image URL</label>
+                  <label className="ui-label">Cover Image URL</label>
                   <input value={newEvent.image} onChange={e => setNewEvent({ ...newEvent, image: e.target.value })}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900" placeholder="https://images.unsplash.com/..." />
+                    className="ui-input" placeholder="https://images.unsplash.com/..." />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Event Description</label>
+                  <label className="ui-label">Event Description</label>
                   <textarea value={newEvent.message} onChange={e => setNewEvent({ ...newEvent, message: e.target.value })}
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl font-bold outline-none focus:border-indigo-500 text-slate-900 h-20 resize-none" placeholder="Details, dress code, instructions..." />
+                    className="ui-textarea h-20 resize-none" placeholder="Details, dress code, instructions..." />
                 </div>
 
                 {/* ─── TICKET TIERS BUILDER ───────────────────────────────── */}
                 <div className="col-span-2">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ticket Tiers *</label>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Name each tier (VIP, General, Early Bird…). Each can have its own price and capacity.</p>
+                      <label className="ui-label">Ticket Tiers *</label>
+                      <p className="text-xs text-slate-400 mt-0.5">Name each tier (VIP, General, Early Bird…). Each can have its own price and capacity.</p>
                     </div>
                     <button type="button" onClick={addTierRow}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-colors shadow-sm">
+                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors shadow-sm">
                       <Plus size={14} /> Add Tier
                     </button>
                   </div>
@@ -1011,13 +1011,13 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                       <div key={row._key} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-4">
                         <div className="flex items-center gap-1 text-slate-300 shrink-0">
                           <GripVertical size={16} />
-                          <span className="text-[10px] font-black text-slate-400 w-4 text-center">{i + 1}</span>
+                          <span className="text-xs font-bold text-slate-400 w-4 text-center">{i + 1}</span>
                         </div>
                         <input
                           required
                           value={row.tier_name}
                           onChange={e => updateTierRow(row._key, 'tier_name', e.target.value)}
-                          className="flex-1 min-w-0 p-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 text-slate-900"
+                          className="ui-input flex-1 min-w-0"
                           placeholder="Tier name (e.g. VIP)"
                         />
                         <div className="relative shrink-0 w-28">
@@ -1026,7 +1026,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                             required type="number" min="0" step="0.01"
                             value={row.price}
                             onChange={e => updateTierRow(row._key, 'price', e.target.value)}
-                            className="w-full pl-7 pr-3 py-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 text-slate-900"
+                            className="ui-input pl-7 pr-3"
                             placeholder="0.00"
                           />
                         </div>
@@ -1035,7 +1035,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                             required type="number" min="1"
                             value={row.capacity}
                             onChange={e => updateTierRow(row._key, 'capacity', e.target.value)}
-                            className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-500 text-slate-900 text-center"
+                            className="ui-input text-center"
                             placeholder="Cap."
                             title="Capacity"
                           />
@@ -1050,7 +1050,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                   </div>
 
                   {/* Tier summary */}
-                  <div className="mt-3 flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest text-slate-500 border-t border-slate-100 pt-3">
+                  <div className="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-slate-500 border-t border-slate-100 pt-3">
                     <span>{tierRows.length} tier{tierRows.length !== 1 ? 's' : ''}</span>
                     <span>Total capacity: {tierRows.reduce((s, r) => s + (parseInt(r.capacity) || 0), 0)}</span>
                     <span>Price range: {(() => {
@@ -1062,7 +1062,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
                   </div>
                 </div>
 
-                <button type="submit" disabled={isLoading} className="col-span-2 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isLoading} className="ui-btn ui-btn-primary col-span-2 w-auto">
                   {isLoading ? <Loader2 className="animate-spin" size={18} /> : editingEvent ? 'Update Event & Tiers' : 'Deploy Event to Network'}
                 </button>
               </div>

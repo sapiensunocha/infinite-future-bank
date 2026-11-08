@@ -36,9 +36,9 @@ const parseTransactionUi = (tx) => {
 };
 
 const StatusBadge = ({ status }) => {
-  if (status === 'Succeeded') return <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg w-fit border border-emerald-100"><CheckCircle2 size={10} /> Done</span>;
-  if (status === 'Pending')   return <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg w-fit border border-amber-100"><Clock size={10} /> Pending</span>;
-  return <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-red-600 bg-red-50 px-2.5 py-1 rounded-lg w-fit border border-red-100"><XCircle size={10} /> Failed</span>;
+  if (status === 'Succeeded') return <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg w-fit border border-emerald-100"><CheckCircle2 size={10} /> Done</span>;
+  if (status === 'Pending')   return <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg w-fit border border-amber-100"><Clock size={10} /> Pending</span>;
+  return <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg w-fit border border-red-100"><XCircle size={10} /> Failed</span>;
 };
 
 export default function TransactionLedger({ transactions, formatCurrency, setShowStatementModal }) {
@@ -71,28 +71,28 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
 
       {/* ─── Monthly summary ─── */}
       <div className="grid grid-cols-3 gap-3 md:gap-4">
-        <div className="bg-white border border-slate-100 p-4 md:p-6 rounded-[1.8rem] shadow-sm">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Net (Month)</p>
-          <p className={`text-lg md:text-xl font-black tracking-tight ${netChange >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+        <div className="bg-white border border-slate-100 p-4 md:p-6 rounded-2xl shadow-sm">
+          <p className="text-xs font-semibold text-slate-500 mb-1.5">Net (Month)</p>
+          <p className={`text-lg md:text-xl font-bold tracking-tight ${netChange >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
             {netChange >= 0 ? '+' : ''}{formatCurrency(Math.abs(netChange))}
           </p>
         </div>
-        <div className="bg-white border border-slate-100 p-4 md:p-6 rounded-[1.8rem] shadow-sm">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1">
+        <div className="bg-white border border-slate-100 p-4 md:p-6 rounded-2xl shadow-sm">
+          <p className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
             <ArrowDownRight size={11} className="text-emerald-500" /> In
           </p>
-          <p className="text-lg md:text-xl font-black tracking-tight text-emerald-600">{formatCurrency(moneyIn)}</p>
+          <p className="text-lg md:text-xl font-bold tracking-tight text-emerald-600">{formatCurrency(moneyIn)}</p>
         </div>
-        <div className="bg-white border border-slate-100 p-4 md:p-6 rounded-[1.8rem] shadow-sm">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1">
+        <div className="bg-white border border-slate-100 p-4 md:p-6 rounded-2xl shadow-sm">
+          <p className="text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
             <ArrowUpRight size={11} className="text-slate-400" /> Out
           </p>
-          <p className="text-lg md:text-xl font-black tracking-tight text-slate-800">{formatCurrency(moneyOut)}</p>
+          <p className="text-lg md:text-xl font-bold tracking-tight text-slate-800">{formatCurrency(moneyOut)}</p>
         </div>
       </div>
 
       {/* ─── Container ─── */}
-      <div className="bg-white border border-slate-100 rounded-[2rem] shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
 
         {/* Controls */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 space-y-3">
@@ -104,7 +104,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
               placeholder="Search transactions..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
+              className="ui-input pl-10 pr-4 font-medium"
             />
           </div>
 
@@ -115,7 +115,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
                 <button
                   key={tab}
                   onClick={() => setActiveTxTab(tab)}
-                  className={`px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                  className={`px-3.5 py-1.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${
                     activeTxTab === tab ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 bg-white border border-slate-100'
                   }`}
                 >
@@ -125,7 +125,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
             </div>
             <button
               onClick={() => setShowStatementModal(true)}
-              className="shrink-0 px-3.5 py-1.5 bg-slate-800 text-white rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5"
+              className="shrink-0 px-3.5 py-1.5 bg-blue-600 text-white rounded-xl text-sm font-semibold flex items-center gap-1.5"
             >
               <FileDown size={12} /> Export
             </button>
@@ -156,17 +156,17 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-slate-800 capitalize truncate">{displayTitle}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">{dateStr} · {timeStr}</p>
+                    <p className="text-xs font-bold text-slate-500">{dateStr} · {timeStr}</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className={`text-sm font-black ${isPos ? 'text-emerald-600' : 'text-slate-800'}`}>
+                  <p className={`text-sm font-bold ${isPos ? 'text-emerald-600' : 'text-slate-800'}`}>
                     {isPos ? '+' : ''}{formatCurrency(tx.amount)}
                   </p>
                   <div className="flex justify-end mt-1">
-                    {uiStatus === 'Succeeded' && <span className="text-[8px] font-black text-emerald-500">✓ Done</span>}
-                    {uiStatus === 'Pending'   && <span className="text-[8px] font-black text-amber-500">⏳ Pending</span>}
-                    {uiStatus === 'Failed'    && <span className="text-[8px] font-black text-red-500">✕ Failed</span>}
+                    {uiStatus === 'Succeeded' && <span className="text-xs font-bold text-emerald-500">Done</span>}
+                    {uiStatus === 'Pending'   && <span className="text-xs font-bold text-amber-500">⏳ Pending</span>}
+                    {uiStatus === 'Failed'    && <span className="text-xs font-bold text-red-500">Failed</span>}
                   </div>
                 </div>
                 <ChevronRight size={14} className="text-slate-300 shrink-0 ml-1" />
@@ -183,7 +183,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
             <thead>
               <tr className="border-b border-slate-200 bg-white">
                 {['Date & Time', 'Description', 'Method', 'Status', 'Amount'].map((h, i) => (
-                  <th key={h} className={`p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap ${i === 4 ? 'text-right' : ''}`}>{h}</th>
+                  <th key={h} className={`p-4 text-xs font-semibold text-slate-500 whitespace-nowrap ${i === 4 ? 'text-right' : ''}`}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -196,7 +196,7 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
                   <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors cursor-pointer">
                     <td className="p-4 whitespace-nowrap">
                       <p className="text-sm font-bold text-slate-800">{new Date(tx.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                      <p className="text-[10px] font-bold text-slate-400">{new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-xs font-bold text-slate-400">{new Date(tx.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
@@ -205,16 +205,16 @@ export default function TransactionLedger({ transactions, formatCurrency, setSho
                         </div>
                         <div>
                           <p className="text-sm font-bold text-slate-800 capitalize truncate max-w-[200px]">{displayTitle}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: {tx.id.split('-')[0]}</p>
+                          <p className="text-xs font-bold text-slate-500">ID: {tx.id.split('-')[0]}</p>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className="bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest inline-block whitespace-nowrap">{methodBadge}</span>
+                      <span className="bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded-lg text-xs font-semibold inline-block whitespace-nowrap">{methodBadge}</span>
                     </td>
                     <td className="p-4"><StatusBadge status={uiStatus} /></td>
-                    <td className={`p-4 text-sm font-black text-right whitespace-nowrap ${isPositive ? 'text-emerald-600' : 'text-slate-800'}`}>
-                      {isPositive ? '+' : ''}{formatCurrency(tx.amount)} <span className="text-[10px] text-slate-400 ml-1">USD</span>
+                    <td className={`p-4 text-sm font-bold text-right whitespace-nowrap ${isPositive ? 'text-emerald-600' : 'text-slate-800'}`}>
+                      {isPositive ? '+' : ''}{formatCurrency(tx.amount)} <span className="text-xs text-slate-400 ml-1">USD</span>
                     </td>
                   </tr>
                 );

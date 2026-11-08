@@ -52,12 +52,12 @@ function StepBar({ current }) {
             <div className={`flex flex-col items-center gap-1 shrink-0 ${active ? 'opacity-100' : done ? 'opacity-70' : 'opacity-30'}`}>
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center border-2 transition-all ${
                 done   ? 'bg-emerald-600 border-emerald-600 text-white' :
-                active ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' :
+                active ? 'bg-blue-600 border-blue-600 text-white shadow-lg' :
                          'bg-white border-slate-200 text-slate-400'
               }`}>
                 {done ? <CheckCircle2 size={16}/> : <Icon size={15}/>}
               </div>
-              <span className={`text-[9px] font-black uppercase tracking-widest ${active ? 'text-blue-600' : done ? 'text-emerald-600' : 'text-slate-400'}`}>
+              <span className={`text-xs font-semibold ${active ? 'text-blue-600' : done ? 'text-emerald-600' : 'text-slate-400'}`}>
                 {step.label}
               </span>
             </div>
@@ -262,11 +262,11 @@ export default function CapitalPlatform({ session, profile }) {
         <Toast n={toast} />
 
         {/* Hero */}
-        <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
+        <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
           <Building2 size={200} className="absolute -right-10 -bottom-10 opacity-5"/>
           <div className="relative z-10">
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-300 mb-2">IFB Capital Operating System</p>
-            <h2 className="text-3xl font-black tracking-tight mb-3">Capital for Companies</h2>
+            <p className="text-xs font-semibold text-blue-300 mb-2">IFB Capital Operating System</p>
+            <h2 className="text-3xl font-bold tracking-tight mb-3">Capital for Companies</h2>
             <p className="text-sm text-slate-400 max-w-2xl leading-relaxed mb-6">
               Submit your project. IFB structures the capital, scores the risk, generates the legal agreement, and tracks every milestone with on-chain tranche releases. Institutional-grade infrastructure — for any company, globally.
             </p>
@@ -278,13 +278,13 @@ export default function CapitalPlatform({ session, profile }) {
                 ['Live Tracking', 'milestone governance + auto-release'],
               ].map(([title, sub]) => (
                 <div key={title} className="bg-white/10 rounded-2xl p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-blue-300 mb-1">{title}</p>
+                  <p className="text-xs font-semibold text-blue-300 mb-1">{title}</p>
                   <p className="text-xs text-slate-300 font-semibold">{sub}</p>
                 </div>
               ))}
             </div>
             <button onClick={() => { setActiveProj(null); setStep('submit'); setAnalysis(null); setMilestones([]); setAgreement(null); }}
-              className="bg-white text-slate-900 font-black text-xs uppercase tracking-widest px-8 py-3.5 rounded-2xl hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-lg">
+              className="bg-white text-slate-900 font-semibold text-xs px-8 py-3.5 rounded-2xl hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-lg">
               <Building2 size={14}/> Submit New Project <ChevronRight size={14}/>
             </button>
           </div>
@@ -301,8 +301,8 @@ export default function CapitalPlatform({ session, profile }) {
           ].map(({ label, value, icon: Icon, color, bg }) => (
             <div key={label} className={`${bg} rounded-2xl p-4 border border-white`}>
               <Icon size={16} className={`${color} mb-2`}/>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{label}</p>
-              <p className={`font-black text-sm ${color}`}>{value}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-0.5">{label}</p>
+              <p className={`font-bold text-sm ${color}`}>{value}</p>
             </div>
           ))}
         </div>
@@ -310,17 +310,17 @@ export default function CapitalPlatform({ session, profile }) {
         {/* Existing projects */}
         {projects.length > 0 && (
           <section>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-slate-500 mb-3 flex items-center gap-2">
               <FileText size={12}/> Your Projects
             </h3>
             <div className="space-y-3">
               {projects.map(p => (
                 <button key={p.id} onClick={() => loadProjectDetail(p)}
-                  className="w-full bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all text-left flex items-center justify-between gap-4">
+                  className="w-full bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-lg transition-all text-left flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-black text-slate-900 truncate">{p.project_name}</p>
-                      <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${statusBadge(p.status)}`}>{p.status}</span>
+                      <p className="font-bold text-slate-900 truncate">{p.project_name}</p>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${statusBadge(p.status)}`}>{p.status}</span>
                     </div>
                     <p className="text-xs text-slate-500 font-semibold">{p.company_name} · {p.sector} · ${parseFloat(p.capital_needed).toLocaleString()} · {p.geography}</p>
                   </div>
@@ -351,11 +351,11 @@ export default function CapitalPlatform({ session, profile }) {
               <Upload size={16} className="text-blue-600"/>
             </div>
             <div className="flex-1">
-              <p className="font-black text-slate-900 text-sm mb-1">AI Document Extraction</p>
+              <p className="font-bold text-slate-900 text-sm mb-1">AI Document Extraction</p>
               <p className="text-xs text-slate-500 mb-3">Upload your pitch deck, business plan, or proposal — AI will pre-fill the form for you. Or fill manually below.</p>
               <input type="file" ref={fileRef} accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onChange={handleDocUpload} className="hidden"/>
               <button onClick={() => fileRef.current?.click()} disabled={docLoading}
-                className="bg-blue-600 text-white text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+                className="bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2">
                 {docLoading ? <Loader2 size={13} className="animate-spin"/> : <Upload size={13}/>}
                 {docLoading ? 'Extracting with AI...' : 'Upload Document'}
               </button>
@@ -364,7 +364,7 @@ export default function CapitalPlatform({ session, profile }) {
         </div>
 
         <form onSubmit={submitProject} className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-5">
-          <h3 className="font-black text-slate-900 text-lg flex items-center gap-2"><FileText size={18} className="text-blue-600"/> Project Details</h3>
+          <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2"><FileText size={18} className="text-blue-600"/> Project Details</h3>
 
           <div className="grid grid-cols-2 gap-4">
             {[
@@ -372,34 +372,34 @@ export default function CapitalPlatform({ session, profile }) {
               { key: 'project_name',  label: 'Project Name', placeholder: 'Solar Farm Phase 1', required: true },
             ].map(f => (
               <div key={f.key}>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">{f.label}</label>
+                <label className="ui-label">{f.label}</label>
                 <input required={f.required} value={form[f.key]} onChange={e => setForm(p => ({...p, [f.key]: e.target.value}))}
                   placeholder={f.placeholder}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400"/>
+                  className="ui-input"/>
               </div>
             ))}
           </div>
 
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Project Description</label>
+            <label className="ui-label">Project Description</label>
             <textarea rows={3} value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))}
               placeholder="What is this project, what problem does it solve, what is the expected impact?"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400 resize-none"/>
+              className="ui-textarea resize-none"/>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Sector</label>
+              <label className="ui-label">Sector</label>
               <select value={form.sector} onChange={e => setForm(p => ({...p, sector: e.target.value}))} required
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400 bg-white">
+                className="ui-select">
                 <option value="">Select sector</option>
                 {['Agriculture','Healthcare','Education','Infrastructure','Technology','Energy','Finance','Housing','Water & Sanitation','Manufacturing','Trade & Commerce','Tourism','Other'].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Company Stage</label>
+              <label className="ui-label">Company Stage</label>
               <select value={form.stage} onChange={e => setForm(p => ({...p, stage: e.target.value}))}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400 bg-white">
+                className="ui-select">
                 {[['seed','Seed / Idea'],['growth','Growth / Early Revenue'],['expansion','Expansion'],['maturity','Maturity']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </div>
@@ -407,14 +407,14 @@ export default function CapitalPlatform({ session, profile }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Geography / Country</label>
+              <label className="ui-label">Geography / Country</label>
               <input value={form.geography} onChange={e => setForm(p => ({...p, geography: e.target.value}))} required placeholder="e.g. Kenya, West Africa, Global"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400"/>
+                className="ui-input"/>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Capital Type Preference</label>
+              <label className="ui-label">Capital Type Preference</label>
               <select value={form.capital_type_pref} onChange={e => setForm(p => ({...p, capital_type_pref: e.target.value}))}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400 bg-white">
+                className="ui-select">
                 {[['grant','Grant'],['debt','Debt / Loan'],['equity','Equity'],['hybrid','Hybrid / Blended']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </div>
@@ -422,32 +422,32 @@ export default function CapitalPlatform({ session, profile }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Capital Needed (USD)</label>
+              <label className="ui-label">Capital Needed (USD)</label>
               <input type="number" min="1000" required value={form.capital_needed} onChange={e => setForm(p => ({...p, capital_needed: e.target.value}))} placeholder="500000"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400"/>
+                className="ui-input"/>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Annual Revenue (USD, if any)</label>
+              <label className="ui-label">Annual Revenue (USD, if any)</label>
               <input type="number" min="0" value={form.annual_revenue} onChange={e => setForm(p => ({...p, annual_revenue: e.target.value}))} placeholder="0"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400"/>
+                className="ui-input"/>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Timeline (months)</label>
+              <label className="ui-label">Timeline (months)</label>
               <input type="number" min="1" max="120" required value={form.timeline_months} onChange={e => setForm(p => ({...p, timeline_months: e.target.value}))}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400"/>
+                className="ui-input"/>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Team Size</label>
+              <label className="ui-label">Team Size</label>
               <input type="number" min="1" value={form.team_size} onChange={e => setForm(p => ({...p, team_size: e.target.value}))}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-blue-400"/>
+                className="ui-input"/>
             </div>
           </div>
 
           <button type="submit" disabled={loading}
-            className="w-full bg-blue-600 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg">
+            className="ui-btn ui-btn-primary">
             {loading ? <Loader2 size={16} className="animate-spin"/> : <BarChart3 size={16}/>}
             Submit & Run AI Analysis
           </button>
@@ -468,22 +468,22 @@ export default function CapitalPlatform({ session, profile }) {
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
               <Loader2 size={28} className="animate-spin text-blue-600"/>
             </div>
-            <p className="font-black text-slate-800">IFB AI Engine running analysis...</p>
+            <p className="font-bold text-slate-800">IFB AI Engine running analysis...</p>
             <p className="text-xs text-slate-500">Capital structure · Risk scoring · Milestone planning · Fee calculation</p>
           </div>
         ) : (
           <div className="space-y-5">
             {/* Executive Summary */}
-            <div className="bg-slate-900 rounded-3xl p-8 text-white">
-              <p className="text-[10px] font-black uppercase tracking-widest text-blue-300 mb-2">AI Executive Summary</p>
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white">
+              <p className="text-xs font-semibold text-blue-300 mb-2">AI Executive Summary</p>
               <p className="text-sm text-slate-300 leading-relaxed">{analysis.executive_summary}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Capital Structure */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-                <h4 className="font-black text-slate-800 flex items-center gap-2 mb-4"><TrendingUp size={16} className="text-blue-600"/> Capital Structure</h4>
-                <p className="text-xs font-black text-blue-600 mb-3">{analysis.recommended_structure}</p>
+                <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4"><TrendingUp size={16} className="text-blue-600"/> Capital Structure</h4>
+                <p className="text-xs font-bold text-blue-600 mb-3">{analysis.recommended_structure}</p>
                 <div className="space-y-3">
                   {[['Grant', analysis.grant_pct, 'emerald'],['Debt', analysis.debt_pct, 'blue'],['Equity', analysis.equity_pct, 'purple'],['Hybrid', analysis.hybrid_pct, 'amber']].map(([label, pct, color]) => (
                     pct > 0 ? (
@@ -503,10 +503,10 @@ export default function CapitalPlatform({ session, profile }) {
 
               {/* Risk Assessment */}
               <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-                <h4 className="font-black text-slate-800 flex items-center gap-2 mb-2"><ShieldCheck size={16} className="text-red-500"/> Risk Assessment</h4>
+                <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-2"><ShieldCheck size={16} className="text-red-500"/> Risk Assessment</h4>
                 {(() => {
                   const rc = RISK_COLOR(analysis.total_risk_score);
-                  return <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${rc.bg} ${rc.text} ${rc.border} border mb-3 inline-block`}>{rc.label} — {Math.round(analysis.total_risk_score)}/100</span>;
+                  return <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${rc.bg} ${rc.text} ${rc.border} border mb-3 inline-block`}>{rc.label} — {Math.round(analysis.total_risk_score)}/100</span>;
                 })()}
                 <div className="space-y-2.5">
                   <RiskBar label="Country Risk"    score={analysis.country_risk}    />
@@ -520,7 +520,7 @@ export default function CapitalPlatform({ session, profile }) {
             {/* Risk Mitigation */}
             {analysis.risk_mitigation && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                <p className="font-black text-amber-800 mb-2 flex items-center gap-2 text-sm"><AlertTriangle size={14}/> Risk Mitigation Plan</p>
+                <p className="font-bold text-amber-800 mb-2 flex items-center gap-2 text-sm"><AlertTriangle size={14}/> Risk Mitigation Plan</p>
                 <ul className="space-y-1">
                   {(typeof analysis.risk_mitigation === 'string' ? JSON.parse(analysis.risk_mitigation) : analysis.risk_mitigation).map((item, i) => (
                     <li key={i} className="text-xs text-amber-700 font-semibold flex items-start gap-2"><span className="text-amber-500 mt-0.5">•</span>{item}</li>
@@ -531,20 +531,20 @@ export default function CapitalPlatform({ session, profile }) {
 
             {/* Milestones */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-              <h4 className="font-black text-slate-800 flex items-center gap-2 mb-4"><Milestone size={16} className="text-indigo-600"/> Milestone Timeline</h4>
+              <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4"><Milestone size={16} className="text-indigo-600"/> Milestone Timeline</h4>
               <div className="space-y-3">
                 {milestones.map(m => (
                   <div key={m.phase || m.id} className="flex items-start gap-4 p-3 bg-slate-50 rounded-2xl">
                     <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                      <span className="text-indigo-700 font-black text-xs">{m.phase}</span>
+                      <span className="text-indigo-700 font-bold text-xs">{m.phase}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-slate-800 text-sm">{m.title}</p>
+                      <p className="font-bold text-slate-800 text-sm">{m.title}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{m.deliverable}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-black text-indigo-600">{m.capital_pct}%</p>
-                      <p className="text-[10px] text-slate-400">Day {m.due_days}</p>
+                      <p className="text-xs font-bold text-indigo-600">{m.capital_pct}%</p>
+                      <p className="text-xs text-slate-400">Day {m.due_days}</p>
                     </div>
                   </div>
                 ))}
@@ -552,7 +552,7 @@ export default function CapitalPlatform({ session, profile }) {
             </div>
 
             <button onClick={() => setStep('package')}
-              className="w-full bg-blue-600 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+              className="ui-btn ui-btn-primary">
               View Full Investment Package <ArrowRight size={16}/>
             </button>
           </div>
@@ -573,11 +573,11 @@ export default function CapitalPlatform({ session, profile }) {
         <Toast n={toast} />
         <StepBar current="package" />
 
-        <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden">
           <FileCheck size={120} className="absolute -right-8 -bottom-8 opacity-5"/>
           <div className="relative z-10">
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-300 mb-2">IFB Investment Package</p>
-            <h2 className="text-2xl font-black mb-1">{activeProj?.project_name}</h2>
+            <p className="text-xs font-semibold text-blue-300 mb-2">IFB Investment Package</p>
+            <h2 className="text-2xl font-bold mb-1">{activeProj?.project_name}</h2>
             <p className="text-slate-400 text-sm">{activeProj?.company_name} · {activeProj?.sector} · {activeProj?.geography}</p>
           </div>
         </div>
@@ -593,14 +593,14 @@ export default function CapitalPlatform({ session, profile }) {
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <Icon size={16} className={`${color} mb-2`}/>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">{label}</p>
-              <p className={`font-black text-sm ${color}`}>{value}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-0.5">{label}</p>
+              <p className={`font-bold text-sm ${color}`}>{value}</p>
             </div>
           ))}
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-3">
-          <h4 className="font-black text-slate-800 flex items-center gap-2"><Banknote size={16} className="text-rose-500"/> Fee Schedule</h4>
+          <h4 className="font-bold text-slate-800 flex items-center gap-2"><Banknote size={16} className="text-rose-500"/> Fee Schedule</h4>
           {[
             [`Structuring Fee (${analysis?.structuring_fee_pct || 2}%)`, sf],
             [`Risk Management Fee (${analysis?.risk_fee_pct || 1}%)`,     rf],
@@ -608,10 +608,10 @@ export default function CapitalPlatform({ session, profile }) {
           ].map(([label, amt]) => (
             <div key={label} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
               <span className="text-sm font-semibold text-slate-600">{label}</span>
-              <span className="font-black text-slate-900">${Number(amt).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              <span className="font-bold text-slate-900">${Number(amt).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </div>
           ))}
-          <div className="flex justify-between items-center pt-2 font-black text-slate-900 text-base">
+          <div className="flex justify-between items-center pt-2 font-bold text-slate-900 text-base">
             <span>Total Upfront</span>
             <span className="text-rose-600">${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
           </div>
@@ -619,12 +619,12 @@ export default function CapitalPlatform({ session, profile }) {
         </div>
 
         <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-          <h4 className="font-black text-slate-800 mb-2 flex items-center gap-2"><FileText size={16} className="text-slate-500"/> Reporting Obligations</h4>
+          <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2"><FileText size={16} className="text-slate-500"/> Reporting Obligations</h4>
           <p className="text-sm text-slate-600 leading-relaxed">{analysis?.reporting_obligations}</p>
         </div>
 
         <button onClick={() => setStep('agreement')}
-          className="w-full bg-slate-900 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+          className="ui-btn ui-btn-primary">
           Proceed to Agreement <PenLine size={16}/>
         </button>
       </div>
@@ -639,7 +639,7 @@ export default function CapitalPlatform({ session, profile }) {
         <StepBar current="agreement" />
 
         <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-          <h3 className="font-black text-slate-900 text-lg flex items-center gap-2 mb-4">
+          <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2 mb-4">
             <PenLine size={18} className="text-blue-600"/> IFB Collaboration Agreement
           </h3>
           <div className="bg-slate-50 rounded-2xl p-5 font-mono text-xs text-slate-700 leading-relaxed max-h-64 overflow-y-auto border border-slate-200 mb-5 whitespace-pre-line">
@@ -675,7 +675,7 @@ By signing, client confirms full agreement to all terms.`}
           </div>
 
           <button onClick={signAgreement} disabled={loading}
-            className="w-full bg-blue-600 text-white rounded-2xl py-4 font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg">
+            className="ui-btn ui-btn-primary">
             {loading ? <Loader2 size={16} className="animate-spin"/> : <BadgeCheck size={16}/>}
             Digitally Sign & Activate
           </button>
@@ -696,21 +696,21 @@ By signing, client confirms full agreement to all terms.`}
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 size={32} className="text-emerald-600"/>
           </div>
-          <h3 className="text-2xl font-black text-slate-900 mb-2">Project Activated</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-2">Project Activated</h3>
           <p className="text-sm text-slate-500 mb-4">Agreement signed · Blockchain recorded · Milestone 1 is now live</p>
           {agreement?.blockchain_tx && (
-            <p className="text-[10px] font-mono text-slate-400 bg-slate-50 px-4 py-2 rounded-xl inline-block border border-slate-200 mb-4">TX: {agreement.blockchain_tx}</p>
+            <p className="text-xs font-mono text-slate-400 bg-slate-50 px-4 py-2 rounded-xl inline-block border border-slate-200 mb-4">TX: {agreement.blockchain_tx}</p>
           )}
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[['Capital',`$${capital.toLocaleString()}`],['Milestones',`${milestones.length} Phases`],['Status','ACTIVE']].map(([l,v]) => (
               <div key={l} className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-                <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500 mb-1">{l}</p>
-                <p className="font-black text-emerald-900 text-sm">{v}</p>
+                <p className="text-xs font-semibold text-emerald-500 mb-1">{l}</p>
+                <p className="font-bold text-emerald-900 text-sm">{v}</p>
               </div>
             ))}
           </div>
           <button onClick={() => setStep('dashboard')}
-            className="bg-slate-900 text-white font-black text-xs uppercase tracking-widest px-8 py-3.5 rounded-2xl hover:bg-slate-800 transition-colors flex items-center gap-2 mx-auto">
+            className="bg-blue-600 text-white font-semibold text-xs px-8 py-3.5 rounded-2xl hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto">
             <LayoutDashboard size={14}/> Open Live Dashboard <ChevronRight size={14}/>
           </button>
         </div>
@@ -736,16 +736,16 @@ By signing, client confirms full agreement to all terms.`}
         </button>
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-slate-900 to-blue-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-slate-900 to-blue-950 rounded-3xl p-8 text-white relative overflow-hidden">
           <Activity size={120} className="absolute -right-8 -bottom-8 opacity-5"/>
           <div className="relative z-10">
             <div className="flex items-start justify-between flex-wrap gap-4 mb-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-300 mb-1">{activeProj?.company_name} · {activeProj?.sector}</p>
-                <h2 className="text-2xl font-black">{activeProj?.project_name}</h2>
+                <p className="text-xs font-semibold text-blue-300 mb-1">{activeProj?.company_name} · {activeProj?.sector}</p>
+                <h2 className="text-2xl font-bold">{activeProj?.project_name}</h2>
                 <p className="text-slate-400 text-sm mt-1">{activeProj?.geography}</p>
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${statusBadge(activeProj?.status)}`}>{activeProj?.status}</span>
+              <span className={`text-xs font-semibold px-3 py-1.5 rounded-xl ${statusBadge(activeProj?.status)}`}>{activeProj?.status}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
@@ -755,8 +755,8 @@ By signing, client confirms full agreement to all terms.`}
                 ['Risk Score',      `${Math.round(analysis?.total_risk_score || 0)}/100`],
               ].map(([l, v]) => (
                 <div key={l} className="bg-white/10 rounded-2xl p-4">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-blue-300 mb-1">{l}</p>
-                  <p className="text-lg font-black">{v}</p>
+                  <p className="text-xs font-semibold text-blue-300 mb-1">{l}</p>
+                  <p className="text-lg font-bold">{v}</p>
                 </div>
               ))}
             </div>
@@ -765,14 +765,14 @@ By signing, client confirms full agreement to all terms.`}
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-400 rounded-full transition-all" style={{ width: `${progressPct}%` }}/>
               </div>
-              <p className="text-[10px] text-slate-400 font-bold mt-1">{completedMilestones}/{milestones.length} milestones completed</p>
+              <p className="text-xs text-slate-400 font-bold mt-1">{completedMilestones}/{milestones.length} milestones completed</p>
             </div>
           </div>
         </div>
 
         {/* Milestones */}
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+          <h3 className="text-xs font-semibold text-slate-500 flex items-center gap-2">
             <Milestone size={12}/> Milestone Governance
           </h3>
           {milestones.map(m => {
@@ -783,39 +783,39 @@ By signing, client confirms full agreement to all terms.`}
                 <div className="flex items-start justify-between flex-wrap gap-3 mb-3">
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                      <span className="text-indigo-700 font-black text-sm">{m.phase}</span>
+                      <span className="text-indigo-700 font-bold text-sm">{m.phase}</span>
                     </div>
                     <div>
-                      <p className="font-black text-slate-900">{m.title}</p>
+                      <p className="font-bold text-slate-900">{m.title}</p>
                       <p className="text-xs text-slate-500 mt-0.5">{m.deliverable}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-black text-indigo-700 text-sm">${capitalAmt.toLocaleString(undefined, {maximumFractionDigits:0})} ({m.capital_pct}%)</span>
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${milestoneStatusColor(m.status)}`}>{m.status}</span>
+                    <span className="font-bold text-indigo-700 text-sm">${capitalAmt.toLocaleString(undefined, {maximumFractionDigits:0})} ({m.capital_pct}%)</span>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${milestoneStatusColor(m.status)}`}>{m.status}</span>
                   </div>
                 </div>
 
                 {m.capital_released && (
                   <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 mb-3">
                     <CheckCircle2 size={13} className="text-emerald-600"/>
-                    <span className="text-xs font-black text-emerald-700">Capital released · TX: {m.tx_hash?.slice(0,14)}...</span>
+                    <span className="text-xs font-bold text-emerald-700">Capital released · TX: {m.tx_hash?.slice(0,14)}...</span>
                   </div>
                 )}
 
                 {m.status === 'in_progress' && (
                   <div className="flex gap-3 mt-3">
                     <input value={noteVal} onChange={e => setNoteVal(e.target.value)} placeholder="Completion notes / evidence link..."
-                      className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:border-indigo-400"/>
+                      className="ui-input flex-1"/>
                     <button onClick={() => submitMilestone(m.id, noteVal)} disabled={loading}
-                      className="bg-indigo-600 text-white rounded-xl px-5 py-2.5 font-black text-xs uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-1">
+                      className="bg-blue-600 text-white rounded-xl px-5 py-2.5 font-semibold text-xs hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1">
                       {loading ? <Loader2 size={12} className="animate-spin"/> : <CheckCircle2 size={12}/>} Complete
                     </button>
                   </div>
                 )}
 
                 {m.due_days && (
-                  <p className="text-[10px] text-slate-400 font-bold mt-2"><Clock size={10} className="inline mr-1"/>Due: Day {m.due_days} from activation</p>
+                  <p className="text-xs text-slate-400 font-bold mt-2"><Clock size={10} className="inline mr-1"/>Due: Day {m.due_days} from activation</p>
                 )}
               </div>
             );
@@ -825,7 +825,7 @@ By signing, client confirms full agreement to all terms.`}
         {/* Risk snapshot */}
         {analysis && (
           <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-            <h4 className="font-black text-slate-800 flex items-center gap-2 mb-4"><ShieldCheck size={16} className="text-amber-500"/> Live Risk Profile</h4>
+            <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4"><ShieldCheck size={16} className="text-amber-500"/> Live Risk Profile</h4>
             <div className="grid grid-cols-2 gap-3">
               <RiskBar label="Country Risk"    score={analysis.country_risk}    />
               <RiskBar label="Execution Risk"  score={analysis.execution_risk}  />
@@ -834,7 +834,7 @@ By signing, client confirms full agreement to all terms.`}
             </div>
             {analysis.early_warnings && (
               <div className="mt-4 bg-amber-50 rounded-2xl p-4 border border-amber-100">
-                <p className="text-xs font-black text-amber-700 mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Early Warning Indicators</p>
+                <p className="text-xs font-bold text-amber-700 mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Early Warning Indicators</p>
                 <ul className="space-y-1">
                   {(typeof analysis.early_warnings === 'string' ? JSON.parse(analysis.early_warnings) : analysis.early_warnings).map((w, i) => (
                     <li key={i} className="text-xs text-amber-600 font-semibold">• {w}</li>

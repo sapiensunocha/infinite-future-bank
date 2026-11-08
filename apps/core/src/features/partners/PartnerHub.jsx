@@ -92,7 +92,7 @@ function ConsentBox({ language, method, setMethod, confirmed, setConfirmed, bulk
       <p className="text-sm text-slate-700 italic">“{api.CONSENT_TEXT[language] || api.CONSENT_TEXT.fr}”</p>
       <div>
         <label className="ui-label">How was consent given?</label>
-        <select className="ui-input" value={method} onChange={(e) => setMethod(e.target.value)}>
+        <select className="ui-select" value={method} onChange={(e) => setMethod(e.target.value)}>
           <option value="signed_form">Signed consent form</option>
           <option value="recorded_verbal">Read aloud and agreed (recorded)</option>
         </select>
@@ -125,12 +125,12 @@ function AddFarmerForm({ partner, onDone, onCancel }) {
         <div><label className="ui-label">Phone</label><input className="ui-input" inputMode="tel" placeholder="+237 6 77 12 34 56" value={f.phone} onChange={set('phone')} /></div>
         <div><label className="ui-label">Partner reference</label><input className="ui-input" placeholder="e.g. GHV-0001" value={f.external_ref} onChange={set('external_ref')} /></div>
         <div><label className="ui-label">Gender</label>
-          <select className="ui-input" value={f.gender} onChange={set('gender')}><option value="">—</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option><option value="undisclosed">Prefer not to say</option></select></div>
+          <select className="ui-select" value={f.gender} onChange={set('gender')}><option value="">—</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option><option value="undisclosed">Prefer not to say</option></select></div>
         <div><label className="ui-label">Year of birth</label><input className="ui-input" inputMode="numeric" maxLength={4} value={f.birth_year} onChange={set('birth_year')} /></div>
         <div><label className="ui-label">Region</label><input className="ui-input" placeholder="e.g. Centre" value={f.region} onChange={set('region')} /></div>
         <div><label className="ui-label">Village / locality</label><input className="ui-input" value={f.locality} onChange={set('locality')} /></div>
         <div><label className="ui-label">Language</label>
-          <select className="ui-input" value={f.language} onChange={set('language')}><option value="fr">Français</option><option value="en">English</option></select></div>
+          <select className="ui-select" value={f.language} onChange={set('language')}><option value="fr">Français</option><option value="en">English</option></select></div>
       </div>
       <ConsentBox language={f.language} method={method} setMethod={setMethod} confirmed={confirmed} setConfirmed={setConfirmed} />
       {err && <Notice>{err}</Notice>}
@@ -348,7 +348,7 @@ function TeamTab({ partner, canManage, myId }) {
         <form onSubmit={add} className="ui-card p-4 grid grid-cols-1 sm:grid-cols-[1fr_180px_auto] gap-3 items-end">
           <div><label className="ui-label">Email of an IFB account</label><input type="email" required className="ui-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="agent@greenhouse.cm" /></div>
           <div><label className="ui-label">Role</label>
-            <select className="ui-input" value={role} onChange={(e) => setRole(e.target.value)}><option value="field_agent">Field agent</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select></div>
+            <select className="ui-select" value={role} onChange={(e) => setRole(e.target.value)}><option value="field_agent">Field agent</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select></div>
           <button disabled={busy} className="ui-btn ui-btn-primary sm:!w-auto">{busy ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />} Add</button>
         </form>
       )}
@@ -389,8 +389,8 @@ function CreatePartner({ onCreated }) {
     <form onSubmit={submit} className="ui-card p-4 md:p-6 space-y-4">
       <p className="text-base font-semibold text-slate-900 flex items-center gap-2"><Building2 size={18} className="text-blue-600" /> Add an implementation partner (IFB admins)</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div><label className="ui-label">Code</label><input className="ui-input uppercase" required pattern="[A-Za-z0-9]{2,12}" value={p.code} onChange={set('code')} /></div>
-        <div><label className="ui-label">Country (ISO code)</label><input className="ui-input uppercase" required maxLength={2} value={p.country} onChange={set('country')} /></div>
+        <div><label className="ui-label">Code</label><input className="ui-input" required pattern="[A-Za-z0-9]{2,12}" value={p.code} onChange={set('code')} /></div>
+        <div><label className="ui-label">Country (ISO code)</label><input className="ui-input" required maxLength={2} value={p.country} onChange={set('country')} /></div>
         <div><label className="ui-label">Name</label><input className="ui-input" required value={p.name} onChange={set('name')} /></div>
         <div><label className="ui-label">Legal name</label><input className="ui-input" value={p.legal_name} onChange={set('legal_name')} /></div>
         <div><label className="ui-label">Agreement reference</label><input className="ui-input" value={p.agreement_ref} onChange={set('agreement_ref')} /></div>
@@ -457,7 +457,7 @@ export default function PartnerHub({ session, profile }) {
         <div className="flex-1 min-w-0">
           <p className="text-sm text-slate-500">{partner?.country} · {partner?.agreement_ref || 'Implementation partner'}{effective ? ` · ${ROLE_LABEL[effective] || effective}` : ''}</p>
           {partners.length > 1 ? (
-            <select className="ui-input !h-11 mt-1 font-semibold" value={partnerId || ''} onChange={(e) => { setPartnerId(e.target.value); setTab('overview'); }}>
+            <select className="ui-select mt-1" value={partnerId || ''} onChange={(e) => { setPartnerId(e.target.value); setTab('overview'); }}>
               {partners.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           ) : <p className="text-xl font-semibold text-slate-900 truncate">{partner?.name}</p>}

@@ -9,7 +9,7 @@ export default function FeatureBadge({ id, compact = false, className = '' }) {
   return (
     <span
       title={entry.reason}
-      className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap border bg-amber-50 text-amber-700 border-amber-200 ${className}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-semibold whitespace-nowrap border bg-amber-50 text-amber-700 border-amber-200 ${className}`}
     >
       {compact ? 'Soon' : 'Coming soon'}
     </span>

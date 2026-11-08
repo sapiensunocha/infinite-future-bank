@@ -30,23 +30,23 @@ const ModalLoader = () => (
 );
 
 const TITLES = {
-  PAYROLL:           'Corporate Payroll',
+  PAYROLL:           'Payroll',
   BILLS:             'Pay Bills',
   CONTRACTS:         'Smart Contracts',
-  NPO:               'Philanthropy Hub',
+  NPO:               'NPO Hub',
   LOANS:             'Lending',
   VENTURE_EXCHANGE:  'Venture Exchange',
-  MERCHANT_BILLING:  'Merchant Invoicing',
+  MERCHANT_BILLING:  'Invoicing',
   PAYMENT_PAGES:     'Payment Pages',
   PARTNER_HUB:       'Partner Hub',
   MERCHANT_TICKETS:  'Box Office',
   CLYRIX:            'Clyrix Health',
   PRAXCI:            'Praxci Education',
-  P2P_EXCHANGE:      'P2P Liquidity',
-  DEUS_MARKET:       'DEUS Market',
+  P2P_EXCHANGE:      'P2P Escrow',
+  DEUS_MARKET:       'Marketplace',
   PENSION_FUND:      'IFB Pension Fund',
   AGRI_SHIELD:       'AgriShield Insurance',
-  CAPITAL_NETWORK:   'Share with Network & Earn',
+  CAPITAL_NETWORK:   'Referrals',
 };
 
 export default function AppPopupModal({
@@ -62,7 +62,7 @@ export default function AppPopupModal({
       {/* Backdrop tap to close */}
       <div className="absolute inset-0" onClick={() => setActiveAppPopup(null)} />
 
-      <div className="relative bg-white w-full md:max-w-5xl md:mx-4 md:rounded-3xl rounded-t-[2.5rem] md:h-[90vh] h-[94vh] shadow-2xl overflow-hidden flex flex-col border border-slate-100 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-300">
+      <div className="relative bg-white w-full md:max-w-5xl md:mx-4 md:rounded-3xl rounded-t-3xl md:h-[90vh] h-[94vh] shadow-2xl overflow-hidden flex flex-col border border-slate-100 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-300">
         {/* Header */}
         <div className="flex-shrink-0">
           {/* Mobile drag handle */}
@@ -70,12 +70,12 @@ export default function AppPopupModal({
             <div className="w-10 h-1 bg-slate-200 rounded-full" />
           </div>
           <div className="px-5 md:px-6 py-3 md:py-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
-            <h3 className="font-black text-sm md:text-lg text-slate-800 tracking-tight uppercase">
+            <h3 className="ui-sheet-title">
               {TITLES[activeAppPopup] || 'App'}
             </h3>
             <button
               onClick={() => setActiveAppPopup(null)}
-              className="w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-2xl flex items-center justify-center transition-colors active:scale-90"
+              aria-label="Close" className="w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-full flex items-center justify-center transition-colors"
             >
               <X size={18} />
             </button>

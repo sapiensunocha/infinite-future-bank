@@ -11,8 +11,8 @@ import {
 // ── Steps ─────────────────────────────────────────────────────────────────────
 
 const STEPS = [
-  { id: 'personal',   label: 'About You',    icon: User,       hint: 'Legal identity & contact details' },
-  { id: 'scan',       label: 'Scan ID',      icon: ScanFace,   hint: 'AI-powered document extraction' },
+  { id: 'personal',   label: 'About You',    icon: User,       hint: 'Your legal name and contact details' },
+  { id: 'scan',       label: 'Scan ID',      icon: ScanFace,   hint: 'Photos of your ID' },
   { id: 'finances',   label: 'Finances',     icon: DollarSign, hint: 'Income, assets & source of funds' },
   { id: 'compliance', label: 'Declarations', icon: Shield,     hint: 'AML · PEP · FATCA / CRS' },
   { id: 'submit',     label: 'Submit',       icon: ShieldCheck,hint: 'Supporting documents & review' },
@@ -120,7 +120,7 @@ function CameraCapture({ onCapture, onClose, facing = 'environment' }) {
   return createPortal(
     <div className="fixed inset-0 z-[2000] bg-black flex flex-col">
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/80 to-transparent">
-        <span className="text-white font-black text-sm tracking-tight">{isFront ? 'Selfie camera' : 'ID camera'}</span>
+        <span className="text-white font-bold text-sm tracking-tight">{isFront ? 'Selfie camera' : 'ID camera'}</span>
         <button onClick={close} aria-label="Close camera" className="text-white/80 hover:text-white transition-colors"><X size={22}/></button>
       </div>
       {camErr ? (
@@ -128,7 +128,7 @@ function CameraCapture({ onCapture, onClose, facing = 'environment' }) {
           <div className="bg-white rounded-2xl p-6 max-w-sm text-center space-y-4">
             <AlertTriangle size={32} className="text-amber-600 mx-auto"/>
             <p className="text-slate-900 font-bold text-sm">{camErr}</p>
-            <button onClick={close} className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-colors">
+            <button onClick={close} className="ui-btn ui-btn-primary">
               Use Upload Instead
             </button>
           </div>
@@ -193,12 +193,12 @@ function DocZone({ label, field, files, onChange, required, accept = 'image/*,ap
         <div className="relative rounded-xl overflow-hidden border border-slate-200 group cursor-pointer" onClick={() => fileRef.current.click()}>
           <img src={previewUrl} alt="" className="w-full h-32 object-cover" />
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <span className="text-slate-900 text-[10px] font-black uppercase bg-slate-50 px-3 py-1.5 rounded-lg backdrop-blur-sm">Replace</span>
+            <span className="text-slate-900 text-xs font-semibold bg-slate-50 px-3 py-1.5 rounded-lg backdrop-blur-sm">Replace</span>
           </div>
           <div className="absolute top-2 right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
             <CheckCircle2 size={12} className="text-slate-900"/>
           </div>
-          <p className="absolute bottom-0 left-0 right-0 bg-slate-50 text-[9px] text-slate-900 font-bold px-2 py-1 truncate">{file.name}</p>
+          <p className="absolute bottom-0 left-0 right-0 bg-slate-50 text-xs text-slate-900 font-bold px-2 py-1 truncate">{file.name}</p>
         </div>
       ) : file ? (
         <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 cursor-pointer" onClick={() => fileRef.current.click()}>
@@ -213,12 +213,12 @@ function DocZone({ label, field, files, onChange, required, accept = 'image/*,ap
           <div className={`grid gap-2 ${capture ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <button type="button" onClick={() => fileRef.current.click()}
               className="flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-all">
-              <Upload size={14}/><span className="text-[10px] font-black uppercase">Upload</span>
+              <Upload size={14}/><span className="text-xs font-semibold">Upload</span>
             </button>
             {capture && (
               <button type="button" onClick={() => setCameraOpen(true)}
                 className="flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-blue-700/40 rounded-lg text-slate-500 hover:text-blue-600 transition-all">
-                <Camera size={14}/><span className="text-[10px] font-black uppercase">Camera</span>
+                <Camera size={14}/><span className="text-xs font-semibold">Camera</span>
               </button>
             )}
           </div>
@@ -237,7 +237,7 @@ function AIPanel({ scanning, fields, confidence }) {
     <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
       <div className="flex items-center gap-2 mb-3">
         <Brain size={14} className="text-blue-600"/>
-        <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">AI Scan</span>
+        <span className="text-xs font-semibold text-blue-600">AI Scan</span>
         {scanning && <Loader2 size={10} className="animate-spin text-blue-600 ml-auto"/>}
         {!scanning && fields?.length > 0 && <Sparkles size={10} className="text-emerald-600 ml-auto"/>}
       </div>
@@ -247,23 +247,23 @@ function AIPanel({ scanning, fields, confidence }) {
           <div className="h-1.5 bg-blue-50 rounded-full overflow-hidden">
             <div className="h-full bg-blue-500 rounded-full w-3/5 animate-pulse"/>
           </div>
-          <p className="text-[10px] text-slate-500">Analysing with Gemini AI…</p>
+          <p className="text-xs text-slate-500">Analysing with Gemini AI…</p>
           {['Full name', 'Date of birth', 'Nationality', 'Document no.', 'Expiry'].map(f => (
             <div key={f} className="flex items-center gap-2 opacity-40">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0"/>
-              <span className="text-[9px] text-slate-500">{f}</span>
+              <span className="text-xs text-slate-500">{f}</span>
             </div>
           ))}
         </div>
       ) : fields?.length > 0 ? (
         <div className="space-y-1.5">
-          <p className="text-[9px] font-black text-emerald-600 uppercase tracking-wider mb-3">✓ {fields.length} fields auto-filled</p>
+          <p className="text-xs font-semibold text-emerald-600 mb-3">{fields.length} fields auto-filled</p>
           {fields.map(f => (
             <div key={f.key} className="flex items-center justify-between gap-2 py-1 border-b border-slate-200 last:border-0">
-              <span className="text-[9px] text-slate-500 font-medium shrink-0">{f.label}</span>
+              <span className="text-xs text-slate-500 font-medium shrink-0">{f.label}</span>
               <div className="flex items-center gap-1 min-w-0">
-                <span className="text-[9px] text-slate-900 font-bold truncate max-w-[70px]">{f.value}</span>
-                <span className={`text-[7px] font-black px-1 py-0.5 rounded shrink-0 ${(f.confidence||0)>=0.8?'bg-emerald-50 text-emerald-600':(f.confidence||0)>=0.6?'bg-amber-50 text-amber-600':'bg-red-50 text-red-600'}`}>
+                <span className="text-xs text-slate-900 font-bold truncate max-w-[70px]">{f.value}</span>
+                <span className={`text-xs font-bold px-1 py-0.5 rounded shrink-0 ${(f.confidence||0)>=0.8?'bg-emerald-50 text-emerald-600':(f.confidence||0)>=0.6?'bg-amber-50 text-amber-600':'bg-red-50 text-red-600'}`}>
                   {Math.round((f.confidence||0)*100)}%
                 </span>
               </div>
@@ -272,8 +272,8 @@ function AIPanel({ scanning, fields, confidence }) {
           {confidence != null && (
             <div className="mt-3 pt-2 border-t border-slate-200">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] text-slate-500 font-black uppercase">Confidence</span>
-                <span className={`text-[9px] font-black ${confidence>=0.8?'text-emerald-600':confidence>=0.6?'text-amber-600':'text-red-600'}`}>
+                <span className="text-xs text-slate-500 font-semibold">Confidence</span>
+                <span className={`text-xs font-bold ${confidence>=0.8?'text-emerald-600':confidence>=0.6?'text-amber-600':'text-red-600'}`}>
                   {Math.round(confidence*100)}%
                 </span>
               </div>
@@ -285,7 +285,7 @@ function AIPanel({ scanning, fields, confidence }) {
           )}
         </div>
       ) : (
-        <p className="text-[10px] text-slate-500 leading-relaxed">
+        <p className="text-xs text-slate-500 leading-relaxed">
           Upload your government-issued ID above — Gemini AI will automatically extract your name, date of birth, nationality, document number, and expiry date.
         </p>
       )}
@@ -854,7 +854,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
             {idCheck.status !== 'verified' && (
               <button type="button" onClick={runIdCheck}
                 disabled={idCheck.status === 'checking' || form.id_number.trim().length < 5 || !form.legal_first_name || !form.legal_last_name}
-                className="shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest disabled:opacity-40 flex items-center justify-center gap-2">
+                className="shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold disabled:opacity-40 flex items-center justify-center gap-2">
                 {idCheck.status === 'checking' ? <><Loader2 size={12} className="animate-spin"/> Checking…</> : <><ShieldCheck size={12}/> Verify ID</>}
               </button>
             )}
@@ -879,7 +879,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         <Field label="Tax ID (TIN)"><input className={inp} value={form.tax_id} onChange={e => set('tax_id', e.target.value)} placeholder="e.g. FIRS TIN — optional"/></Field>
 
         <Sect icon={Camera} title="Document Capture — AI Auto-Fill" />
-        <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-[10px] text-blue-600 font-medium">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 text-xs text-blue-600 font-medium">
           Upload or photograph your ID — Gemini AI reads it instantly and fills your details on step 1.
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -895,8 +895,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           <DocZone label="Selfie Holding ID" field="selfie_with_id" files={files} onChange={setFile} accept="image/*" capture facing="user" required />
         </div>
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-          <p className="text-[9px] font-black uppercase tracking-wider text-blue-600 mb-1">Selfie tips</p>
-          <ul className="text-[9px] text-slate-500 space-y-0.5 list-disc list-inside">
+          <p className="text-xs font-semibold text-blue-600 mb-1">Selfie tips</p>
+          <ul className="text-xs text-slate-500 space-y-0.5 list-disc list-inside">
             <li>Face fully visible, good lighting, no sunglasses</li>
             <li>Hold your ID next to your face — all text must be readable</li>
             <li>Plain or neutral background preferred</li>
@@ -910,8 +910,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           <AIPanel scanning={aiScanning} fields={aiFields} confidence={aiConfidence} />
           {aiFields.length > 0 && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-              <p className="text-[9px] font-black text-emerald-600 uppercase mb-1">Step 1 auto-filled</p>
-              <p className="text-[9px] text-slate-500">Navigate back to verify AI-extracted values before continuing.</p>
+              <p className="text-xs font-semibold text-emerald-600 mb-1">Step 1 auto-filled</p>
+              <p className="text-xs text-slate-500">Navigate back to verify AI-extracted values before continuing.</p>
             </div>
           )}
         </div>
@@ -1108,7 +1108,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           <DocZone label="UBO Government ID" field="ubo_id_document" files={files} onChange={setFile} required capture />
         </>
       )}
-      <p className="text-[9px] text-slate-500 mt-1">Proof of address must be dated within the last 90 days. Max 10 MB per file. JPG / PNG / PDF / HEIC accepted.</p>
+      <p className="text-xs text-slate-500 mt-1">Proof of address must be dated within the last 90 days. Max 10 MB per file. JPG / PNG / PDF / HEIC accepted.</p>
 
       <Sect icon={CheckCircle2} title="Review Summary" />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -1127,7 +1127,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           { label: 'Documents', val: `${Object.values(files).filter(Boolean).length} uploaded` },
         ].map(({ label, val }) => (
           <div key={label} className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+            <p className="text-xs font-semibold text-slate-500">{label}</p>
             <p className="text-xs font-bold text-slate-900 mt-0.5 truncate">{val}</p>
           </div>
         ))}
@@ -1139,8 +1139,8 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
           {Object.entries(uploadProgress).map(([doc, status]) => (
             <div key={doc} className="flex items-center gap-2">
               {status === 'uploading' ? <Loader2 size={10} className="animate-spin text-blue-600 shrink-0"/> : <CheckCircle2 size={10} className="text-emerald-600 shrink-0"/>}
-              <span className="text-[9px] font-bold text-slate-500 flex-1 capitalize">{doc.replace(/_/g,' ')}</span>
-              <span className={`text-[8px] font-black ${status === 'done' ? 'text-emerald-600' : 'text-blue-600'}`}>{status}</span>
+              <span className="text-xs font-bold text-slate-500 flex-1 capitalize">{doc.replace(/_/g,' ')}</span>
+              <span className={`text-xs font-bold ${status === 'done' ? 'text-emerald-600' : 'text-blue-600'}`}>{status}</span>
             </div>
           ))}
         </div>
@@ -1148,7 +1148,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
       {/* AML Declaration */}
       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
-        <h4 className="font-black text-slate-900 text-sm mb-3 flex items-center gap-2">
+        <h4 className="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
           <Shield size={14} className="text-blue-600"/> AML / CTF Declaration
         </h4>
         <p className="text-xs text-slate-500 leading-relaxed mb-4">
@@ -1157,7 +1157,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
         <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
           <input type="checkbox" id="aml_agree" checked={form.aml_terms_agreed} onChange={e => set('aml_terms_agreed', e.target.checked)}
             className="w-5 h-5 accent-blue-500 mt-0.5 shrink-0 cursor-pointer"/>
-          <label htmlFor="aml_agree" className="text-xs font-black text-slate-600 cursor-pointer leading-relaxed">
+          <label htmlFor="aml_agree" className="text-xs font-bold text-slate-600 cursor-pointer leading-relaxed">
             I have read and agree to the AML/CTF declaration, Terms of Service, and Privacy Policy. I consent to identity verification and ongoing monitoring.
           </label>
         </div>
@@ -1187,7 +1187,7 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       {prefilled && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-2">
           <AlertTriangle size={13} className="text-amber-600 shrink-0"/>
-          <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Previous submission loaded — update what's flagged and resubmit.</p>
+          <p className="text-xs font-semibold text-amber-600">Previous submission loaded — update what's flagged and resubmit.</p>
         </div>
       )}
 
@@ -1207,13 +1207,13 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
               <button key={s.id} type="button" onClick={() => i < step && setStep(i)}
                 disabled={i > step}
                 className={`flex flex-col items-center gap-1.5 group ${i <= step ? 'cursor-pointer' : 'cursor-default'}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${done ? 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/30' : active ? 'bg-blue-600 border-blue-400 shadow-lg shadow-blue-500/40 scale-110' : 'bg-slate-50 border-slate-200'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${done ? 'bg-emerald-500 border-emerald-400 shadow-md' : active ? 'bg-blue-600 border-blue-400 shadow-lg scale-110' : 'bg-slate-50 border-slate-200'}`}>
                   {done
                     ? <CheckCheck size={15} className="text-slate-900"/>
                     : <Icon size={15} className={active ? 'text-slate-900' : 'text-slate-500'}/>
                   }
                 </div>
-                <span className={`text-[8px] font-black uppercase tracking-widest hidden sm:block whitespace-nowrap transition-colors ${active ? 'text-blue-600' : done ? 'text-emerald-600' : 'text-slate-600'}`}>
+                <span className={`text-xs font-semibold hidden sm:block whitespace-nowrap transition-colors ${active ? 'text-blue-600' : done ? 'text-emerald-600' : 'text-slate-600'}`}>
                   {s.label}
                 </span>
               </button>
@@ -1224,11 +1224,11 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
 
       {/* ── Step title ── */}
       <div>
-        <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
           <S.icon size={18} className="text-blue-600"/>
           {S.label}
         </h3>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-0.5">{S.hint}</p>
+        <p className="text-xs font-semibold text-slate-500 mt-0.5">{S.hint}</p>
       </div>
 
       {/* ── Step content ── */}
@@ -1237,19 +1237,19 @@ export default function KYCWizard({ session, profile, onComplete, triggerNotific
       {/* ── Navigation ── */}
       <div className="flex justify-between items-center border-t border-slate-200 pt-5">
         <button type="button" onClick={() => setStep(s => Math.max(s - 1, 0))} disabled={step === 0}
-          className="flex items-center gap-2 px-5 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-30 border border-slate-200">
+          className="flex items-center gap-2 px-5 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-xs rounded-xl transition-all disabled:opacity-30 border border-slate-200">
           <ChevronLeft size={14}/> Back
         </button>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] text-slate-600 font-bold hidden sm:block">{step + 1} / {STEPS.length}</span>
+          <span className="text-xs text-slate-600 font-bold hidden sm:block">{step + 1} / {STEPS.length}</span>
           {step < STEPS.length - 1 ? (
             <button type="button" onClick={goNext}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-900/40">
+              className="ui-btn ui-btn-primary w-auto">
               Continue <ChevronRight size={14}/>
             </button>
           ) : (
             <button type="button" onClick={handleSubmit} disabled={submitting || !form.aml_terms_agreed}
-              className="flex items-center gap-2 px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-900/40 disabled:opacity-50">
+              className="ui-btn ui-btn-primary w-auto">
               {submitting
                 ? <><Loader2 size={14} className="animate-spin"/> Submitting…</>
                 : <><ShieldCheck size={14}/> Submit KYC</>

@@ -61,7 +61,7 @@ export default function CashOptimizer() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3 drop-shadow-sm">
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tighter flex items-center gap-3 drop-shadow-sm">
             <Zap className="text-blue-600" size={28} /> Capital Allocation
           </h1>
           <p className="text-slate-500 font-bold mt-2 max-w-xl text-sm leading-relaxed">
@@ -69,8 +69,8 @@ export default function CashOptimizer() {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Live Protocol APY</p>
-          <div className="text-4xl font-black text-green-600 drop-shadow-sm">
+          <p className="text-xs font-semibold text-slate-500 mb-1">Live Protocol APY</p>
+          <div className="text-4xl font-bold text-green-600 drop-shadow-sm">
             {liveApy > 0 ? `${liveApy}%` : '---'}
           </div>
         </div>
@@ -82,21 +82,21 @@ export default function CashOptimizer() {
             <>
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                     <Wallet size={16} className="text-blue-600" /> Liquid Cash
                   </h3>
                   <span className="text-xs font-bold text-slate-500">Available: {formatCurrency(availableCash)}</span>
                 </div>
 
                 <div className="relative mb-6">
-                  <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-3xl font-black text-slate-300 pointer-events-none">$</span>
+                  <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-3xl font-bold text-slate-300 pointer-events-none">$</span>
                   <input
                     type="number"
                     value={deployAmount}
                     onChange={(e) => setDeployAmount(e.target.value)}
                     placeholder="0.00"
                     max={availableCash}
-                    className="w-full bg-white/40 border border-white/60 rounded-[1.5rem] py-6 pl-14 pr-6 text-4xl font-black text-slate-800 focus:outline-none focus:border-blue-400 focus:bg-white/80 transition-all shadow-inner placeholder-slate-300"
+                    className="ui-input pl-14 pr-6 text-4xl h-16"
                   />
                 </div>
 
@@ -111,12 +111,12 @@ export default function CashOptimizer() {
                 <button 
                   onClick={handleDeploy}
                   disabled={isDeploying || availableCash === 0}
-                  className="w-full py-4 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg disabled:opacity-50"
+                  className="ui-btn ui-btn-primary"
                 >
                   {isDeploying ? 'Processing Transaction...' : 'Deploy Capital'} <ArrowRight size={18} />
                 </button>
-                <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 flex justify-center items-center gap-1.5">
-                  <Lock size={10} /> Cryptographically secured. Withdraw anytime.
+                <p className="text-center text-xs font-bold text-slate-500 mt-4 flex justify-center items-center gap-1.5">
+                  <Lock size={10} /> Protected. Withdraw anytime.
                 </p>
               </div>
             </>
@@ -125,9 +125,9 @@ export default function CashOptimizer() {
               <div className="w-20 h-20 rounded-3xl bg-green-100 border border-green-200 flex items-center justify-center mb-6 shadow-inner">
                 <ShieldCheck size={40} className="text-green-600" />
               </div>
-              <h2 className="text-2xl font-black text-slate-800 mb-2">Capital Deployed</h2>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">Capital Deployed</h2>
               <p className="text-slate-500 font-bold mb-8">Asset reallocation confirmed on ledger.</p>
-              <button onClick={() => setSuccess(false)} className="px-6 py-3 bg-white/60 border border-white/80 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-white/90 shadow-sm">
+              <button onClick={() => setSuccess(false)} className="px-6 py-3 bg-white/60 border border-white/80 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white/90 shadow-sm">
                 Return to Treasury
               </button>
             </div>

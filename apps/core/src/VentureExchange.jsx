@@ -102,16 +102,16 @@ function computeMatchScore(company, investor) {
 // ─── Small reusable UI ────────────────────────────────────────────────────
 const ScoreBadge = ({ label, value, color }) => (
   <div className="flex flex-col items-center gap-1">
-    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-lg border-4 ${color}`}>
+    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg border-4 ${color}`}>
       {value}
     </div>
-    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+    <p className="text-xs font-semibold text-slate-500">{label}</p>
   </div>
 );
 
 const Field = ({ label, children, required }) => (
   <div className="w-full">
-    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">
+    <label className="ui-label">
       {label}{required && <span className="text-red-400 ml-0.5">*</span>}
     </label>
     {children}
@@ -119,10 +119,10 @@ const Field = ({ label, children, required }) => (
 );
 
 const Section = ({ title, icon, children }) => (
-  <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm mb-6 relative overflow-hidden group">
+  <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm mb-6 relative overflow-hidden group">
     <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
       <div className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">{icon}</div>
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">{title}</h3>
+      <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
     </div>
     {children}
   </div>
@@ -135,7 +135,7 @@ const ToggleGroup = ({ label, options, value = [], onChange }) => (
         const active = value.includes(opt);
         return (
           <button key={opt} type="button" onClick={() => onChange(active ? value.filter(v => v !== opt) : [...value, opt])}
-            className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border ${active ? 'bg-blue-600 text-white border-blue-700 shadow-md' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300'}`}>
+            className={`px-3 py-1.5 text-sm font-semibold rounded-xl transition-all border ${active ? 'bg-blue-600 text-white border-blue-700 shadow-md' : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300'}`}>
             {opt}
           </button>
         );
@@ -549,7 +549,7 @@ export default function VentureExchange({ session, balances, profile }) {
   return (
     <div className="relative min-h-full bg-slate-50 pb-20">
       {toast && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full shadow-2xl text-sm font-black flex items-center gap-2 animate-in slide-in-from-top-4 ${toast.type === 'error' ? 'bg-red-900 text-red-200 border border-red-500' : 'bg-emerald-800 text-emerald-100 border border-emerald-500'}`}>
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full shadow-2xl text-sm font-bold flex items-center gap-2 animate-in slide-in-from-top-4 ${toast.type === 'error' ? 'bg-red-900 text-red-200 border border-red-500' : 'bg-emerald-800 text-emerald-100 border border-emerald-500'}`}>
           {toast.type === 'error' ? <XCircle size={14}/> : <CheckCircle2 size={14}/>} {toast.msg}
         </div>
       )}
@@ -570,7 +570,7 @@ export default function VentureExchange({ session, balances, profile }) {
             { id:'EXCHANGE', label:'Venture Exchange' },
           ].filter(t => t.label).map(t => (
             <button key={t.id} onClick={() => { setTab(t.id); setSelectedDeal(null); }}
-              className={`shrink-0 px-5 py-3 text-[11px] font-black uppercase tracking-widest rounded-t-2xl border-b-4 transition-all ${tab === t.id ? 'border-blue-600 text-blue-700 bg-white shadow-[0_-5px_15px_-10px_rgba(0,0,0,0.1)]' : 'border-transparent text-slate-400 hover:text-slate-700 hover:bg-white/50'}`}>
+              className={`shrink-0 px-5 py-3 text-[11px] font-semibold rounded-t-2xl border-b-4 transition-all ${tab === t.id ? 'border-blue-600 text-blue-700 bg-white shadow-[0_-5px_15px_-10px_rgba(0,0,0,0.1)]' : 'border-transparent text-slate-400 hover:text-slate-700 hover:bg-white/50'}`}>
               {t.label}
             </button>
           ))}
@@ -584,7 +584,7 @@ export default function VentureExchange({ session, balances, profile }) {
            </button>
            {showNotifications && (
              <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50">
-               <div className="p-4 bg-slate-50 border-b border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-500 flex justify-between">
+               <div className="p-4 bg-slate-50 border-b border-slate-100 font-semibold text-xs text-slate-500 flex justify-between">
                  <span>Notifications</span>
                  <button className="hover:text-blue-600" onClick={() => setShowNotifications(false)}><XCircle size={14}/></button>
                </div>
@@ -593,9 +593,9 @@ export default function VentureExchange({ session, balances, profile }) {
                    <div className="p-6 text-center text-xs text-slate-400 font-bold">No new notifications.</div>
                  ) : notifications.map(n => (
                    <div key={n.id} className={`p-4 border-b border-slate-50 text-xs ${!n.is_read ? 'bg-blue-50/50' : ''}`}>
-                     <p className="font-black text-slate-800 mb-1">{n.title}</p>
+                     <p className="font-bold text-slate-800 mb-1">{n.title}</p>
                      <p className="text-slate-600">{n.message}</p>
-                     <p className="text-[8px] text-slate-400 uppercase mt-2">{new Date(n.created_at).toLocaleString()}</p>
+                     <p className="text-xs text-slate-500 mt-2">{new Date(n.created_at).toLocaleString()}</p>
                    </div>
                  ))}
                </div>
@@ -621,24 +621,24 @@ export default function VentureExchange({ session, balances, profile }) {
           <div className="space-y-8 animate-in fade-in max-w-3xl mx-auto">
             <div className="flex justify-between items-end">
               <div>
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">Global Updates</h2>
+                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Global Updates</h2>
                 <p className="text-sm font-medium text-slate-500 mt-1">Follow companies, investors, and NPOs to receive their latest news.</p>
               </div>
               <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
-                 <p className="text-[9px] font-black uppercase text-slate-400 mb-1">Your Reaction Value</p>
+                 <p className="text-xs font-semibold text-slate-500 mb-1">Your Reaction Value</p>
                  <div className="flex items-center gap-2">
-                   <span className="font-black text-sm text-slate-800">$</span>
-                   <input type="number" step="0.5" className="w-16 bg-slate-50 border border-slate-100 rounded-lg p-1 font-black text-sm outline-none" value={myLikeValue} onChange={e => updateLikeValue(+e.target.value)}/>
+                   <span className="font-bold text-sm text-slate-800">$</span>
+                   <input type="number" step="0.5" className="ui-input w-16" value={myLikeValue} onChange={e => updateLikeValue(+e.target.value)}/>
                  </div>
               </div>
             </div>
 
             {/* Create Post */}
-            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-6 shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
               <form onSubmit={handlePostSubmit}>
                 <textarea 
                   required 
-                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 font-bold text-sm outline-none focus:border-blue-500 resize-none h-24 mb-4" 
+                  className="ui-textarea resize-none h-24 mb-4" 
                   placeholder="Share a milestone, post a video update, or announce a new round..."
                   value={postForm.content} 
                   onChange={e => setPostForm(p => ({...p, content: e.target.value}))}
@@ -650,10 +650,10 @@ export default function VentureExchange({ session, balances, profile }) {
                         const file = e.target.files[0];
                         if(file) setPostForm(p => ({...p, file, fileType: file.type.startsWith('video') ? 'video' : 'image'}));
                       }}/>
-                      <Upload size={18}/> <span className="text-[10px] font-black uppercase tracking-widest">{postForm.file ? 'Media Attached' : 'Attach Media'}</span>
+                      <Upload size={18}/> <span className="text-xs font-semibold">{postForm.file ? 'Media Attached' : 'Attach Media'}</span>
                     </label>
                   </div>
-                  <button type="submit" disabled={isPosting} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 disabled:opacity-50 shadow-md">
+                  <button type="submit" disabled={isPosting} className="ui-btn ui-btn-primary w-auto">
                     {isPosting ? <Loader2 size={14} className="animate-spin"/> : 'Publish Update'}
                   </button>
                 </div>
@@ -663,20 +663,20 @@ export default function VentureExchange({ session, balances, profile }) {
             {/* Feed List */}
             <div className="space-y-6">
               {feedPosts.filter(post => followingMap[post.author_id] || post.author_id === session?.user?.id).length === 0 ? (
-                <div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem]">
+                <div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-3xl">
                   <Activity size={40} className="mx-auto text-slate-300 mb-4"/>
                   <p className="text-slate-500 font-bold">Your feed is empty.</p>
                   <p className="text-xs text-slate-400 mt-1">Follow companies in the Marketplace to see their updates here.</p>
                 </div>
               ) : (
                 feedPosts.filter(post => followingMap[post.author_id] || post.author_id === session?.user?.id).map(post => (
-                  <div key={post.id} className="bg-white border border-slate-200 rounded-[2.5rem] p-6 shadow-sm">
+                  <div key={post.id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-black">{post.author_name.charAt(0)}</div>
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">{post.author_name.charAt(0)}</div>
                         <div>
-                          <p className="font-black text-slate-800 leading-tight">{post.author_name}</p>
-                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{post.author_role} • {new Date(post.created_at).toLocaleDateString()}</p>
+                          <p className="font-bold text-slate-800 leading-tight">{post.author_name}</p>
+                          <p className="text-xs font-semibold text-slate-500">{post.author_role} • {new Date(post.created_at).toLocaleDateString()}</p>
                         </div>
                       </div>
                     </div>
@@ -685,9 +685,9 @@ export default function VentureExchange({ session, balances, profile }) {
                     {post.media_urls && post.media_urls.length > 0 && (
                       <div className="mb-4 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
                         {post.media_types[0] === 'video' ? (
-                          <div className="aspect-video bg-slate-900 flex items-center justify-center text-white"><span className="text-xs font-black tracking-widest uppercase">Video Player (Simulated)</span></div>
+                          <div className="aspect-video bg-slate-900 flex items-center justify-center text-white"><span className="text-xs font-semibold">Video Player (Simulated)</span></div>
                         ) : (
-                          <div className="aspect-video bg-slate-200 flex items-center justify-center text-slate-400"><span className="text-xs font-black tracking-widest uppercase">Image Attachment (Simulated)</span></div>
+                          <div className="aspect-video bg-slate-200 flex items-center justify-center text-slate-400"><span className="text-xs font-semibold">Image Attachment (Simulated)</span></div>
                         )}
                       </div>
                     )}
@@ -696,38 +696,38 @@ export default function VentureExchange({ session, balances, profile }) {
                       <button onClick={() => handleLike(post.id, 'like')} className="flex items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors group">
                         <HeartHandshake size={18}/> 
                         <div className="flex flex-col items-start">
-                          <span className="text-xs font-black">{post.like_count}</span>
-                          <span className="text-[8px] font-bold uppercase text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">Cost: ${myLikeValue}</span>
+                          <span className="text-xs font-bold">{post.like_count}</span>
+                          <span className="text-xs font-bold text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">Cost: ${myLikeValue}</span>
                         </div>
                       </button>
                       <button onClick={() => handleLike(post.id, 'love')} className="flex items-center gap-1 text-slate-400 hover:text-rose-500 transition-colors group">
                         <Star size={18}/> 
                         <div className="flex flex-col items-start">
-                          <span className="text-xs font-black">{post.love_count}</span>
-                          <span className="text-[8px] font-bold uppercase text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">Cost: ${myLikeValue}</span>
+                          <span className="text-xs font-bold">{post.love_count}</span>
+                          <span className="text-xs font-bold text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">Cost: ${myLikeValue}</span>
                         </div>
                       </button>
 
                       <button onClick={() => setShowSpecialLike(post.id)} className="flex items-center gap-1 text-emerald-600 hover:text-emerald-500 transition-colors">
-                        <Zap size={18}/> <span className="text-[10px] font-black uppercase tracking-widest">Special Like</span>
+                        <Zap size={18}/> <span className="text-xs font-semibold">Special Like</span>
                       </button>
 
                       <div className="ml-auto text-right">
-                         <p className="text-[9px] font-black uppercase text-slate-400">Raised via Post</p>
-                         <p className="text-sm font-black text-emerald-600">${Number(post.total_revenue).toLocaleString()}</p>
+                         <p className="text-xs font-semibold text-slate-500">Raised via Post</p>
+                         <p className="text-sm font-bold text-emerald-600">${Number(post.total_revenue).toLocaleString()}</p>
                       </div>
                     </div>
 
                     {showSpecialLike === post.id && (
                       <div className="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between animate-in zoom-in-95">
                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-black text-emerald-800">Support Amount:</span>
+                            <span className="text-xs font-bold text-emerald-800">Support Amount:</span>
                             <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-xl border border-emerald-200">
-                               <span className="font-black text-emerald-600">$</span>
-                               <input type="number" className="w-16 bg-transparent font-black text-sm outline-none text-emerald-800" value={specialAmount} onChange={e=>setSpecialAmount(+e.target.value)}/>
+                               <span className="font-bold text-emerald-600">$</span>
+                               <input type="number" className="ui-input w-16" value={specialAmount} onChange={e=>setSpecialAmount(+e.target.value)}/>
                             </div>
                          </div>
-                         <button onClick={() => handleLike(post.id, 'special', specialAmount)} className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 shadow-md">Deploy Support</button>
+                         <button onClick={() => handleLike(post.id, 'special', specialAmount)} className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-500 shadow-md">Deploy Support</button>
                       </div>
                     )}
                   </div>
@@ -742,12 +742,12 @@ export default function VentureExchange({ session, balances, profile }) {
           <div className="space-y-8 animate-in fade-in">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">Executive Data Room</h2>
+                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Executive Data Room</h2>
                 <p className="text-sm font-medium text-slate-500 mt-1">Exhaustive metrics for investor due diligence.</p>
               </div>
               <div className="flex gap-3">
-                <button onClick={()=>saveCompany(false)} disabled={isSaving} className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 shadow-sm">Save Draft</button>
-                <button onClick={()=>saveCompany(true)} disabled={isSaving} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 shadow-md flex items-center gap-2"><Globe size={14}/> Publish Live</button>
+                <button onClick={()=>saveCompany(false)} disabled={isSaving} className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-semibold text-sm hover:bg-slate-50 shadow-sm">Save Draft</button>
+                <button onClick={()=>saveCompany(true)} disabled={isSaving} className="ui-btn ui-btn-primary w-auto"><Globe size={14}/> Publish Live</button>
               </div>
             </div>
 
@@ -782,7 +782,7 @@ export default function VentureExchange({ session, balances, profile }) {
                   <ToggleGroup label="Acceptable Capital Solutions" options={CAPITAL_TYPES} value={compForm.capital_solutions_sought} onChange={v=>cf('capital_solutions_sought',v)}/>
                   <div className="mt-6 p-5 bg-blue-50 border border-blue-100 rounded-2xl">
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-black text-blue-900">Seeking Mentorship & Guidance?</span>
+                      <span className="text-sm font-bold text-blue-900">Seeking Mentorship & Guidance?</span>
                       <Toggle value={compForm.mentorship_needed} onChange={v=>cf('mentorship_needed',v)}/>
                     </div>
                     {compForm.mentorship_needed && (
@@ -821,14 +821,14 @@ export default function VentureExchange({ session, balances, profile }) {
         {tab === 'VDR' && myCompany && (
           <div className="space-y-8 animate-in fade-in">
              <div>
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">Virtual Data Room (VDR)</h2>
+                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Virtual Data Room (VDR)</h2>
                 <p className="text-sm font-medium text-slate-500 mt-1">Blockchain-notarized document repository for investor due diligence.</p>
              </div>
 
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                <div className="lg:col-span-1">
-                 <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm sticky top-24">
-                   <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-4 flex items-center gap-2"><Upload size={16} className="text-blue-600"/> Upload Document</h3>
+                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm sticky top-24">
+                   <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2"><Upload size={16} className="text-blue-600"/> Upload Document</h3>
                    <form onSubmit={handleFileUpload} className="space-y-4">
                      <Field label="Document Title" required><input required className={inp} value={uploadForm.title} onChange={e=>setUploadForm(p=>({...p,title:e.target.value}))} placeholder="e.g., Q3 Financials 2026"/></Field>
                      <Field label="Category" required><select className={sel} value={uploadForm.document_type} onChange={e=>setUploadForm(p=>({...p,document_type:e.target.value}))}>
@@ -847,7 +847,7 @@ export default function VentureExchange({ session, balances, profile }) {
                        <option value="Public">Public (All IFB Investors)</option>
                      </select></Field>
                      <Field label="File" required><input required type="file" className="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" onChange={e=>setUploadForm(p=>({...p,file:e.target.files[0]}))}/></Field>
-                     <button type="submit" disabled={isSaving} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
+                     <button type="submit" disabled={isSaving} className="ui-btn ui-btn-primary">
                        {isSaving ? <Loader2 size={14} className="animate-spin"/> : <><ShieldCheck size={14}/> Notarize & Upload</>}
                      </button>
                    </form>
@@ -856,7 +856,7 @@ export default function VentureExchange({ session, balances, profile }) {
 
                <div className="lg:col-span-2 space-y-6">
                  {documents.length === 0 ? (
-                   <div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-[2.5rem]"><FileArchive size={40} className="mx-auto text-slate-300 mb-4"/><p className="text-slate-500 font-bold">Your VDR is empty. Upload documents to build investor trust.</p></div>
+                   <div className="text-center py-16 bg-slate-50 border border-slate-200 rounded-3xl"><FileArchive size={40} className="mx-auto text-slate-300 mb-4"/><p className="text-slate-500 font-bold">Your VDR is empty. Upload documents to build investor trust.</p></div>
                  ) : (
                    documents.map(doc => (
                      <div key={doc.id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -864,20 +864,20 @@ export default function VentureExchange({ session, balances, profile }) {
                          <div className="flex items-center gap-3">
                            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><FileText size={20}/></div>
                            <div>
-                             <h4 className="font-black text-lg text-slate-800">{doc.title}</h4>
-                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{doc.document_type.replace('_',' ')} · {(doc.file_size_bytes/1024/1024).toFixed(2)} MB</p>
+                             <h4 className="font-bold text-lg text-slate-800">{doc.title}</h4>
+                             <p className="text-xs font-semibold text-slate-500">{doc.document_type.replace('_',' ')} · {(doc.file_size_bytes/1024/1024).toFixed(2)} MB</p>
                            </div>
                          </div>
-                         <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg ${doc.access_level === 'Public' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{doc.access_level.replace('_',' ')}</span>
+                         <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${doc.access_level === 'Public' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{doc.access_level.replace('_',' ')}</span>
                        </div>
                        
                        <div className="bg-slate-900 rounded-2xl p-4 text-white mt-4 relative overflow-hidden">
-                         <div className="flex items-center gap-2 mb-2"><ShieldCheck size={14} className="text-emerald-400"/><span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Blockchain Notarized</span></div>
+                         <div className="flex items-center gap-2 mb-2"><ShieldCheck size={14} className="text-emerald-400"/><span className="text-xs font-semibold text-emerald-400">Blockchain Notarized</span></div>
                          {doc.venturex_document_notary?.[0] ? (
                            <div className="space-y-1">
-                             <div className="flex justify-between"><span className="text-[9px] text-slate-500 font-bold">Block</span><span className="text-[10px] font-mono text-slate-300">#{doc.venturex_document_notary[0].block_number}</span></div>
-                             <div className="flex justify-between"><span className="text-[9px] text-slate-500 font-bold">File Hash</span><span className="text-[10px] font-mono text-slate-300 truncate max-w-[200px]" title={doc.venturex_document_notary[0].file_hash}>{doc.venturex_document_notary[0].file_hash}</span></div>
-                             <div className="flex justify-between"><span className="text-[9px] text-slate-500 font-bold">Tx Signature</span><span className="text-[10px] font-mono text-slate-300 truncate max-w-[200px]" title={doc.venturex_document_notary[0].chain_tx_hash}>{doc.venturex_document_notary[0].chain_tx_hash}</span></div>
+                             <div className="flex justify-between"><span className="text-xs text-slate-500 font-bold">Block</span><span className="text-xs font-mono text-slate-300">#{doc.venturex_document_notary[0].block_number}</span></div>
+                             <div className="flex justify-between"><span className="text-xs text-slate-500 font-bold">File Hash</span><span className="text-xs font-mono text-slate-300 truncate max-w-[200px]" title={doc.venturex_document_notary[0].file_hash}>{doc.venturex_document_notary[0].file_hash}</span></div>
+                             <div className="flex justify-between"><span className="text-xs text-slate-500 font-bold">Tx Signature</span><span className="text-xs font-mono text-slate-300 truncate max-w-[200px]" title={doc.venturex_document_notary[0].chain_tx_hash}>{doc.venturex_document_notary[0].chain_tx_hash}</span></div>
                            </div>
                          ) : (
                            <p className="text-xs text-slate-400 italic">Notarization pending confirmation...</p>
@@ -896,7 +896,7 @@ export default function VentureExchange({ session, balances, profile }) {
           <div className="space-y-8 animate-in fade-in">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">Venture Network</h2>
+                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Venture Network</h2>
                 <p className="text-sm font-medium text-slate-500 mt-1">Connect, analyze, and execute smart contracts.</p>
               </div>
             </div>
@@ -904,41 +904,41 @@ export default function VentureExchange({ session, balances, profile }) {
             {myInvestor && matches.length > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {matches.map(({ comp, score }) => comp && (
-                  <div key={comp.id} className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all group">
+                  <div key={comp.id} className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all group">
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg"><Rocket size={24}/></div>
                         <div>
-                          <h3 className="font-black text-2xl text-slate-800 tracking-tight">{comp.legal_name}</h3>
-                          <p className="text-xs font-black uppercase tracking-widest text-slate-400">{comp.sector} · {comp.country}</p>
+                          <h3 className="font-bold text-2xl text-slate-800 tracking-tight">{comp.legal_name}</h3>
+                          <p className="text-xs font-semibold text-slate-500">{comp.sector} · {comp.country}</p>
                         </div>
                       </div>
                       <div className="text-center flex flex-col items-end">
                         <div className="flex gap-2 mb-2">
-                           <button onClick={() => toggleFollow(comp.user_id)} className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-colors ${followingMap[comp.user_id] ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
+                           <button onClick={() => toggleFollow(comp.user_id)} className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors ${followingMap[comp.user_id] ? 'bg-blue-600 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'}`}>
                              {followingMap[comp.user_id] ? 'Following' : 'Follow'}
                            </button>
                         </div>
-                        <div className={`text-2xl font-black ${score >= 75 ? 'text-emerald-500' : 'text-amber-500'}`}>{score}%</div>
-                        <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Match</p>
+                        <div className={`text-2xl font-bold ${score >= 75 ? 'text-emerald-500' : 'text-amber-500'}`}>{score}%</div>
+                        <p className="text-xs font-semibold text-slate-500">Match</p>
                       </div>
                     </div>
                     
                     <p className="text-sm text-slate-600 font-medium mb-6 line-clamp-2">"{comp.tagline}"</p>
 
                     <div className="grid grid-cols-3 gap-3 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      <div><p className="text-[10px] font-black uppercase text-slate-400">Revenue</p><p className="text-lg font-black text-slate-800">{fmtK(comp.monthly_revenue)}/mo</p></div>
-                      <div><p className="text-[10px] font-black uppercase text-slate-400">Raising</p><p className="text-lg font-black text-blue-600">{fmtK(comp.funding_goal)}</p></div>
-                      <div><p className="text-[10px] font-black uppercase text-slate-400">Valuation</p><p className="text-lg font-black text-slate-800">{fmtK(comp.valuation)}</p></div>
+                      <div><p className="text-xs font-semibold text-slate-500">Revenue</p><p className="text-lg font-bold text-slate-800">{fmtK(comp.monthly_revenue)}/mo</p></div>
+                      <div><p className="text-xs font-semibold text-slate-500">Raising</p><p className="text-lg font-bold text-blue-600">{fmtK(comp.funding_goal)}</p></div>
+                      <div><p className="text-xs font-semibold text-slate-500">Valuation</p><p className="text-lg font-bold text-slate-800">{fmtK(comp.valuation)}</p></div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-6">
-                      {(comp.capital_solutions_sought||[]).map(s => <span key={s} className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[9px] font-black uppercase rounded-lg border border-indigo-100">{s}</span>)}
-                      {comp.mentorship_needed && <span className="px-2 py-1 bg-fuchsia-50 text-fuchsia-600 text-[9px] font-black uppercase rounded-lg border border-fuchsia-100 flex items-center gap-1"><BrainCircuit size={10}/> Mentorship</span>}
+                      {(comp.capital_solutions_sought||[]).map(s => <span key={s} className="px-2 py-1 bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-lg border border-indigo-100">{s}</span>)}
+                      {comp.mentorship_needed && <span className="px-2 py-1 bg-fuchsia-50 text-fuchsia-600 text-xs font-semibold rounded-lg border border-fuchsia-100 flex items-center gap-1"><BrainCircuit size={10}/> Mentorship</span>}
                     </div>
 
                     <button onClick={()=>{ setSelectedCompany(comp); setDealForm({ ...dealForm, amount: comp.funding_goal, equity_percentage: comp.equity_offered, valuation: comp.valuation, deal_type: comp.capital_solutions_sought?.[0] || 'Equity' }); }}
-                      className="w-full py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                      className="ui-btn ui-btn-primary">
                       Enter Deal Room <ArrowRight size={14}/>
                     </button>
                   </div>
@@ -951,13 +951,13 @@ export default function VentureExchange({ session, balances, profile }) {
         {/* ═════════ DEAL ROOM MODAL (SMART CONTRACT GENERATION) ═════════ */}
         {selectedCompany && (
           <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-[3rem] w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-3xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
               <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 text-blue-600 rounded-xl"><Database size={20}/></div>
                   <div>
-                    <h3 className="font-black text-xl text-slate-800 tracking-tight">Interactive Deal Room</h3>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{selectedCompany.legal_name} · Real-Time Assessment</p>
+                    <h3 className="font-bold text-xl text-slate-800 tracking-tight">Interactive Deal Room</h3>
+                    <p className="text-xs font-semibold text-slate-500">{selectedCompany.legal_name} · Real-Time Assessment</p>
                   </div>
                 </div>
                 <button onClick={()=>setSelectedCompany(null)} className="p-3 bg-white rounded-full text-slate-400 hover:text-slate-800 shadow-sm border border-slate-200"><XCircle size={20}/></button>
@@ -966,19 +966,19 @@ export default function VentureExchange({ session, balances, profile }) {
               <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 custom-scrollbar">
                 {/* Left: Deep Data */}
                 <div className="space-y-6">
-                  <div className="bg-slate-900 text-white p-6 rounded-3xl relative overflow-hidden">
+                  <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-3xl relative overflow-hidden">
                     <Activity className="absolute -right-4 -bottom-4 text-slate-800 opacity-50" size={100}/>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-4">Verified Telemetry</h4>
+                    <h4 className="text-xs font-semibold text-blue-400 mb-4">Verified Telemetry</h4>
                     <div className="grid grid-cols-2 gap-4 relative z-10">
-                       <div><p className="text-[10px] uppercase text-slate-400 font-bold">Active Users</p><p className="text-2xl font-black">{selectedCompany.active_users?.toLocaleString()}</p></div>
-                       <div><p className="text-[10px] uppercase text-slate-400 font-bold">Monthly Rev</p><p className="text-2xl font-black">{fmtK(selectedCompany.monthly_revenue)}</p></div>
-                       <div><p className="text-[10px] uppercase text-slate-400 font-bold">LTV/CAC</p><p className="text-2xl font-black">{selectedCompany.cac > 0 ? (selectedCompany.ltv/selectedCompany.cac).toFixed(1) : 'N/A'}x</p></div>
-                       <div><p className="text-[10px] uppercase text-slate-400 font-bold">Runway</p><p className="text-2xl font-black">{selectedCompany.runway_months?.toFixed(1)} mo</p></div>
+                       <div><p className="text-xs text-slate-500 font-bold">Active Users</p><p className="text-2xl font-bold">{selectedCompany.active_users?.toLocaleString()}</p></div>
+                       <div><p className="text-xs text-slate-500 font-bold">Monthly Rev</p><p className="text-2xl font-bold">{fmtK(selectedCompany.monthly_revenue)}</p></div>
+                       <div><p className="text-xs text-slate-500 font-bold">LTV/CAC</p><p className="text-2xl font-bold">{selectedCompany.cac > 0 ? (selectedCompany.ltv/selectedCompany.cac).toFixed(1) : 'N/A'}x</p></div>
+                       <div><p className="text-xs text-slate-500 font-bold">Runway</p><p className="text-2xl font-bold">{selectedCompany.runway_months?.toFixed(1)} mo</p></div>
                     </div>
                   </div>
 
                   <div className="border border-slate-200 p-6 rounded-3xl">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-800 mb-4 flex items-center gap-2"><Key size={14}/> IP & Assets</h4>
+                    <h4 className="text-xs font-semibold text-slate-800 mb-4 flex items-center gap-2"><Key size={14}/> IP & Assets</h4>
                     {selectedCompany.patents_ip?.length > 0 ? (
                       <ul className="space-y-2">
                         {selectedCompany.patents_ip.map((p,i) => <li key={i} className="text-sm font-medium text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{p}</li>)}
@@ -988,9 +988,9 @@ export default function VentureExchange({ session, balances, profile }) {
                   
                   {selectedCompany.mentorship_needed && (
                     <div className="bg-fuchsia-50 border border-fuchsia-100 p-6 rounded-3xl">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-fuchsia-800 mb-2 flex items-center gap-2"><BrainCircuit size={14}/> Mentorship Requested</h4>
+                      <h4 className="text-xs font-semibold text-fuchsia-800 mb-2 flex items-center gap-2"><BrainCircuit size={14}/> Mentorship Requested</h4>
                       <div className="flex flex-wrap gap-2">
-                        {(selectedCompany.mentorship_areas||[]).map(a => <span key={a} className="px-2 py-1 bg-white text-fuchsia-600 text-[9px] font-black uppercase rounded-lg shadow-sm border border-fuchsia-100">{a}</span>)}
+                        {(selectedCompany.mentorship_areas||[]).map(a => <span key={a} className="px-2 py-1 bg-white text-fuchsia-600 text-xs font-semibold rounded-lg shadow-sm border border-fuchsia-100">{a}</span>)}
                       </div>
                     </div>
                   )}
@@ -999,7 +999,7 @@ export default function VentureExchange({ session, balances, profile }) {
                 {/* Right: Smart Contract Config */}
                 <div className="space-y-6">
                    <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-3xl">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-800 mb-4 flex items-center gap-2"><FileText size={14}/> Configure Smart Contract</h4>
+                      <h4 className="text-xs font-semibold text-blue-800 mb-4 flex items-center gap-2"><FileText size={14}/> Configure Smart Contract</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <Field label="Structure"><select className={sel} value={dealForm.deal_type} onChange={e=>setDealForm(p=>({...p,deal_type:e.target.value}))}>{CAPITAL_TYPES.map(c=><option key={c}>{c}</option>)}</select></Field>
                         <Field label="Valuation ($)"><input type="number" className={inp} value={dealForm.valuation} onChange={e=>setDealForm(p=>({...p,valuation:+e.target.value}))}/></Field>
@@ -1013,7 +1013,7 @@ export default function VentureExchange({ session, balances, profile }) {
                    </div>
 
                    <div className="border border-slate-200 p-6 rounded-3xl bg-slate-50">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-800 mb-4">Fund Release Milestones</h4>
+                      <h4 className="text-xs font-semibold text-slate-800 mb-4">Fund Release Milestones</h4>
                       {milestoneForm.map((m, i) => (
                         <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200 space-y-3 relative mb-3 shadow-sm">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1023,13 +1023,13 @@ export default function VentureExchange({ session, balances, profile }) {
                           {milestoneForm.length > 1 && <button className="absolute top-2 right-2 text-red-400 hover:text-red-600" onClick={()=>setMilestoneForm(milestoneForm.filter((_,j)=>j!==i))}><XCircle size={16}/></button>}
                         </div>
                       ))}
-                      <button onClick={()=>setMilestoneForm([...milestoneForm,{title:'',description:'',deadline:'',success_metric:'',verification_method:'',fund_amount:0}])} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline">+ Add Milestone Tranch</button>
+                      <button onClick={()=>setMilestoneForm([...milestoneForm,{title:'',description:'',deadline:'',success_metric:'',verification_method:'',fund_amount:0}])} className="text-sm font-semibold text-blue-600 hover:underline">+ Add Milestone Tranch</button>
                    </div>
                 </div>
               </div>
 
               <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-4">
-                <button onClick={()=>proposeDeal(selectedCompany)} disabled={isSaving} className="w-full md:w-auto px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-blue-600 shadow-xl disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
+                <button onClick={()=>proposeDeal(selectedCompany)} disabled={isSaving} className="ui-btn ui-btn-primary md:w-auto">
                   {isSaving ? <Loader2 size={16} className="animate-spin"/> : <><ShieldCheck size={16}/> Deploy Smart Contract</>}
                 </button>
               </div>
@@ -1040,25 +1040,25 @@ export default function VentureExchange({ session, balances, profile }) {
         {/* ═════════ ACTIVE DEALS & CONTRACTS ═════════ */}
         {tab === 'DEALS' && (
           <div className="space-y-6 animate-in fade-in">
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight">Active Contracts</h2>
+            <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Active Contracts</h2>
             {deals.map(deal => {
               const isFounder = deal.company_user_id === session?.user?.id;
               const progress = deal.total_milestones > 0 ? (deal.completed_milestones / deal.total_milestones) * 100 : 0;
               return (
-                <div key={deal.id} className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all">
+                <div key={deal.id} className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 pb-6">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-black bg-slate-900 text-white px-2 py-1 rounded-lg tracking-widest uppercase flex items-center gap-1"><Network size={10}/> SC: {deal.smart_contract_address || 'Pending'}</span>
-                        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border ${deal.status==='active'?'bg-emerald-50 text-emerald-700 border-emerald-200': deal.status==='proposed'?'bg-amber-50 text-amber-700 border-amber-200': 'bg-slate-50 text-slate-500 border-slate-200'}`}>{deal.status}</span>
+                        <span className="text-xs font-semibold bg-slate-900 text-white px-2 py-1 rounded-lg flex items-center gap-1"><Network size={10}/> SC: {deal.smart_contract_address || 'Pending'}</span>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-lg border ${deal.status==='active'?'bg-emerald-50 text-emerald-700 border-emerald-200': deal.status==='proposed'?'bg-amber-50 text-amber-700 border-amber-200': 'bg-slate-50 text-slate-500 border-slate-200'}`}>{deal.status}</span>
                       </div>
-                      <p className="font-black text-2xl text-slate-800 tracking-tight">{fmtK(deal.amount)} <span className="text-lg text-slate-400 font-medium">via {deal.deal_type}</span></p>
+                      <p className="font-bold text-2xl text-slate-800 tracking-tight">{fmtK(deal.amount)} <span className="text-lg text-slate-400 font-medium">via {deal.deal_type}</span></p>
                     </div>
-                    <button onClick={()=>openDeal(deal)} className="px-6 py-3 bg-blue-50 text-blue-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-colors border border-blue-100">Manage Contract</button>
+                    <button onClick={()=>openDeal(deal)} className="px-6 py-3 bg-blue-50 text-blue-700 rounded-xl font-semibold text-sm hover:bg-blue-600 hover:text-white transition-colors border border-blue-100">Manage Contract</button>
                   </div>
 
                   <div className="mb-4">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                    <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
                       <span>Fund Release Progress</span>
                       <span className="text-slate-800">{fmtK(deal.funds_released)} / {fmtK(deal.amount)}</span>
                     </div>
@@ -1069,18 +1069,18 @@ export default function VentureExchange({ session, balances, profile }) {
 
                   {deal.status === 'proposed' && isFounder && (
                     <div className="flex gap-3 mt-6 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-                      <button onClick={()=>respondDeal(deal.id,'accept')} className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 shadow-sm">Sign & Accept</button>
-                      <button onClick={()=>respondDeal(deal.id,'reject')} className="px-6 py-3 bg-white text-red-600 border border-red-200 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-50">Decline</button>
+                      <button onClick={()=>respondDeal(deal.id,'accept')} className="ui-btn ui-btn-primary flex-1">Sign & Accept</button>
+                      <button onClick={()=>respondDeal(deal.id,'reject')} className="px-6 py-3 bg-white text-red-600 border border-red-200 rounded-xl font-semibold text-sm hover:bg-red-50">Decline</button>
                     </div>
                   )}
 
                   {deal.status === 'accepted' && !isFounder && (
-                    <div className="mt-6 p-6 bg-slate-900 rounded-3xl text-white">
+                    <div className="mt-6 p-6 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl text-white">
                       <div className="flex items-center gap-3 mb-4">
                         <Lock className="text-amber-400" size={20}/>
-                        <div><p className="font-black text-sm uppercase tracking-widest">Fund Escrow to Activate</p><p className="text-xs text-slate-400 font-medium">Smart contract requires initial liquidity.</p></div>
+                        <div><p className="font-semibold text-sm">Fund Escrow to Activate</p><p className="text-xs text-slate-400 font-medium">Smart contract requires initial liquidity.</p></div>
                       </div>
-                      <button onClick={()=>fundEscrow(deal.id, deal.amount)} disabled={isFunding || myBalance < deal.amount} className="w-full py-4 bg-amber-500 text-amber-950 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-400 disabled:opacity-50 transition-colors">
+                      <button onClick={()=>fundEscrow(deal.id, deal.amount)} disabled={isFunding || myBalance < deal.amount} className="w-full py-4 bg-amber-500 text-amber-950 rounded-xl font-semibold text-xs hover:bg-amber-400 disabled:opacity-50 transition-colors">
                         {isFunding ? <Loader2 className="animate-spin mx-auto" size={16}/> : `Lock ${fmtK(deal.amount)} in Escrow`}
                       </button>
                     </div>
@@ -1096,29 +1096,29 @@ export default function VentureExchange({ session, balances, profile }) {
           <div className="space-y-6 animate-in fade-in">
              <div className="flex items-center gap-4 mb-4">
                 <button onClick={()=>{setTab('DEALS'); setLiveMetrics({});}} className="p-2 bg-white border border-slate-200 rounded-full text-slate-500 hover:text-slate-800 shadow-sm"><ArrowRight size={16} className="rotate-180"/></button>
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">Smart Contract Hub</h2>
+                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Smart Contract Hub</h2>
              </div>
 
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                   <div className="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-6 flex items-center gap-2"><Network size={16} className="text-blue-600"/> Automated Milestones</h3>
+                   <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
+                      <h3 className="text-sm font-semibold text-slate-800 mb-6 flex items-center gap-2"><Network size={16} className="text-blue-600"/> Automated Milestones</h3>
                       <div className="space-y-4">
                         {dealMilestones.map((m, i) => (
                           <div key={m.id} className={`p-5 rounded-2xl border ${m.is_verified ? 'bg-emerald-50 border-emerald-200' : m.is_completed ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100'}`}>
                             <div className="flex justify-between items-start">
                               <div>
-                                <h4 className="font-black text-slate-800">{i+1}. {m.title}</h4>
+                                <h4 className="font-bold text-slate-800">{i+1}. {m.title}</h4>
                                 <p className="text-xs text-slate-500 font-medium mt-1">Tranch: {fmtK(m.fund_amount)}</p>
                               </div>
-                              <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${m.is_verified ? 'bg-emerald-200 text-emerald-800' : m.is_completed ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'}`}>
+                              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${m.is_verified ? 'bg-emerald-200 text-emerald-800' : m.is_completed ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'}`}>
                                 {m.is_verified ? 'Funds Released' : m.is_completed ? 'Awaiting Verification' : 'Pending'}
                               </span>
                             </div>
                             
                             {/* Investor Action */}
                             {!m.is_verified && m.is_completed && selectedDeal.investor_user_id === session?.user?.id && (
-                               <button onClick={()=>verifyMilestone(m.id)} className="mt-4 w-full py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 shadow-sm flex items-center justify-center gap-2"><Unlock size={14}/> Authorize Release</button>
+                               <button onClick={()=>verifyMilestone(m.id)} className="ui-btn ui-btn-primary mt-4"><Unlock size={14}/> Authorize Release</button>
                             )}
                           </div>
                         ))}
@@ -1129,24 +1129,24 @@ export default function VentureExchange({ session, balances, profile }) {
                 <div className="space-y-6">
                    {/* Real-time metrics panel if enabled */}
                    {selectedDeal.real_time_data_access && selectedDeal.investor_user_id === session?.user?.id && (
-                     <div className="bg-slate-900 text-white border border-slate-800 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+                     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white border p-8 rounded-3xl shadow-sm relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[60px] opacity-20 pointer-events-none"></div>
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-6 flex items-center gap-2"><Activity size={14}/> Live Telemetry</h3>
+                        <h3 className="text-xs font-semibold text-blue-400 mb-6 flex items-center gap-2"><Activity size={14}/> Live Telemetry</h3>
                         <div className="space-y-6 relative z-10">
-                           <div><p className="text-[10px] uppercase text-slate-400 font-bold mb-1">API Requests / min</p><p className="text-3xl font-black font-mono">{liveMetrics.api_calls?.toLocaleString() || '---'}</p></div>
-                           <div><p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Active Sessions</p><p className="text-3xl font-black font-mono">{liveMetrics.active_sessions?.toLocaleString() || '---'}</p></div>
-                           <div><p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Transaction Vol.</p><p className="text-3xl font-black font-mono text-emerald-400">{liveMetrics.tx_volume ? fmtK(liveMetrics.tx_volume) : '---'}</p></div>
+                           <div><p className="text-xs text-slate-500 font-bold mb-1">API Requests / min</p><p className="text-3xl font-bold font-mono">{liveMetrics.api_calls?.toLocaleString() || '---'}</p></div>
+                           <div><p className="text-xs text-slate-500 font-bold mb-1">Active Sessions</p><p className="text-3xl font-bold font-mono">{liveMetrics.active_sessions?.toLocaleString() || '---'}</p></div>
+                           <div><p className="text-xs text-slate-500 font-bold mb-1">Transaction Vol.</p><p className="text-3xl font-bold font-mono text-emerald-400">{liveMetrics.tx_volume ? fmtK(liveMetrics.tx_volume) : '---'}</p></div>
                         </div>
-                        <div className="mt-6 pt-4 border-t border-slate-800 text-[8px] text-slate-500 uppercase font-black text-center tracking-widest">Connected via Secure Oracle</div>
+                        <div className="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-500 font-semibold text-center">Connected via Secure Oracle</div>
                      </div>
                    )}
 
-                   <div className="bg-white border border-slate-200 p-6 rounded-[2.5rem] shadow-sm">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Contract Details</h3>
+                   <div className="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
+                      <h3 className="text-xs font-semibold text-slate-500 mb-4">Contract Details</h3>
                       <div className="space-y-3 text-sm">
-                         <div className="flex justify-between"><span className="text-slate-500 font-bold">Address</span><span className="font-mono text-[10px] font-black text-slate-800">{selectedDeal.smart_contract_address}</span></div>
-                         <div className="flex justify-between"><span className="text-slate-500 font-bold">Type</span><span className="font-black text-slate-800">{selectedDeal.deal_type}</span></div>
-                         <div className="flex justify-between"><span className="text-slate-500 font-bold">Valuation</span><span className="font-black text-slate-800">{fmtK(selectedDeal.valuation)}</span></div>
+                         <div className="flex justify-between"><span className="text-slate-500 font-bold">Address</span><span className="font-mono text-xs font-bold text-slate-800">{selectedDeal.smart_contract_address}</span></div>
+                         <div className="flex justify-between"><span className="text-slate-500 font-bold">Type</span><span className="font-bold text-slate-800">{selectedDeal.deal_type}</span></div>
+                         <div className="flex justify-between"><span className="text-slate-500 font-bold">Valuation</span><span className="font-bold text-slate-800">{fmtK(selectedDeal.valuation)}</span></div>
                       </div>
                    </div>
                 </div>
@@ -1158,7 +1158,7 @@ export default function VentureExchange({ session, balances, profile }) {
         {tab === 'CFO' && (
           <div className="space-y-6 animate-in fade-in max-w-4xl mx-auto">
             {/* Header card */}
-            <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 border border-slate-800 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-3xl p-8 border relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-[120px] opacity-10 pointer-events-none" />
               <div className="relative z-10">
                 <div className="flex items-center gap-4 mb-3">
@@ -1166,11 +1166,11 @@ export default function VentureExchange({ session, balances, profile }) {
                     <BrainCircuit size={28} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black tracking-tight">Pascaline CFO</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">Pascaline CFO</h2>
                     <p className="text-sm text-slate-400 font-medium">Your AI Chief Financial Officer</p>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-300">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-full text-xs font-semibold text-blue-300">
                   <Zap size={10} /> Powered by Pascaline Intelligence
                 </span>
               </div>
@@ -1188,7 +1188,7 @@ export default function VentureExchange({ session, balances, profile }) {
                 <button
                   key={chip}
                   onClick={() => setCfoInput(chip)}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-600 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-all shadow-sm"
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[11px] font-bold text-slate-600 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-all shadow-sm"
                 >
                   {chip}
                 </button>
@@ -1196,7 +1196,7 @@ export default function VentureExchange({ session, balances, profile }) {
             </div>
 
             {/* Chat area */}
-            <div className="bg-slate-900 border border-slate-800 rounded-[2.5rem] overflow-hidden flex flex-col" style={{ minHeight: '520px' }}>
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col" style={{ minHeight: '520px' }}>
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ maxHeight: '440px' }}>
                 {cfoMessages.map((msg, i) => (
@@ -1206,7 +1206,7 @@ export default function VentureExchange({ session, balances, profile }) {
                         <BrainCircuit size={14} className="text-white" />
                       </div>
                       <div className="bg-slate-800 border-l-4 border-blue-500 rounded-2xl px-5 py-4 max-w-[85%]">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1.5">Pascaline CFO</p>
+                        <p className="text-xs font-semibold text-blue-400 mb-1.5">Pascaline CFO</p>
                         <p className="text-sm text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       </div>
                     </div>
@@ -1234,7 +1234,7 @@ export default function VentureExchange({ session, balances, profile }) {
               <div className="p-4 border-t border-slate-800 flex gap-3">
                 <input
                   type="text"
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-bold placeholder:text-slate-500 outline-none focus:border-blue-500 transition-colors"
+                  className="ui-input flex-1"
                   placeholder="Ask your CFO anything about your financials..."
                   value={cfoInput}
                   onChange={e => setCfoInput(e.target.value)}
@@ -1244,7 +1244,7 @@ export default function VentureExchange({ session, balances, profile }) {
                 <button
                   onClick={sendCfoMessage}
                   disabled={cfoLoading || !cfoInput.trim()}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] uppercase tracking-widest rounded-xl disabled:opacity-40 transition-colors flex items-center gap-2"
+                  className="ui-btn ui-btn-primary w-auto"
                 >
                   {cfoLoading ? <Loader2 size={14} className="animate-spin" /> : <><Zap size={14}/> Send</>}
                 </button>
@@ -1253,8 +1253,8 @@ export default function VentureExchange({ session, balances, profile }) {
 
             {/* Company context card (shows what the CFO knows) */}
             {myCompany && (
-              <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2"><Database size={12}/> CFO Context — Your Company Data</p>
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <p className="text-xs font-semibold text-slate-500 mb-4 flex items-center gap-2"><Database size={12}/> CFO Context — Your Company Data</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
                     { label: 'Monthly Revenue', value: fmtK(myCompany.monthly_revenue) },
@@ -1263,8 +1263,8 @@ export default function VentureExchange({ session, balances, profile }) {
                     { label: 'Stage', value: myCompany.current_round || 'pre-seed' },
                   ].map(({ label, value }) => (
                     <div key={label} className="bg-slate-50 rounded-2xl p-4 text-center">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-                      <p className="font-black text-slate-800 text-sm">{value}</p>
+                      <p className="text-xs font-semibold text-slate-500 mb-1">{label}</p>
+                      <p className="font-bold text-slate-800 text-sm">{value}</p>
                     </div>
                   ))}
                 </div>

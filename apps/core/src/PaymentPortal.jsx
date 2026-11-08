@@ -40,7 +40,7 @@ const CheckoutForm = ({ amount, receiverName, onBack, context }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full animate-in fade-in slide-in-from-right-4 duration-300 mt-4">
-      <button type="button" onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 flex items-center gap-2 mb-2 transition-colors">
+      <button type="button" onClick={onBack} className="text-sm font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-2 mb-2 transition-colors">
         <ArrowLeft size={14}/> Cancel Payment
       </button>
       
@@ -56,7 +56,7 @@ const CheckoutForm = ({ amount, receiverName, onBack, context }) => {
       
       <button 
         disabled={isProcessing || !stripe || !elements} 
-        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black text-sm uppercase tracking-widest p-5 rounded-2xl shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        className="ui-btn ui-btn-primary"
       >
         {isProcessing ? <Loader2 className="animate-spin" size={18} /> : `AUTHORIZE $${amount} FOR ${context ? 'TICKET' : receiverName.toUpperCase()}`}
       </button>
@@ -332,26 +332,26 @@ export default function PaymentPortal({ session }) {
     const selfLink = `${APP_URL}/pay?to=${selfProfile?.id}`;
     return (
       <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4 animate-in fade-in">
-        <div className="w-full max-w-md bg-white border border-slate-200 rounded-[3rem] shadow-2xl p-8 text-center">
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-8 text-center">
           <div className="w-24 h-24 rounded-full bg-slate-100 shadow-inner border-4 border-white mx-auto mb-4 flex items-center justify-center overflow-hidden">
             {selfProfile?.avatar_url ? <img src={selfProfile.avatar_url} className="w-full h-full object-cover" alt="You" /> : <User size={40} className="text-slate-300" />}
           </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-1">{selfProfile?.full_name}</h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-6">{selfProfile?.active_tier || 'Verified'} · Your Pay Me Link</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-1">{selfProfile?.full_name}</h2>
+          <p className="text-xs font-semibold text-blue-600 mb-6">{selfProfile?.active_tier || 'Verified'} · Your Pay Me Link</p>
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 text-left">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Your Payment Link</p>
+            <p className="text-xs font-semibold text-slate-500 mb-2">Your Payment Link</p>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-700 truncate flex-1">{selfLink}</span>
               <button
                 onClick={() => { navigator.clipboard.writeText(selfLink); setSelfCopied(true); setTimeout(() => setSelfCopied(false), 2500); }}
-                className="shrink-0 bg-blue-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-blue-500 transition-colors"
+                className="shrink-0 bg-blue-600 text-white px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-1 hover:bg-blue-500 transition-colors"
               >
                 {selfCopied ? <><CheckCircle2 size={12}/> Copied!</> : <><CreditCard size={12}/> Copy</>}
               </button>
             </div>
           </div>
           <p className="text-xs text-slate-400 font-medium mb-6">Share this link so others can pay you instantly. You cannot send money to yourself.</p>
-          <button onClick={() => window.location.href = '/'} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-colors">
+          <button onClick={() => window.location.href = '/'} className="ui-btn ui-btn-primary">
             Back to Dashboard
           </button>
         </div>
@@ -362,10 +362,10 @@ export default function PaymentPortal({ session }) {
   if (error) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 p-6 text-center animate-in fade-in">
-        <div className="w-20 h-20 bg-red-100 text-red-500 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm"><ShieldCheck size={32}/></div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2">Invalid or Expired Link</h2>
+        <div className="w-20 h-20 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm"><ShieldCheck size={32}/></div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Invalid or Expired Link</h2>
         <p className="text-sm text-slate-500 max-w-sm">{error}</p>
-        <button onClick={() => window.location.href = '/'} className="mt-8 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Return Home</button>
+        <button onClick={() => window.location.href = '/'} className="ui-btn ui-btn-primary mt-8 w-auto">Return Home</button>
       </div>
     );
   }
@@ -377,12 +377,12 @@ export default function PaymentPortal({ session }) {
         <div className="w-28 h-28 bg-white text-emerald-500 rounded-full flex items-center justify-center mb-8 shadow-xl relative z-10 border-4 border-emerald-100 animate-in zoom-in">
           <CheckCircle2 size={50}/>
         </div>
-        <h2 className="text-4xl font-black text-emerald-950 tracking-tighter mb-2 relative z-10">Payment Sent</h2>
+        <h2 className="text-4xl font-bold text-emerald-950 tracking-tighter mb-2 relative z-10">Payment Sent</h2>
         <p className="text-emerald-800 font-medium mb-10 relative z-10">
           Successfully routed ${amount} to {receiver.full_name}.
           {eventIdContext && <><br/>Your ticket has been minted and sent to your email.</>}
         </p>
-        <button onClick={() => window.location.href = '/'} className="px-10 py-5 bg-emerald-600 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-xl hover:bg-emerald-500 transition-all relative z-10">
+        <button onClick={() => window.location.href = '/'} className="ui-btn ui-btn-primary relative z-10 w-auto">
           Done
         </button>
       </div>
@@ -391,11 +391,11 @@ export default function PaymentPortal({ session }) {
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-[3rem] shadow-2xl p-8 relative overflow-hidden animate-in slide-in-from-bottom-8">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-8 relative overflow-hidden animate-in slide-in-from-bottom-8">
         
         <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-6">
           <button onClick={() => window.location.href = '/'} className="p-2 bg-slate-50 text-slate-400 rounded-full hover:text-slate-800 transition-colors"><ArrowLeft size={20}/></button>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center max-w-[200px] truncate" title={paymentContext}>
+          <span className="text-xs font-semibold text-slate-500 text-center max-w-[200px] truncate" title={paymentContext}>
             {paymentContext || 'Secure Transfer'}
           </span>
           <div className="w-8"></div>
@@ -405,8 +405,8 @@ export default function PaymentPortal({ session }) {
           <div className="w-24 h-24 rounded-full bg-slate-100 shadow-inner border-4 border-white mb-4 flex items-center justify-center overflow-hidden">
             {receiver.avatar_url ? <img src={receiver.avatar_url} className="w-full h-full object-cover" alt="Receiver"/> : <User size={40} className="text-slate-300"/>}
           </div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight text-center">{receiver.full_name}</h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mt-1">{receiver.active_tier || 'Verified'} Tier</p>
+          <h2 className="text-2xl font-bold text-slate-800 tracking-tight text-center">{receiver.full_name}</h2>
+          <p className="text-xs font-semibold text-blue-600 mt-1">{receiver.active_tier || 'Verified'} Tier</p>
         </div>
 
         {/* EXTERNAL USER: STRIPE CHECKOUT ACTIVE */}
@@ -421,26 +421,26 @@ export default function PaymentPortal({ session }) {
           <>
             {session ? (
               <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full mb-6">
-                <button onClick={() => setAsset('AFR')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${asset === 'AFR' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                <button onClick={() => setAsset('AFR')} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1 ${asset === 'AFR' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
                   <Zap size={14}/> AFR 
                 </button>
-                <button onClick={() => setAsset('USD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${asset === 'USD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                <button onClick={() => setAsset('USD')} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${asset === 'USD' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
                   USD Fiat
                 </button>
-                <button onClick={() => setAsset('CARD')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 ${asset === 'CARD' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
+                <button onClick={() => setAsset('CARD')} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1 ${asset === 'CARD' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
                   <CreditCard size={14}/> IFB Card
                 </button>
               </div>
             ) : (
               <div className="text-center mb-6">
-                <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 flex items-center justify-center gap-2 max-w-[200px] mx-auto">
+                <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-100 flex items-center justify-center gap-2 max-w-[200px] mx-auto">
                   <ShieldCheck size={14}/> Secure Guest Checkout
                 </span>
               </div>
             )}
 
             <div className="mb-10 relative">
-              <span className="absolute left-6 top-[28px] -translate-y-1/2 text-2xl font-black text-slate-400">
+              <span className="absolute left-6 top-[28px] -translate-y-1/2 text-2xl font-bold text-slate-400">
                 {asset === 'USD' || asset === 'CARD' || !session ? '$' : '⚡'}
               </span>
               <input 
@@ -449,12 +449,12 @@ export default function PaymentPortal({ session }) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 disabled={isProcessing || isFixedAmount}
-                className={`w-full border-2 rounded-[2rem] py-6 pl-14 pr-6 text-4xl font-black outline-none transition-colors mb-4 ${isFixedAmount ? 'bg-slate-100 border-slate-200 text-slate-500 opacity-90 cursor-not-allowed' : 'bg-slate-50 border-slate-100 text-slate-800 focus:border-blue-500'}`}
+                className={`w-full border-2 rounded-2xl py-6 pl-14 pr-6 text-4xl font-bold outline-none transition-colors mb-4 ${isFixedAmount ? 'bg-slate-100 border-slate-200 text-slate-500 opacity-90 cursor-not-allowed' : 'bg-slate-50 border-slate-100 text-slate-800 focus:border-blue-500'}`}
               />
               
               {/* Fixed Invoice / Ticket Badge */}
               {isFixedAmount && (
-                <span className="absolute right-6 top-[28px] -translate-y-1/2 text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 shadow-sm flex items-center gap-1">
+                <span className="absolute right-6 top-[28px] -translate-y-1/2 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 shadow-sm flex items-center gap-1">
                   {eventIdContext ? <Ticket size={12}/> : <ShieldCheck size={12}/>} 
                   {eventIdContext ? 'Fixed Ticket' : 'Fixed Invoice'}
                 </span>
@@ -462,17 +462,17 @@ export default function PaymentPortal({ session }) {
               
               {asset === 'CARD' && session && (
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                  <input type="text" placeholder="IFB Virtual Card (16 Digits)" value={ifbPan} onChange={e => setIfbPan(e.target.value)} disabled={isProcessing} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-mono text-sm outline-none focus:border-blue-500 transition-colors"/>
+                  <input type="text" placeholder="IFB Virtual Card (16 Digits)" value={ifbPan} onChange={e => setIfbPan(e.target.value)} disabled={isProcessing} className="ui-input font-mono"/>
                   <div className="flex gap-3">
-                      <input type="text" placeholder="MM/YY" value={ifbExpiry} onChange={e => setIfbExpiry(e.target.value)} disabled={isProcessing} className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-mono text-sm outline-none focus:border-blue-500 transition-colors"/>
-                      <input type="text" placeholder="CVV" value={ifbCvv} onChange={e => setIfbCvv(e.target.value)} disabled={isProcessing} className="flex-1 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-mono text-sm outline-none focus:border-blue-500 transition-colors"/>
+                      <input type="text" placeholder="MM/YY" value={ifbExpiry} onChange={e => setIfbExpiry(e.target.value)} disabled={isProcessing} className="ui-input flex-1 font-mono"/>
+                      <input type="text" placeholder="CVV" value={ifbCvv} onChange={e => setIfbCvv(e.target.value)} disabled={isProcessing} className="ui-input flex-1 font-mono"/>
                   </div>
                 </div>
               )}
 
               {session && asset !== 'CARD' && (
                 <div className="text-center mt-3 animate-in fade-in">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <span className="text-xs font-bold text-slate-500">
                     Available: {asset === 'AFR' ? (balances?.afr_balance || 0) : (balances?.liquid_usd || 0)} {asset}
                   </span>
                 </div>
@@ -483,7 +483,7 @@ export default function PaymentPortal({ session }) {
               <button 
                 onClick={handleExecutePayment}
                 disabled={!amount || isProcessing || (asset === 'CARD' && (!ifbPan || !ifbExpiry || !ifbCvv))}
-                className={`w-full py-6 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none ${session ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/30'}`}
+                className={`w-full py-6 text-white rounded-2xl font-semibold text-xs shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:shadow-none ${session ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-900 hover:bg-slate-800'}`}
               >
                 {isProcessing ? <Loader2 size={18} className="animate-spin"/> : (
                   session ? <><Send size={16}/> Authorize Transfer</> : <><CreditCard size={16}/> Proceed to Payment</>
@@ -492,10 +492,10 @@ export default function PaymentPortal({ session }) {
             )}
 
             {executionPlan.isActive && session && (
-              <div className="w-full bg-[#111111] text-slate-200 rounded-[2rem] p-6 shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4">
+              <div className="w-full bg-[#111111] text-slate-200 rounded-2xl p-6 shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4">
                 <div className="flex justify-between items-center mb-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2">Protocol Active</h4>
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_#3b82f6]"></div>
+                  <h4 className="text-xs font-semibold text-white flex items-center gap-2">Protocol Active</h4>
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                 </div>
                 
                 <div className="space-y-4 mb-6">
@@ -510,7 +510,7 @@ export default function PaymentPortal({ session }) {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-slate-800/50">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3">{executionPlan.currentDetail}</p>
+                  <p className="text-xs font-semibold text-slate-500 mb-3">{executionPlan.currentDetail}</p>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
                       <div className="h-full bg-white transition-all duration-500" style={{ width: `${executionPlan.progressPct}%` }}></div>

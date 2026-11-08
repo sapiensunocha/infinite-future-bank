@@ -11,7 +11,7 @@ export default function GlobalToastAlert({ notification }) {
           : 'bg-red-500/10 border-red-500/20 text-red-400'
       }`}>
         <div className={`w-2 h-2 rounded-full animate-pulse ${notification.type === 'success' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
-        <p className="font-black text-sm uppercase tracking-widest">{notification.text}</p>
+        <p className="font-semibold text-sm">{notification.text}</p>
       </div>
     </div>
   );

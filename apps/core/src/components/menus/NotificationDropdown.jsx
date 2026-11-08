@@ -24,23 +24,23 @@ function ProgressReportCard({ notif, onPay, markAsRead }) {
         {/* Title row */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-0.5">Capital Readiness Report</p>
+            <p className="text-xs font-bold text-blue-600 mb-0.5">Capital Readiness Report</p>
             <p className="text-xs font-semibold text-slate-800 leading-tight truncate">{notif.title}</p>
           </div>
-          <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full border shrink-0 ${LEVEL_COLORS[level] || LEVEL_COLORS[3]}`}>Lv.{level}/5</span>
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full border shrink-0 ${LEVEL_COLORS[level] || LEVEL_COLORS[3]}`}>Lv.{level}/5</span>
         </div>
 
         {/* Progress bar */}
         <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-1.5">
           <div className="h-full bg-blue-600 rounded-full" style={{ width: `${pct}%` }}/>
         </div>
-        <p className="text-[10px] text-slate-500 mb-2.5">{pct}% ready · {missing} item{missing !== 1 ? 's' : ''} required</p>
+        <p className="text-xs text-slate-500 mb-2.5">{pct}% ready · {missing} item{missing !== 1 ? 's' : ''} required</p>
 
         {/* Action buttons */}
         <div className="flex gap-2">
           <button
             onClick={() => { setExpanded(e => !e); if (!notif.is_read) markAsRead(notif.id); }}
-            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[10px] uppercase rounded-lg transition-colors"
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg transition-colors"
           >
             {expanded ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
             {expanded ? 'Hide' : 'View Report'}
@@ -48,7 +48,7 @@ function ProgressReportCard({ notif, onPay, markAsRead }) {
           {costMin > 0 && (
             <button
               onClick={() => { onPay(notif); if (!notif.is_read) markAsRead(notif.id); }}
-              className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[10px] uppercase rounded-lg shadow-sm transition-colors"
+              className="ui-btn ui-btn-primary flex-1"
             >
               <Zap size={12}/> Pay & Start
             </button>
@@ -80,7 +80,7 @@ export default function NotificationDropdown({
         <div className="flex items-center justify-between mb-3 px-1">
           <span className="font-bold text-sm text-slate-900">Notifications</span>
           {visibleNotifications.filter(n => !n.is_read).length > 0 && (
-            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{visibleNotifications.filter(n => !n.is_read).length} new</span>
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{visibleNotifications.filter(n => !n.is_read).length} new</span>
           )}
         </div>
         <div className="space-y-2 max-h-[60vh] overflow-y-auto no-scrollbar scroll-container">
@@ -101,23 +101,23 @@ export default function NotificationDropdown({
               <div key={notif.id} className={`p-3.5 rounded-xl border transition-colors ${notif.is_read || notif.read ? 'bg-slate-50 border-slate-100' : 'bg-blue-50/60 border-blue-100'}`}>
                 <p className="text-xs text-slate-800 font-medium leading-relaxed mb-1.5">{notif.message || notif.title}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-slate-400 font-medium">{new Date(notif.created_at).toLocaleDateString()}</span>
+                  <span className="text-xs text-slate-400 font-medium">{new Date(notif.created_at).toLocaleDateString()}</span>
                   {!(notif.is_read || notif.read) && notif.type !== 'payment_request' && notif.type !== 'p2p_withdrawal_request' && (
-                    <button onClick={() => markAsRead(notif.id)} className="text-blue-600 text-[10px] font-bold hover:underline">Mark as read</button>
+                    <button onClick={() => markAsRead(notif.id)} className="text-blue-600 text-xs font-bold hover:underline">Mark as read</button>
                   )}
                 </div>
 
                 {notif.type === 'payment_request' && notif.status === 'pending' && (
                   <div className="flex gap-2 mt-2.5">
-                    <button onClick={() => handleConfirmRequest(notif)} className="flex-1 bg-blue-600 text-white text-[10px] font-bold py-1.5 rounded-lg hover:bg-blue-500 transition-colors">Confirm</button>
-                    <button onClick={() => handleDeclineRequest(notif)} className="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Decline</button>
+                    <button onClick={() => handleConfirmRequest(notif)} className="ui-btn ui-btn-primary flex-1">Confirm</button>
+                    <button onClick={() => handleDeclineRequest(notif)} className="flex-1 bg-slate-100 text-slate-600 text-xs font-bold py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Decline</button>
                   </div>
                 )}
 
                 {notif.type === 'p2p_withdrawal_request' && notif.status === 'pending' && (
                   <div className="flex gap-2 mt-2.5">
-                    <button onClick={() => handleAcceptP2PWithdrawal(notif)} className="flex-1 bg-blue-600 text-white text-[10px] font-bold py-1.5 rounded-lg hover:bg-blue-500 transition-colors">Accept</button>
-                    <button onClick={() => handleDeclineRequest(notif)} className="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Decline</button>
+                    <button onClick={() => handleAcceptP2PWithdrawal(notif)} className="ui-btn ui-btn-primary flex-1">Accept</button>
+                    <button onClick={() => handleDeclineRequest(notif)} className="flex-1 bg-slate-100 text-slate-600 text-xs font-bold py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Decline</button>
                   </div>
                 )}
               </div>

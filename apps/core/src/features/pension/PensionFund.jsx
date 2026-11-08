@@ -143,7 +143,7 @@ export default function PensionFund({ session, balances, fetchAllData }) {
       )}
 
       {/* HERO */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-[2rem] p-8 text-white shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 rounded-2xl p-8 text-white shadow-2xl">
         <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/5 rounded-full" />
         <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white/5 rounded-full" />
         <div className="relative">
@@ -151,23 +151,23 @@ export default function PensionFund({ session, balances, fetchAllData }) {
             <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
               <PiggyBank size={22} className="text-blue-200" />
             </div>
-            <span className="text-blue-200 text-xs font-black uppercase tracking-widest">IFB Pension Fund</span>
+            <span className="text-blue-200 text-xs font-semibold">IFB Pension Fund</span>
           </div>
           {account ? (
             <>
               <p className="text-blue-300 text-xs mt-4 mb-1">Current Balance</p>
-              <p className="text-4xl font-black tracking-tight">{fmt(account.current_balance)}</p>
+              <p className="text-4xl font-bold tracking-tight">{fmt(account.current_balance)}</p>
               <p className="text-blue-300 text-xs mt-3">
                 Projected at retirement ({yearsLeft}y): <span className="text-white font-bold">{fmt(projected)}</span>
               </p>
               <div className="mt-4">
                 <ProgressBar pct={progressPct} color="bg-blue-400" />
-                <p className="text-blue-300 text-[10px] mt-1">{progressPct.toFixed(1)}% of retirement target</p>
+                <p className="text-blue-300 text-xs mt-1">{progressPct.toFixed(1)}% of retirement target</p>
               </div>
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-black mt-4 leading-tight">Your future,<br />secured today.</h2>
+              <h2 className="text-2xl font-bold mt-4 leading-tight">Your future,<br />secured today.</h2>
               <p className="text-blue-300 text-sm mt-2 leading-relaxed">7% projected annual growth. Open your IFB pension in 60 seconds.</p>
             </>
           )}
@@ -176,8 +176,8 @@ export default function PensionFund({ session, balances, fetchAllData }) {
 
       {!account ? (
         /* ── ENROLLMENT ── */
-        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 space-y-6">
-          <h3 className="text-lg font-black text-slate-800">Open Your Pension Account</h3>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 space-y-6">
+          <h3 className="text-lg font-bold text-slate-800">Open Your Pension Account</h3>
 
           <div className="grid grid-cols-2 gap-4">
             {[
@@ -188,30 +188,30 @@ export default function PensionFund({ session, balances, fetchAllData }) {
             ].map(({ icon: Icon, title, sub }) => (
               <div key={title} className="bg-slate-50 rounded-2xl p-4">
                 <Icon size={18} className="text-blue-600 mb-2" />
-                <p className="text-xs font-black text-slate-800">{title}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">{sub}</p>
+                <p className="text-xs font-bold text-slate-800">{title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{sub}</p>
               </div>
             ))}
           </div>
 
           <form onSubmit={handleEnroll} className="space-y-4">
             <div>
-              <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Monthly Contribution ($)</label>
+              <label className="ui-label">Monthly Contribution ($)</label>
               <input
                 type="number" min="10" step="10" required
                 value={enrollForm.contribution_amount}
                 onChange={e => setEnrollForm(p => ({ ...p, contribution_amount: e.target.value }))}
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="ui-input"
                 placeholder="100"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Frequency</label>
+                <label className="ui-label">Frequency</label>
                 <select
                   value={enrollForm.frequency}
                   onChange={e => setEnrollForm(p => ({ ...p, frequency: e.target.value }))}
-                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:border-blue-400 bg-white"
+                  className="ui-select"
                 >
                   <option value="monthly">Monthly</option>
                   <option value="quarterly">Quarterly</option>
@@ -219,22 +219,22 @@ export default function PensionFund({ session, balances, fetchAllData }) {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Retirement Age</label>
+                <label className="ui-label">Retirement Age</label>
                 <input
                   type="number" min="50" max="80" required
                   value={enrollForm.retirement_age}
                   onChange={e => setEnrollForm(p => ({ ...p, retirement_age: e.target.value }))}
-                  className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="ui-input"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Birth Year</label>
+              <label className="ui-label">Birth Year</label>
               <input
                 type="number" min="1950" max={new Date().getFullYear() - 18} required
                 value={enrollForm.birth_year}
                 onChange={e => setEnrollForm(p => ({ ...p, birth_year: e.target.value }))}
-                className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="ui-input"
               />
             </div>
 
@@ -245,15 +245,15 @@ export default function PensionFund({ session, balances, fetchAllData }) {
               return (
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
                   <p className="text-xs text-blue-600 font-medium">At {enrollForm.retirement_age} years old ({yrs} years from now):</p>
-                  <p className="text-2xl font-black text-blue-700 mt-1">{fmt(proj)}</p>
-                  <p className="text-[10px] text-blue-500 mt-1">Based on 7% annual growth, 0.5% management fee</p>
+                  <p className="text-2xl font-bold text-blue-700 mt-1">{fmt(proj)}</p>
+                  <p className="text-xs text-blue-500 mt-1">Based on 7% annual growth, 0.5% management fee</p>
                 </div>
               );
             })()}
 
             <button
               type="submit" disabled={submitting}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-colors disabled:opacity-60"
+              className="ui-btn ui-btn-primary"
             >
               {submitting ? 'Opening Account…' : 'Open Pension Account'}
             </button>
@@ -265,35 +265,35 @@ export default function PensionFund({ session, balances, fetchAllData }) {
           {/* Stats row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Contributed</p>
-              <p className="text-xl font-black text-slate-800">{fmt(account.total_contributed)}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Total Contributed</p>
+              <p className="text-xl font-bold text-slate-800">{fmt(account.total_contributed)}</p>
             </div>
             <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Years to Retire</p>
-              <p className="text-xl font-black text-slate-800">{yearsLeft} <span className="text-sm text-slate-400 font-medium">years</span></p>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Years to Retire</p>
+              <p className="text-xl font-bold text-slate-800">{yearsLeft} <span className="text-sm text-slate-400 font-medium">years</span></p>
             </div>
             <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Monthly Target</p>
-              <p className="text-xl font-black text-slate-800">{fmt(account.contribution_amount)}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Monthly Target</p>
+              <p className="text-xl font-bold text-slate-800">{fmt(account.contribution_amount)}</p>
             </div>
             <div className="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm p-5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Projected Value</p>
-              <p className="text-xl font-black text-emerald-600">{fmt(projected)}</p>
+              <p className="text-xs font-semibold text-slate-500 mb-1">Projected Value</p>
+              <p className="text-xl font-bold text-emerald-600">{fmt(projected)}</p>
             </div>
           </div>
 
           {/* Contribute */}
-          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <Plus size={18} className="text-blue-600" />
-              <h4 className="font-black text-slate-800">Make a Contribution</h4>
+              <h4 className="font-bold text-slate-800">Make a Contribution</h4>
             </div>
             <div className="flex gap-3">
               {[50, 100, 250, 500].map(amt => (
                 <button
                   key={amt}
                   onClick={() => setContribAmount(String(amt))}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-colors border ${
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors border ${
                     contribAmount === String(amt)
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'border-slate-200 text-slate-700 hover:border-blue-300'
@@ -307,11 +307,11 @@ export default function PensionFund({ session, balances, fetchAllData }) {
               type="number" min="1" placeholder="Custom amount"
               value={contribAmount}
               onChange={e => setContribAmount(e.target.value)}
-              className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-800 font-bold focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="ui-input"
             />
             <button
               onClick={handleContribute} disabled={submitting || !contribAmount}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-colors disabled:opacity-50"
+              className="ui-btn ui-btn-primary"
             >
               {submitting ? 'Processing…' : `Contribute ${contribAmount ? fmt(parseFloat(contribAmount)) : ''}`}
             </button>
@@ -319,8 +319,8 @@ export default function PensionFund({ session, balances, fetchAllData }) {
 
           {/* Contribution history */}
           {contributions.length > 0 && (
-            <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
-              <h4 className="font-black text-slate-800 mb-4">Contribution History</h4>
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <h4 className="font-bold text-slate-800 mb-4">Contribution History</h4>
               <div className="space-y-3">
                 {contributions.map(c => (
                   <div key={c.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
@@ -330,10 +330,10 @@ export default function PensionFund({ session, balances, fetchAllData }) {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-800 capitalize">{c.source} contribution</p>
-                        <p className="text-[10px] text-slate-400">{new Date(c.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-slate-400">{new Date(c.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <p className="text-sm font-black text-emerald-600">+{fmt(c.amount)}</p>
+                    <p className="text-sm font-bold text-emerald-600">+{fmt(c.amount)}</p>
                   </div>
                 ))}
               </div>

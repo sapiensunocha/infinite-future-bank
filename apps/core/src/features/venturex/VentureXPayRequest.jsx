@@ -57,8 +57,8 @@ export default function VentureXPayRequest({ notif, session, onClose }) {
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-slate-200 flex items-start justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">IFB Advisory Engagement</p>
-            <h2 className="text-lg font-black text-slate-900 leading-tight">{companyName}</h2>
+            <p className="text-xs font-semibold text-violet-600 mb-1">IFB Advisory Engagement</p>
+            <h2 className="text-lg font-bold text-slate-900 leading-tight">{companyName}</h2>
             <p className="text-xs text-slate-500 mt-0.5">Level {level}/5 · {pct}% capital ready</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500">
@@ -69,26 +69,26 @@ export default function VentureXPayRequest({ notif, session, onClose }) {
         <div className="p-6 space-y-5">
           {/* What this pays for */}
           <div className="bg-slate-50 rounded-2xl p-4 space-y-1.5">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">What this starts</p>
+            <p className="text-xs font-semibold text-slate-500">What this starts</p>
             <p className="text-sm text-slate-800 leading-relaxed">
               IFB will begin working on your outstanding requirements — organizational structuring, documentation, financial alignment, and funding positioning — billed at <span className="text-violet-600 font-bold">$30/hour</span>.
             </p>
-            <p className="text-[10px] text-slate-500">Total estimated: <span className="text-slate-900 font-bold">{fmtUSD(costMin)} – {fmtUSD(costMax)}</span> · You choose your starting amount.</p>
+            <p className="text-xs text-slate-500">Total estimated: <span className="text-slate-900 font-bold">{fmtUSD(costMin)} – {fmtUSD(costMax)}</span> · You choose your starting amount.</p>
           </div>
 
           {/* Presets */}
           <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Choose a starting amount</p>
+            <p className="text-xs font-semibold text-slate-500 mb-2">Choose a starting amount</p>
             <div className="grid grid-cols-3 gap-2">
               {PRESETS.map(p => (
                 <button
                   key={p.label}
                   onClick={() => { setAmount(p.amount); setCustom(''); }}
-                  className={`flex flex-col items-center gap-1 px-2 py-3 rounded-xl border font-bold transition-all ${amount === p.amount && !custom ? 'bg-violet-600 border-violet-500 text-white' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-violet-600'}`}
+                  className={`flex flex-col items-center gap-1 px-2 py-3 rounded-xl border font-bold transition-all ${amount === p.amount && !custom ? 'bg-blue-600 border-violet-500 text-white' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-violet-600'}`}
                 >
-                  <span className="text-sm font-black">{fmtUSD(p.amount)}</span>
-                  <span className="text-[9px] uppercase tracking-wide opacity-70">{p.label}</span>
-                  <span className="text-[8px] opacity-60">{p.desc}</span>
+                  <span className="text-sm font-bold">{fmtUSD(p.amount)}</span>
+                  <span className="text-xs opacity-70">{p.label}</span>
+                  <span className="text-xs opacity-60">{p.desc}</span>
                 </button>
               ))}
             </div>
@@ -96,9 +96,9 @@ export default function VentureXPayRequest({ notif, session, onClose }) {
 
           {/* Custom amount */}
           <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Or enter a custom amount</p>
+            <p className="text-xs font-semibold text-slate-500 mb-1.5">Or enter a custom amount</p>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-black text-sm">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-sm">$</span>
               <input
                 type="number"
                 min="50"
@@ -106,7 +106,7 @@ export default function VentureXPayRequest({ notif, session, onClose }) {
                 placeholder={`50 – ${costMax}`}
                 value={custom}
                 onChange={e => { setCustom(e.target.value); setAmount(0); }}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-violet-500 rounded-xl pl-7 pr-4 py-3 text-slate-900 font-bold text-sm outline-none"
+                className="ui-input pl-7 pr-4"
               />
             </div>
           </div>
@@ -114,12 +114,12 @@ export default function VentureXPayRequest({ notif, session, onClose }) {
           {/* Summary line */}
           <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 flex items-center justify-between">
             <div>
-              <p className="text-[9px] font-black uppercase text-violet-600">Amount to commit</p>
-              <p className="text-xl font-black text-slate-900">{fmtUSD(finalAmount)}</p>
+              <p className="text-xs font-semibold text-violet-600">Amount to commit</p>
+              <p className="text-xl font-bold text-slate-900">{fmtUSD(finalAmount)}</p>
             </div>
             <div className="text-right">
-              <p className="text-[9px] text-slate-500">≈ {Math.round(finalAmount / 30)} hours of IFB support</p>
-              <p className="text-[9px] text-slate-600">Remaining after: {fmtUSD(Math.max(0, costMin - finalAmount))} – {fmtUSD(Math.max(0, costMax - finalAmount))}</p>
+              <p className="text-xs text-slate-500">≈ {Math.round(finalAmount / 30)} hours of IFB support</p>
+              <p className="text-xs text-slate-600">Remaining after: {fmtUSD(Math.max(0, costMin - finalAmount))} – {fmtUSD(Math.max(0, costMax - finalAmount))}</p>
             </div>
           </div>
 
@@ -129,14 +129,14 @@ export default function VentureXPayRequest({ notif, session, onClose }) {
           <button
             onClick={handlePay}
             disabled={loading || finalAmount < 50}
-            className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 text-white font-black text-sm uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-violet-900/40"
+            className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-all shadow-lg"
           >
             {loading ? <Loader2 size={16} className="animate-spin"/> : <Zap size={16}/>}
             {loading ? 'Opening Payment...' : `Pay ${fmtUSD(finalAmount)} & Start`}
             {!loading && <ChevronRight size={16}/>}
           </button>
 
-          <p className="text-center text-[10px] text-slate-600">
+          <p className="text-center text-xs text-slate-600">
             Secure payment via Stripe · You can pay the remainder later as work progresses
           </p>
         </div>

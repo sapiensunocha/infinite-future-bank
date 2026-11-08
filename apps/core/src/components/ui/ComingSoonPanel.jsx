@@ -11,7 +11,7 @@ export default function ComingSoonPanel({ id }) {
       <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center bg-amber-50 text-amber-600">
         <Clock size={26} />
       </div>
-      <p className="text-xs font-semibold uppercase tracking-wide mb-2 text-amber-700">Coming soon</p>
+      <p className="text-xs font-semibold mb-2 text-amber-700">Coming soon</p>
       <h2 className="text-xl font-semibold text-slate-900 mb-2">{entry.title}</h2>
       <p className="text-sm text-slate-600 leading-relaxed">{entry.reason}</p>
       <p className="text-sm text-slate-400 mt-4">We will let you know as soon as it is available.</p>

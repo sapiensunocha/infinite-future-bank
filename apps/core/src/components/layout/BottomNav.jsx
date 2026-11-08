@@ -42,7 +42,7 @@ export default function BottomNav({
             <Icon size={21} strokeWidth={active ? 2.5 : 1.8} />
           </div>
           {badge > 0 && (
-            <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] bg-red-500 text-white rounded-full text-[8px] font-black flex items-center justify-center px-1 border-2 border-white shadow-sm">
+            <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] bg-red-500 text-white rounded-full text-xs font-bold flex items-center justify-center px-1 border-2 border-white shadow-sm">
               {badge > 9 ? '9+' : badge}
             </span>
           )}
@@ -66,7 +66,7 @@ export default function BottomNav({
         <div className="flex flex-col items-center justify-end pb-2 px-3" style={{ marginBottom: 0 }}>
           <button
             onClick={() => setShowTapToPay && setShowTapToPay(true)}
-            className="w-13 h-13 -mt-6 rounded-full bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/20 flex items-center justify-center active:scale-95 transition-transform border-4 border-white"
+            className="w-13 h-13 -mt-6 rounded-full bg-blue-600 hover:bg-blue-500 shadow-md flex items-center justify-center active:scale-95 transition-transform border-4 border-white"
             style={{ marginTop: '-18px' }}
           >
             <CreditCard size={21} className="text-white" />

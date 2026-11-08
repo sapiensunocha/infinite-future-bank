@@ -435,7 +435,7 @@ export default function Dashboard({ session, onSignOut }) {
           {/* Chat FAB */}
           <button
             onClick={() => setActiveModal('ADVISOR')}
-            className="fixed z-[110] bg-blue-700 text-white shadow-2xl rounded-full flex items-center gap-3 hover:-translate-y-1 transition-all active:scale-95 border-2 border-white/20"
+            className="fixed z-[110] bg-blue-700 text-white shadow-2xl rounded-full flex items-center gap-3 transition-all active:scale-95 border-2 border-white/20"
             style={{
               bottom: 'calc(max(env(safe-area-inset-bottom), 6px) + 4.5rem)',
               right: '1.25rem',
@@ -443,7 +443,7 @@ export default function Dashboard({ session, onSignOut }) {
             }}
           >
             <MessageSquare size={22} className="animate-pulse" />
-            <span className="font-black text-[10px] uppercase tracking-widest pr-1 hidden md:block">Your Financial AI</span>
+            <span className="font-semibold text-xs pr-1 hidden md:block">Your Financial AI</span>
           </button>
         </main>
       </div>
@@ -508,35 +508,15 @@ export default function Dashboard({ session, onSignOut }) {
       {/* 💳 DEPOSIT / 💸 WITHDRAWAL overlays */}
       <Suspense fallback={null}>
       {showDepositUI && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-4 sm:p-8">
-           <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
-             <button 
-                onClick={() => setShowDepositUI(false)} 
-                className="mb-8 bg-white text-slate-900 px-10 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:bg-red-50 hover:text-red-600"
-             >
-                <X size={20} /> Close Terminal
-             </button>
-             <div className="w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-               <DepositInterface session={session} onClose={() => setShowDepositUI(false)} onSuccess={fetchAllData} />
-             </div>
-           </div>
-        </div>
+        <DepositInterface session={session} onClose={() => setShowDepositUI(false)} onSuccess={fetchAllData} />
       )}
-      
-      {/* 💸 WITHDRAWAL OVERLAY */}
+
+      {/* WITHDRAW: same bottom sheet (phone) / centred dialog (web) as Send and Receive */}
       {isWithdrawOpen && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-4 sm:p-8">
-           <div className="relative w-full max-w-4xl h-fit max-h-[90vh] flex flex-col items-center">
-             <button
-                onClick={() => setIsWithdrawOpen(false)}
-                className="mb-8 bg-white text-slate-900 px-10 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:bg-red-50 hover:text-red-600"
-             >
-                <X size={20} /> Close Terminal
-             </button>
-             <div className="w-full bg-white rounded-[3.5rem] shadow-2xl overflow-y-auto border border-white/20 max-h-[80vh]">
-               <WithdrawalPage userBalance={balances.liquid_usd} userId={session.user.id} onClose={() => setIsWithdrawOpen(false)} onSuccess={fetchAllData} />
-             </div>
-           </div>
+        <div className="fixed inset-0 z-[500] flex items-end md:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200 md:p-4" onClick={() => setIsWithdrawOpen(false)}>
+          <div className="w-full md:max-w-lg bg-white rounded-t-3xl md:rounded-3xl shadow-2xl max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <WithdrawalPage userBalance={balances.liquid_usd} userId={session.user.id} onClose={() => setIsWithdrawOpen(false)} onSuccess={fetchAllData} />
+          </div>
         </div>
       )}
       </Suspense>
@@ -551,7 +531,7 @@ export default function Dashboard({ session, onSignOut }) {
       {showVault && (
         <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-0 sm:p-8">
           <div className="relative w-full sm:max-w-lg animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
-            <div className="bg-white border border-slate-200 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-sm overflow-y-auto max-h-[92vh] p-6">
+            <div className="bg-white border border-slate-200 rounded-t-3xl sm:rounded-3xl shadow-sm overflow-y-auto max-h-[92vh] p-6">
               <div className="flex justify-end mb-2">
                 <button onClick={() => setShowVault(false)} className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors">
                   <X size={14}/>
@@ -571,10 +551,11 @@ export default function Dashboard({ session, onSignOut }) {
       {showNFC && (
         <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-0 sm:p-8">
           <div className="relative w-full sm:max-w-sm animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
-            <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
-              <div className="flex justify-end mb-2">
-                <button onClick={() => setShowNFC(false)} className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 transition-colors">
-                  <X size={14}/>
+            <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-y-auto max-h-[92vh] p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="ui-sheet-title">Tap &amp; Pay</h3>
+                <button onClick={() => setShowNFC(false)} aria-label="Close" className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors">
+                  <X size={18}/>
                 </button>
               </div>
               <NFCTransfer
@@ -589,7 +570,7 @@ export default function Dashboard({ session, onSignOut }) {
               <div className="mt-6 pt-4 border-t border-slate-800">
                 <button
                   onClick={() => { setShowNFC(false); setShowTapToPay(true); }}
-                  className="w-full py-3 bg-gradient-to-r from-violet-700 to-indigo-700 hover:from-violet-600 hover:to-indigo-600 text-white font-black rounded-2xl text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all">
+                  className="ui-btn ui-btn-primary">
                   <CreditCard size={14}/> Tap a Physical Card to Phone
                 </button>
               </div>
@@ -602,7 +583,7 @@ export default function Dashboard({ session, onSignOut }) {
       {showTapToPay && (
         <div className="fixed inset-0 z-[500] flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300 p-0 sm:p-8">
           <div className="relative w-full sm:max-w-sm animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
-            <div className="bg-slate-900 border border-slate-700/50 rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[92vh] p-6">
+            <div className="bg-slate-900 border border-slate-700/50 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-y-auto max-h-[92vh] p-6">
               <TapToPay
                 balances={balances}
                 onClose={() => setShowTapToPay(false)}

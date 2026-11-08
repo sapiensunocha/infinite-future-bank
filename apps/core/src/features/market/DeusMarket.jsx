@@ -86,7 +86,7 @@ function HomeScreen({ vendors, allProducts, search, setSearch, activeCategory, s
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search products or brands…"
-          className="w-full pl-10 pr-4 py-3.5 bg-slate-100 rounded-2xl text-sm font-medium text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-blue-500/30"
+          className="ui-input pl-10 pr-4 font-medium"
         />
         {search && (
           <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -104,7 +104,7 @@ function HomeScreen({ vendors, allProducts, search, setSearch, activeCategory, s
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all shrink-0 ${active ? 'bg-slate-900 text-white shadow-lg scale-105' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${active ? 'bg-blue-600 text-white shadow-lg scale-105' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
             >
               <Icon size={12} />
               {cat}
@@ -117,8 +117,8 @@ function HomeScreen({ vendors, allProducts, search, setSearch, activeCategory, s
       {!search && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-500">Featured Brands</h2>
-            <span className="text-[10px] text-slate-400 font-semibold">{featured.length} partners</span>
+            <h2 className="text-xs font-semibold text-slate-500">Featured Brands</h2>
+            <span className="text-xs text-slate-400 font-semibold">{featured.length} partners</span>
           </div>
           <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
             {filteredVendors.map(vendor => (
@@ -136,10 +136,10 @@ function HomeScreen({ vendors, allProducts, search, setSearch, activeCategory, s
                       onError={e => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="text-2xl font-black text-white tracking-tight px-4">{vendor.name}</div>
+                    <div className="text-2xl font-bold text-white tracking-tight px-4">{vendor.name}</div>
                   )}
                   <div className="absolute bottom-2.5 left-0 right-0 text-center">
-                    <span className="text-[9px] text-white/50 uppercase tracking-widest">{vendor.country}</span>
+                    <span className="text-xs text-white/50">{vendor.country}</span>
                   </div>
                   {vendor.is_verified && (
                     <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
@@ -149,10 +149,10 @@ function HomeScreen({ vendors, allProducts, search, setSearch, activeCategory, s
                 </div>
                 <div className="bg-white p-3 flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-black text-slate-800">{vendor.category}</div>
+                    <div className="text-xs font-bold text-slate-800">{vendor.category}</div>
                     <div className="flex items-center gap-1 mt-0.5">
                       <Star size={10} className="text-amber-400 fill-amber-400" />
-                      <span className="text-[10px] text-slate-500 font-semibold">{vendor.rating} · {vendor.review_count.toLocaleString()}</span>
+                      <span className="text-xs text-slate-500 font-semibold">{vendor.rating} · {vendor.review_count.toLocaleString()}</span>
                     </div>
                   </div>
                   <ChevronRight size={14} className="text-slate-400 group-hover:text-slate-700 transition-colors" />
@@ -166,10 +166,10 @@ function HomeScreen({ vendors, allProducts, search, setSearch, activeCategory, s
       {/* Products grid */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-500">
+          <h2 className="text-xs font-semibold text-slate-500">
             {search ? `Results for "${search}"` : 'All Products'}
           </h2>
-          <span className="text-[10px] text-slate-400 font-semibold">{filteredProducts.length} items</span>
+          <span className="text-xs text-slate-400 font-semibold">{filteredProducts.length} items</span>
         </div>
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 text-slate-400">
@@ -217,7 +217,7 @@ function VendorScreen({ vendor, products, onBack, onAddToCart, onRemoveFromCart,
               onError={e => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (
-            <h1 className="text-3xl font-black text-white tracking-tight">{vendor.name}</h1>
+            <h1 className="text-3xl font-bold text-white tracking-tight">{vendor.name}</h1>
           )}
           <div className="flex items-center gap-3 mt-1">
             <div className="flex items-center gap-1">
@@ -246,7 +246,7 @@ function VendorScreen({ vendor, products, onBack, onAddToCart, onRemoveFromCart,
           <button
             key={cat}
             onClick={() => setActiveTab(cat)}
-            className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shrink-0 ${activeTab === cat ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all shrink-0 ${activeTab === cat ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
           >
             {cat}
           </button>
@@ -277,23 +277,23 @@ function ProductCard({ product, vendorColor, qty, onAdd, onRemove }) {
       <div className="h-36 relative overflow-hidden bg-slate-100">
         <ProductImage src={product.image_url} name={product.name} color={vendorColor} />
         {product.badge && (
-          <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${BADGE_STYLE[product.badge] || 'bg-slate-800 text-white'}`}>
+          <span className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-semibold ${BADGE_STYLE[product.badge] || 'bg-slate-800 text-white'}`}>
             {product.badge}
           </span>
         )}
       </div>
       <div className="p-3 flex flex-col flex-1">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{product.category}</p>
-        <p className="text-xs font-black text-slate-800 leading-tight line-clamp-2 flex-1">{product.name}</p>
+        <p className="text-xs font-bold text-slate-500 mb-0.5">{product.category}</p>
+        <p className="text-xs font-bold text-slate-800 leading-tight line-clamp-2 flex-1">{product.name}</p>
         <div className="flex items-center justify-between mt-3">
           <div>
-            <p className="text-sm font-black text-slate-900">{fmt(product.price_usd)}</p>
+            <p className="text-sm font-bold text-slate-900">{fmt(product.price_usd)}</p>
             {product.original_price_usd && (
-              <p className="text-[9px] text-slate-400 line-through">{fmt(product.original_price_usd)}</p>
+              <p className="text-xs text-slate-400 line-through">{fmt(product.original_price_usd)}</p>
             )}
           </div>
           {qty === 0 ? (
-            <button onClick={onAdd} className="w-8 h-8 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-blue-600 transition-colors active:scale-90 shadow-sm">
+            <button onClick={onAdd} className="w-8 h-8 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-600 transition-colors active:scale-90 shadow-sm">
               <Plus size={14} />
             </button>
           ) : (
@@ -301,7 +301,7 @@ function ProductCard({ product, vendorColor, qty, onAdd, onRemove }) {
               <button onClick={onRemove} className="w-7 h-7 bg-red-100 text-red-600 rounded-xl flex items-center justify-center hover:bg-red-200 active:scale-90 transition-all">
                 <Minus size={12} />
               </button>
-              <span className="text-xs font-black text-slate-800 w-4 text-center">{qty}</span>
+              <span className="text-xs font-bold text-slate-800 w-4 text-center">{qty}</span>
               <button onClick={onAdd} className="w-7 h-7 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center hover:bg-emerald-200 active:scale-90 transition-all">
                 <Plus size={12} />
               </button>
@@ -325,8 +325,8 @@ function CartScreen({ cart, onBack, onRemove, onAdd, onCheckout, balances, isPla
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <ShoppingCart size={48} className="text-slate-200" />
-        <p className="font-black text-slate-400 uppercase tracking-widest text-xs">Your cart is empty</p>
-        <button onClick={onBack} className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-colors">
+        <p className="font-semibold text-slate-500 text-xs">Your cart is empty</p>
+        <button onClick={onBack} className="ui-btn ui-btn-primary w-auto">
           Browse Products
         </button>
       </div>
@@ -337,10 +337,10 @@ function CartScreen({ cart, onBack, onRemove, onAdd, onCheckout, balances, isPla
     <div className="space-y-4">
       <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors">
         <ArrowLeft size={16} />
-        <span className="text-xs font-bold uppercase tracking-wider">Continue Shopping</span>
+        <span className="text-xs font-bold">Continue Shopping</span>
       </button>
 
-      <h2 className="text-lg font-black text-slate-800">Your Cart</h2>
+      <h2 className="text-lg font-bold text-slate-800">Your Cart</h2>
 
       <div className="space-y-3">
         {items.map(({ product, quantity }) => (
@@ -349,15 +349,15 @@ function CartScreen({ cart, onBack, onRemove, onAdd, onCheckout, balances, isPla
               <ProductImage src={product.image_url} name={product.name} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-slate-800 line-clamp-1">{product.name}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">{product.category}</p>
-              <p className="text-sm font-black text-slate-900 mt-1">{fmt(product.price_usd * quantity)}</p>
+              <p className="text-xs font-bold text-slate-800 line-clamp-1">{product.name}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{product.category}</p>
+              <p className="text-sm font-bold text-slate-900 mt-1">{fmt(product.price_usd * quantity)}</p>
             </div>
             <div className="flex flex-col items-center gap-2">
               <button onClick={() => onAdd(product)} className="w-7 h-7 bg-slate-100 text-slate-700 rounded-xl flex items-center justify-center hover:bg-emerald-100 hover:text-emerald-700 transition-all active:scale-90">
                 <Plus size={12} />
               </button>
-              <span className="text-xs font-black text-slate-800">{quantity}</span>
+              <span className="text-xs font-bold text-slate-800">{quantity}</span>
               <button onClick={() => onRemove(product.id)} className="w-7 h-7 bg-slate-100 text-slate-700 rounded-xl flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-all active:scale-90">
                 {quantity === 1 ? <Trash2 size={12} /> : <Minus size={12} />}
               </button>
@@ -368,7 +368,7 @@ function CartScreen({ cart, onBack, onRemove, onAdd, onCheckout, balances, isPla
 
       {/* Order summary */}
       <div className="bg-slate-50 rounded-2xl p-5 space-y-3">
-        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Order Summary</h3>
+        <h3 className="text-xs font-semibold text-slate-500">Order Summary</h3>
         <div className="flex justify-between text-sm text-slate-600">
           <span>Subtotal ({items.reduce((s, i) => s + i.quantity, 0)} items)</span>
           <span className="font-bold">{fmt(subtotal)}</span>
@@ -378,7 +378,7 @@ function CartScreen({ cart, onBack, onRemove, onAdd, onCheckout, balances, isPla
           <span className="font-bold">{fmt(fee)}</span>
         </div>
         <div className="h-px bg-slate-200" />
-        <div className="flex justify-between text-base font-black text-slate-900">
+        <div className="flex justify-between text-base font-bold text-slate-900">
           <span>Total</span>
           <span>{fmt(total)}</span>
         </div>
@@ -398,12 +398,12 @@ function CartScreen({ cart, onBack, onRemove, onAdd, onCheckout, balances, isPla
       <button
         disabled={!canAfford || isPlacingOrder}
         onClick={onCheckout}
-        className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-blue-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg active:scale-[0.98]"
+        className="ui-btn ui-btn-primary"
       >
         {isPlacingOrder ? <><Loader2 size={18} className="animate-spin" /> Processing…</> : <><ShieldCheck size={18} /> Pay {fmt(total)} with IFB</>}
       </button>
 
-      <p className="text-center text-[10px] text-slate-400">Secured by Infinite Future Bank · 2.5% platform fee applies</p>
+      <p className="text-center text-xs text-slate-400">Secured by Infinite Future Bank · 2.5% platform fee applies</p>
     </div>
   );
 }
@@ -416,24 +416,24 @@ function OrderConfirm({ order, onDone }) {
         <CheckCircle size={40} className="text-emerald-500" />
       </div>
       <div>
-        <h2 className="text-2xl font-black text-slate-900">Order Placed!</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Order Placed!</h2>
         <p className="text-slate-500 text-sm mt-2 max-w-xs">Your purchase is confirmed and being processed by the vendor. You'll receive updates in your notifications.</p>
       </div>
       <div className="bg-slate-50 rounded-2xl p-5 w-full max-w-sm space-y-3">
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 font-medium">Order ID</span>
-          <span className="font-black text-slate-800 font-mono text-xs">{order.id.slice(0, 8).toUpperCase()}</span>
+          <span className="font-bold text-slate-800 font-mono text-xs">{order.id.slice(0, 8).toUpperCase()}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 font-medium">Total charged</span>
-          <span className="font-black text-slate-800">{fmt(order.total_usd)}</span>
+          <span className="font-bold text-slate-800">{fmt(order.total_usd)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 font-medium">Status</span>
-          <span className="font-black text-emerald-600 uppercase text-[11px] tracking-widest">Confirmed</span>
+          <span className="font-semibold text-emerald-600 text-[11px]">Confirmed</span>
         </div>
       </div>
-      <button onClick={onDone} className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-colors shadow-md">
+      <button onClick={onDone} className="px-8 py-3.5 bg-blue-600 text-white rounded-2xl font-semibold text-xs hover:bg-blue-600 transition-colors shadow-md">
         Back to Market
       </button>
     </div>
@@ -447,14 +447,14 @@ function CartFAB({ count, total, onClick }) {
     <div className="sticky bottom-4 left-0 right-0 flex justify-center pointer-events-none z-50 px-4">
       <button
         onClick={onClick}
-        className="pointer-events-auto flex items-center gap-4 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl hover:bg-blue-700 transition-colors active:scale-95 animate-in slide-in-from-bottom-4 duration-300"
+        className="ui-btn ui-btn-primary w-auto"
       >
         <div className="relative">
           <ShoppingCart size={20} />
-          <span className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 rounded-full text-[10px] font-black flex items-center justify-center">{count}</span>
+          <span className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 rounded-full text-xs font-bold flex items-center justify-center">{count}</span>
         </div>
-        <span className="font-black text-sm">View Cart</span>
-        <span className="font-black text-sm text-blue-300">{fmt(total)}</span>
+        <span className="font-bold text-sm">View Cart</span>
+        <span className="font-bold text-sm text-blue-300">{fmt(total)}</span>
       </button>
     </div>
   );
@@ -468,7 +468,7 @@ function OrdersScreen({ orders }) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <ClipboardList size={48} className="text-slate-200" />
-        <p className="font-black text-slate-400 uppercase tracking-widest text-xs">No orders yet</p>
+        <p className="font-semibold text-slate-500 text-xs">No orders yet</p>
       </div>
     );
   }
@@ -493,17 +493,17 @@ function OrdersScreen({ orders }) {
                  <Clock size={18} className={meta.color} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-slate-800 font-mono">{order.id.slice(0,8).toUpperCase()}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">
+                <p className="text-xs font-bold text-slate-800 font-mono">{order.id.slice(0,8).toUpperCase()}</p>
+                <p className="text-xs text-slate-400 mt-0.5">
                   {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   {' · '}{order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full border ${meta.color} ${meta.bg} ${meta.border}`}>
+                <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${meta.color} ${meta.bg} ${meta.border}`}>
                   {meta.label}
                 </span>
-                <p className="text-sm font-black text-slate-900 mt-1">{fmt(order.total_usd)}</p>
+                <p className="text-sm font-bold text-slate-900 mt-1">{fmt(order.total_usd)}</p>
               </div>
             </button>
 
@@ -521,7 +521,7 @@ function OrdersScreen({ orders }) {
                             <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${done ? 'bg-slate-900' : 'bg-slate-100'}`}>
                               {done && <CheckCircle size={10} className="text-white" />}
                             </div>
-                            <span className={`text-[7px] font-black uppercase text-center w-12 leading-tight ${done ? 'text-slate-700' : 'text-slate-300'}`}>
+                            <span className={`text-xs font-semibold text-center w-12 leading-tight ${done ? 'text-slate-700' : 'text-slate-300'}`}>
                               {ORDER_STATUS[s].label}
                             </span>
                           </div>
@@ -549,19 +549,19 @@ function OrdersScreen({ orders }) {
                   <div className={`flex items-center gap-3 p-3 rounded-xl ${ORDER_STATUS.shipped.bg} border ${ORDER_STATUS.shipped.border}`}>
                     <MapPin size={14} className={ORDER_STATUS.shipped.color} />
                     <div>
-                      <p className="text-[10px] font-black uppercase text-slate-500">Tracking</p>
+                      <p className="text-xs font-semibold text-slate-500">Tracking</p>
                       <p className="text-xs font-bold text-slate-800">{order.tracking_number}</p>
                     </div>
                     {order.tracking_url && (
                       <a href={order.tracking_url} target="_blank" rel="noreferrer"
-                        className="ml-auto text-[10px] font-black text-blue-600 underline">Track</a>
+                        className="ml-auto text-xs font-bold text-blue-600 underline">Track</a>
                     )}
                   </div>
                 )}
 
                 {/* Estimated delivery */}
                 {order.estimated_delivery && order.status !== 'delivered' && (
-                  <p className="text-[10px] text-slate-500 font-semibold">
+                  <p className="text-xs text-slate-500 font-semibold">
                     Estimated delivery: <strong className="text-slate-800">
                       {new Date(order.estimated_delivery).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </strong>
@@ -571,7 +571,7 @@ function OrdersScreen({ orders }) {
                 {/* Admin notes to user */}
                 {order.admin_notes && (
                   <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                    <p className="text-[10px] font-black uppercase text-blue-500 mb-1">Update from IFB</p>
+                    <p className="text-xs font-semibold text-blue-500 mb-1">Update from IFB</p>
                     <p className="text-xs text-slate-700">{order.admin_notes}</p>
                   </div>
                 )}
@@ -753,7 +753,7 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <Loader2 size={32} className="animate-spin text-blue-500" />
-        <p className="text-xs font-black uppercase tracking-widest text-slate-400">Loading DEUS Market…</p>
+        <p className="text-xs font-semibold text-slate-500">Loading DEUS Market…</p>
       </div>
     );
   }
@@ -768,12 +768,12 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
               <Store size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-base font-black text-slate-900 leading-none">DEUS Market</h1>
-              <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">{vendors.length} brands · {allProducts.length} products</p>
+              <h1 className="text-base font-bold text-slate-900 leading-none">DEUS Market</h1>
+              <p className="text-xs text-slate-400 mt-0.5 font-semibold">{vendors.length} brands · {allProducts.length} products</p>
             </div>
           </div>
           {(view === 'HOME' || view === 'ORDERS') && cartCount > 0 && (
-            <button onClick={() => setView('CART')} className="relative flex items-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-2xl text-xs font-black hover:bg-blue-600 transition-colors shadow-md">
+            <button onClick={() => setView('CART')} className="relative flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-2xl text-xs font-bold hover:bg-blue-600 transition-colors shadow-md">
               <ShoppingCart size={14} />
               <span>{cartCount}</span>
               <span className="text-blue-300">{fmt(cartTotal)}</span>
@@ -797,7 +797,7 @@ export default function DeusMarket({ session, balances, fetchAllData }) {
             <button
               key={id}
               onClick={() => setView(id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${view === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all ${view === id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <Icon size={13} />
               {label}

@@ -170,7 +170,7 @@ export default function FaceAuthManager({ mode, storedDescriptor, onEnrolled, on
 
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-sm overflow-hidden shadow-2xl">
+      <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
 
         {/* Header */}
         <div className="p-5 border-b border-slate-100 flex items-center gap-3 bg-white text-slate-900">
@@ -178,8 +178,8 @@ export default function FaceAuthManager({ mode, storedDescriptor, onEnrolled, on
             <ScanFace size={18} />
           </div>
           <div>
-            <h3 className="font-black text-sm">{mode === 'enroll' ? 'Enrol Face Login' : 'Face Recognition'}</h3>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">IFB Biometric Vault</p>
+            <h3 className="font-bold text-sm">{mode === 'enroll' ? 'Enrol Face Login' : 'Face Recognition'}</h3>
+            <p className="text-xs text-slate-500 font-bold">Face login</p>
           </div>
         </div>
 
@@ -247,32 +247,32 @@ export default function FaceAuthManager({ mode, storedDescriptor, onEnrolled, on
           <div className="flex gap-3">
             <button
               onClick={handleCancel}
-              className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-colors"
+              className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-colors"
             >Cancel</button>
             {mode === 'enroll' && phase === 'ready' && (
               <button
                 onClick={handleCapture}
-                className="flex-2 flex-grow py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30"
+                className="ui-btn ui-btn-primary w-auto"
               >
                 <Camera size={14} /> Capture Face
               </button>
             )}
             {mode === 'enroll' && phase === 'scanning' && (
-              <button disabled className="flex-grow py-3 bg-amber-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest opacity-80 flex items-center justify-center gap-2">
+              <button disabled className="ui-btn ui-btn-primary w-auto">
                 <Loader2 size={14} className="animate-spin" /> Scanning...
               </button>
             )}
             {phase === 'error' && (
               <button
                 onClick={() => { setPhase('ready'); setStatusMsg('Position your face and try again.'); setOverlayColor('rgba(66,133,244,0.25)'); }}
-                className="flex-grow py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800"
+                className="ui-btn ui-btn-primary w-auto"
               >Retry</button>
             )}
           </div>
 
           <div className="flex items-center gap-2 justify-center">
             <ShieldCheck size={12} className="text-slate-300" />
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Data encrypted — never leaves your device</p>
+            <p className="text-xs font-bold text-slate-500">Your face data stays on this device</p>
           </div>
         </div>
       </div>

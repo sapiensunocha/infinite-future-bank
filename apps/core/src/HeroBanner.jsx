@@ -280,13 +280,13 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
         <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <ShieldAlert size={14} className={localRisk.colorText} />
-            <span className="text-[9px] text-slate-300 uppercase tracking-widest font-black">{weather.city} Risk</span>
+            <span className="text-xs text-slate-300 font-semibold">{weather.city} Risk</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-[10px] font-black uppercase tracking-widest ${localRisk.colorText} ${localRisk.bgGlow} px-2 py-0.5 rounded-lg`}>
+            <span className={`text-xs font-semibold ${localRisk.colorText} ${localRisk.bgGlow} px-2 py-0.5 rounded-lg`}>
               {localRisk.label}
             </span>
-            <span className={`text-sm font-black ${localRisk.colorText}`}>{localRisk.score}/10</span>
+            <span className={`text-sm font-bold ${localRisk.colorText}`}>{localRisk.score}/10</span>
             <ChevronDown size={13} className={`text-slate-400 transition-transform duration-300 ${showRiskDetails ? 'rotate-180' : ''}`} />
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
         <div className={`mt-3 pt-3 border-t border-white/10 space-y-3 transition-opacity duration-300 ${showRiskDetails ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
 
           {/* MICHAEL directive */}
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 text-center">
+          <p className="text-xs font-semibold text-slate-500 text-center">
             MICHAEL Score: <span className={localRisk.colorText}>{Math.round(localRisk.michaelScore)}</span>/100
             · {localRisk.nearbyCount > 0 ? `${localRisk.nearbyCount} nearby` : `${localRisk.totalEvents} global`} events
           </p>
@@ -310,8 +310,8 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
                   <meta.Icon size={11} className={meta.color} />
                   <div className="flex-1">
                     <div className="flex justify-between mb-0.5">
-                      <span className="text-[8px] font-black text-slate-300 uppercase tracking-wide truncate">{cat}</span>
-                      <span className={`text-[8px] font-black ${d.count > 0 ? meta.color : 'text-slate-600'}`}>{d.count}</span>
+                      <span className="text-xs font-semibold text-slate-300 truncate">{cat}</span>
+                      <span className={`text-xs font-bold ${d.count > 0 ? meta.color : 'text-slate-600'}`}>{d.count}</span>
                     </div>
                     <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                       <div
@@ -334,26 +334,26 @@ export default function HeroBanner({ profile, balances, wallets = [], transactio
                 ['Coping',      localRisk.components.lack_of_coping_capacity],
               ].map(([label, val]) => (
                 <div key={label} className={`${localRisk.bgGlow} rounded-lg p-1.5 border ${localRisk.colorBorder}`}>
-                  <p className={`text-[10px] font-black ${localRisk.colorText}`}>{(val || 0).toFixed(1)}</p>
-                  <p className="text-[7px] text-slate-400 font-bold uppercase leading-tight">{label}</p>
+                  <p className={`text-xs font-bold ${localRisk.colorText}`}>{(val || 0).toFixed(1)}</p>
+                  <p className="text-xs text-slate-500 font-bold leading-tight">{label}</p>
                 </div>
               ))}
             </div>
           )}
 
-          <p className="text-[8px] text-slate-500 text-center font-bold pt-1">
+          <p className="text-xs text-slate-500 text-center font-bold pt-1">
             Powered by MICHAEL Global Ops API
           </p>
 
           {/* IFB Green Finance — SDG Alignment strip */}
           <div className="mt-3 pt-3 border-t border-white/10">
-            <p className="text-[8px] font-black uppercase tracking-widest text-emerald-400 mb-2">IFB Green Finance · SDG Alignment</p>
+            <p className="text-xs font-semibold text-emerald-400 mb-2">IFB Green Finance · SDG Alignment</p>
             <div className="flex flex-wrap gap-1">
               {['SDG 1','SDG 2','SDG 7','SDG 8','SDG 9','SDG 10','SDG 12','SDG 13','SDG 14','SDG 15'].map(sdg => (
-                <span key={sdg} className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[7px] font-black rounded-full">{sdg}</span>
+                <span key={sdg} className="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-full">{sdg}</span>
               ))}
             </div>
-            <p className="text-[7px] text-slate-500 mt-1.5">Just Transition Intermediary · IFC Green Bond Principles (ICMA 2025) · Paris Aligned</p>
+            <p className="text-xs text-slate-500 mt-1.5">Just Transition Intermediary · IFC Green Bond Principles (ICMA 2025) · Paris Aligned</p>
           </div>
         </div>
       </div>
