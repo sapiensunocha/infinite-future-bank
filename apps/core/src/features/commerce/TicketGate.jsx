@@ -497,7 +497,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
             <div className="relative">
               <MapPin className="absolute left-4 top-3.5 text-slate-400" size={16} />
               <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)}
-                className="ui-select min-w-[160px]">
+                className="ui-select min-w-[160px] pl-11">
                 <option value="">All Locations</option>
                 {allLocations.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
@@ -505,7 +505,7 @@ export default function TicketGate({ session, balances, fetchAllData }) {
             <div className="relative">
               <Tag className="absolute left-4 top-3.5 text-slate-400" size={16} />
               <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
-                className="ui-select min-w-[160px]">
+                className="ui-select min-w-[160px] pl-11">
                 <option value="">All Categories</option>
                 {EVENT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>

@@ -460,7 +460,7 @@ export default function NpoHub({ session }) {
             <p className="text-xs font-bold text-slate-400">Zero-fee fundraising · Worldwide · Impact-verified</p>
           </div>
         </div>
-        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl overflow-x-auto no-scrollbar">
+        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl overflow-x-auto no-scrollbar w-full md:w-auto min-w-0 self-stretch md:self-auto">
           {TABS.map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`shrink-0 h-10 px-4 rounded-lg text-sm font-semibold transition-colors ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>
