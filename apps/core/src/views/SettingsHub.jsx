@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { enablePush, disablePush, pushSupported } from '../services/pushAlerts';
 import {
   User, Shield, Bell, Landmark, Eye, Info, LogOut, Camera,
   Fingerprint, RefreshCw, FileText, Scale, ShieldCheck, Mail,
@@ -74,7 +75,9 @@ export default function SettingsHub({
   const [notificationPrefs, setNotificationPrefs] = useState({
     payment_requests: profile?.pref_notif_payments ?? true,
     system_alerts: profile?.pref_notif_system ?? true,
-    market_loans: profile?.pref_notif_loans ?? true
+    market_loans: profile?.pref_notif_loans ?? true,
+    tx_email: profile?.pref_notif_tx_email ?? false,
+    tx_push: profile?.pref_notif_tx_push ?? true
   });
 
   const [previewAccess, setPreviewAccess] = useState({ 
@@ -102,7 +105,9 @@ export default function SettingsHub({
       setNotificationPrefs({
         payment_requests: profile.pref_notif_payments ?? true,
         system_alerts: profile.pref_notif_system ?? true,
-        market_loans: profile.pref_notif_loans ?? true
+        market_loans: profile.pref_notif_loans ?? true,
+        tx_email: profile.pref_notif_tx_email ?? false,
+        tx_push: profile.pref_notif_tx_push ?? true
       });
       setPreviewAccess({
         theme: profile.theme_preference || 'system',
@@ -312,13 +317,35 @@ export default function SettingsHub({
   };
 
   const handleSaveNotificationPrefs = async (key, value) => {
+    // Push needs this device's permission first; without it the switch stays off.
+    if (key === 'tx_push' && value) {
+      const res = await enablePush();
+      if (!res.ok) {
+        const why = {
+          unsupported: 'Push notifications are not available on this device yet. Turn on transaction emails instead.',
+          denied: 'Notifications are blocked for IFB on this device. Allow them in your browser or phone settings, then try again.',
+          not_configured: 'Push notifications are not set up yet. Please try again later.',
+          save_failed: 'Could not register this device. Please try again.',
+        }[res.reason] || 'Could not turn on push notifications.';
+        triggerNotification('error', why);
+        return;
+      }
+    }
+    if (key === 'tx_push' && !value) await disablePush();
     const updated = { ...notificationPrefs, [key]: value };
     setNotificationPrefs(updated);
-    await supabase.from('profiles').update({
+    const { error } = await supabase.from('profiles').update({
       pref_notif_payments: updated.payment_requests,
       pref_notif_system: updated.system_alerts,
-      pref_notif_loans: updated.market_loans
+      pref_notif_loans: updated.market_loans,
+      pref_notif_tx_email: updated.tx_email,
+      pref_notif_tx_push: updated.tx_push
     }).eq('id', session.user.id);
+    if (error) {
+      setNotificationPrefs(notificationPrefs);
+      triggerNotification('error', 'Could not save your notification settings. Please try again.');
+      return;
+    }
     triggerNotification('success', 'Notification preferences updated.');
   };
 
@@ -1023,6 +1050,26 @@ export default function SettingsHub({
             <div>
               <h2 className="text-2xl font-bold text-slate-800 mb-2">Notification Preferences</h2>
               <p className="text-xs text-slate-500">Control what alerts appear in your inbox.</p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Email for every transaction</h4>
+                  <p className="text-xs text-slate-500 mt-1">Get an email at {profile?.email || session?.user?.email || 'your address'} each time money enters or leaves your account.</p>
+                </div>
+                <button type="button" role="switch" aria-checked={notificationPrefs.tx_email} aria-label="Email for every transaction" onClick={() => handleSaveNotificationPrefs('tx_email', !notificationPrefs.tx_email)} className={`shrink-0 w-12 h-6 rounded-full transition-colors relative ${notificationPrefs.tx_email ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${notificationPrefs.tx_email ? 'translate-x-6' : ''}`}></div>
+                </button>
+              </div>
+              <div className="p-6 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Push notification for every transaction</h4>
+                  <p className="text-xs text-slate-500 mt-1">{pushSupported() ? 'A notification on this device each time money enters or leaves your account.' : 'Not available on this device yet. Use transaction emails for now.'}</p>
+                </div>
+                <button type="button" role="switch" aria-checked={pushSupported() && notificationPrefs.tx_push} aria-label="Push notification for every transaction" disabled={!pushSupported()} onClick={() => handleSaveNotificationPrefs('tx_push', !notificationPrefs.tx_push)} className={`shrink-0 w-12 h-6 rounded-full transition-colors relative disabled:opacity-50 ${pushSupported() && notificationPrefs.tx_push ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${pushSupported() && notificationPrefs.tx_push ? 'translate-x-6' : ''}`}></div>
+                </button>
+              </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
               <div className="p-6 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
