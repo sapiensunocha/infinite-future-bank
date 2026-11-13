@@ -14,14 +14,17 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, getAuthedUser, HttpError, jsonResponse } from "../_shared/auth.ts";
 import { payoutRate, round2 } from "../_shared/flw-rates.ts";
+import { transferBase, transferHeaders } from "../_shared/flw-relay.ts";
 
 const FLW = "https://api.flutterwave.com/v3";
 const FEE_PCT = 0.005; // same 0.5% routing fee shown in the app
 
 async function flw(secret: string, path: string, init: RequestInit = {}) {
-  const res = await fetch(`${FLW}${path}`, {
+  // Only transfers need the fixed-address relay (Flutterwave IP whitelisting).
+  const viaRelay = path === "/transfers" || path.startsWith("/transfers/");
+  const res = await fetch(`${viaRelay ? transferBase() : FLW}${path}`, {
     ...init,
-    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json", ...(viaRelay ? transferHeaders() : {}) },
     signal: AbortSignal.timeout(15_000),
   });
   const j = await res.json().catch(() => null);
