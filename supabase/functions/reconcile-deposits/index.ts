@@ -70,17 +70,37 @@ Deno.serve(async (req: Request) => {
       for (const row of pending ?? []) {
         if (!isInstantRef(row.tx_ref)) continue;
         const v = await verifyFlutterwaveByRef(row.tx_ref);
-        if (!v.ok || v.tx_ref !== row.tx_ref) continue;
+        if (!v.ok || v.tx_ref !== row.tx_ref) {
+          // Record why Flutterwave did not confirm it (no secrets, no customer data).
+          let why: Record<string, unknown> = {};
+          try {
+            const r = await fetch(
+              `https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${encodeURIComponent(row.tx_ref)}`,
+              { headers: { Authorization: `Bearer ${Deno.env.get("FLUTTERWAVE_SECRET_KEY")}` }, signal: AbortSignal.timeout(10_000) },
+            );
+            const j = await r.json().catch(() => ({}));
+            why = {
+              http: r.status, flw_status: j?.status ?? null, flw_message: String(j?.message ?? "").slice(0, 160),
+              charge_status: j?.data?.status ?? null, amount: j?.data?.amount ?? null, currency: j?.data?.currency ?? null,
+              ref_matches: j?.data?.tx_ref === row.tx_ref,
+            };
+          } catch (e) { why = { error: e instanceof Error ? e.message.slice(0, 160) : "error" }; }
+          await adminSupabase.from("app_telemetry").insert([{ event: "flw_reconcile_unconfirmed", metadata: { tx_ref: row.tx_ref, ...why } }]);
+          continue;
+        }
         const { data: outcome, error } = await adminSupabase.rpc("complete_deposit_intent", {
           p_tx_ref: row.tx_ref, p_paid_amount: v.amount_cents / 100, p_paid_currency: v.currency, p_provider_ref: v.ref,
         });
+        await adminSupabase.from("app_telemetry").insert([{ event: "flw_reconcile_result", metadata: { tx_ref: row.tx_ref, outcome: outcome ?? null, error: error?.code ?? null } }]);
         if (error) { console.error("reconcile: complete_deposit_intent failed:", error.code); continue; }
         if (outcome === "credited") flwCredited++;
         if (outcome === "mismatch") console.warn("reconcile: Flutterwave amount/currency mismatch — manual review", row.tx_ref);
       }
     }
   } catch (err: unknown) {
-    console.warn("reconcile-deposits flutterwave pass:", err instanceof Error ? err.message : String(err));
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("reconcile-deposits flutterwave pass:", msg);
+    await adminSupabase.from("app_telemetry").insert([{ event: "flw_reconcile_error", metadata: { error: msg.slice(0, 200) } }]).then(() => {}, () => {});
   }
 
   const sevenDaysAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
