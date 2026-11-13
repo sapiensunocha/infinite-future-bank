@@ -14,7 +14,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, getAuthedUser, HttpError, jsonResponse } from "../_shared/auth.ts";
 import { payoutRate, round2 } from "../_shared/flw-rates.ts";
-import { transferBase, transferHeaders } from "../_shared/flw-relay.ts";
+import { relayConfigured, transferBase, transferHeaders } from "../_shared/flw-relay.ts";
 
 const FLW = "https://api.flutterwave.com/v3";
 const FEE_PCT = 0.005; // same 0.5% routing fee shown in the app
@@ -115,6 +115,11 @@ Deno.serve(async (req: Request) => {
     if (!ok && res && res.status >= 400 && res.status < 500) {
       const { error: refundErr } = await admin.rpc("refund_withdrawal", { p_external_id: reference });
       if (refundErr) console.error("CRITICAL: refund_withdrawal failed for", reference, refundErr.code);
+      // Keep the provider's reason so support can see why a payout was refused (no keys, no account numbers).
+      await admin.from("app_telemetry").insert([{ event: "bank_payout_refused", metadata: {
+        reference, http: res.status, flw_status: j?.status ?? null, flw_message: String(j?.message ?? "").slice(0, 200),
+        empty_body: j === null, via_relay: relayConfigured(), refunded: !refundErr,
+      } }]).then(() => {}, () => {});
       throw new HttpError(502, j?.message ? `The bank transfer was refused: ${String(j.message).slice(0, 120)}` : "The bank transfer was refused. Your money is back in your wallet.");
     }
     // Success, or an ambiguous network error: keep the debit; the transfer webhook settles it.
