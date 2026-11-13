@@ -6,6 +6,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "npm:stripe@17";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyFlutterwaveByRef } from "../_shared/page-orders.ts";
+import { isInstantRef } from "../_shared/money-rails.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-06-20",
@@ -46,8 +48,43 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // ── Flutterwave Instant Deposits left pending ───────────────────────────────
+  // The wallet is credited by flutterwave-webhook, or by the deposit screen
+  // polling `instant-deposit` status. If the webhook is missed and the user left
+  // that screen (e.g. the return page failed to load), the deposit stays pending.
+  // Re-check this user's recent pending intents with Flutterwave and complete the
+  // ones Flutterwave confirms. complete_deposit_intent is idempotent and checks
+  // the paid amount/currency, so a repeat call never credits twice.
+  let flwCredited = 0;
+  try {
+    if (Deno.env.get("FLUTTERWAVE_SECRET_KEY")) {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: pending } = await adminSupabase
+        .from("deposit_intents")
+        .select("tx_ref")
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      for (const row of pending ?? []) {
+        if (!isInstantRef(row.tx_ref)) continue;
+        const v = await verifyFlutterwaveByRef(row.tx_ref);
+        if (!v.ok || v.tx_ref !== row.tx_ref) continue;
+        const { data: outcome, error } = await adminSupabase.rpc("complete_deposit_intent", {
+          p_tx_ref: row.tx_ref, p_paid_amount: v.amount_cents / 100, p_paid_currency: v.currency, p_provider_ref: v.ref,
+        });
+        if (error) { console.error("reconcile: complete_deposit_intent failed:", error.code); continue; }
+        if (outcome === "credited") flwCredited++;
+        if (outcome === "mismatch") console.warn("reconcile: Flutterwave amount/currency mismatch — manual review", row.tx_ref);
+      }
+    }
+  } catch (err: unknown) {
+    console.warn("reconcile-deposits flutterwave pass:", err instanceof Error ? err.message : String(err));
+  }
+
   const sevenDaysAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  let credited = 0;
+  let credited = flwCredited;
   let checked = 0;
 
   try {
