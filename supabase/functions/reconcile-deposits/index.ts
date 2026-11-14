@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
       const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { data: pending } = await adminSupabase
         .from("deposit_intents")
-        .select("tx_ref")
+        .select("tx_ref, expires_at")
         .eq("user_id", user.id)
         .eq("status", "pending")
         .gte("created_at", since)
@@ -71,6 +71,12 @@ Deno.serve(async (req: Request) => {
         if (!isInstantRef(row.tx_ref)) continue;
         const v = await verifyFlutterwaveByRef(row.tx_ref);
         if (!v.ok || v.tx_ref !== row.tx_ref) {
+          // Past its payment window and still unpaid: close it so it is not re-checked on every login.
+          if (row.expires_at && new Date(row.expires_at).getTime() < Date.now() && v.tx_ref !== row.tx_ref) {
+            await adminSupabase.from("deposit_intents").update({ status: "expired", failure_reason: "not paid before expiry" })
+              .eq("tx_ref", row.tx_ref).eq("status", "pending");
+            continue;
+          }
           // Record why Flutterwave did not confirm it (no secrets, no customer data).
           let why: Record<string, unknown> = {};
           try {

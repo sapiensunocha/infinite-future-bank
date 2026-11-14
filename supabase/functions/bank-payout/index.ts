@@ -14,18 +14,39 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, getAuthedUser, HttpError, jsonResponse } from "../_shared/auth.ts";
 import { payoutRate, round2 } from "../_shared/flw-rates.ts";
+import { relayConfigured, transferBase, transferHeaders } from "../_shared/flw-relay.ts";
 
 const FLW = "https://api.flutterwave.com/v3";
 const FEE_PCT = 0.005; // same 0.5% routing fee shown in the app
 
 async function flw(secret: string, path: string, init: RequestInit = {}) {
-  const res = await fetch(`${FLW}${path}`, {
+  // Only transfers need the fixed-address relay (Flutterwave IP whitelisting).
+  const viaRelay = path === "/transfers" || path.startsWith("/transfers/");
+  const res = await fetch(`${viaRelay ? transferBase() : FLW}${path}`, {
     ...init,
-    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json", ...(viaRelay ? transferHeaders() : {}) },
     signal: AbortSignal.timeout(15_000),
   });
   const j = await res.json().catch(() => null);
   return { res, j };
+}
+
+/**
+ * Which Flutterwave balance pays a naira payout. FLW_PAYOUT_DEBIT_CURRENCY = "NGN" | "USD" forces one;
+ * otherwise ("auto") use the NGN balance when it covers the payout plus fees, else the USD balance
+ * (Flutterwave converts). Naira collected from customers can then fund naira withdrawals directly.
+ */
+async function ngnDebitCurrency(secret: string, needNgn: number): Promise<{ currency: "NGN" | "USD"; how: string }> {
+  const pref = (Deno.env.get("FLW_PAYOUT_DEBIT_CURRENCY") ?? "auto").trim().toUpperCase();
+  if (pref === "NGN" || pref === "USD") return { currency: pref, how: "configured" };
+  try {
+    const { res, j } = await flw(secret, "/balances/NGN");
+    const avail = Number(j?.data?.available_balance);
+    if (res.ok && Number.isFinite(avail)) return avail >= needNgn ? { currency: "NGN", how: "ngn_balance_covers" } : { currency: "USD", how: "ngn_balance_short" };
+    return { currency: "USD", how: `balance_lookup_http_${res.status}` };
+  } catch {
+    return { currency: "USD", how: "balance_lookup_failed" };
+  }
 }
 
 async function resolveAccount(secret: string, bank: string, acct: string): Promise<string> {
@@ -99,10 +120,13 @@ Deno.serve(async (req: Request) => {
     });
     if (debitErr) throw new HttpError(400, "Insufficient balance");
 
+    // Flutterwave's NGN transfer fee (₦10 up to ₦5,000, ₦25 up to ₦50,000, ₦50 above) plus 7.5% VAT.
+    const flwFeeNgn = Math.ceil((amountNgn <= 5000 ? 10 : amountNgn <= 50000 ? 25 : 50) * 1.075 * 100) / 100;
+    const debit = await ngnDebitCurrency(secret, amountNgn + flwFeeNgn);
     const { res, j } = await flw(secret, "/transfers", {
       method: "POST",
       body: JSON.stringify({
-        account_bank: bank, account_number: acct, amount: amountNgn, currency: "NGN", debit_currency: "USD",
+        account_bank: bank, account_number: acct, amount: amountNgn, currency: "NGN", debit_currency: debit.currency,
         reference, narration: "IFB wallet withdrawal",
         callback_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/flutterwave-webhook`,
       }),
@@ -112,6 +136,11 @@ Deno.serve(async (req: Request) => {
     if (!ok && res && res.status >= 400 && res.status < 500) {
       const { error: refundErr } = await admin.rpc("refund_withdrawal", { p_external_id: reference });
       if (refundErr) console.error("CRITICAL: refund_withdrawal failed for", reference, refundErr.code);
+      // Keep the provider's reason so support can see why a payout was refused (no keys, no account numbers).
+      await admin.from("app_telemetry").insert([{ event: "bank_payout_refused", metadata: {
+        reference, http: res.status, flw_status: j?.status ?? null, flw_message: String(j?.message ?? "").slice(0, 200),
+        empty_body: j === null, via_relay: relayConfigured(), refunded: !refundErr,
+      } }]).then(() => {}, () => {});
       throw new HttpError(502, j?.message ? `The bank transfer was refused: ${String(j.message).slice(0, 120)}` : "The bank transfer was refused. Your money is back in your wallet.");
     }
     // Success, or an ambiguous network error: keep the debit; the transfer webhook settles it.
@@ -122,7 +151,7 @@ Deno.serve(async (req: Request) => {
       status: "flw_processing",
       metadata: {
         flw_reference: reference, flw_transfer_id: j?.data?.id ?? null, flw_currency: "NGN", rate, amount_ngn: amountNgn,
-        fee_usd: fee, bank_code: bank, account_last4: acct.slice(-4), account_name: accountName, country: "NG",
+        fee_usd: fee, debit_currency: debit.currency, debit_choice: debit.how, bank_code: bank, account_last4: acct.slice(-4), account_name: accountName, country: "NG",
       },
     }]);
     await admin.from("notifications").insert([{
