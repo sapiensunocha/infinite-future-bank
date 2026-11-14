@@ -120,8 +120,9 @@ Deno.serve(async (req: Request) => {
     });
     if (debitErr) throw new HttpError(400, "Insufficient balance");
 
-    // ₦100 headroom covers Flutterwave's transfer fee and VAT.
-    const debit = await ngnDebitCurrency(secret, amountNgn + 100);
+    // Flutterwave's NGN transfer fee (₦10 up to ₦5,000, ₦25 up to ₦50,000, ₦50 above) plus 7.5% VAT.
+    const flwFeeNgn = Math.ceil((amountNgn <= 5000 ? 10 : amountNgn <= 50000 ? 25 : 50) * 1.075 * 100) / 100;
+    const debit = await ngnDebitCurrency(secret, amountNgn + flwFeeNgn);
     const { res, j } = await flw(secret, "/transfers", {
       method: "POST",
       body: JSON.stringify({
