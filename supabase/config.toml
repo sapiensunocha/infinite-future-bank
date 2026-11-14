@@ -83,5 +83,8 @@ verify_jwt = false
 # MICHAEL calls this server-to-server; every request is HMAC-signed and time-checked instead.
 verify_jwt = false
 
+[functions.payout-sync]
+verify_jwt = false
+
 [functions.transaction-alerts]
 verify_jwt = false

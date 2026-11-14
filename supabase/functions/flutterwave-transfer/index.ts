@@ -6,6 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders as buildCors, getAuthedUser, HttpError, parseAmount } from "../_shared/auth.ts";
 import { payoutRate } from "../_shared/flw-rates.ts";
+import { transferBase, transferHeaders } from "../_shared/flw-relay.ts";
 
 const FLW_SECRET   = Deno.env.get("FLUTTERWAVE_SECRET_KEY") ?? "";
 const FLW_BASE     = "https://api.flutterwave.com/v3";
@@ -133,9 +134,10 @@ Deno.serve(async (req) => {
   let flwOk = false;
   let flwDefinitelyRejected = false;
   try {
-    const flwRes = await fetch(`${FLW_BASE}/transfers`, {
+    const flwRes = await fetch(`${transferBase()}/transfers`, {
       method: "POST",
       headers: {
+        ...transferHeaders(),
         "Content-Type": "application/json",
         "Authorization": `Bearer ${FLW_SECRET}`,
       },
