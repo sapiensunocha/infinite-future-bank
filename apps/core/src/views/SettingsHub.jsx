@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { enablePush, disablePush, pushSupported } from '../services/pushAlerts';
+import { changePin } from '../services/pin';
 import {
   User, Shield, Bell, Landmark, Eye, Info, LogOut, Camera,
   Fingerprint, RefreshCw, FileText, Scale, ShieldCheck, Mail,
@@ -921,6 +922,13 @@ export default function SettingsHub({
             </div>
 
             {/* ─── FACE LOGIN ─────────────────────────────────────────────── */}
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2"><Lock size={16} className="text-blue-500"/> Transaction PIN</h3>
+                <p className="text-xs text-slate-600 leading-relaxed mt-3 mb-5">A 4 to 6 digit PIN you enter each time you send or withdraw money. Five wrong tries lock it for 15 minutes.</p>
+                <button type="button" onClick={async () => { if (await changePin()) triggerNotification('success', 'Your transaction PIN is saved.'); }} className="ui-btn ui-btn-secondary">
+                  Set or change PIN
+                </button>
+              </div>
             <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">

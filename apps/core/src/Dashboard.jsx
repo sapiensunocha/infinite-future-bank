@@ -11,6 +11,8 @@ import BottomNav from './components/layout/BottomNav';
 import TransactionModal from './components/modals/TransactionModal';
 import StatementExportModal from './components/modals/StatementExportModal';
 import GlobalToastAlert from './components/ui/GlobalToastAlert';
+import { requirePin } from './services/pin';
+import PullToRefresh from './components/PullToRefresh';
 import ComingSoonPanel from './components/ui/ComingSoonPanel';
 import { isGated } from './config/featureAvailability';
 
@@ -99,6 +101,7 @@ export default function Dashboard({ session, onSignOut }) {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [searchResults, setSearchResults] = useState({ transactions: [], notifications: [], pockets: [], recipients: [], investments: [] });
   const searchDebounce = useRef(null);
+  const mainScrollRef = useRef(null);
   
   // Real-Time Database States
   const [profile, setProfile] = useState(null);
@@ -235,6 +238,7 @@ export default function Dashboard({ session, onSignOut }) {
       const amount = meta.amount || 0;
       const requesterId = meta.requester_id;
       if (!requesterId || !amount) throw new Error('Invalid request data.');
+      if (!(await requirePin())) return;
       const { error } = await supabase.rpc('process_payment_request', {
         p_sender_id: session.user.id,
         p_receiver_id: requesterId,
@@ -355,7 +359,8 @@ export default function Dashboard({ session, onSignOut }) {
             onPayReport={setPayReportNotif}
           />
           
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 no-scrollbar scroll-container pb-24 md:pb-8" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 5rem), 2rem)' }} id="main-scroll">
+          <PullToRefresh targetRef={mainScrollRef} onRefresh={fetchAllData} />
+          <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 no-scrollbar scroll-container pb-24 md:pb-8" style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 5rem), 2rem)' }} id="main-scroll">
 
             {/* DYNAMIC VIEW ROUTER */}
             <Suspense fallback={<ScreenLoader />}>

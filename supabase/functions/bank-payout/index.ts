@@ -14,6 +14,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, errorResponse, getAuthedUser, HttpError, jsonResponse } from "../_shared/auth.ts";
 import { payoutRate, round2 } from "../_shared/flw-rates.ts";
+import { requirePinGrant } from "../_shared/pin.ts";
 import { relayConfigured, transferBase, transferHeaders } from "../_shared/flw-relay.ts";
 
 const FLW = "https://api.flutterwave.com/v3";
@@ -114,6 +115,7 @@ Deno.serve(async (req: Request) => {
     const amountNgn = Math.floor(amountUsd * rate * 100) / 100;
     const reference = `IFB-BANK-${crypto.randomUUID()}`;
 
+    await requirePinGrant(admin, user.id);
     const { error: debitErr } = await admin.rpc("debit_for_withdrawal", {
       p_user_id: user.id, p_amount: total, p_external_id: reference,
       p_description: `Bank withdrawal $${amountUsd} + $${fee} fee → ${accountName} (${acct.slice(-4)})`,

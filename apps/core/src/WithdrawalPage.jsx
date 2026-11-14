@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { requirePin } from './services/pin';
 import NigeriaBankPayout from './components/NigeriaBankPayout';
 import MobileMoneyAccounts from './components/MobileMoneyAccounts';
 import { X, Landmark, MapPin, ShieldCheck, ArrowRight, CheckCircle, Loader2, Lock, Star, User, CreditCard, Globe, Smartphone, Wallet, HandCoins, ArrowLeft, Users, History, FileText, ExternalLink, AlertTriangle, Clock, Activity, Search, ShieldAlert, Check, Zap } from 'lucide-react';
@@ -128,6 +129,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
     setError('');
     if (!flwPhone) return showToast('Enter your mobile number.', true);
     if (withdrawalTotal > userBalance) return showToast(`Insufficient funds. Need $${withdrawalTotal.toFixed(2)}.`, true);
+    if (!(await requirePin())) return;
 
     setIsProcessing(true);
     try {
@@ -235,6 +237,7 @@ export default function WithdrawalPage({ userBalance = 0, userId, onClose, onSuc
         }
         cardId = data.card.id;
       }
+      if (!(await requirePin())) { setIsProcessing(false); return; }
       const { data: res, error: rpcErr } = await supabase.rpc('request_card_payout', { p_card_id: cardId, p_amount: parseFloat(amount) });
       if (rpcErr) throw rpcErr;
       if (!res?.success) throw new Error(res?.error || 'Card withdrawal could not be started.');

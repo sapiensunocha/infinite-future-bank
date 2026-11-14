@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { TranslationProvider } from './i18n/TranslationContext';
 import { supabase, supabaseUrl, supabaseAnonKey } from './services/supabaseClient';
+import SessionGuard from './components/SessionGuard';
 import { APP_URL } from './config/constants';
 import { Mail, Sparkles, ChevronRight, Lock, Eye, EyeOff, Smartphone, DownloadCloud, Monitor, User, RefreshCw, ShieldAlert, Share2, Plus, GraduationCap, Building2 } from 'lucide-react';
 import PhoneField from './components/PhoneField';
@@ -610,10 +611,18 @@ function MainApp() {
     } catch (error) { showMessage(error.message, 'error'); } finally { setIsLoading(false); }
   };
 
+  // Signed out for inactivity (components/SessionGuard): back to sign-in with a clear reason.
+  const handleIdleSignOut = () => {
+    supabase.auth.signOut();
+    setCurrentView('enter_email'); setEmailValue(''); setPasswordValue('');
+    try { showMessage('You were signed out because the app was not used for 10 minutes.', 'info'); } catch { /* message area not mounted */ }
+  };
+
   if (session && currentView !== 'update_password') {
     return (
       <Suspense fallback={<PageLoader />}>
         <Dashboard session={session} onSignOut={() => { supabase.auth.signOut(); setCurrentView('enter_email'); setEmailValue(''); setPasswordValue(''); }} />
+        <SessionGuard active onExpire={handleIdleSignOut} />
       </Suspense>
     );
   }

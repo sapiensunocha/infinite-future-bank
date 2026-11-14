@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { requirePin } from '../../services/pin';
 import QRCode from "react-qr-code";
 import { X, ShieldCheck, ArrowDownToLine, Loader2, Plus, Send, Download, ArrowRightLeft, Mail, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
@@ -100,6 +101,7 @@ export default function TransactionModal({
         } else {
           // Real IFB-to-IFB transfer via hardened p2p_transfer RPC (atomic balance updates + dual transaction logs)
           const targetId = targetUserId || recipientRecord?.id;
+          if (!(await requirePin())) return;
           const { data: p2pRes, error: p2pErr } = await supabase.rpc('p2p_transfer', {
             sender_id: session.user.id,
             receiver_id: targetId,

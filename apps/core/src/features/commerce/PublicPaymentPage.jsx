@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { requirePin } from '../../services/pin';
 import { useParams } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -374,6 +375,7 @@ function PaymentPageForm({ slug, session }) {
     if (isCustomerAmount && amountCents == null) { setCheckoutError('Please enter a valid amount.'); return; }
     if (TURNSTILE_SITE_KEY && !turnstileToken) { setCheckoutError('Please complete the security check.'); return; }
     if (method === 'wallet' && !session) { setCheckoutError('Sign in to pay with your IFB wallet.'); return; }
+    if (method === 'wallet' && !(await requirePin())) return;
 
     setBusyMethod(method);
     const body = {

@@ -49,7 +49,7 @@ async function sendPushTo(admin: Db, userId: string, payload: string): Promise<s
   return sent ? `sent:${sent}` : `failed:${failed}`;
 }
 
-async function drain(admin: Db): Promise<{ processed: number }> {
+async function drain(admin: Db): Promise<{ processed: number; pushed: number }> {
   const { data: alerts, error } = await admin.rpc("claim_transaction_alerts", { p_limit: 25 });
   if (error) throw new Error(`claim_transaction_alerts: ${error.code}`);
   let processed = 0;
@@ -92,7 +92,23 @@ async function drain(admin: Db): Promise<{ processed: number }> {
     await admin.from("transaction_alerts").update({ processed_at: new Date().toISOString(), email_status: emailStatus, push_status: pushStatus }).eq("id", a.id);
     processed++;
   }
-  return { processed };
+
+  // Event pushes (one per in-app notification; queued by the notifications trigger).
+  let pushed = 0;
+  const { data: events, error: evErr } = await admin.rpc("claim_push_outbox", { p_limit: 25 });
+  // PGRST202 / 42883: migration 20261125 not applied yet.
+  if (evErr && evErr.code !== "PGRST202" && evErr.code !== "42883") throw new Error(`claim_push_outbox: ${evErr.code}`);
+  for (const ev of events ?? []) {
+    let status = "failed:error";
+    try {
+      status = await sendPushTo(admin, ev.user_id, JSON.stringify({ title: ev.title, body: ev.body, url: APP_URL + "/", tag: ev.tag ?? undefined }));
+    } catch (e) {
+      console.error("transaction-alerts: event push failed:", e instanceof Error ? e.message : "error");
+    }
+    await admin.from("push_outbox").update({ processed_at: new Date().toISOString(), status }).eq("id", ev.id);
+    pushed++;
+  }
+  return { processed, pushed };
 }
 
 Deno.serve(async (req: Request) => {
