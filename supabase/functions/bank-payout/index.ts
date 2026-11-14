@@ -31,6 +31,24 @@ async function flw(secret: string, path: string, init: RequestInit = {}) {
   return { res, j };
 }
 
+/**
+ * Which Flutterwave balance pays a naira payout. FLW_PAYOUT_DEBIT_CURRENCY = "NGN" | "USD" forces one;
+ * otherwise ("auto") use the NGN balance when it covers the payout plus fees, else the USD balance
+ * (Flutterwave converts). Naira collected from customers can then fund naira withdrawals directly.
+ */
+async function ngnDebitCurrency(secret: string, needNgn: number): Promise<{ currency: "NGN" | "USD"; how: string }> {
+  const pref = (Deno.env.get("FLW_PAYOUT_DEBIT_CURRENCY") ?? "auto").trim().toUpperCase();
+  if (pref === "NGN" || pref === "USD") return { currency: pref, how: "configured" };
+  try {
+    const { res, j } = await flw(secret, "/balances/NGN");
+    const avail = Number(j?.data?.available_balance);
+    if (res.ok && Number.isFinite(avail)) return avail >= needNgn ? { currency: "NGN", how: "ngn_balance_covers" } : { currency: "USD", how: "ngn_balance_short" };
+    return { currency: "USD", how: `balance_lookup_http_${res.status}` };
+  } catch {
+    return { currency: "USD", how: "balance_lookup_failed" };
+  }
+}
+
 async function resolveAccount(secret: string, bank: string, acct: string): Promise<string> {
   const { res, j } = await flw(secret, "/accounts/resolve", {
     method: "POST", body: JSON.stringify({ account_number: acct, account_bank: bank }),
@@ -102,10 +120,12 @@ Deno.serve(async (req: Request) => {
     });
     if (debitErr) throw new HttpError(400, "Insufficient balance");
 
+    // ₦100 headroom covers Flutterwave's transfer fee and VAT.
+    const debit = await ngnDebitCurrency(secret, amountNgn + 100);
     const { res, j } = await flw(secret, "/transfers", {
       method: "POST",
       body: JSON.stringify({
-        account_bank: bank, account_number: acct, amount: amountNgn, currency: "NGN", debit_currency: "USD",
+        account_bank: bank, account_number: acct, amount: amountNgn, currency: "NGN", debit_currency: debit.currency,
         reference, narration: "IFB wallet withdrawal",
         callback_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/flutterwave-webhook`,
       }),
@@ -130,7 +150,7 @@ Deno.serve(async (req: Request) => {
       status: "flw_processing",
       metadata: {
         flw_reference: reference, flw_transfer_id: j?.data?.id ?? null, flw_currency: "NGN", rate, amount_ngn: amountNgn,
-        fee_usd: fee, bank_code: bank, account_last4: acct.slice(-4), account_name: accountName, country: "NG",
+        fee_usd: fee, debit_currency: debit.currency, debit_choice: debit.how, bank_code: bank, account_last4: acct.slice(-4), account_name: accountName, country: "NG",
       },
     }]);
     await admin.from("notifications").insert([{
