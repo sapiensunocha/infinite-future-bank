@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, BadgeCheck, CheckCircle, Landmark, Loader2, Search } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
+import { requirePin } from '../services/pin';
 
 async function call(body) {
   const { data, error } = await supabase.functions.invoke('bank-payout', { body });
@@ -50,6 +51,7 @@ export default function NigeriaBankPayout({ amount, onBack, onDone }) {
   const send = async () => {
     setBusy('send'); setErr('');
     try {
+      if (!(await requirePin())) return;
       const d = await call({ action: 'send', bank_code: bank.code, account_number: acct, amount_usd: Number(amount) });
       setDone(d);
       onDone?.();

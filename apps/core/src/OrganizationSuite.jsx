@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { requirePin } from './services/pin';
 import { supabase } from './services/supabaseClient';
 import {
   Folder, PieChart, ArrowDownToLine, Users,
@@ -271,6 +272,7 @@ export default function OrganizationSuite({ session, balances, pockets, recipien
       return;
     }
 
+    if (!(await requirePin())) return;
     setIsLoading(true);
     try {
       const { data: result, error: rpcError } = await supabase.rpc('p2p_transfer', {

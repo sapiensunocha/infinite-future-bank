@@ -6,6 +6,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders as buildCors, getAuthedUser, HttpError, parseAmount } from "../_shared/auth.ts";
 import { payoutRate } from "../_shared/flw-rates.ts";
+import { requirePinGrant } from "../_shared/pin.ts";
 import { transferBase, transferHeaders } from "../_shared/flw-relay.ts";
 
 const FLW_SECRET   = Deno.env.get("FLUTTERWAVE_SECRET_KEY") ?? "";
@@ -119,6 +120,12 @@ Deno.serve(async (req) => {
   const fee = Math.round(amount * 0.005 * 100) / 100;
   const total = Math.round((amount + fee) * 100) / 100;
   const reference = `IFB-WD-${user.id.slice(0, 8)}-${crypto.randomUUID()}`;
+
+  try {
+    await requirePinGrant(sb, user.id);
+  } catch (e) {
+    return jsonRes({ flw_supported: true, error: e instanceof HttpError ? e.message : "Could not check your transaction PIN. Please try again." }, e instanceof HttpError ? e.status : 500);
+  }
 
   // 1. Debit liquid_usd + fee atomically BEFORE paying out (raises on insufficient funds).
   const { error: debitErr } = await sb.rpc("debit_for_withdrawal", {

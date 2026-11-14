@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './index.css';
 import { Capacitor } from '@capacitor/core';
+import PinGateHost from './components/modals/PinGate';
+import { installDismissHandlers } from './services/dismiss';
 
 // Native app (Android/iOS) gets app-only styling, e.g. no website footers.
 if (Capacitor.isNativePlatform()) document.documentElement.classList.add('is-native-app');
@@ -53,11 +55,14 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+installDismissHandlers();
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />
+      <PinGateHost />
     </ErrorBoundary>
   </React.StrictMode>,
 );

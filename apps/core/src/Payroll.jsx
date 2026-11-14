@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { requirePin } from './services/pin';
 import { Users, Plus, UploadCloud, Send, CheckCircle2, Clock, AlertCircle, ShieldCheck, Landmark, Receipt, Loader2, Info } from 'lucide-react';
 import { supabase } from './services/supabaseClient';
 
@@ -70,6 +71,7 @@ export default function Payroll({ session, balances, fetchAllData, commercialPro
     if (!payrollConfirm) return;
     if (isLoading) return;
     const { totalGross } = payrollConfirm;
+    if (!(await requirePin())) return;
     setPayrollConfirm(null);
     setIsLoading(true);
     try {
