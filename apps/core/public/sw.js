@@ -206,11 +206,11 @@ self.addEventListener('message', async (event) => {
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
   event.waitUntil(
-    self.registration.showNotification(data.title || 'IFB Transfer', {
-      body: data.body || 'You have a new AFR transaction.',
+    self.registration.showNotification(data.title || 'Infinite Future Bank', {
+      body: data.body || 'You have a new transaction.',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
-      tag: 'afr-tx',
+      tag: data.tag || 'ifb-tx',
       data: { url: data.url || '/' },
     })
   );

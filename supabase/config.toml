@@ -84,4 +84,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.payout-sync]
+
+[functions.transaction-alerts]
 verify_jwt = false
