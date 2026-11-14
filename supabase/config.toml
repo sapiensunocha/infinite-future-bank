@@ -82,3 +82,6 @@ verify_jwt = false
 [functions.michael-agri-webhook]
 # MICHAEL calls this server-to-server; every request is HMAC-signed and time-checked instead.
 verify_jwt = false
+
+[functions.transaction-alerts]
+verify_jwt = false
